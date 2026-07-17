@@ -23,6 +23,22 @@ function App() {
   useEffect(() => {
     checkConnection()
     checkSession()
+
+    // Listen to auth state changes so UI updates when user logs in/out
+    const { data } = supabase.auth.onAuthStateChange(() => {
+      checkSession()
+    })
+
+    return () => {
+      // unsubscribe if available
+      try {
+        // data may contain a subscription with unsubscribe()
+        // @ts-ignore
+        data?.subscription?.unsubscribe?.()
+      } catch (e) {
+        // ignore
+      }
+    }
   }, [])
 
   const checkConnection = async () => {
@@ -53,6 +69,10 @@ function App() {
           const role = await getUserRole(data.session.user.id)
           setUserRole(role)
         }
+      } else {
+        // no active session
+        setUser(null)
+        setUserRole(null)
       }
     } catch (error) {
       console.error('Error:', error)
