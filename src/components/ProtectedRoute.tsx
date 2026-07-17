@@ -6,6 +6,7 @@ interface ProtectedRouteProps {
   requiredRole?: string
   userId: string
   onRoleLoaded?: (role: UserRole | null) => void
+  redirectTo?: string
 }
 
 export function ProtectedRoute({
@@ -13,10 +14,18 @@ export function ProtectedRoute({
   requiredRole,
   userId,
   onRoleLoaded
-}: ProtectedRouteProps) {
+  , redirectTo = '/' }: ProtectedRouteProps) {
   const [loading, setLoading] = useState(true)
   const [allowed, setAllowed] = useState(false)
   const [userRole, setUserRole] = useState<UserRole | null>(null)
+
+  // If not authenticated, redirect to login/root
+  useEffect(() => {
+    if (!userId) {
+      // prefer hash-based SPA; navigate to root which shows Auth component
+      window.location.href = redirectTo
+    }
+  }, [userId, redirectTo])
 
   useEffect(() => {
     const checkRole = async () => {
