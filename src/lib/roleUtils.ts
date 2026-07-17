@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { getSupabaseClient } from './supabase'
 
 const extractRelatedName = (related: any) => {
   if (Array.isArray(related)) {
@@ -21,6 +21,7 @@ export interface UserRole {
  */
 export async function getUserRole(userId: string): Promise<UserRole | null> {
   try {
+    const supabase = getSupabaseClient()
     const { data, error } = await supabase
       .from('user_roles')
       .select(`
@@ -64,6 +65,7 @@ export async function getUserRole(userId: string): Promise<UserRole | null> {
  */
 export async function getUserRoles(userId: string): Promise<UserRole[]> {
   try {
+    const supabase = getSupabaseClient()
     const { data, error } = await supabase
       .from('user_roles')
       .select(`
@@ -102,6 +104,7 @@ export async function getUserRoles(userId: string): Promise<UserRole[]> {
  */
 export async function hasRole(userId: string, roleName: string): Promise<boolean> {
   try {
+    const supabase = getSupabaseClient()
     const { data, error } = await supabase
       .from('user_roles')
       .select('id')
@@ -142,26 +145,52 @@ export async function isMarketAdmin(userId: string): Promise<boolean> {
  */
 export async function getUserMarket(userId: string): Promise<any | null> {
   try {
-    const { data, error } = await supabase
-      .from('user_roles')
-      .select(`
-        market_id,
-        markets (
-          id,
-          code,
-          name,
-          address,
-          city,
-          status
-        )
-      `)
-      .eq('user_id', userId)
-      .eq('roles.name', 'MARKET_HEAD')
-      .limit(1)
+    const supabase = getSupabaseClient()
 
-    if (error || !Array.isArray(data) || data.length === 0) return null
-    const market = data[0].markets
-    return Array.isArray(market) ? market[0] : market
+    const { data: userRoleRows, error: roleRowsError } = await supabase
+      .from('user_roles')
+      .select('market_id, role_id')
+      .eq('user_id', userId)
+
+    if (roleRowsError) throw roleRowsError
+    if (!Array.isArray(userRoleRows) || userRoleRows.length === 0) return null
+
+    const roleIds = [...new Set(userRoleRows.filter((r: any) => r.role_id).map((r: any) => r.role_id))]
+
+    let roleNameMap = new Map<number, string>()
+    if (roleIds.length > 0) {
+      const { data: rolesData, error: rolesError } = await supabase
+        .from('roles')
+        .select('id, name')
+        .in('id', roleIds)
+
+      if (!rolesError) {
+        roleNameMap = new Map((rolesData || []).map((r: any) => [r.id, r.name]))
+      }
+    }
+
+    const assignedRow = userRoleRows.find((row: any) => {
+      const roleName = (roleNameMap.get(row.role_id) || '').toUpperCase()
+      const hasMarket = row.market_id != null && row.market_id !== ''
+      return hasMarket && (
+        roleName === 'MARKET_HEAD' ||
+        roleName === 'ADMIN_PASAR' ||
+        roleName === 'PASAR_ADMIN' ||
+        roleName === 'MARKET_ADMIN' ||
+        roleName === 'ADMIN'
+      )
+    }) || userRoleRows.find((row: any) => row.market_id != null && row.market_id !== '') || userRoleRows[0]
+
+    if (!assignedRow?.market_id) return null
+
+    const { data: marketData, error: marketError } = await supabase
+      .from('markets')
+      .select('id, code, name, address, city, status')
+      .eq('id', assignedRow.market_id)
+      .single()
+
+    if (marketError) throw marketError
+    return marketData
   } catch (err) {
     console.error('Error in getUserMarket:', err)
     return null
@@ -173,6 +202,7 @@ export async function getUserMarket(userId: string): Promise<any | null> {
  */
 export async function getAllMarkets(): Promise<any[]> {
   try {
+    const supabase = getSupabaseClient()
     const { data, error } = await supabase
       .from('markets')
       .select('*')

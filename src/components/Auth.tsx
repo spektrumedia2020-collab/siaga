@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { getSupabaseClient } from '../lib/supabase'
 import './Auth.css'
 
 interface AuthProps {
@@ -19,6 +19,8 @@ export function Auth({ onLoginSuccess }: AuthProps) {
     setError('')
 
     try {
+      const supabase = getSupabaseClient()
+
       if (isLogin) {
         // Sign In
         const { error } = await supabase.auth.signInWithPassword({

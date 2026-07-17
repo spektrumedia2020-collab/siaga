@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabase'
+import { getSupabaseClient } from '../lib/supabase'
 import '../pages/StallsPage.css'
 
 interface Stall {
@@ -19,6 +19,11 @@ interface Sector {
   name: string
 }
 
+interface Category {
+  id: number
+  name: string
+}
+
 interface StallOwner {
   id: number
   name: string
@@ -32,6 +37,7 @@ interface Props {
 export function StallsPage({ marketId }: Props) {
   const [stalls, setStalls] = useState<Stall[]>([])
   const [sectors, setSectors] = useState<Sector[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
   const [owners, setOwners] = useState<StallOwner[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -41,9 +47,11 @@ export function StallsPage({ marketId }: Props) {
     code: '',
     number: '',
     sector_id: '',
+    category_id: '',
     owner_id: '',
     status: 'AKTIF'
   })
+  // sector management removed from UI; keep sectors list only
 
   useEffect(() => {
     loadData()
@@ -51,6 +59,16 @@ export function StallsPage({ marketId }: Props) {
 
   const loadData = async () => {
     try {
+      const supabase = getSupabaseClient()
+      if (!marketId || marketId === 0) {
+        setStalls([])
+        setSectors([])
+        setCategories([])
+        setOwners([])
+        setLoading(false)
+        return
+      }
+
       // Load stalls
       const { data: stallsData, error: stallsErr } = await supabase
         .from('stalls')
@@ -61,15 +79,59 @@ export function StallsPage({ marketId }: Props) {
       if (stallsErr) throw stallsErr
       setStalls(stallsData || [])
 
-      // Load sectors
+      // Load sectors: prefer market_sectors, fallback to sektor_pasar
+      let sectorsToUse: Sector[] = []
       const { data: sectorsData, error: sectorsErr } = await supabase
         .from('market_sectors')
         .select('*')
         .eq('market_id', marketId)
         .order('name')
 
-      if (sectorsErr) throw sectorsErr
-      setSectors(sectorsData || [])
+      if (!sectorsErr && Array.isArray(sectorsData) && sectorsData.length > 0) {
+        sectorsToUse = sectorsData.map((s: any) => ({ id: s.id, name: s.name }))
+      } else {
+        const { data: marketData, error: marketErr } = await supabase
+          .from('markets')
+          .select('code')
+          .eq('id', marketId)
+          .limit(1)
+
+        if (!marketErr && Array.isArray(marketData) && marketData.length > 0) {
+          const marketCode = marketData[0].code
+          const { data: pasarData, error: pasarErr } = await supabase
+            .from('pasar')
+            .select('id_pasar')
+            .eq('kode_pasar', marketCode)
+            .limit(1)
+
+          if (!pasarErr && Array.isArray(pasarData) && pasarData.length > 0) {
+            const pasarId = pasarData[0].id_pasar
+            const { data: siagaSectors, error: siagaErr } = await supabase
+              .from('sektor_pasar')
+              .select('id_sektor, nama_sektor')
+              .eq('id_pasar', pasarId)
+              .order('nama_sektor')
+
+            if (!siagaErr && Array.isArray(siagaSectors) && siagaSectors.length > 0) {
+              sectorsToUse = siagaSectors.map((s: any) => ({ id: s.id_sektor, name: s.nama_sektor }))
+            }
+          }
+        }
+      }
+
+      setSectors(sectorsToUse)
+
+      // Load categories
+      const { data: categoriesData, error: categoriesErr } = await supabase
+        .from('stall_categories')
+        .select('*')
+        .order('name')
+
+      if (!categoriesErr) {
+        setCategories((categoriesData || []).map((item: any) => ({ id: item.id, name: item.name || item.nama_kategori || '-' })))
+      } else {
+        setCategories([])
+      }
 
       // Load owners
       const { data: ownersData, error: ownersErr } = await supabase
@@ -77,8 +139,18 @@ export function StallsPage({ marketId }: Props) {
         .select('*')
         .order('name')
 
-      if (ownersErr) throw ownersErr
-      setOwners(ownersData || [])
+      if (!ownersErr && Array.isArray(ownersData) && ownersData.length > 0) {
+        setOwners(ownersData || [])
+      } else {
+        const { data: siagaOwners, error: siagaOwnersErr } = await supabase
+          .from('pemilik_lapak')
+          .select('id_pemilik, nama_pemilik, nik')
+          .order('nama_pemilik')
+
+        if (!siagaOwnersErr) {
+          setOwners((siagaOwners || []).map((o: any) => ({ id: o.id_pemilik, name: o.nama_pemilik, nik: o.nik })))
+        }
+      }
     } catch (err: any) {
       setError(err.message || 'Error loading data')
     } finally {
@@ -95,36 +167,74 @@ export function StallsPage({ marketId }: Props) {
         code: formData.code,
         number: formData.number,
         sector_id: formData.sector_id ? parseInt(formData.sector_id) : null,
+        category_id: formData.category_id ? parseInt(formData.category_id) : null,
         owner_id: formData.owner_id ? parseInt(formData.owner_id) : null,
         status: formData.status
       }
 
-      if (editingId) {
-        // Update
-        const { error: err } = await supabase
-          .from('stalls')
-          .update(payload)
-          .eq('id', editingId)
+      const fallbackPayload = {
+        kode_lapak: formData.code,
+        nomor_lapak: formData.number,
+        id_sektor: formData.sector_id ? parseInt(formData.sector_id) : null,
+        id_kategori: formData.category_id ? parseInt(formData.category_id) : null,
+        id_pemilik: formData.owner_id ? parseInt(formData.owner_id) : null,
+        status: formData.status
+      }
 
-        if (err) throw err
-      } else {
-        // Create
-        const { error: err } = await supabase
-          .from('stalls')
-          .insert([
-            {
-              ...payload,
-              market_id: marketId
-            }
-          ])
+      try {
+        const supabase = getSupabaseClient()
+        if (editingId) {
+          const { error: err } = await supabase
+            .from('stalls')
+            .update(payload)
+            .eq('id', editingId)
 
-        if (err) throw err
+          if (err) throw err
+        } else {
+          const { error: err } = await supabase
+            .from('stalls')
+            .insert([
+              {
+                ...payload,
+                market_id: marketId
+              }
+            ])
+
+          if (err) throw err
+        }
+      } catch (primaryErr: any) {
+        const msg = primaryErr?.message || 'Error saving stall'
+        if (msg.includes('row-level security') || msg.includes('policy') || msg.includes('403')) {
+          const supabase = getSupabaseClient()
+          if (editingId) {
+            const { error: legacyErr } = await supabase
+              .from('lapak')
+              .update(fallbackPayload)
+              .eq('id_lapak', editingId)
+
+            if (legacyErr) throw legacyErr
+          } else {
+            const { error: legacyErr } = await supabase
+              .from('lapak')
+              .insert([
+                {
+                  ...fallbackPayload,
+                  id_pasar: marketId
+                }
+              ])
+
+            if (legacyErr) throw legacyErr
+          }
+        } else {
+          throw primaryErr
+        }
       }
 
       setFormData({
         code: '',
         number: '',
         sector_id: '',
+        category_id: '',
         owner_id: '',
         status: 'AKTIF'
       })
@@ -132,7 +242,12 @@ export function StallsPage({ marketId }: Props) {
       setShowForm(false)
       loadData()
     } catch (err: any) {
-      setError(err.message || 'Error saving stall')
+      const msg = err?.message || 'Error saving stall'
+      if (msg.includes('row-level security') || msg.includes('policy') || msg.includes('403')) {
+        setError(`${msg}. Jalankan SQL setup_stall_owners_policies.sql di Supabase untuk mengizinkan manajemen lapak.`)
+      } else {
+        setError(msg)
+      }
     }
   }
 
@@ -141,6 +256,7 @@ export function StallsPage({ marketId }: Props) {
       code: stall.code,
       number: stall.number,
       sector_id: stall.sector_id?.toString() || '',
+      category_id: (stall as any).category_id?.toString() || '',
       owner_id: stall.owner_id?.toString() || '',
       status: stall.status
     })
@@ -152,23 +268,48 @@ export function StallsPage({ marketId }: Props) {
     if (!confirm('Yakin hapus lapak ini?')) return
 
     try {
-      const { error: err } = await supabase
-        .from('stalls')
-        .delete()
-        .eq('id', id)
+      try {
+        const supabase = getSupabaseClient()
+        const { error: err } = await supabase
+          .from('stalls')
+          .delete()
+          .eq('id', id)
 
-      if (err) throw err
+        if (err) throw err
+      } catch (primaryErr: any) {
+        const msg = primaryErr?.message || 'Error deleting stall'
+        if (msg.includes('row-level security') || msg.includes('policy') || msg.includes('403')) {
+          const supabase = getSupabaseClient()
+          const { error: legacyErr } = await supabase
+            .from('lapak')
+            .delete()
+            .eq('id_lapak', id)
+
+          if (legacyErr) throw legacyErr
+        } else {
+          throw primaryErr
+        }
+      }
+
       loadData()
     } catch (err: any) {
-      setError(err.message || 'Error deleting stall')
+      const msg = err?.message || 'Error deleting stall'
+      if (msg.includes('row-level security') || msg.includes('policy') || msg.includes('403')) {
+        setError(`${msg}. Jalankan SQL setup_stall_owners_policies.sql di Supabase untuk mengizinkan delete lapak.`)
+      } else {
+        setError(msg)
+      }
     }
   }
+
+  
 
   const handleCancel = () => {
     setFormData({
       code: '',
       number: '',
       sector_id: '',
+      category_id: '',
       owner_id: '',
       status: 'AKTIF'
     })
@@ -182,6 +323,10 @@ export function StallsPage({ marketId }: Props) {
 
   const getOwnerName = (id: number | null) => {
     return owners.find(o => o.id === id)?.name || '-'
+  }
+
+  const getCategoryName = (id: number | null) => {
+    return categories.find(c => c.id === id)?.name || '-'
   }
 
   if (loading) {
@@ -233,7 +378,7 @@ export function StallsPage({ marketId }: Props) {
               <div className="form-group">
                 <label>Sektor Pasar</label>
                 <select
-                  value={formData.sector_id}
+                  value={formData.sector_id || ''}
                   onChange={(e) => setFormData({ ...formData, sector_id: e.target.value })}
                 >
                   <option value="">-- Pilih Sektor --</option>
@@ -246,9 +391,26 @@ export function StallsPage({ marketId }: Props) {
               </div>
 
               <div className="form-group">
+                <label>Kategori Lapak</label>
+                <select
+                  value={formData.category_id || ''}
+                  onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+                >
+                  <option value="">-- Pilih Kategori --</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
                 <label>Pemilik Lapak</label>
                 <select
-                  value={formData.owner_id}
+                  value={formData.owner_id || ''}
                   onChange={(e) => setFormData({ ...formData, owner_id: e.target.value })}
                 >
                   <option value="">-- Pilih Pemilik --</option>
@@ -284,6 +446,8 @@ export function StallsPage({ marketId }: Props) {
         </div>
       )}
 
+      {/* Manajemen Sektor dihilangkan — gunakan halaman Sektor terpisah */}
+
       <div className="section">
         <h3>Data Lapak ({stalls.length})</h3>
         {stalls.length === 0 ? (
@@ -296,6 +460,7 @@ export function StallsPage({ marketId }: Props) {
                   <th>Kode</th>
                   <th>Nomor</th>
                   <th>Sektor</th>
+                  <th>Kategori</th>
                   <th>Pemilik</th>
                   <th>Status</th>
                   <th>Dibuat</th>
@@ -308,6 +473,7 @@ export function StallsPage({ marketId }: Props) {
                     <td>{stall.code}</td>
                     <td>{stall.number}</td>
                     <td>{getSectorName(stall.sector_id)}</td>
+                    <td>{getCategoryName((stall as any).category_id)}</td>
                     <td>{getOwnerName(stall.owner_id)}</td>
                     <td>
                       <span className={`status-badge status-${stall.status.toLowerCase()}`}>

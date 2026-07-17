@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabase'
+import { getSupabaseClient } from '../lib/supabase'
 import '../pages/UserManagement.css'
 
 interface User {
   id: string
   email?: string | null
   created_at: string
+  display_name?: string | null
+  user_metadata?: any
 }
 
 interface UserRole {
@@ -35,7 +37,27 @@ export function UserManagement() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [showForm, setShowForm] = useState(false)
+
+  const getUserDisplayName = (user: User) => {
+    const sanitizeDisplayName = (value?: string | null) => {
+      if (!value || typeof value !== 'string') return ''
+      const cleaned = value.trim().replace(/\s+/g, ' ')
+      if (!cleaned) return ''
+      if (/^[#\s]+$/.test(cleaned) || /^[^a-zA-Z0-9]+$/.test(cleaned)) return ''
+      return cleaned
+    }
+
+    const rawName = sanitizeDisplayName(user.display_name || user.user_metadata?.full_name || user.user_metadata?.name)
+    if (rawName) return rawName
+
+    const email = sanitizeDisplayName(user.email || '')
+    if (email) return email.split('@')[0] || 'User'
+
+    const shortId = user.id ? user.id.slice(0, 8) : ''
+    return shortId ? `User ${shortId}` : 'User'
+  }
   const [formData, setFormData] = useState({
+    fullName: '',
     email: '',
     password: '',
     roleId: '',
@@ -48,6 +70,7 @@ export function UserManagement() {
 
   const loadData = async () => {
     try {
+      const supabase = getSupabaseClient()
       // Load roles
       const { data: rolesData, error: rolesErr } = await supabase
         .from('roles')
@@ -66,13 +89,7 @@ export function UserManagement() {
       if (marketsErr) throw marketsErr
       setMarkets(marketsData || [])
 
-      // Load auth users via admin API
-      const { data: usersData, error: usersErr } = await supabase.auth.admin.listUsers()
-
-      if (usersErr) throw usersErr
-      setUsers(usersData?.users || [])
-
-      // Load user roles
+      // Load user roles first; this works even when admin API is unavailable
       const { data: rolesMapping, error: rolesMappingErr } = await supabase
         .from('user_roles')
         .select(`
@@ -102,6 +119,44 @@ export function UserManagement() {
       })
 
       setUserRoles(rolesByUser)
+
+      const loadedUsers: User[] = []
+      const seenUserIds = new Set<string>()
+
+      try {
+        const { data: authData } = await supabase.auth.getUser()
+        const currentUser = (authData as any)?.user as any
+        if (currentUser?.id) {
+          loadedUsers.push({
+            id: currentUser.id,
+            email: currentUser.email ?? null,
+            created_at: currentUser.created_at ?? '',
+            display_name: currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || null,
+            user_metadata: currentUser.user_metadata || {}
+          })
+          seenUserIds.add(currentUser.id)
+        }
+      } catch (e) {
+        console.warn('Current user lookup unavailable', e)
+      }
+
+      ;(rolesMapping || [])
+        .map((rm: any) => rm.user_id)
+        .filter(Boolean)
+        .filter((value: string, index: number, self: string[]) => self.indexOf(value) === index)
+        .forEach((userId: string) => {
+          if (seenUserIds.has(userId)) return
+          seenUserIds.add(userId)
+          loadedUsers.push({
+            id: userId,
+            email: null,
+            created_at: '',
+            display_name: null,
+            user_metadata: {}
+          })
+        })
+
+      setUsers(loadedUsers)
     } catch (err: any) {
       setError(err.message || 'Error loading data')
     } finally {
@@ -113,25 +168,37 @@ export function UserManagement() {
     e.preventDefault()
     setError('')
 
-    if (!formData.email || !formData.password || !formData.roleId) {
-      setError('Email, password, dan role wajib diisi')
+    if (!formData.fullName.trim() || !formData.email || !formData.password || !formData.roleId) {
+      setError('Nama lengkap, email, password, dan role wajib diisi')
       return
     }
 
     try {
-      // Create auth user
-      const { data: signUpData, error: signUpErr } = await supabase.auth.admin.createUser({
+      const supabase = getSupabaseClient()
+      const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
-        email_confirm: true
+        options: {
+          data: {
+            full_name: formData.fullName.trim(),
+            name: formData.fullName.trim()
+          }
+        }
       })
 
-      if (signUpErr) throw signUpErr
+      if (signUpErr) {
+        const message = (signUpErr.message || '').toLowerCase()
+        if (message.includes('rate limit') || message.includes('too many requests') || message.includes('signup')) {
+          throw new Error('Terlalu banyak percobaan pembuatan akun. Tunggu beberapa saat lalu coba lagi.')
+        }
+        throw signUpErr
+      }
 
-      if (signUpData.user) {
-        // Create user role mapping
+      const createdUserId = signUpData.user?.id || signUpData.session?.user?.id
+
+      if (createdUserId) {
         const rolePayload: any = {
-          user_id: signUpData.user.id,
+          user_id: createdUserId,
           role_id: parseInt(formData.roleId)
         }
 
@@ -144,11 +211,12 @@ export function UserManagement() {
         if (roleErr) throw roleErr
       }
 
-      setFormData({ email: '', password: '', roleId: '', marketId: '' })
+      setFormData({ fullName: '', email: '', password: '', roleId: '', marketId: '' })
       setShowForm(false)
-      loadData()
+      await loadData()
     } catch (err: any) {
-      setError(err.message || 'Error creating user')
+      const message = err?.message || 'Error creating user'
+      setError(message)
     }
   }
 
@@ -156,13 +224,11 @@ export function UserManagement() {
     if (!confirm('Yakin hapus user ini? Aksi ini tidak bisa dibatalkan.')) return
 
     try {
-      // Delete user roles first
-      await supabase.from('user_roles').delete().eq('user_id', userId)
+      const supabase = getSupabaseClient()
+      const { error: roleDeleteErr } = await supabase.from('user_roles').delete().eq('user_id', userId)
+      if (roleDeleteErr) throw roleDeleteErr
 
-      // Delete auth user
-      const { error: err } = await supabase.auth.admin.deleteUser(userId)
-
-      if (err) throw err
+      setError('Mapping role berhasil dihapus. Penghapusan akun auth dari frontend memerlukan akses server-side.')
       loadData()
     } catch (err: any) {
       setError(err.message || 'Error deleting user')
@@ -171,6 +237,7 @@ export function UserManagement() {
 
   const handleRemoveRole = async (roleId: number) => {
     try {
+      const supabase = getSupabaseClient()
       const { error: err } = await supabase.from('user_roles').delete().eq('id', roleId)
 
       if (err) throw err
@@ -201,6 +268,17 @@ export function UserManagement() {
         <div className="form-section">
           <h3>Buat User Baru</h3>
           <form onSubmit={handleCreateUser}>
+            <div className="form-group">
+              <label>Nama Lengkap</label>
+              <input
+                type="text"
+                value={formData.fullName}
+                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                placeholder="Nama lengkap user"
+                required
+              />
+            </div>
+
             <div className="form-group">
               <label>Email</label>
               <input
@@ -283,8 +361,9 @@ export function UserManagement() {
               <div key={user.id} className="user-card">
                 <div className="user-header">
                   <div>
-                    <h4>{user.email}</h4>
-                    <p className="user-id">ID: {user.id.substring(0, 8)}...</p>
+                    <h4>{getUserDisplayName(user)}</h4>
+                    <p className="user-email">{user.email || 'Email belum tersedia'}</p>
+                    <p className="user-id">ID: {user.id}</p>
                   </div>
                   <button
                     onClick={() => handleDeleteUser(user.id)}
@@ -321,7 +400,10 @@ export function UserManagement() {
                 </div>
 
                 <div className="user-meta">
-                  <small>Dibuat: {new Date(user.created_at).toLocaleDateString('id-ID')}</small>
+                  <small>Dibuat: {user.created_at ? new Date(user.created_at).toLocaleDateString('id-ID') : 'Tidak diketahui'}</small>
+                  <small style={{ display: 'block', marginTop: 4 }}>
+                    Role aktif: {(userRoles[user.id] || []).length > 0 ? userRoles[user.id].map((r) => r.role_name).join(', ') : 'Tidak ada role'}
+                  </small>
                 </div>
               </div>
             ))}

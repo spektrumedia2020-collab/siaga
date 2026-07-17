@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabase'
+import { getSupabaseClient } from '../lib/supabase'
 import '../pages/OfficersPage.css'
 
 interface Officer {
@@ -35,6 +35,7 @@ export function OfficersPage({ marketId }: Props) {
 
   const loadOfficers = async () => {
     try {
+      const supabase = getSupabaseClient()
       const { data, error: err } = await supabase
         .from('officers')
         .select('*')
@@ -55,6 +56,7 @@ export function OfficersPage({ marketId }: Props) {
     setError('')
 
     try {
+      const supabase = getSupabaseClient()
       if (editingId) {
         // Update
         const { error: err } = await supabase
@@ -107,6 +109,7 @@ export function OfficersPage({ marketId }: Props) {
     if (!confirm('Yakin hapus petugas ini?')) return
 
     try {
+      const supabase = getSupabaseClient()
       const { error: err } = await supabase
         .from('officers')
         .delete()
