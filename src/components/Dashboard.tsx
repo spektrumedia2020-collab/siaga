@@ -10,11 +10,21 @@ interface DashboardProps {
   onLogout: () => void
   isDashboardHeader?: boolean
   children?: ReactNode
+  impersonation?: {
+    originalUserId: string
+    targetUserId: string
+    targetRole: any
+  } | null
+  onStopImpersonation?: () => void
 }
 
 type PageType = 'dashboard' | 'pasar' | 'lapak' | 'petugas' | 'users' | 'transaksi' | 'laporan'
 
 export function Dashboard({ user, onLogout, isDashboardHeader, children }: DashboardProps) {
+  // @ts-ignore
+  const impersonation = (arguments[0] && arguments[0].impersonation) || null
+  // @ts-ignore
+  const onStopImpersonation = (arguments[0] && arguments[0].onStopImpersonation) || undefined
   const [currentPage, setCurrentPage] = useState<PageType>('dashboard')
 
   useEffect(() => {
@@ -80,6 +90,14 @@ export function Dashboard({ user, onLogout, isDashboardHeader, children }: Dashb
   if (isDashboardHeader && children) {
     return (
       <div className="dashboard">
+        {impersonation && (
+          <div className="impersonation-banner" style={{background:'#ffeeba',padding:'8px 12px',textAlign:'center'}}>
+            <strong>🔀 Impersonating as {impersonation.targetRole?.role_name || impersonation.targetUserId}</strong>
+            {onStopImpersonation && (
+              <button style={{marginLeft:12}} onClick={onStopImpersonation}>Stop impersonation</button>
+            )}
+          </div>
+        )}
         <header className="dashboard-header">
           <div className="header-content">
             <div className="logo-section">
@@ -107,6 +125,14 @@ export function Dashboard({ user, onLogout, isDashboardHeader, children }: Dashb
   // Default dashboard with sidebar
   return (
     <div className="dashboard">
+      {impersonation && (
+        <div className="impersonation-banner" style={{background:'#ffeeba',padding:'8px 12px',textAlign:'center'}}>
+          <strong>🔀 Impersonating as {impersonation.targetRole?.role_name || impersonation.targetUserId}</strong>
+          {onStopImpersonation && (
+            <button style={{marginLeft:12}} onClick={onStopImpersonation}>Stop impersonation</button>
+          )}
+        </div>
+      )}
       <header className="dashboard-header">
         <div className="header-content">
           <div className="logo-section">

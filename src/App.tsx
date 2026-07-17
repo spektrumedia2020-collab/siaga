@@ -120,6 +120,8 @@ function App() {
           user={user} 
           onLogout={handleLogout}
           isDashboardHeader={true}
+          impersonation={impersonation}
+          onStopImpersonation={handleStopImpersonation}
         >
           <SuperAdminDashboard />
         </Dashboard>
@@ -134,6 +136,8 @@ function App() {
           user={user} 
           onLogout={handleLogout}
           isDashboardHeader={true}
+          impersonation={impersonation}
+          onStopImpersonation={handleStopImpersonation}
         >
           <MarketDashboard 
             userId={activeUserId} 
@@ -147,7 +151,7 @@ function App() {
 
   return (
     <div className="app">
-      <Dashboard user={user} onLogout={handleLogout} />
+      <Dashboard user={user} onLogout={handleLogout} impersonation={impersonation} onStopImpersonation={handleStopImpersonation} />
     </div>
   )
 }
