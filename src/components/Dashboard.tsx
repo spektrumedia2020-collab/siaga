@@ -25,6 +25,12 @@ export function Dashboard({ user, onLogout, isDashboardHeader, children }: Dashb
   const impersonation = (arguments[0] && arguments[0].impersonation) || null
   // @ts-ignore
   const onStopImpersonation = (arguments[0] && arguments[0].onStopImpersonation) || undefined
+
+  const handleStop = () => {
+    if (!onStopImpersonation) return
+    const ok = window.confirm('Stop impersonation and return to your account?')
+    if (ok) onStopImpersonation()
+  }
   const [currentPage, setCurrentPage] = useState<PageType>('dashboard')
 
   useEffect(() => {
@@ -94,7 +100,7 @@ export function Dashboard({ user, onLogout, isDashboardHeader, children }: Dashb
           <div className="impersonation-banner" style={{background:'#ffeeba',padding:'8px 12px',textAlign:'center'}}>
             <strong>🔀 Impersonating as {impersonation.targetRole?.role_name || impersonation.targetUserId}</strong>
             {onStopImpersonation && (
-              <button style={{marginLeft:12}} onClick={onStopImpersonation}>Stop impersonation</button>
+              <button style={{marginLeft:12}} onClick={handleStop}>Stop impersonation</button>
             )}
           </div>
         )}
@@ -129,7 +135,7 @@ export function Dashboard({ user, onLogout, isDashboardHeader, children }: Dashb
         <div className="impersonation-banner" style={{background:'#ffeeba',padding:'8px 12px',textAlign:'center'}}>
           <strong>🔀 Impersonating as {impersonation.targetRole?.role_name || impersonation.targetUserId}</strong>
           {onStopImpersonation && (
-            <button style={{marginLeft:12}} onClick={onStopImpersonation}>Stop impersonation</button>
+            <button style={{marginLeft:12}} onClick={handleStop}>Stop impersonation</button>
           )}
         </div>
       )}
