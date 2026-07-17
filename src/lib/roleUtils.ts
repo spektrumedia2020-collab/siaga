@@ -16,11 +16,58 @@ export interface UserRole {
   market_name?: string
 }
 
+// Role cache TTL in milliseconds (5 minutes)
+const ROLE_CACHE_TTL = 5 * 60 * 1000
+
+function roleCacheKey(userId: string) {
+  return `role_cache_${userId}`
+}
+
+export function setRoleCache(userId: string, role: UserRole | null) {
+  try {
+    const payload = {
+      ts: Date.now(),
+      role
+    }
+    localStorage.setItem(roleCacheKey(userId), JSON.stringify(payload))
+  } catch (e) {
+    // ignore
+  }
+}
+
+export function getRoleCache(userId: string): UserRole | null {
+  try {
+    const raw = localStorage.getItem(roleCacheKey(userId))
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    if (!parsed || !parsed.ts) return null
+    if (Date.now() - parsed.ts > ROLE_CACHE_TTL) {
+      localStorage.removeItem(roleCacheKey(userId))
+      return null
+    }
+    return parsed.role || null
+  } catch (e) {
+    return null
+  }
+}
+
+export function clearRoleCache(userId: string) {
+  try {
+    localStorage.removeItem(roleCacheKey(userId))
+  } catch (e) {
+    // ignore
+  }
+}
+
 /**
  * Get user's primary role and market assignment
  */
 export async function getUserRole(userId: string): Promise<UserRole | null> {
   try {
+    // Try cache first
+    const cached = getRoleCache(userId)
+    if (cached) return cached
+
     const { data, error } = await supabase
       .from('user_roles')
       .select(`
@@ -45,7 +92,7 @@ export async function getUserRole(userId: string): Promise<UserRole | null> {
 
     const row = data[0]
 
-    return {
+    const result = {
       id: row.id,
       user_id: row.user_id,
       role_id: row.role_id,
@@ -53,6 +100,11 @@ export async function getUserRole(userId: string): Promise<UserRole | null> {
       market_id: row.market_id,
       market_name: extractRelatedName(row.markets) || undefined
     }
+
+    // store into cache
+    setRoleCache(userId, result)
+
+    return result
   } catch (err) {
     console.error('Error in getUserRole:', err)
     return null
@@ -64,6 +116,7 @@ export async function getUserRole(userId: string): Promise<UserRole | null> {
  */
 export async function getUserRoles(userId: string): Promise<UserRole[]> {
   try {
+    // No caching for multiple roles; fall back to DB
     const { data, error } = await supabase
       .from('user_roles')
       .select(`
@@ -102,6 +155,10 @@ export async function getUserRoles(userId: string): Promise<UserRole[]> {
  */
 export async function hasRole(userId: string, roleName: string): Promise<boolean> {
   try {
+    // Use cached role when possible to avoid extra queries
+    const cached = getRoleCache(userId)
+    if (cached) return cached.role_name === roleName
+
     const { data, error } = await supabase
       .from('user_roles')
       .select('id')

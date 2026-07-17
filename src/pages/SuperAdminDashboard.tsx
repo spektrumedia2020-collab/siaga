@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { setImpersonateSession, getUserRoles } from '../lib/roleUtils'
+import { setImpersonateSession, getUserRoles, clearRoleCache } from '../lib/roleUtils'
 import { UserManagement } from './UserManagement'
 import '../pages/SuperAdminDashboard.css'
 
@@ -148,6 +148,10 @@ export function SuperAdminDashboard() {
       const currentUser = (await supabase.auth.getSession()).data.session?.user
       
       if (currentUser) {
+        // Clear role cache for both users to ensure fresh role lookup after impersonation
+        try { clearRoleCache(currentUser.id) } catch (e) {}
+        try { clearRoleCache(userId) } catch (e) {}
+
         setImpersonateSession(currentUser.id, userId, targetRole)
         // Reload page to see impersonated dashboard
         window.location.reload()
