@@ -41,18 +41,15 @@ export function UserManagement() {
   const loadData = async () => {
     setLoading(true)
     try {
-      // Load users from backend API (required for admin access)
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+      // Load users from backend API (Vercel serverless function)
       try {
-        const usersRes = await fetch(`${apiUrl}/api/users`)
+        const usersRes = await fetch('/api/users')
         if (usersRes.ok) {
           const usersData = await usersRes.json()
           setUsers(usersData)
-        } else {
-          throw new Error('Backend not available')
         }
       } catch (fetchError) {
-        console.warn('Using Supabase fallback - may require service role key')
+        console.warn('Backend unavailable, using empty state')
       }
 
       // Load roles from Supabase (public)
@@ -72,7 +69,7 @@ export function UserManagement() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const res = await fetch('http://localhost:3001/api/users/create', {
+      const res = await fetch('/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -101,7 +98,7 @@ export function UserManagement() {
     if (!confirm('Yakin hapus user ini?')) return
 
     try {
-      const res = await fetch(`http://localhost:3001/api/users/${userId}`, {
+      const res = await fetch(`/api/users?id=${userId}`, {
         method: 'DELETE'
       })
 
