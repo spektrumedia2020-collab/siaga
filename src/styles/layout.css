@@ -1,0 +1,202 @@
+/* SIAGA Unified Layout System */
+/* Design System Variables */
+:root {
+  /* Colors */
+  --siaga-primary: #1f7a1f;
+  --siaga-primary-dark: #193d0c;
+  --siaga-primary-light: #d1fae5;
+  --siaga-accent: #f4c300;
+  --siaga-accent-light: #fff3b0;
+  
+  /* Background */
+  --siaga-bg-primary: #fff9e0;
+  --siaga-bg-secondary: #fff8de;
+  --siaga-bg-card: #ffffff;
+  
+  /* Text */
+  --siaga-text-primary: #1f1f1f;
+  --siaga-text-secondary: #6b7280;
+  
+  /* Spacing */
+  --siaga-spacing-xs: 0.5rem;
+  --siaga-spacing-sm: 1rem;
+  --siaga-spacing-md: 1.5rem;
+  --siaga-spacing-lg: 2rem;
+  --siaga-spacing-xl: 3rem;
+  
+  /* Border radius */
+  --siaga-radius-sm: 6px;
+  --siaga-radius-md: 8px;
+  --siaga-radius-lg: 12px;
+  --siaga-radius-xl: 16px;
+  
+  /* Shadows */
+  --siaga-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --siaga-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --siaga-shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* Reset & Base */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--siaga-bg-primary);
+  color: var(--siaga-text-primary);
+  line-height: 1.6;
+}
+
+/* Grid System */
+.siaga-grid {
+  display: grid;
+  gap: var(--siaga-spacing-md);
+}
+
+.siaga-grid-cols-1 { grid-template-columns: 1fr; }
+.siaga-grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+.siaga-grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+.siaga-grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+.siaga-grid-auto {
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+/* Card Components */
+.siaga-card {
+  background: var(--siaga-bg-card);
+  border-radius: var(--siaga-radius-lg);
+  padding: var(--siaga-spacing-md);
+  box-shadow: var(--siaga-shadow-sm);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.siaga-card:hover {
+  box-shadow: var(--siaga-shadow-md);
+}
+
+.siaga-card-header {
+  margin-bottom: var(--siaga-spacing-sm);
+  padding-bottom: var(--siaga-spacing-sm);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* Button Components */
+.siaga-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--siaga-radius-sm);
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.siaga-btn-primary {
+  background: var(--siaga-primary);
+  color: white;
+}
+
+.siaga-btn-primary:hover {
+  background: var(--siaga-primary-dark);
+}
+
+.siaga-btn-accent {
+  background: var(--siaga-accent);
+  color: var(--siaga-primary-dark);
+}
+
+.siaga-btn-outline {
+  background: transparent;
+  border: 1px solid var(--siaga-primary);
+  color: var(--siaga-primary);
+}
+
+/* Badge Components */
+.siaga-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.siaga-badge-active {
+  background: var(--siaga-primary-light);
+  color: var(--siaga-primary-dark);
+}
+
+.siaga-badge-inactive {
+  background: #ffccbc;
+  color: #d84315;
+}
+
+/* Table Components */
+.siaga-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.siaga-table th,
+.siaga-table td {
+  padding: var(--siaga-spacing-sm);
+  text-align: left;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.siaga-table th {
+  background: #f9fafb;
+  font-weight: 600;
+  color: var(--siaga-primary-dark);
+}
+
+.siaga-table tr:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+/* Form Components */
+.siaga-input {
+  width: 100%;
+  padding: 0.6rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: var(--siaga-radius-sm);
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+}
+
+.siaga-input:focus {
+  outline: none;
+  border-color: var(--siaga-primary);
+  box-shadow: 0 0 0 3px rgba(31, 122, 31, 0.2);
+}
+
+/* Responsive Utilities */
+@media (max-width: 768px) {
+  .siaga-grid-cols-2,
+  .siaga-grid-cols-3,
+  .siaga-grid-cols-4 {
+    grid-template-columns: 1fr;
+  }
+  
+  .siaga-card {
+    padding: var(--siaga-spacing-sm);
+  }
+}
+
+/* Loading States */
+.siaga-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  font-size: 1.1rem;
+  color: var(--siaga-text-secondary);
+}

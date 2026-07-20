@@ -12,6 +12,8 @@ interface Market {
   city: string
   status: string
   created_at: string
+  photo_url?: string | null
+  head_photo_url?: string | null
 }
 
 export function MarketsPage() {
@@ -170,7 +172,16 @@ export function MarketsPage() {
         .order('created_at', { ascending: false })
 
       if (error) throw error
-      setMarkets(data || [])
+
+      const normalizedMarkets = await Promise.all(
+        (data || []).map(async (market: any) => ({
+          ...market,
+          photo_url: await resolveStoredImageUrl(market.photo_url),
+          head_photo_url: await resolveStoredImageUrl(market.head_photo_url)
+        }))
+      )
+
+      setMarkets(normalizedMarkets)
       await loadAssignedAdmins(userList)
     } catch (err: any) {
       setError(err.message)
@@ -227,19 +238,125 @@ export function MarketsPage() {
     }
   }
 
+  const isStoragePolicyError = (error: any) => {
+    const message = String(error?.message || error?.statusText || error?.code || '')
+    const normalized = message.toLowerCase()
+    return (
+      normalized.includes('row-level security') ||
+      normalized.includes('policy') ||
+      normalized.includes('forbidden') ||
+      normalized.includes('permission denied') ||
+      normalized.includes('bucket') ||
+      normalized.includes('not found')
+    )
+  }
+
+  const getStorageObjectPath = (value: string) => {
+    const trimmed = value.trim()
+    if (!trimmed) return null
+
+    if (/^https?:\/\//i.test(trimmed)) {
+      const match = trimmed.match(/\/storage\/v1\/object\/(?:public\/)?([^/]+)\/(.+)/i)
+      if (match) {
+        return {
+          bucketName: decodeURIComponent(match[1]),
+          objectPath: decodeURIComponent(match[2])
+        }
+      }
+
+      return null
+    }
+
+    const normalized = trimmed.replace(/^\/+/, '')
+    const bucketPrefix = 'data siaga/'
+    const bucketMatch = normalized.match(/^([^/]+)\/(.+)$/i)
+    if (bucketMatch && bucketMatch[1].toLowerCase() === 'data siaga') {
+      return {
+        bucketName: bucketMatch[1],
+        objectPath: bucketMatch[2]
+      }
+    }
+
+    return {
+      bucketName: 'Data Siaga',
+      objectPath: normalized
+    }
+  }
+
+  const tryCreateSignedUrl = async (bucketName: string, fileName: string) => {
+    const supabase = getSupabaseClient()
+    const { data, error } = await supabase.storage.from(bucketName).createSignedUrl(fileName, 60 * 60 * 24)
+
+    if (!error && data?.signedUrl) {
+      return data.signedUrl
+    }
+
+    return null
+  }
+
+  const resolveStoredImageUrl = async (value?: string | null) => {
+    const trimmed = value?.trim() || ''
+    if (!trimmed) return null
+
+    if (/^(https?:\/\/|data:|blob:)/i.test(trimmed)) return trimmed
+    if (trimmed.startsWith('/')) return trimmed
+
+    const parsedPath = getStorageObjectPath(trimmed)
+    if (parsedPath) {
+      const signedUrl = await tryCreateSignedUrl(parsedPath.bucketName, parsedPath.objectPath)
+      if (signedUrl) {
+        return signedUrl
+      }
+
+      const supabase = getSupabaseClient()
+      const { data: publicUrlData } = supabase.storage.from(parsedPath.bucketName).getPublicUrl(parsedPath.objectPath)
+      if (publicUrlData?.publicUrl) {
+        return publicUrlData.publicUrl
+      }
+    }
+
+    return trimmed
+  }
+
   const uploadFile = async (file: File, path: string) => {
     const compressedFile = await compressImageFile(file, { maxWidth: 1200, maxHeight: 1200, quality: 0.8, maxBytes: 700 * 1024 })
     const fileExt = compressedFile.name.split('.').pop() || 'jpg'
-    const fileName = `${path}/${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`
+    const normalizedPath = path.replace(/^\/+/, '').replace(/\/+$/g, '')
+    const safeFileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`
+    const fileName = `${normalizedPath ? `${normalizedPath}/` : ''}${safeFileName}`
     const supabase = getSupabaseClient()
-    const { error } = await supabase.storage.from('Data Siaga').upload(fileName, compressedFile, {
-      cacheControl: '3600',
-      upsert: false
-    })
+    const bucketName = 'Data Siaga'
 
-    if (error) throw error
-    const { data: urlData } = supabase.storage.from('Data Siaga').getPublicUrl(fileName)
-    return urlData.publicUrl
+    try {
+      const { error } = await supabase.storage.from(bucketName).upload(fileName, compressedFile, {
+        cacheControl: '3600',
+        upsert: false
+      })
+
+      if (error) {
+        if (isStoragePolicyError(error)) {
+          return null
+        }
+        throw error
+      }
+
+      const signedUrl = await tryCreateSignedUrl(bucketName, fileName)
+      if (signedUrl) {
+        return fileName
+      }
+
+      const { data: publicUrlData } = supabase.storage.from(bucketName).getPublicUrl(fileName)
+      if (publicUrlData?.publicUrl) {
+        return fileName
+      }
+
+      return null
+    } catch (error: any) {
+      if (isStoragePolicyError(error)) {
+        return null
+      }
+      throw error
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -261,10 +378,25 @@ export function MarketsPage() {
       }
 
       if (marketPhotoFile) {
-        payload.photo_url = await uploadFile(marketPhotoFile, 'market-photos')
+        try {
+          const uploadedPhotoPath = await uploadFile(marketPhotoFile, 'market-photos')
+          payload.photo_url = uploadedPhotoPath || formData.photo_url || null
+        } catch {
+          payload.photo_url = formData.photo_url || null
+        }
+      } else if (editingId) {
+        payload.photo_url = formData.photo_url || null
       }
+
       if (headPhotoFile) {
-        payload.head_photo_url = await uploadFile(headPhotoFile, 'head-photos')
+        try {
+          const uploadedHeadPhotoPath = await uploadFile(headPhotoFile, 'head-photos')
+          payload.head_photo_url = uploadedHeadPhotoPath || formData.head_photo_url || null
+        } catch {
+          payload.head_photo_url = formData.head_photo_url || null
+        }
+      } else if (editingId) {
+        payload.head_photo_url = formData.head_photo_url || null
       }
 
       const supabase = getSupabaseClient()
@@ -291,7 +423,7 @@ export function MarketsPage() {
       setHeadPhotoPreview('')
       setEditingId(null)
       setShowForm(false)
-      loadMarkets()
+      await loadMarkets()
     } catch (err: any) {
       setError(err.message)
     }
@@ -410,188 +542,217 @@ export function MarketsPage() {
       {error && <div className="error-message">{error}</div>}
 
       {showForm && (
-        <div className="form-section">
-          <h3>{editingId ? 'Edit Pasar' : 'Tambah Pasar Baru'}</h3>
-          <form onSubmit={handleSubmit}>
-            <div className="form-row">
-              <div className="form-group">
-                <label>Kode Pasar</label>
-                <input
-                  type="text"
-                  value={formData.code}
-                  onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                  placeholder="MKT001"
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Nama Pasar</label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Pasar Sentral"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label>Alamat</label>
-              <textarea
-                value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                placeholder="Jl. Merdeka No. 123"
-                rows={3}
-              />
-            </div>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label>Kota</label>
-                <input
-                  type="text"
-                  value={formData.city}
-                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                  placeholder="Makassar"
-                />
-              </div>
-              <div className="form-group">
-                <label>Status</label>
-                <select
-                  value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                >
-                  <option value="AKTIF">AKTIF</option>
-                  <option value="NONAKTIF">NONAKTIF</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label>Foto Pasar</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0] || null
-                    setMarketPhotoFile(file)
-                    if (file) {
-                      setMarketPhotoPreview(URL.createObjectURL(file))
-                    }
-                  }}
-                />
-                {marketPhotoPreview && (
-                  <img src={marketPhotoPreview} alt="Preview Foto Pasar" className="image-preview" />
-                )}
-              </div>
-              <div className="form-group">
-                <label>Foto Kepala Pasar</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0] || null
-                    setHeadPhotoFile(file)
-                    if (file) {
-                      setHeadPhotoPreview(URL.createObjectURL(file))
-                    }
-                  }}
-                />
-                {headPhotoPreview && (
-                  <img src={headPhotoPreview} alt="Preview Foto Kepala Pasar" className="image-preview" />
-                )}
-              </div>
-            </div>
-
-            <div className="form-actions">
-              <button type="submit" className="btn-primary">
-                {editingId ? 'Update' : 'Simpan'}
-              </button>
-              <button type="button" className="btn-secondary" onClick={handleCancel}>
-                Batal
+        <div className="modal-overlay" onClick={handleCancel}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>{editingId ? 'Edit Pasar' : 'Tambah Pasar Baru'}</h3>
+              <button type="button" className="modal-close" onClick={handleCancel}>
+                ×
               </button>
             </div>
-          </form>
+
+            <form onSubmit={handleSubmit} className="modal-form">
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Kode Pasar</label>
+                  <input
+                    type="text"
+                    value={formData.code}
+                    onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                    placeholder="MKT001"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Nama Pasar</label>
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="Pasar Sentral"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Alamat</label>
+                <textarea
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  placeholder="Jl. Merdeka No. 123"
+                  rows={3}
+                />
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Kota</label>
+                  <input
+                    type="text"
+                    value={formData.city}
+                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                    placeholder="Makassar"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Status</label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  >
+                    <option value="AKTIF">AKTIF</option>
+                    <option value="NONAKTIF">NONAKTIF</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Foto Pasar</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] || null
+                      setMarketPhotoFile(file)
+                      if (file) {
+                        setMarketPhotoPreview(URL.createObjectURL(file))
+                      }
+                    }}
+                  />
+                  {marketPhotoPreview && (
+                    <img src={marketPhotoPreview} alt="Preview Foto Pasar" className="image-preview" />
+                  )}
+                </div>
+                <div className="form-group">
+                  <label>Foto Kepala Pasar</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] || null
+                      setHeadPhotoFile(file)
+                      if (file) {
+                        setHeadPhotoPreview(URL.createObjectURL(file))
+                      }
+                    }}
+                  />
+                  {headPhotoPreview && (
+                    <img src={headPhotoPreview} alt="Preview Foto Kepala Pasar" className="image-preview" />
+                  )}
+                </div>
+              </div>
+
+              <div className="form-actions">
+                <button type="submit" className="btn-primary">
+                  {editingId ? 'Update' : 'Simpan'}
+                </button>
+                <button type="button" className="btn-secondary" onClick={handleCancel}>
+                  Batal
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
-      <div className="table-responsive">
-        <table className="markets-table">
-          <thead>
-            <tr>
-              <th>Kode</th>
-              <th>Nama Pasar</th>
-              <th>Kota</th>
-              <th>Alamat</th>
-              <th>Status</th>
-              <th>Admin</th>
-              <th>Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            {markets.map((market) => (
-                <tr key={market.id}>
-                  <td>{market.code}</td>
-                  <td>{market.name}</td>
-                  <td>{market.city}</td>
-                  <td className="address-cell">{market.address}</td>
-                  <td>
-                    <span className={`status-badge status-${market.status.toLowerCase()}`}>
-                      {market.status}
-                    </span>
-                  </td>
-                  <td className="admin-cell">
-                    {assignForMarket[market.id]?.open ? (
-                      <div className="assign-inline">
-                        <select value={assignForMarket[market.id]?.userId || ''} onChange={(e) => setAssignForMarket(prev => ({ ...prev, [market.id]: { ...(prev[market.id]||{}), userId: e.target.value } }))}>
-                          <option value="">-- Pilih User --</option>
-                          {users.map(u => (
-                            <option key={u.id} value={u.id}>{getUserDisplayLabel(u)}</option>
-                          ))}
-                        </select>
-                        <button className="btn-sm btn-primary" onClick={() => handleSaveAssign(market.id)}>Simpan</button>
-                        <button className="btn-sm btn-secondary" onClick={() => closeAssign(market.id)}>Batal</button>
-                      </div>
-                    ) : assignedAdmins[market.id] ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
-                        <strong>{assignedAdmins[market.id].label}</strong>
-                        <span className="muted">Admin Pasar</span>
-                      </div>
-                    ) : (
-                      isSuperAdmin ? (
-                        <button className="btn-sm btn-assign" onClick={() => openAssign(market.id)}>Tetapkan Admin Pasar</button>
-                      ) : (
-                        <span className="muted">-</span>
-                      )
-                    )}
-                  </td>
-                  <td className="action-cell">
-                    {isSuperAdmin ? (
-                      <>
-                        <button
-                          className="btn-sm btn-edit"
-                          onClick={() => handleEdit(market)}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className="btn-sm btn-delete"
-                          onClick={() => handleDelete(market.id)}
-                        >
-                          Hapus
-                        </button>
-                      </>
-                    ) : (
-                      <span className="muted">View only</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <div className="market-card-grid">
+        {markets.map((market) => {
+          const marketImage = market.photo_url && market.photo_url.trim() ? market.photo_url : '/pasar.jpeg'
+
+          return (
+          <div key={market.id} className="market-card">
+            <img
+              src={marketImage}
+              alt={market.name}
+              className="market-card-image"
+              onError={(e) => {
+                const target = e.currentTarget
+                if (target.src !== window.location.origin + '/pasar.jpeg') {
+                  target.src = '/pasar.jpeg'
+                }
+              }}
+            />
+            <div className="market-card-header">
+              <div>
+                <div className="market-card-code">{market.code}</div>
+                <h3>{market.name}</h3>
+              </div>
+              <span className={`status-badge status-${market.status.toLowerCase()}`}>
+                {market.status}
+              </span>
+            </div>
+
+            <div className="market-card-body">
+              <div className="market-card-row">
+                <span className="market-card-label">Kota</span>
+                <span>{market.city}</span>
+              </div>
+              <div className="market-card-row">
+                <span className="market-card-label">Alamat</span>
+                <span className="market-card-address">{market.address}</span>
+              </div>
+              <div className="market-card-row">
+                <span className="market-card-label">Admin</span>
+                <div className="market-card-admin">
+                  {assignForMarket[market.id]?.open ? (
+                    <div className="assign-inline">
+                      <select
+                        value={assignForMarket[market.id]?.userId || ''}
+                        onChange={(e) =>
+                          setAssignForMarket((prev) => ({
+                            ...prev,
+                            [market.id]: { ...(prev[market.id] || {}), userId: e.target.value }
+                          }))
+                        }
+                      >
+                        <option value="">-- Pilih User --</option>
+                        {users.map((u) => (
+                          <option key={u.id} value={u.id}>{getUserDisplayLabel(u)}</option>
+                        ))}
+                      </select>
+                      <button className="btn-sm btn-primary" onClick={() => handleSaveAssign(market.id)}>
+                        Simpan
+                      </button>
+                      <button className="btn-sm btn-secondary" onClick={() => closeAssign(market.id)}>
+                        Batal
+                      </button>
+                    </div>
+                  ) : assignedAdmins[market.id] ? (
+                    <div className="market-admin-info">
+                      <strong>{assignedAdmins[market.id].label}</strong>
+                      <span className="muted">Admin Pasar</span>
+                    </div>
+                  ) : isSuperAdmin ? (
+                    <button className="btn-sm btn-assign" onClick={() => openAssign(market.id)}>
+                      Tetapkan Admin Pasar
+                    </button>
+                  ) : (
+                    <span className="muted">-</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="market-card-actions">
+              {isSuperAdmin ? (
+                <>
+                  <button className="btn-sm btn-edit" onClick={() => handleEdit(market)}>
+                    Edit
+                  </button>
+                  <button className="btn-sm btn-delete" onClick={() => handleDelete(market.id)}>
+                    Hapus
+                  </button>
+                </>
+              ) : (
+                <span className="muted">View only</span>
+              )}
+            </div>
+          </div>
+          )
+        })}
+      </div>
       </div>
     )
   }

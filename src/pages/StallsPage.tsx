@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import QRCodeGenerator from '../components/QRCodeGenerator'
 import { getSupabaseClient } from '../lib/supabase'
 import '../pages/StallsPage.css'
 
@@ -483,6 +484,10 @@ export function StallsPage({ marketId }: Props) {
                     <td>{new Date(stall.created_at).toLocaleDateString('id-ID')}</td>
                     <td>
                       <div className="action-buttons">
+                        <QRCodeGenerator
+                          value={String(stall.code || stall.id)}
+                          label={`Lapak ${stall.code || stall.number}`}
+                        />
                         <button
                           onClick={() => handleEdit(stall)}
                           className="btn-edit"

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { type ChangeEvent, type FormEvent, useEffect, useState } from 'react'
 import { getSupabaseClient } from '../lib/supabase'
 import { DEFAULT_RETRIBUTION_TYPES } from '../lib/retributionMasterData'
 
@@ -87,7 +87,7 @@ export function RetribusiPage({ marketId }: RetribusiPageProps) {
     setEditingId(null)
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!name.trim()) {
       setError('Nama retribusi wajib diisi')
@@ -160,7 +160,7 @@ export function RetribusiPage({ marketId }: RetribusiPageProps) {
           <label style={{ display: 'block', marginBottom: 6 }}>Jenis Retribusi</label>
           <select
             value={selectedType}
-            onChange={(e) => {
+            onChange={(e: ChangeEvent<HTMLSelectElement>) => {
               const nextType = e.target.value
               setSelectedType(nextType)
               const matched = DEFAULT_RETRIBUTION_TYPES.find((item) => item.id === nextType)
@@ -180,7 +180,7 @@ export function RetribusiPage({ marketId }: RetribusiPageProps) {
           <input
             type="number"
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setAmount(e.target.value)}
             placeholder="50000"
             style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #d1d5db' }}
             min="0"
@@ -190,7 +190,7 @@ export function RetribusiPage({ marketId }: RetribusiPageProps) {
           <label style={{ display: 'block', marginBottom: 6 }}>Keterangan (opsional)</label>
           <input
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setDescription(e.target.value)}
             placeholder="Contoh: Tarif bulanan untuk pedagang tetap"
             style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #d1d5db' }}
           />

@@ -368,7 +368,19 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(29, 61, 7, 0.12)" />
                         <XAxis dataKey="name" stroke="#3d5224" tickLine={false} axisLine={false} />
                         <YAxis stroke="#3d5224" tickLine={false} axisLine={false} />
-                        <Tooltip formatter={(value: number | string | Array<number | string>) => typeof value === 'number' ? value.toLocaleString('id-ID') : value} />
+                        <Tooltip
+                          formatter={(value: number | string | readonly (number | string)[] | undefined) => {
+                            if (typeof value === 'number') {
+                              return value.toLocaleString('id-ID')
+                            }
+
+                            if (Array.isArray(value)) {
+                              return value.join(', ')
+                            }
+
+                            return value ?? ''
+                          }}
+                        />
                         <Legend verticalAlign="top" height={36} />
                         <Line type="monotone" dataKey="revenue" stroke="#1f4e12" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
                         <Line type="monotone" dataKey="transactions" stroke="#f4c300" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
@@ -496,103 +508,92 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
   }
 
   return (
-    <div className="market-dashboard">
-      {impersonating && (
-        <div className="impersonation-banner">
-          <span>🔐 Sedang impersonate sebagai Admin Pasar</span>
-          {onStopImpersonation && (
-            <button onClick={onStopImpersonation} className="btn-stop-impersonation">
-              Kembali ke Superadmin
-            </button>
-          )}
-        </div>
-      )}
-
-      <div className="dashboard-layout">
-        <aside className="sidebar">
-          <div className="sidebar-nav">
-            <div className="sidebar-group">
-              <div className="sidebar-group-title">Overview</div>
-              <button
-                className={`sidebar-item ${currentPage === 'overview' ? 'active' : ''}`}
-                onClick={() => setCurrentPage('overview')}
-              >
-                <span className="sidebar-icon"><IconOverview /></span>
-                <span>Overview</span>
-              </button>
+      <div className="market-dashboard">
+        <div className="dashboard-layout">
+          <aside className="sidebar">
+            <div className="sidebar-nav">
+              <div className="sidebar-group">
+                <div className="sidebar-group-title">Overview</div>
+                <button
+                  className={`sidebar-item ${currentPage === 'overview' ? 'active' : ''}`}
+                  onClick={() => setCurrentPage('overview')}
+                >
+                  <span className="sidebar-icon"><IconOverview /></span>
+                  <span>Overview</span>
+                </button>
+              </div>
+              <div className="sidebar-group">
+                <div className="sidebar-group-title">Data Pasar</div>
+                <button
+                  className={`sidebar-item ${currentPage === 'stalls' ? 'active' : ''}`}
+                  onClick={() => setCurrentPage('stalls')}
+                >
+                  <span className="sidebar-icon"><IconStalls /></span>
+                  <span>Lapak</span>
+                </button>
+                <button
+                  className={`sidebar-item ${currentPage === 'sectors' ? 'active' : ''}`}
+                  onClick={() => setCurrentPage('sectors')}
+                >
+                  <span className="sidebar-icon"><IconSectors /></span>
+                  <span>Sektor</span>
+                </button>
+                <button
+                  className={`sidebar-item ${currentPage === 'owners' ? 'active' : ''}`}
+                  onClick={() => setCurrentPage('owners')}
+                >
+                  <span className="sidebar-icon"><IconOwners /></span>
+                  <span>Pemilik</span>
+                </button>
+              </div>
+              <div className="sidebar-group">
+                <div className="sidebar-group-title">Konfigurasi</div>
+                <button
+                  className={`sidebar-item ${currentPage === 'categories' ? 'active' : ''}`}
+                  onClick={() => setCurrentPage('categories')}
+                >
+                  <span className="sidebar-icon"><IconCategories /></span>
+                  <span>Kategori</span>
+                </button>
+                <button
+                  className={`sidebar-item ${currentPage === 'retribusi' ? 'active' : ''}`}
+                  onClick={() => setCurrentPage('retribusi')}
+                >
+                  <span className="sidebar-icon"><IconRetribusi /></span>
+                  <span>Retribusi</span>
+                </button>
+              </div>
+              <div className="sidebar-group">
+                <div className="sidebar-group-title">Keuangan</div>
+                <button
+                  className={`sidebar-item ${currentPage === 'transactions' ? 'active' : ''}`}
+                  onClick={() => setCurrentPage('transactions')}
+                >
+                  <span className="sidebar-icon"><IconTransactions /></span>
+                  <span>Transaksi</span>
+                </button>
+                <button
+                  className={`sidebar-item ${currentPage === 'reconciliations' ? 'active' : ''}`}
+                  onClick={() => setCurrentPage('reconciliations')}
+                >
+                  <span className="sidebar-icon"><IconReconciliations /></span>
+                  <span>Rekonsiliasi</span>
+                </button>
+              </div>
+              <div className="sidebar-group">
+                <div className="sidebar-group-title">Operasional</div>
+                <button
+                  className={`sidebar-item ${currentPage === 'officers' ? 'active' : ''}`}
+                  onClick={() => setCurrentPage('officers')}
+                >
+                  <span className="sidebar-icon"><IconOfficers /></span>
+                  <span>Petugas</span>
+                </button>
+              </div>
             </div>
-          <div className="sidebar-group">
-            <div className="sidebar-group-title">Data Pasar</div>
-            <button
-              className={`sidebar-item ${currentPage === 'stalls' ? 'active' : ''}`}
-              onClick={() => setCurrentPage('stalls')}
-            >
-              <span className="sidebar-icon"><IconStalls /></span>
-              <span>Lapak</span>
-            </button>
-            <button
-              className={`sidebar-item ${currentPage === 'sectors' ? 'active' : ''}`}
-              onClick={() => setCurrentPage('sectors')}
-            >
-              <span className="sidebar-icon"><IconSectors /></span>
-              <span>Sektor</span>
-            </button>
-            <button
-              className={`sidebar-item ${currentPage === 'owners' ? 'active' : ''}`}
-              onClick={() => setCurrentPage('owners')}
-            >
-              <span className="sidebar-icon"><IconOwners /></span>
-              <span>Pemilik</span>
-            </button>
-          </div>
-          <div className="sidebar-group">
-            <div className="sidebar-group-title">Konfigurasi</div>
-            <button
-              className={`sidebar-item ${currentPage === 'categories' ? 'active' : ''}`}
-              onClick={() => setCurrentPage('categories')}
-            >
-              <span className="sidebar-icon"><IconCategories /></span>
-              <span>Kategori</span>
-            </button>
-            <button
-              className={`sidebar-item ${currentPage === 'retribusi' ? 'active' : ''}`}
-              onClick={() => setCurrentPage('retribusi')}
-            >
-              <span className="sidebar-icon"><IconRetribusi /></span>
-              <span>Retribusi</span>
-            </button>
-          </div>
-          <div className="sidebar-group">
-            <div className="sidebar-group-title">Keuangan</div>
-            <button
-              className={`sidebar-item ${currentPage === 'transactions' ? 'active' : ''}`}
-              onClick={() => setCurrentPage('transactions')}
-            >
-              <span className="sidebar-icon"><IconTransactions /></span>
-              <span>Transaksi</span>
-            </button>
-            <button
-              className={`sidebar-item ${currentPage === 'reconciliations' ? 'active' : ''}`}
-              onClick={() => setCurrentPage('reconciliations')}
-            >
-              <span className="sidebar-icon"><IconReconciliations /></span>
-              <span>Rekonsiliasi</span>
-            </button>
-          </div>
-            <div className="sidebar-group">
-              <div className="sidebar-group-title">Operasional</div>
-              <button
-                className={`sidebar-item ${currentPage === 'officers' ? 'active' : ''}`}
-                onClick={() => setCurrentPage('officers')}
-              >
-                <span className="sidebar-icon"><IconOfficers /></span>
-                <span>Petugas</span>
-              </button>
-            </div>
-          </div>
 
-          <div className="sidebar-footer">
-            <button className="sidebar-profile" type="button" onClick={() => setProfileOpen((open) => !open)}>
+            <div className="sidebar-footer">
+              <button className="sidebar-profile" type="button" onClick={() => setProfileOpen((open) => !open)}>
               <div className="sidebar-profile-avatar">
                 {profilePhotoUrl ? (
                   <img src={profilePhotoUrl} alt="avatar" className="sidebar-profile-photo" />
