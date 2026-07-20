@@ -66,8 +66,8 @@ export function MarketEditPage({ marketId, onBack }: Props) {
 
   const loadMarket = async () => {
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001'
-      const res = await fetch(`${apiUrl}/api/markets/${marketId}`)
+      // Use relative API endpoint
+      const res = await fetch(`/api/markets/${marketId}`)
       if (res.ok) {
         const data = await res.json()
         console.log('Market data loaded:', data)
@@ -91,7 +91,7 @@ export function MarketEditPage({ marketId, onBack }: Props) {
         const supabase = getSupabaseClient()
         const { data } = await supabase
           .from('markets')
-          .select(`*`)
+          .select('*')
           .eq('id', marketId)
           .single()
         
@@ -121,8 +121,8 @@ export function MarketEditPage({ marketId, onBack }: Props) {
 
   const loadUsers = async () => {
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001'
-      const res = await fetch(`${apiUrl}/api/users/market-heads`)
+      // Use relative API endpoint
+      const res = await fetch('/api/users/market-heads')
       if (res.ok) {
         const usersData = await res.json()
         console.log('Market heads loaded:', usersData)
@@ -183,9 +183,7 @@ export function MarketEditPage({ marketId, onBack }: Props) {
     setSaving(true)
     
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001'
-      
-      const res = await fetch(`${apiUrl}/api/markets/${marketId}`, {
+      const res = await fetch(`/api/markets/${marketId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -227,7 +225,6 @@ export function MarketEditPage({ marketId, onBack }: Props) {
 
   return (
     <div className="siaga-card">
-      {/* Header */}
       <div style={{ 
         display: 'flex', 
         justifyContent: 'space-between', 
@@ -247,7 +244,6 @@ export function MarketEditPage({ marketId, onBack }: Props) {
 
       <form onSubmit={handleSubmit}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
-          {/* Left Column */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div>
               <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Nama Pasar</label>
@@ -316,7 +312,6 @@ export function MarketEditPage({ marketId, onBack }: Props) {
             </div>
           </div>
 
-          {/* Right Column */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div>
               <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Warna Tema</label>
