@@ -13,11 +13,19 @@
       "use": "@vercel/node"
     },
     {
+      "src": "api/users/market-heads.ts",
+      "use": "@vercel/node"
+    },
+    {
       "src": "api/markets.ts",
       "use": "@vercel/node"
     }
   ],
   "routes": [
+    {
+      "src": "/api/users/market-heads",
+      "dest": "/api/users/market-heads.ts"
+    },
     {
       "src": "/api/users",
       "dest": "/api/users.ts"
