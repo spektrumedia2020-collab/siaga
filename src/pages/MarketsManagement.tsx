@@ -56,10 +56,8 @@ export function MarketsManagement({ onImpersonate }: Props) {
 
   const loadAllData = async () => {
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001'
-      
-      // Use API endpoint to get markets with officers relationship (handles head data properly)
-      const marketsRes = await fetch(`${apiUrl}/api/markets`)
+      // Use relative API endpoint
+      const marketsRes = await fetch('/api/markets')
       let marketsData = []
       
       if (marketsRes.ok) {
@@ -91,7 +89,6 @@ export function MarketsManagement({ onImpersonate }: Props) {
       const marketsNeedingHeadName = marketsData.filter((m: any) => m.head_user_id && !m.head_name)
       
       if (marketsNeedingHeadName.length > 0) {
-        // Get user roles to find MARKET_HEAD users
         const { data: rolesData } = await supabase.from('roles').select('id, name')
         const roleMap = new Map<number, string>((rolesData || []).map((r: any) => [r.id, r.name]))
         
@@ -100,14 +97,12 @@ export function MarketsManagement({ onImpersonate }: Props) {
           .select('user_id, users:user_id(email, raw_user_meta_data)')
           .in('user_id', marketsNeedingHeadName.map((m: any) => m.head_user_id))
         
-        // Create a map of user_id to full_name
         const headNameMap = new Map<string, string>()
         ;(userRolesData || []).forEach((ur: any) => {
           const fullName = ur.users?.raw_user_meta_data?.full_name || ur.users?.email || ''
           headNameMap.set(ur.user_id, fullName)
         })
         
-        // Update markets with head names
         marketsData = marketsData.map((m: any) => ({
           ...m,
           head_name: headNameMap.get(m.head_user_id) || m.head_name || '-'
@@ -116,9 +111,9 @@ export function MarketsManagement({ onImpersonate }: Props) {
       
       setMarkets(marketsData)
       
-      // Load all users with MARKET_HEAD role for dropdown via API
+      // Load all users with MARKET_HEAD role via relative API
       try {
-        const usersRes = await fetch(`${apiUrl}/api/users/market-heads`)
+        const usersRes = await fetch('/api/users/market-heads')
         if (usersRes.ok) {
           const usersData = await usersRes.json()
           setUsers(usersData || [])
@@ -126,7 +121,6 @@ export function MarketsManagement({ onImpersonate }: Props) {
         }
       } catch (fetchErr) {
         console.warn('Falling back to local user query for dropdown')
-        // Fallback
         const { data: rolesData } = await supabase.from('roles').select('id, name')
         const roleMap = new Map<number, string>((rolesData || []).map((r: any) => [r.id, r.name]))
         
@@ -188,9 +182,8 @@ export function MarketsManagement({ onImpersonate }: Props) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001'
       const marketData = { name: formData.name, code: formData.code, city: formData.city, address: formData.address, photo_url: formData.photo_url, head_photo_url: formData.head_photo_url, status: formData.status }
-      const res = await fetch(`${apiUrl}/api/markets`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(marketData) })
+      const res = await fetch('/api/markets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(marketData) })
       if (!res.ok) { const supabase = getSupabaseClient(); await supabase.from('markets').insert([marketData]) }
       setFormData({ name: '', code: '', city: '', address: '', photo_url: '', head_photo_url: '', head_user_id: '', status: 'AKTIF' })
       setPreviewUrl(null); setHeadPhotoPreview(null); setShowForm(false); loadAllData()
@@ -200,11 +193,7 @@ export function MarketsManagement({ onImpersonate }: Props) {
   const handleEdit = (marketId: number) => { window.location.hash = `superadmin/market-edit/${marketId}` }
   const handleDelete = async (id: number) => {
     if (!confirm('Yakin hapus pasar ini?')) return
-    try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001'
-      await fetch(`${apiUrl}/api/markets/${id}`, { method: 'DELETE' })
-      loadAllData()
-    } catch (err) { console.error('Error deleting market:', err) }
+    try { await fetch(`/api/markets/${id}`, { method: 'DELETE' }); loadAllData() } catch (err) { console.error('Error deleting market:', err) }
   }
 
   const handleImpersonate = async (market: Market) => {

@@ -11,12 +11,20 @@
     {
       "src": "api/users.ts",
       "use": "@vercel/node"
+    },
+    {
+      "src": "api/markets.ts",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/api/users",
       "dest": "/api/users.ts"
+    },
+    {
+      "src": "/api/markets",
+      "dest": "/api/markets.ts"
     },
     {
       "handle": "filesystem"
