@@ -27,11 +27,11 @@
       "dest": "/api/users/market-heads.ts"
     },
     {
-      "src": "/api/users",
+      "src": "/api/users/(.*)",
       "dest": "/api/users.ts"
     },
     {
-      "src": "/api/markets",
+      "src": "/api/markets/(.*)",
       "dest": "/api/markets.ts"
     },
     {

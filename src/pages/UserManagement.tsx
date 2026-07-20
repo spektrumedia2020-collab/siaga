@@ -3,11 +3,11 @@ import { api } from '../lib/api'
 import '../styles/layout.css'
 
 interface User {
-  id: string
+  id: number
   email: string
   full_name?: string
-  created_at?: string
-  roles?: any[]
+  role_id?: number
+  role_name?: string
 }
 
 interface Role {
@@ -26,6 +26,7 @@ export function UserManagement() {
   const [markets, setMarkets] = useState<Market[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
+  const [editingUser, setEditingUser] = useState<User | null>(null)
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -41,22 +42,23 @@ export function UserManagement() {
   const loadData = async () => {
     setLoading(true)
     try {
-      // Load users from backend API (Vercel serverless function)
-      try {
-        const usersRes = await fetch('/api/users')
-        if (usersRes.ok) {
-          const usersData = await usersRes.json()
-          setUsers(usersData)
-        }
-      } catch (fetchError) {
-        console.warn('Backend unavailable, using empty state')
-      }
-
-      // Load roles from Supabase (public)
+      // Load users directly from users table
+      const { data: usersData } = await api.supabase.from('users').select('id_user, email, nama, id_role')
+      
+      // Load roles for mapping
       const { data: rolesData } = await api.supabase.from('roles').select('id, name')
+      const roleMap = new Map((rolesData || []).map((r: any) => [r.id, r.name]))
+
+      const formattedUsers = (usersData || []).map((u: any) => ({
+        id: u.id_user,
+        email: u.email,
+        full_name: u.nama || u.email,
+        role_id: u.id_role,
+        role_name: roleMap.get(u.id_role) || 'UNKNOWN'
+      }))
+      setUsers(formattedUsers)
       setRoles(rolesData || [])
 
-      // Load markets
       const { data: marketsData } = await api.supabase.from('markets').select('id, name')
       setMarkets(marketsData || [])
     } catch (err) {
@@ -66,207 +68,101 @@ export function UserManagement() {
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    try {
-      const res = await fetch('/api/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          fullName: formData.fullName,
-          roleId: parseInt(formData.roleId),
-          marketId: formData.marketId ? parseInt(formData.marketId) : null
-        })
-      })
-
-      if (res.ok) {
-        setFormData({ email: '', password: '', fullName: '', roleId: '', marketId: '' })
-        setShowForm(false)
-        loadData()
-      } else {
-        const error = await res.json()
-        alert('Error: ' + error.error)
-      }
-    } catch (err) {
-      console.error('Error creating user:', err)
-    }
+  const handleEdit = (user: User) => {
+    setEditingUser(user)
+    setFormData({ email: user.email, password: '', fullName: user.full_name || '', roleId: user.role_id?.toString() || '', marketId: '' })
+    setShowForm(true)
   }
 
-  const handleDeleteUser = async (userId: string) => {
+  const handleDelete = async (userId: number) => {
     if (!confirm('Yakin hapus user ini?')) return
-
     try {
-      const res = await fetch(`/api/users?id=${userId}`, {
-        method: 'DELETE'
-      })
-
-      if (res.ok) {
-        loadData()
-      }
+      await api.supabase.from('user_roles').delete().eq('id', userId)
+      await api.supabase.from('users').delete().eq('id_user', userId)
+      loadData()
     } catch (err) {
       console.error('Error deleting user:', err)
     }
   }
 
-  const getUserDisplayName = (user: User) => {
-    return user.full_name || user.email || 'Tanpa Nama'
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      if (editingUser) {
+        await api.supabase.from('users').update({ email: formData.email, nama: formData.fullName }).eq('id_user', editingUser.id)
+      } else {
+        await fetch('/api/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: formData.email, password: formData.password, fullName: formData.fullName, roleId: parseInt(formData.roleId), marketId: formData.marketId ? parseInt(formData.marketId) : null })
+        })
+      }
+      setFormData({ email: '', password: '', fullName: '', roleId: '', marketId: '' })
+      setEditingUser(null)
+      setShowForm(false)
+      loadData()
+    } catch (err) {
+      console.error('Error saving user:', err)
+    }
   }
 
+  const getUserDisplayName = (user: User) => user.full_name || user.email || 'Tanpa Nama'
+
   if (loading) {
-    return <div className="siaga-loading">Memuat data users...</div>
+    return <div className="siage-loading">Memuat data users...</div>
   }
 
   return (
-    <div className="siaga-card">
+    <div className="siage-card">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <h3 style={{ margin: 0 }}>👥 Manajemen User</h3>
-        <button 
-          className="siaga-btn siaga-btn-primary"
-          onClick={() => setShowForm(!showForm)}
-        >
+        <button className="siage-btn siage-btn-primary" onClick={() => { setEditingUser(null); setFormData({ email: '', password: '', fullName: '', roleId: '', marketId: '' }); setShowForm(!showForm) }}>
           {showForm ? 'Tutup' : '+ Tambah User'}
         </button>
       </div>
 
       {showForm && (
-        <form onSubmit={handleSubmit} style={{ 
-          marginBottom: '1.5rem', 
-          padding: '1rem', 
-          background: '#f9fafb', 
-          borderRadius: '8px'
-        }}>
+        <form onSubmit={handleSubmit} style={{ marginBottom: '1.5rem', padding: '1rem', background: '#f9fafb', borderRadius: '8px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Email</label>
-              <input
-                type="email"
-                className="siaga-input"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                required
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Password</label>
-              <input
-                type="password"
-                className="siaga-input"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                minLength={6}
-                required
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Nama Lengkap</label>
-              <input
-                type="text"
-                className="siaga-input"
-                value={formData.fullName}
-                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Role</label>
-              <select
-                className="siaga-input"
-                value={formData.roleId}
-                onChange={(e) => setFormData({ ...formData, roleId: e.target.value })}
-                required
-              >
-                <option value="">-- Pilih Role --</option>
-                {roles.map(r => (
-                  <option key={r.id} value={r.id}>{r.name}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Pasar (opsional)</label>
-              <select
-                className="siaga-input"
-                value={formData.marketId}
-                onChange={(e) => setFormData({ ...formData, marketId: e.target.value })}
-              >
-                <option value="">-- Pilih Pasar --</option>
-                {markets.map(m => (
-                  <option key={m.id} value={m.id}>{m.name}</option>
-                ))}
-              </select>
-            </div>
+            <div><label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Email</label><input type="email" className="siage-input" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required /></div>
+            <div><label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Password {editingUser && '(kosongkan untuk tidak diubah)'}</label><input type="password" className="siage-input" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} minLength={6} /></div>
+            <div><label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Nama Lengkap</label><input type="text" className="siage-input" value={formData.fullName} onChange={(e) => setFormData({ ...formData, fullName: e.target.value })} /></div>
+            <div><label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Role</label><select className="siage-input" value={formData.roleId} onChange={(e) => setFormData({ ...formData, roleId: e.target.value })} required><option value="">-- Pilih Role --</option>{roles.map(r => (<option key={r.id} value={r.id}>{r.name}</option>))}</select></div>
+            <div><label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Pasar (opsional)</label><select className="siage-input" value={formData.marketId} onChange={(e) => setFormData({ ...formData, marketId: e.target.value })}><option value="">-- Pilih Pasar --</option>{markets.map(m => (<option key={m.id} value={m.id}>{m.name}</option>))}</select></div>
           </div>
-          <div style={{ marginTop: '1rem' }}>
-            <button type="submit" className="siaga-btn siaga-btn-primary">
-              Buat User
-            </button>
-            <button 
-              type="button" 
-              className="siaga-btn siaga-btn-outline"
-              onClick={() => setShowForm(false)}
-              style={{ marginLeft: '0.5rem' }}
-            >
-              Batal
-            </button>
-          </div>
+          <div style={{ marginTop: '1rem' }}><button type="submit" className="siage-btn siage-btn-primary">{editingUser ? 'Update' : 'Buat'} User</button><button type="button" className="siage-btn siage-btn-outline" onClick={() => { setEditingUser(null); setFormData({ email: '', password: '', fullName: '', roleId: '', marketId: '' }) }} style={{ marginLeft: '0.5rem' }}>Batal</button></div>
         </form>
       )}
 
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', 
-        gap: '1rem' 
-      }}>
-        {users.length === 0 ? (
-          <div style={{ 
-            gridColumn: '1/-1',
-            padding: '2rem',
-            textAlign: 'center',
-            color: '#6b7280',
-            background: '#f9fafb',
-            borderRadius: '8px'
-          }}>
-            <p>Belum ada user. Klik "+ Tambah User" untuk menambah.</p>
-          </div>
-        ) : (
-          users.map((user) => (
-            <div key={user.id} className="siaga-card" style={{ margin: 0, padding: '1rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div>
-                  <h4 style={{ margin: 0, fontSize: '1.1rem' }}>{getUserDisplayName(user)}</h4>
-                  <p style={{ margin: '0.25rem 0', color: '#6b7280', fontSize: '0.9rem' }}>
-                    {user.email || 'Email tidak tersedia'}
-                  </p>
-                  <p style={{ margin: '0.25rem 0', color: '#9ca3af', fontSize: '0.8rem' }}>
-                    ID: {user.id}
-                  </p>
-                </div>
-                <button 
-                  onClick={() => handleDeleteUser(user.id)}
-                  className="siaga-btn siaga-btn-accent"
-                  style={{ padding: '0.25rem 0.5rem' }}
-                  title="Hapus user"
-                >
-                  🗑️
-                </button>
-              </div>
-              <div style={{ marginTop: '0.75rem' }}>
-                {(user.roles || []).length > 0 ? (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
-                    {user.roles?.map((r: any) => (
-                      <span key={r.id} className="siaga-badge siaga-badge-active">
-                        {r.roles?.name || r.role_name}
-                      </span>
-                    ))}
-                  </div>
-                ) : (
-                  <span style={{ color: '#9ca3af', fontSize: '0.85rem' }}>Tidak ada role</span>
-                )}
-              </div>
-            </div>
-          ))
-        )}
-      </div>
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <thead>
+          <tr style={{ background: '#f9fafb' }}>
+            <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>Nama</th>
+            <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>Email</th>
+            <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>Role</th>
+            <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '1px solid #e5e7eb', width: '100px' }}>Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {users.length === 0 ? (
+            <tr><td colSpan={4} style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>Belum ada user.</td></tr>
+          ) : (
+            users.map((user) => (
+              <tr key={user.id}>
+                <td style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb' }}>{getUserDisplayName(user)}</td>
+                <td style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb' }}>{user.email}</td>
+                <td style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb' }}>
+                  <span style={{ background: '#dbeafe', color: '#1e40af', padding: '0.25rem 0.5rem', borderRadius: '4px', fontSize: '0.85rem' }}>{user.role_name}</span>
+                </td>
+                <td style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb', textAlign: 'center' }}>
+                  <button className="siage-btn siage-btn-outline" onClick={() => handleEdit(user)} style={{ padding: '0.25rem 0.5rem', marginRight: '0.25rem' }}>✏️</button>
+                  <button className="siage-btn siage-btn-accent" onClick={() => handleDelete(user.id)} style={{ padding: '0.25rem 0.5rem' }}>🗑️</button>
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
     </div>
   )
 }

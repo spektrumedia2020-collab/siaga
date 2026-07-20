@@ -13,8 +13,27 @@ export default async function handler(req: any, res: any) {
 
   if (req.method === 'OPTIONS') return res.status(200).end()
 
-  // GET - List all markets
+  // GET - List all markets or get single market
   if (req.method === 'GET') {
+    const marketId = req.query?.id
+    
+    if (marketId) {
+      // Get single market
+      try {
+        const { data: market, error } = await supabase
+          .from('markets')
+          .select('*')
+          .eq('id', marketId)
+          .single()
+        
+        if (error) throw error
+        return res.json(market || null)
+      } catch (err: any) {
+        return res.status(500).json({ error: err.message || 'Market not found' })
+      }
+    }
+    
+    // Get all markets
     try {
       const { data: markets, error } = await supabase
         .from('markets')
@@ -25,6 +44,22 @@ export default async function handler(req: any, res: any) {
       return res.json(markets || [])
     } catch (err: any) {
       return res.status(500).json({ error: err.message || 'Internal server error' })
+    }
+  }
+
+  // GET with path param /api/markets/16
+  if (req.method === 'GET' && req.query?.marketId) {
+    try {
+      const { data: market, error } = await supabase
+        .from('markets')
+        .select('*')
+        .eq('id', req.query.marketId)
+        .single()
+      
+      if (error) throw error
+      return res.json(market || null)
+    } catch (err: any) {
+      return res.status(500).json({ error: err.message || 'Market not found' })
     }
   }
 
@@ -46,14 +81,14 @@ export default async function handler(req: any, res: any) {
 
   // PUT - Update market
   if (req.method === 'PUT') {
-    const { id } = req.query || {}
+    const marketId = req.query?.id || req.query?.marketId
     const { name, code, city, address, photo_url, head_photo_url, status } = req.body || {}
     
     try {
       const { data, error } = await supabase
         .from('markets')
         .update({ name, code, city, address, photo_url, head_photo_url, status })
-        .eq('id', id)
+        .eq('id', marketId)
         .select()
       if (error) throw error
       return res.json(data?.[0])
@@ -64,10 +99,10 @@ export default async function handler(req: any, res: any) {
 
   // DELETE - Delete market
   if (req.method === 'DELETE') {
-    const { id } = req.query || {}
+    const marketId = req.query?.id || req.query?.marketId
     
     try {
-      const { error } = await supabase.from('markets').delete().eq('id', id)
+      const { error } = await supabase.from('markets').delete().eq('id', marketId)
       if (error) throw error
       return res.json({ success: true })
     } catch (err: any) {
