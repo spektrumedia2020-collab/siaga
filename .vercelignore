@@ -1,0 +1,6 @@
+mobile/
+node_modules/
+*.md
+*.sql
+*.docx
+*.pdf

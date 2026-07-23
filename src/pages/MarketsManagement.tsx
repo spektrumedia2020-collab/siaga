@@ -13,10 +13,8 @@ interface Market {
   photo_url?: string
   head_photo_url?: string
   status: string
-  created_at?: string
-  head_name?: string
   head_user_id?: string
-  officer_name?: string
+  head_name?: string
 }
 
 interface User {
@@ -56,90 +54,79 @@ export function MarketsManagement({ onImpersonate }: Props) {
 
   const loadAllData = async () => {
     try {
-      // Use relative API endpoint
-      const marketsRes = await fetch('/api/markets')
-      let marketsData = []
-      
-      if (marketsRes.ok) {
-        marketsData = await marketsRes.json()
-        console.log('Markets loaded from API:', marketsData)
-      } else {
-        // Fallback to direct Supabase query
-        const supabase = getSupabaseClient()
-        const { data: supabaseMarkets } = await supabase
-          .from('markets')
-          .select(`
-            *,
-            officers (id, name, user_id, photo_url)
-          `)
-          .order('name')
-        marketsData = supabaseMarkets || []
-        
-        // Process to extract head info from officers
-        marketsData = marketsData.map((m: any) => ({
-          ...m,
-          head_user_id: m.officers?.[0]?.user_id || '',
-          head_name: m.officers?.[0]?.name || '',
-          head_photo_url: m.officers?.[0]?.photo_url || ''
-        }))
-      }
-      
-      // Load head user names for markets that have head_user_id but no head_name
       const supabase = getSupabaseClient()
-      const marketsNeedingHeadName = marketsData.filter((m: any) => m.head_user_id && !m.head_name)
       
-      if (marketsNeedingHeadName.length > 0) {
-        const { data: rolesData } = await supabase.from('roles').select('id, name')
-        const roleMap = new Map<number, string>((rolesData || []).map((r: any) => [r.id, r.name]))
-        
-        const { data: userRolesData } = await supabase
-          .from('user_roles')
-          .select('user_id, users:user_id(email, raw_user_meta_data)')
-          .in('user_id', marketsNeedingHeadName.map((m: any) => m.head_user_id))
-        
-        const headNameMap = new Map<string, string>()
-        ;(userRolesData || []).forEach((ur: any) => {
-          const fullName = ur.users?.raw_user_meta_data?.full_name || ur.users?.email || ''
-          headNameMap.set(ur.user_id, fullName)
-        })
-        
-        marketsData = marketsData.map((m: any) => ({
-          ...m,
-          head_name: headNameMap.get(m.head_user_id) || m.head_name || '-'
-        }))
-      }
+      // Load markets
+      const { data: marketsData } = await supabase
+        .from('markets')
+        .select('*')
+        .order('name')
       
-      setMarkets(marketsData)
+      // Load user_roles for head users (market_id not null)
+      const { data: userRolesData } = await supabase
+        .from('user_roles')
+        .select('market_id, user_id')
+        .not('market_id', 'is', null)
       
-      // Load all users with MARKET_HEAD role via relative API
-      try {
-        const usersRes = await fetch('/api/users/market-heads')
-        if (usersRes.ok) {
-          const usersData = await usersRes.json()
-          setUsers(usersData || [])
-          console.log('Market heads loaded:', usersData)
-        }
-      } catch (fetchErr) {
-        console.warn('Falling back to local user query for dropdown')
-        const { data: rolesData } = await supabase.from('roles').select('id, name')
-        const roleMap = new Map<number, string>((rolesData || []).map((r: any) => [r.id, r.name]))
-        
-        const { data: userRolesData } = await supabase.from('user_roles').select('user_id')
-        
-        const headUserIds = (userRolesData || [])
-          .filter((ur: any) => (roleMap.get(ur.role_id) || '').toUpperCase() === 'MARKET_HEAD')
-          .map((ur: any) => ur.user_id)
-
-        const { data: usersFromDb } = await supabase
+      // Get user details for head users - using correct schema (id_user is integer, user_id is UUID)
+      const authUserIds = [...new Set((userRolesData || []).map((ur: any) => ur.user_id))]
+      
+      let userMap = new Map<string, string>()
+      if (authUserIds.length > 0) {
+        // Query users table by market_id to get head users
+        const { data: headUsers } = await supabase
           .from('users')
-          .select('id, email, raw_user_meta_data')
-          .in('id', headUserIds)
-        setUsers(usersFromDb?.map((u: any) => ({
-          id: u.id,
-          email: u.email,
-          full_name: u.raw_user_meta_data?.full_name || u.email
-        })) || [])
+          .select('id_user, email, nama, market_id')
+          .in('market_id', (marketsData || []).map((m: any) => m.id))
+        
+        // Map market_id to user name
+        ;(headUsers || []).forEach((u: any) => {
+          userMap.set(u.market_id, u.nama || u.email || '-')
+        })
       }
+      
+      // Process markets
+      const processedMarkets = (marketsData || []).map((m: any) => {
+        const headInfo = (userRolesData || []).find((ur: any) => ur.market_id === m.id)
+        return {
+          ...m,
+          head_user_id: headInfo?.user_id || '',
+          head_name: headInfo ? (userMap.get(m.id) || '-') : '-'
+        }
+      })
+      
+      setMarkets(processedMarkets)
+
+      // Load users with MARKET_HEAD role for dropdown - query public.users
+      const { data: rolesData } = await supabase.from('roles').select('id, name')
+      const roleMap = new Map((rolesData || []).map((r: any) => [r.id, r.name]))
+      
+      const { data: marketHeadRoles } = await supabase.from('user_roles').select('user_id, role_id')
+      const headUserIds = (marketHeadRoles || [])
+        .filter((ur: any) => (roleMap.get(ur.role_id) || '').toUpperCase() === 'MARKET_HEAD')
+        .map((ur: any) => ur.user_id)
+
+      const { data: dropdownUsers } = await supabase
+        .from('users')
+        .select('id_user, email, nama')
+        .not('id_user', 'is', null)
+      
+      // Map auth user_id to users table
+      const authToUserMap = new Map()
+      ;(dropdownUsers || []).forEach((u: any) => {
+        // For now, use id_user as unique identifier
+        authToUserMap.set(u.id_user.toString(), {
+          id: u.id_user.toString(),
+          email: u.email,
+          full_name: u.nama
+        })
+      })
+
+      setUsers((dropdownUsers || []).map((u: any) => ({
+        id: u.id_user.toString(),
+        email: u.email,
+        full_name: u.nama || u.email
+      })))
     } catch (err) {
       console.error('Error loading data:', err)
     } finally {
@@ -182,9 +169,10 @@ export function MarketsManagement({ onImpersonate }: Props) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
+      const supabase = getSupabaseClient()
       const marketData = { name: formData.name, code: formData.code, city: formData.city, address: formData.address, photo_url: formData.photo_url, head_photo_url: formData.head_photo_url, status: formData.status }
-      const res = await fetch('/api/markets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(marketData) })
-      if (!res.ok) { const supabase = getSupabaseClient(); await supabase.from('markets').insert([marketData]) }
+      const { error } = await supabase.from('markets').insert([marketData])
+      if (error) throw error
       setFormData({ name: '', code: '', city: '', address: '', photo_url: '', head_photo_url: '', head_user_id: '', status: 'AKTIF' })
       setPreviewUrl(null); setHeadPhotoPreview(null); setShowForm(false); loadAllData()
     } catch (err) { console.error('Error saving market:', err) }
@@ -193,7 +181,11 @@ export function MarketsManagement({ onImpersonate }: Props) {
   const handleEdit = (marketId: number) => { window.location.hash = `superadmin/market-edit/${marketId}` }
   const handleDelete = async (id: number) => {
     if (!confirm('Yakin hapus pasar ini?')) return
-    try { await fetch(`/api/markets/${id}`, { method: 'DELETE' }); loadAllData() } catch (err) { console.error('Error deleting market:', err) }
+    try {
+      const supabase = getSupabaseClient()
+      await supabase.from('markets').delete().eq('id', id)
+      loadAllData()
+    } catch (err) { console.error('Error deleting market:', err) }
   }
 
   const handleImpersonate = async (market: Market) => {
@@ -202,7 +194,7 @@ export function MarketsManagement({ onImpersonate }: Props) {
       setImpersonatingMarketId(market.id)
       const supabase = getSupabaseClient()
       const { data: rolesData } = await supabase.from('roles').select('id, name')
-      const roleMap = new Map<number, string>((rolesData || []).map((r: any) => [r.id, r.name]))
+      const roleMap = new Map((rolesData || []).map((r: any) => [r.id, r.name]))
       const { data: userRoleData } = await supabase.from('user_roles').select('id, user_id, role_id, market_id').eq('user_id', market.head_user_id)
       const marketHeadRole = (userRoleData || []).find((ur: any) => (roleMap.get(ur.role_id) || '').toUpperCase() === 'MARKET_HEAD')
       if (!marketHeadRole) { alert('Kepala pasar tidak memiliki role yang sesuai'); setImpersonatingMarketId(null); return }
@@ -259,7 +251,7 @@ export function MarketsManagement({ onImpersonate }: Props) {
                     <p style={{ margin: '0.25rem 0' }}><strong>Kode:</strong> {market.code}</p>
                     <p style={{ margin: '0.25rem 0' }}><strong>Kota:</strong> {market.city}</p>
                     <p style={{ margin: '0.25rem 0' }}><strong>Alamat:</strong> {market.address || '-'}</p>
-                    <p style={{ margin: '0.25rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><strong>Kepala Pasar:</strong> {market.head_photo_url && <img src={market.head_photo_url} alt="Kepala Pasar" style={{ width: '24px', height: '24px', borderRadius: '50%' }} />} {market.head_name || market.officer_name || '-'}</p>
+                    <p style={{ margin: '0.25rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><strong>Kepala Pasar:</strong> {market.head_name || '-'}</p>
                   </div>
                 </div>
                 <div style={{ marginTop: 'auto', paddingTop: '1rem' }}>

@@ -80,8 +80,7 @@ export function StallsPage({ marketId }: Props) {
       if (stallsErr) throw stallsErr
       setStalls(stallsData || [])
 
-      // Load sectors: prefer market_sectors, fallback to sektor_pasar
-      let sectorsToUse: Sector[] = []
+      // Load sectors: prefer market_sectors
       const { data: sectorsData, error: sectorsErr } = await supabase
         .from('market_sectors')
         .select('*')
@@ -89,38 +88,10 @@ export function StallsPage({ marketId }: Props) {
         .order('name')
 
       if (!sectorsErr && Array.isArray(sectorsData) && sectorsData.length > 0) {
-        sectorsToUse = sectorsData.map((s: any) => ({ id: s.id, name: s.name }))
+        setSectors(sectorsData.map((s: any) => ({ id: s.id, name: s.name })))
       } else {
-        const { data: marketData, error: marketErr } = await supabase
-          .from('markets')
-          .select('code')
-          .eq('id', marketId)
-          .limit(1)
-
-        if (!marketErr && Array.isArray(marketData) && marketData.length > 0) {
-          const marketCode = marketData[0].code
-          const { data: pasarData, error: pasarErr } = await supabase
-            .from('pasar')
-            .select('id_pasar')
-            .eq('kode_pasar', marketCode)
-            .limit(1)
-
-          if (!pasarErr && Array.isArray(pasarData) && pasarData.length > 0) {
-            const pasarId = pasarData[0].id_pasar
-            const { data: siagaSectors, error: siagaErr } = await supabase
-              .from('sektor_pasar')
-              .select('id_sektor, nama_sektor')
-              .eq('id_pasar', pasarId)
-              .order('nama_sektor')
-
-            if (!siagaErr && Array.isArray(siagaSectors) && siagaSectors.length > 0) {
-              sectorsToUse = siagaSectors.map((s: any) => ({ id: s.id_sektor, name: s.nama_sektor }))
-            }
-          }
-        }
+        setSectors([])
       }
-
-      setSectors(sectorsToUse)
 
       // Load categories
       const { data: categoriesData, error: categoriesErr } = await supabase
@@ -143,14 +114,7 @@ export function StallsPage({ marketId }: Props) {
       if (!ownersErr && Array.isArray(ownersData) && ownersData.length > 0) {
         setOwners(ownersData || [])
       } else {
-        const { data: siagaOwners, error: siagaOwnersErr } = await supabase
-          .from('pemilik_lapak')
-          .select('id_pemilik, nama_pemilik, nik')
-          .order('nama_pemilik')
-
-        if (!siagaOwnersErr) {
-          setOwners((siagaOwners || []).map((o: any) => ({ id: o.id_pemilik, name: o.nama_pemilik, nik: o.nik })))
-        }
+        setOwners([])
       }
     } catch (err: any) {
       setError(err.message || 'Error loading data')
@@ -173,62 +137,25 @@ export function StallsPage({ marketId }: Props) {
         status: formData.status
       }
 
-      const fallbackPayload = {
-        kode_lapak: formData.code,
-        nomor_lapak: formData.number,
-        id_sektor: formData.sector_id ? parseInt(formData.sector_id) : null,
-        id_kategori: formData.category_id ? parseInt(formData.category_id) : null,
-        id_pemilik: formData.owner_id ? parseInt(formData.owner_id) : null,
-        status: formData.status
-      }
+      const supabase = getSupabaseClient()
+      if (editingId) {
+        const { error: err } = await supabase
+          .from('stalls')
+          .update(payload)
+          .eq('id', editingId)
 
-      try {
-        const supabase = getSupabaseClient()
-        if (editingId) {
-          const { error: err } = await supabase
-            .from('stalls')
-            .update(payload)
-            .eq('id', editingId)
+        if (err) throw err
+      } else {
+        const { error: err } = await supabase
+          .from('stalls')
+          .insert([
+            {
+              ...payload,
+              market_id: marketId
+            }
+          ])
 
-          if (err) throw err
-        } else {
-          const { error: err } = await supabase
-            .from('stalls')
-            .insert([
-              {
-                ...payload,
-                market_id: marketId
-              }
-            ])
-
-          if (err) throw err
-        }
-      } catch (primaryErr: any) {
-        const msg = primaryErr?.message || 'Error saving stall'
-        if (msg.includes('row-level security') || msg.includes('policy') || msg.includes('403')) {
-          const supabase = getSupabaseClient()
-          if (editingId) {
-            const { error: legacyErr } = await supabase
-              .from('lapak')
-              .update(fallbackPayload)
-              .eq('id_lapak', editingId)
-
-            if (legacyErr) throw legacyErr
-          } else {
-            const { error: legacyErr } = await supabase
-              .from('lapak')
-              .insert([
-                {
-                  ...fallbackPayload,
-                  id_pasar: marketId
-                }
-              ])
-
-            if (legacyErr) throw legacyErr
-          }
-        } else {
-          throw primaryErr
-        }
+        if (err) throw err
       }
 
       setFormData({
@@ -244,11 +171,7 @@ export function StallsPage({ marketId }: Props) {
       loadData()
     } catch (err: any) {
       const msg = err?.message || 'Error saving stall'
-      if (msg.includes('row-level security') || msg.includes('policy') || msg.includes('403')) {
-        setError(`${msg}. Jalankan SQL setup_stall_owners_policies.sql di Supabase untuk mengizinkan manajemen lapak.`)
-      } else {
-        setError(msg)
-      }
+      setError(msg)
     }
   }
 
@@ -269,41 +192,18 @@ export function StallsPage({ marketId }: Props) {
     if (!confirm('Yakin hapus lapak ini?')) return
 
     try {
-      try {
-        const supabase = getSupabaseClient()
-        const { error: err } = await supabase
-          .from('stalls')
-          .delete()
-          .eq('id', id)
+      const supabase = getSupabaseClient()
+      const { error: err } = await supabase
+        .from('stalls')
+        .delete()
+        .eq('id', id)
 
-        if (err) throw err
-      } catch (primaryErr: any) {
-        const msg = primaryErr?.message || 'Error deleting stall'
-        if (msg.includes('row-level security') || msg.includes('policy') || msg.includes('403')) {
-          const supabase = getSupabaseClient()
-          const { error: legacyErr } = await supabase
-            .from('lapak')
-            .delete()
-            .eq('id_lapak', id)
-
-          if (legacyErr) throw legacyErr
-        } else {
-          throw primaryErr
-        }
-      }
-
+      if (err) throw err
       loadData()
     } catch (err: any) {
-      const msg = err?.message || 'Error deleting stall'
-      if (msg.includes('row-level security') || msg.includes('policy') || msg.includes('403')) {
-        setError(`${msg}. Jalankan SQL setup_stall_owners_policies.sql di Supabase untuk mengizinkan delete lapak.`)
-      } else {
-        setError(msg)
-      }
+      setError(err.message || 'Error deleting stall')
     }
   }
-
-  
 
   const handleCancel = () => {
     setFormData({

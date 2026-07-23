@@ -76,7 +76,7 @@ export function SuperAdminDashboardImproved({ onImpersonate }: Props) {
               .eq('market_id', market.id)
 
             const { count: officerCount } = await supabase
-              .from('officers')
+              .from('users')
               .select('*', { count: 'exact' })
               .eq('market_id', market.id)
 

@@ -27,41 +27,25 @@ export function OwnersPage({ marketId }: OwnersPageProps) {
   const loadOwners = async () => {
     try {
       const supabase = getSupabaseClient()
-      const { data, error } = await supabase.from('stall_owners').select('*').order('name')
+      const { data, error } = await supabase
+        .from('stall_owners')
+        .select('*')
+        .order('name')
 
       if (error) throw error
 
       const mappedOwners = (data || []).map((item: any) => ({
         id: item.id,
-        name: item.name || item.nama_pemilik || '-',
-        nik: item.nik || item.nik_pemilik || '',
-        phone: item.phone || item.telepon || '',
-        address: item.address || item.alamat || '',
-        created_at: item.created_at || item.tanggal_daftar || ''
+        name: item.name || '-',
+        nik: item.nik || '',
+        phone: item.phone || '',
+        address: item.address || '',
+        created_at: item.created_at || ''
       }))
 
       setOwners(mappedOwners)
     } catch (err: any) {
-      try {
-        const supabase = getSupabaseClient()
-        const { data, error } = await supabase
-          .from('pemilik_lapak')
-          .select('id_pemilik, nama_pemilik, nik')
-          .order('nama_pemilik')
-
-        if (error) throw error
-
-        setOwners((data || []).map((item: any) => ({
-          id: item.id_pemilik,
-          name: item.nama_pemilik || '-',
-          nik: item.nik || '',
-          phone: '',
-          address: '',
-          created_at: ''
-        })))
-      } catch (fallbackErr: any) {
-        setError(fallbackErr.message || 'Gagal memuat data pemilik lapak')
-      }
+      setError(err.message || 'Gagal memuat data pemilik lapak')
     } finally {
       setLoading(false)
     }
@@ -119,36 +103,24 @@ export function OwnersPage({ marketId }: OwnersPageProps) {
       }
 
       if (editingId) {
-        const { error } = await supabase.from('stall_owners').update(payload).eq('id', editingId)
+        const { error } = await supabase
+          .from('stall_owners')
+          .update(payload)
+          .eq('id', editingId)
+
         if (error) throw error
       } else {
-        const { error } = await supabase.from('stall_owners').insert([payload])
+        const { error } = await supabase
+          .from('stall_owners')
+          .insert([payload])
+
         if (error) throw error
       }
 
       resetForm()
       await loadOwners()
     } catch (err: any) {
-      try {
-        const supabase = getSupabaseClient()
-        const fallbackPayload = {
-          nama_pemilik: name.trim(),
-          nik: nik.trim() || null
-        }
-
-        if (editingId) {
-          const { error } = await supabase.from('pemilik_lapak').update(fallbackPayload).eq('id_pemilik', editingId)
-          if (error) throw error
-        } else {
-          const { error } = await supabase.from('pemilik_lapak').insert([fallbackPayload])
-          if (error) throw error
-        }
-
-        resetForm()
-        await loadOwners()
-      } catch (fallbackErr: any) {
-        setError(fallbackErr.message || (editingId ? 'Gagal mengubah pemilik lapak' : 'Gagal menambah pemilik lapak'))
-      }
+      setError(err.message || (editingId ? 'Gagal mengubah pemilik lapak' : 'Gagal menambah pemilik lapak'))
     } finally {
       setSaving(false)
     }
@@ -165,18 +137,15 @@ export function OwnersPage({ marketId }: OwnersPageProps) {
 
     try {
       const supabase = getSupabaseClient()
-      const { error } = await supabase.from('stall_owners').delete().eq('id', id)
+      const { error } = await supabase
+        .from('stall_owners')
+        .delete()
+        .eq('id', id)
+
       if (error) throw error
       await loadOwners()
     } catch (err: any) {
-      try {
-        const supabase = getSupabaseClient()
-        const { error } = await supabase.from('pemilik_lapak').delete().eq('id_pemilik', id)
-        if (error) throw error
-        await loadOwners()
-      } catch (fallbackErr: any) {
-        setError(fallbackErr.message || 'Gagal menghapus pemilik lapak')
-      }
+      setError(err.message || 'Gagal menghapus pemilik lapak')
     }
   }
 

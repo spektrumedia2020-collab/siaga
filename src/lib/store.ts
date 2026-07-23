@@ -118,7 +118,7 @@ export const useOfficerStore = create<OfficerState>()(
         try {
           const supabase = getSupabaseClient()
           const { data, error } = await supabase
-            .from('officers')
+            .from('users')
             .select('*')
             .eq('market_id', marketId)
             .order('name')

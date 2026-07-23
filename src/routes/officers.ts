@@ -13,7 +13,7 @@ router.get('/market/:marketId', async (req, res) => {
   try {
     const { marketId } = req.params
     const { data, error } = await supabaseAdmin
-      .from('officers')
+      .from('users')
       .select('*')
       .eq('market_id', marketId)
       .order('name')
@@ -39,7 +39,7 @@ router.post('/', async (req, res) => {
     }
 
     const { data, error } = await supabaseAdmin
-      .from('officers')
+      .from('users')
       .insert([{ code, name, phone, market_id, status: 'AKTIF' }])
       .select()
       .single()

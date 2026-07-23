@@ -90,7 +90,7 @@ class ApiClient {
           .eq('market_id', market.id)
 
         const { count: officerCount } = await this.supabase
-          .from('officers')
+          .from('users')
           .select('*', { count: 'exact' })
           .eq('market_id', market.id)
 
@@ -146,10 +146,10 @@ class ApiClient {
     return data
   }
 
-  // Officers API
+  // Users/Officers API
   async getOfficers(marketId: number): Promise<Officer[]> {
     const { data, error } = await this.supabase
-      .from('officers')
+      .from('users')
       .select('*')
       .eq('market_id', marketId)
       .order('name')
@@ -160,7 +160,7 @@ class ApiClient {
 
   async createOfficer(officer: Partial<Officer>): Promise<Officer> {
     const { data, error } = await this.supabase
-      .from('officers')
+      .from('users')
       .insert([officer])
       .select()
       .single()

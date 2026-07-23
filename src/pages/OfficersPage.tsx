@@ -37,7 +37,7 @@ export function OfficersPage({ marketId }: Props) {
     try {
       const supabase = getSupabaseClient()
       const { data, error: err } = await supabase
-        .from('officers')
+        .from('users')
         .select('*')
         .eq('market_id', marketId)
         .order('name')
@@ -60,7 +60,7 @@ export function OfficersPage({ marketId }: Props) {
       if (editingId) {
         // Update
         const { error: err } = await supabase
-          .from('officers')
+          .from('users')
           .update({
             code: formData.code,
             name: formData.name,
@@ -72,7 +72,7 @@ export function OfficersPage({ marketId }: Props) {
       } else {
         // Create - Admin pasar dapat membuat officer
         const { error: err } = await supabase
-          .from('officers')
+          .from('users')
           .insert([
             {
               code: formData.code,
@@ -111,7 +111,7 @@ export function OfficersPage({ marketId }: Props) {
     try {
       const supabase = getSupabaseClient()
       const { error: err } = await supabase
-        .from('officers')
+        .from('users')
         .delete()
         .eq('id', id)
 

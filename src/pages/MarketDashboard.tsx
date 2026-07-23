@@ -227,7 +227,7 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
 
       // Count officers in this market
       const { count: officerCount } = await supabaseClient
-        .from('officers')
+        .from('users')
         .select('*', { count: 'exact' })
         .eq('market_id', market.id)
 

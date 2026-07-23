@@ -53,3 +53,5 @@ mobile/**/*.freezed.dart
 mobile/**/*.part.dart
 mobile/.env
 mobile/.env.local
+.vercel
+.env*
