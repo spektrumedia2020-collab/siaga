@@ -56,7 +56,7 @@ export function MarketsManagement({ onImpersonate }: Props) {
     try {
       const supabase = getSupabaseClient()
       
-      // Load markets with head_user_id directly from markets table
+      // Load markets
       const { data: marketsData, error: marketsError } = await supabase
         .from('markets')
         .select('*')
@@ -64,29 +64,42 @@ export function MarketsManagement({ onImpersonate }: Props) {
 
       if (marketsError) throw marketsError
       
-      // Get all head users's auth_uid from markets table
-      const headUserIds = [...new Set((marketsData || [])
-        .filter((m: any) => m.head_user_id)
-        .map((m: any) => m.head_user_id))]
+      const marketIds = (marketsData || []).map((m: any) => m.id)
       
-      // Map head_user_id to user name from public.users table
-      let userMap = new Map<string, string>()
-      if (headUserIds.length > 0) {
+      // Get MARKET_HEAD role id
+      const { data: headRole } = await supabase
+        .from('roles')
+        .select('id')
+        .eq('name', 'MARKET_HEAD')
+        .maybeSingle()
+      const headRoleId = headRole?.id
+      
+      // Find head users from users table by market_id (users.market_id = markets.id) and id_role = MARKET_HEAD
+      let userMap = new Map<number, { name: string; auth_uid: string }>()
+      if (marketIds.length > 0 && headRoleId) {
         const { data: headUsers } = await supabase
           .from('users')
-          .select('nama, email, auth_uid')
-          .in('auth_uid', headUserIds)
+          .select('nama, email, auth_uid, market_id')
+          .in('market_id', marketIds)
+          .eq('id_role', headRoleId)
         
         ;(headUsers || []).forEach((u: any) => {
-          userMap.set(u.auth_uid, u.nama || u.email || '-')
+          userMap.set(u.market_id, {
+            name: u.nama || u.email || '-',
+            auth_uid: u.auth_uid || ''
+          })
         })
       }
       
       // Process markets
-      const processedMarkets = (marketsData || []).map((m: any) => ({
-        ...m,
-        head_name: m.head_user_id ? (userMap.get(m.head_user_id) || '-') : '-'
-      }))
+      const processedMarkets = (marketsData || []).map((m: any) => {
+        const headInfo = userMap.get(m.id)
+        return {
+          ...m,
+          head_user_id: headInfo?.auth_uid || m.head_user_id || '',
+          head_name: headInfo?.name || '-'
+        }
+      })
       
       setMarkets(processedMarkets)
 

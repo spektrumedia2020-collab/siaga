@@ -7,7 +7,6 @@ interface Stall {
   id: number
   market_id: number
   sector_id: number | null
-  category_id: number | null
   owner_id: number | null
   code: string
   number: string
@@ -38,7 +37,24 @@ interface RetributionRate {
   stall_id: number | null
   market_id: number
   types_id: number
-  retribution_type_name?: string
+  retribution_types?: {
+    id: number
+    name: string
+    code: string
+    category: string
+    unit: string
+  }
+  created_at?: string
+  updated_at?: string
+}
+
+interface DbRetributionType {
+  id: number
+  code: string
+  name: string
+  category: string
+  unit: string
+  is_active?: boolean
 }
 
 interface Props {
@@ -50,8 +66,6 @@ export function StallsPage({ marketId }: Props) {
   const [sectors, setSectors] = useState<Sector[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [owners, setOwners] = useState<StallOwner[]>([])
-  const [retributions, setRetributions] = useState<RetributionRate[]>([])
-  const [retributionTypes, setRetributionTypes] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [showForm, setShowForm] = useState(false)
@@ -64,9 +78,23 @@ export function StallsPage({ marketId }: Props) {
     owner_id: '',
     status: 'AKTIF'
   })
-  const [selectedStallId, setSelectedStallId] = useState<number | null>(null)
-  const [quickRetributionType, setQuickRetributionType] = useState('')
-  const [quickRetributionAmount, setQuickRetributionAmount] = useState('')
+  const [sectorFilter, setSectorFilter] = useState('')
+  // rate dialog state
+  const [rateDialogOpen, setRateDialogOpen] = useState(false)
+  const [rateDialogStall, setRateDialogStall] = useState<Stall | null>(null)
+  const [rates, setRates] = useState<RetributionRate[]>([])
+  const [ratesLoading, setRatesLoading] = useState(false)
+  const [rateFormOpen, setRateFormOpen] = useState(false)
+  const [rateEditingId, setRateEditingId] = useState<number | null>(null)
+  const [rateFormTypesId, setRateFormTypesId] = useState('')
+  const [rateFormAmount, setRateFormAmount] = useState('')
+  const [rateSaving, setRateSaving] = useState(false)
+  const [retributionTypes, setRetributionTypes] = useState<DbRetributionType[]>([])
+
+  const filteredStalls = sectorFilter
+    ? stalls.filter(s => s.sector_id === parseInt(sectorFilter))
+    : stalls
+  // sector management removed from UI; keep sectors list only
 
   useEffect(() => {
     loadData()
@@ -80,8 +108,6 @@ export function StallsPage({ marketId }: Props) {
         setSectors([])
         setCategories([])
         setOwners([])
-        setRetributions([])
-        setRetributionTypes([])
         setLoading(false)
         return
       }
@@ -131,35 +157,6 @@ export function StallsPage({ marketId }: Props) {
         setOwners(ownersData || [])
       } else {
         setOwners([])
-      }
-
-      // Load retribution types
-      const { data: typesData, error: typesErr } = await supabase
-        .from('retribution_types')
-        .select('*')
-        .order('name')
-
-      if (!typesErr && Array.isArray(typesData)) {
-        setRetributionTypes(typesData || [])
-      } else {
-        setRetributionTypes([])
-      }
-
-      // Load retribution rates for this market
-      const { data: ratesData, error: ratesErr } = await supabase
-        .from('retribution_rates')
-        .select('*')
-        .eq('market_id', marketId)
-        .order('id')
-
-      if (!ratesErr && Array.isArray(ratesData)) {
-        const ratesWithTypeName = (ratesData || []).map((r: any) => ({
-          ...r,
-          retribution_type_name: (retributionTypes.find(t => t.id === r.types_id) || typesData?.find((t: any) => t.id === r.types_id))?.name || '-'
-        }))
-        setRetributions(ratesWithTypeName)
-      } else {
-        setRetributions([])
       }
     } catch (err: any) {
       setError(err.message || 'Error loading data')
@@ -250,45 +247,6 @@ export function StallsPage({ marketId }: Props) {
     }
   }
 
-  const handleAddRetribution = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    try {
-      const supabase = getSupabaseClient()
-      const { error: err } = await supabase
-        .from('retribution_rates')
-        .insert([{
-          market_id: marketId,
-          stall_id: retributionForm.stall_id ? parseInt(retributionForm.stall_id) : null,
-          types_id: parseInt(retributionForm.type_id),
-          amount: parseFloat(retributionForm.amount)
-        }])
-
-      if (err) throw err
-      setRetributionForm({ stall_id: '', amount: '', type_id: '' })
-      setShowRetributionForm(false)
-      loadData()
-    } catch (err: any) {
-      setError(err.message || 'Error saving retribution rate')
-    }
-  }
-
-  const handleDeleteRetribution = async (id: number) => {
-    if (!confirm('Yakin hapus tarif retribusi ini?')) return
-    try {
-      const supabase = getSupabaseClient()
-      const { error: err } = await supabase
-        .from('retribution_rates')
-        .delete()
-        .eq('id', id)
-
-      if (err) throw err
-      loadData()
-    } catch (err: any) {
-      setError(err.message || 'Error deleting retribution rate')
-    }
-  }
-
   const handleCancel = () => {
     setFormData({
       code: '',
@@ -312,6 +270,132 @@ export function StallsPage({ marketId }: Props) {
 
   const getCategoryName = (id: number | null) => {
     return categories.find(c => c.id === id)?.name || '-'
+  }
+
+  // Rate dialog handlers
+  const loadRates = async (stallId: number) => {
+    try {
+      setRatesLoading(true)
+      const supabase = getSupabaseClient()
+      const { data, error } = await supabase
+        .from('retribution_rates')
+        .select('*, retribution_types(name, code, category, unit)')
+        .eq('stall_id', stallId)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      setRates(data || [])
+    } catch (err: any) {
+      console.error('Error loading rates:', err.message)
+    } finally {
+      setRatesLoading(false)
+    }
+  }
+
+  const loadRetributionTypes = async () => {
+    try {
+      const supabase = getSupabaseClient()
+      const { data, error } = await supabase
+        .from('retribution_types')
+        .select('*')
+        .order('name')
+      if (!error && data) {
+        setRetributionTypes(data)
+      }
+    } catch (err) {
+      console.error('Error loading retribution types:', err)
+    }
+  }
+
+  const handleOpenRateDialog = (stall: Stall) => {
+    setRateDialogStall(stall)
+    setRateDialogOpen(true)
+    loadRates(stall.id)
+    loadRetributionTypes()
+  }
+
+  const handleCloseRateDialog = () => {
+    setRateDialogOpen(false)
+    setRateDialogStall(null)
+    setRates([])
+    setRateFormOpen(false)
+    setRateEditingId(null)
+    setRateFormTypesId('')
+    setRateFormAmount('')
+  }
+
+  const handleRateFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!rateFormTypesId || !rateFormAmount) return
+
+    try {
+      setRateSaving(true)
+      const supabase = getSupabaseClient()
+      const payload = {
+        types_id: parseInt(rateFormTypesId),
+        amount: parseFloat(rateFormAmount),
+        stall_id: rateDialogStall!.id,
+        market_id: (rateDialogStall as any).market_id || marketId
+      }
+
+      if (rateEditingId) {
+        const { error } = await supabase
+          .from('retribution_rates')
+          .update({ amount: payload.amount, types_id: payload.types_id })
+          .eq('id', rateEditingId)
+        if (error) throw error
+      } else {
+        const { error } = await supabase
+          .from('retribution_rates')
+          .insert([payload])
+        if (error) throw error
+      }
+
+      setRateFormTypesId('')
+      setRateFormAmount('')
+      setRateEditingId(null)
+      setRateFormOpen(false)
+      loadRates(rateDialogStall!.id)
+    } catch (err: any) {
+      console.error('Error saving rate:', err.message)
+    } finally {
+      setRateSaving(false)
+    }
+  }
+
+  const handleRateEdit = (rate: RetributionRate) => {
+    setRateEditingId(rate.id)
+    setRateFormTypesId(String(rate.types_id))
+    setRateFormAmount(String(rate.amount))
+    setRateFormOpen(true)
+  }
+
+  const handleRateDelete = async (id: number) => {
+    if (!confirm('Yakin hapus rate retribusi ini?')) return
+
+    try {
+      const supabase = getSupabaseClient()
+      const { error } = await supabase
+        .from('retribution_rates')
+        .delete()
+        .eq('id', id)
+      if (error) {
+        throw new Error(error.message || 'Gagal menghapus rate')
+      }
+      if (rateDialogStall) {
+        loadRates(rateDialogStall.id)
+      }
+    } catch (err: any) {
+      const msg = err?.message || 'Gagal menghapus rate retribusi'
+      setError(msg)
+    }
+  }
+
+  const resetRateForm = () => {
+    setRateFormTypesId('')
+    setRateFormAmount('')
+    setRateEditingId(null)
+    setRateFormOpen(false)
   }
 
   if (loading) {
@@ -434,8 +518,25 @@ export function StallsPage({ marketId }: Props) {
       {/* Manajemen Sektor dihilangkan — gunakan halaman Sektor terpisah */}
 
       <div className="section">
-        <h3>Data Lapak ({stalls.length})</h3>
-        {stalls.length === 0 ? (
+        <div className="section-header-row">
+          <h3>Data Lapak ({filteredStalls.length})</h3>
+          <div className="filter-group">
+            <label>Filter Sektor:</label>
+            <select
+              value={sectorFilter}
+              onChange={(e) => setSectorFilter(e.target.value)}
+              className="filter-select"
+            >
+              <option value="">Semua Sektor</option>
+              {sectors.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        {filteredStalls.length === 0 ? (
           <p className="no-data">Tidak ada data lapak.</p>
         ) : (
           <div className="table-wrapper">
@@ -453,7 +554,7 @@ export function StallsPage({ marketId }: Props) {
                 </tr>
               </thead>
               <tbody>
-                {stalls.map((stall) => (
+                {filteredStalls.map((stall) => (
                   <tr key={stall.id}>
                     <td>{stall.code}</td>
                     <td>{stall.number}</td>
@@ -473,6 +574,13 @@ export function StallsPage({ marketId }: Props) {
                           label={`Lapak ${stall.code || stall.number}`}
                         />
                         <button
+                          onClick={() => handleOpenRateDialog(stall)}
+                          className="btn-rate"
+                          title="Atur Retribusi"
+                        >
+                          💰
+                        </button>
+                        <button
                           onClick={() => handleEdit(stall)}
                           className="btn-edit"
                           title="Edit"
@@ -487,55 +595,6 @@ export function StallsPage({ marketId }: Props) {
                           🗑️
                         </button>
                       </div>
-                      <div className="retribution-row">
-                        <strong>Tarif:</strong>
-                        {retributions.filter(r => r.stall_id === stall.id).length === 0 && (
-                          <span className="no-data">-</span>
-                        )}
-                        {retributions.filter(r => r.stall_id === stall.id).map((r) => (
-                          <div key={r.id} className="retribution-chip">
-                            {retributionTypes.find(t => t.id === r.types_id)?.name}: Rp {Number(r.amount).toLocaleString('id-ID')}
-                            <button onClick={() => handleDeleteRetribution(r.id)} className="btn-xs btn-delete">×</button>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="retribution-form-row">
-                        <select
-                          value={selectedStallId === stall.id ? quickRetributionType : ''}
-                          onChange={(e) => {
-                            setSelectedStallId(stall.id)
-                            setQuickRetributionType(e.target.value)
-                          }}
-                        >
-                          <option value="">+ Tipe</option>
-                          {retributionTypes.map((t) => (
-                            <option key={t.id} value={t.id}>{t.name}</option>
-                          ))}
-                        </select>
-                        <input
-                          type="number"
-                          placeholder="Nominal"
-                          value={selectedStallId === stall.id ? quickRetributionAmount : ''}
-                          onChange={(e) => {
-                            setSelectedStallId(stall.id)
-                            setQuickRetributionAmount(e.target.value)
-                          }}
-                        />
-                          <button
-                            onClick={async () => {
-                              if (!quickRetributionType || !quickRetributionAmount) return
-                              const supabase = getSupabaseClient()
-                              await supabase.from('retribution_rates').insert([{ market_id: marketId, stall_id: stall.id, types_id: parseInt(quickRetributionType), amount: parseFloat(quickRetributionAmount) }])
-                              setQuickRetributionType('')
-                              setQuickRetributionAmount('')
-                              setSelectedStallId(null)
-                              loadData()
-                            }}
-                            className="btn-xs btn-primary"
-                          >
-                          Simpan
-                        </button>
-                      </div>
                     </td>
                   </tr>
                 ))}
@@ -544,6 +603,93 @@ export function StallsPage({ marketId }: Props) {
           </div>
         )}
       </div>
+
+      {/* Rate Dialog */}
+      {rateDialogOpen && rateDialogStall && (
+        <div className="modal-backdrop" onClick={handleCloseRateDialog}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 600 }}>
+            <div className="modal-header">
+              <h3>💰 Retribusi Rates — {rateDialogStall.code || rateDialogStall.number}</h3>
+              <button className="modal-close" onClick={handleCloseRateDialog}>&times;</button>
+            </div>
+
+            <div style={{ padding: '16px 0' }}>
+              {!rateFormOpen ? (
+                <button className="btn-primary" onClick={() => setRateFormOpen(true)}>
+                  + Tambah Rate
+                </button>
+              ) : (
+                <form onSubmit={handleRateFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 16, border: '1px solid #e5e7eb', borderRadius: 8, background: '#f9fafb' }}>
+                  <h4>{rateEditingId ? 'Edit' : 'Tambah'} Rate Retribusi</h4>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>Jenis Retribusi</label>
+                    <select
+                      value={rateFormTypesId}
+                      onChange={(e) => setRateFormTypesId(e.target.value)}
+                      style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #d1d5db' }}
+                      required
+                    >
+                      <option value="">-- Pilih Jenis --</option>
+                      {retributionTypes.map((t) => (
+                        <option key={t.id} value={t.id}>{t.name} ({t.code})</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>Tarif (Rp)</label>
+                    <input
+                      type="number"
+                      value={rateFormAmount}
+                      onChange={(e) => setRateFormAmount(e.target.value)}
+                      placeholder="50000"
+                      style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #d1d5db' }}
+                      min="0"
+                      required
+                    />
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button type="submit" className="btn-primary" disabled={rateSaving}>
+                      {rateSaving ? 'Menyimpan...' : rateEditingId ? 'Simpan' : 'Tambah'}
+                    </button>
+                    <button type="button" className="btn-secondary" onClick={resetRateForm}>Batal</button>
+                  </div>
+                </form>
+              )}
+            </div>
+
+            <div>
+              <h4>Daftar Rate Retribusi ({rates.length})</h4>
+              {ratesLoading ? (
+                <p>Memuat data rates...</p>
+              ) : rates.length === 0 ? (
+                <p style={{ color: '#6b7280', padding: '12px 0' }}>Belum ada rate retribusi untuk lapak ini.</p>
+              ) : (
+                <div style={{ display: 'grid', gap: 8, marginTop: 8 }}>
+                  {rates.map((rate) => (
+                    <div key={rate.id} style={{ padding: 12, border: '1px solid #e5e7eb', borderRadius: 8, background: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <strong>{rate.retribution_types?.name || `Tipe #${rate.types_id}`}</strong>
+                        <div style={{ fontSize: 12, color: '#999' }}>
+                          {rate.retribution_types?.code || ''}
+                        </div>
+                        <div style={{ color: '#6b7280', fontSize: 13 }}>
+                          Rp {rate.amount.toLocaleString('id-ID')}
+                          {rate.retribution_types?.unit ? ` / ${rate.retribution_types.unit}` : ''}
+                          {rate.retribution_types?.category ? ` • ${rate.retribution_types.category}` : ''}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button className="btn-secondary" onClick={() => handleRateEdit(rate)} style={{ padding: '4px 12px', fontSize: 13 }}>Edit</button>
+                        <button className="btn-delete-user" onClick={() => handleRateDelete(rate.id)} style={{ padding: '4px 12px', fontSize: 13 }}>Hapus</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

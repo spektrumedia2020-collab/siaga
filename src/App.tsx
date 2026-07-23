@@ -137,8 +137,8 @@ function App() {
 
   // URL Router - determines route based on hash
   const getCurrentRoute = (): Route => {
-    // Public routes - no auth required
-    if (window.location.hash.startsWith('#@')) {
+    // Public routes - no auth required, use pathname /@slug
+    if (window.location.pathname.startsWith('/@')) {
       return 'market-landing'
     }
     
@@ -222,7 +222,7 @@ function App() {
 
   // Public market landing page (no auth required)
   if (currentRoute === 'market-landing') {
-    const slug = window.location.hash.slice(3) // Remove '#@' prefix
+    const slug = window.location.pathname.slice(2) // Remove '/@' prefix
     return <MarketLandingPage slug={slug} />
   }
 

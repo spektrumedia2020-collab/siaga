@@ -8,6 +8,9 @@ export default defineConfig({
     port: 5173,
     open: true
   },
+  preview: {
+    port: 4173
+  },
   build: {
     rollupOptions: {
       output: {
@@ -18,3 +21,7 @@ export default defineConfig({
     }
   }
 })
+
+// Ensure /@slug paths work without server-side rewrites here.
+// If you later serve via nginx/Vercel, add a rewrite rule:
+// /@* -> /index.html
