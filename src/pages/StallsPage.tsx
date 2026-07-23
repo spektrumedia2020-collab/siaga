@@ -64,9 +64,9 @@ export function StallsPage({ marketId }: Props) {
     owner_id: '',
     status: 'AKTIF'
   })
-  const [showRetributionForm, setShowRetributionForm] = useState(false)
-  const [retributionForm, setRetributionForm] = useState({ stall_id: '', amount: '', type_id: '' })
-  // sector management removed from UI; keep sectors list only
+  const [selectedStallId, setSelectedStallId] = useState<number | null>(null)
+  const [quickRetributionType, setQuickRetributionType] = useState('')
+  const [quickRetributionAmount, setQuickRetributionAmount] = useState('')
 
   useEffect(() => {
     loadData()
@@ -433,87 +433,6 @@ export function StallsPage({ marketId }: Props) {
 
       {/* Manajemen Sektor dihilangkan — gunakan halaman Sektor terpisah */}
 
-      {/* Retribution Rates Section */}
-      <div className="section">
-        <div className="section-header">
-          <h3>Retribusi Rates ({retributions.length})</h3>
-          <button onClick={() => setShowRetributionForm(!showRetributionForm)} className="btn-secondary">
-            {showRetributionForm ? 'Batal' : '+ Tambah Tarif'}
-          </button>
-        </div>
-
-        {showRetributionForm && (
-          <form onSubmit={handleAddRetribution} className="form-section">
-            <div className="form-row">
-              <div className="form-group">
-                <label>Lapak</label>
-                <select
-                  value={retributionForm.stall_id}
-                  onChange={(e) => setRetributionForm({ ...retributionForm, stall_id: e.target.value })}
-                >
-                  <option value="">Semua Lapak</option>
-                  {stalls.map((s) => (
-                    <option key={s.id} value={s.id}>{s.code} - {s.number}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Tipe Retribusi</label>
-                <select
-                  value={retributionForm.type_id}
-                  onChange={(e) => setRetributionForm({ ...retributionForm, type_id: e.target.value })}
-                  required
-                >
-                  <option value="">-- Pilih Tipe --</option>
-                  {retributionTypes.map((t) => (
-                    <option key={t.id} value={t.id}>{t.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Nominal</label>
-                <input
-                  type="number"
-                  value={retributionForm.amount}
-                  onChange={(e) => setRetributionForm({ ...retributionForm, amount: e.target.value })}
-                  required
-                />
-              </div>
-            </div>
-            <button type="submit" className="btn-primary">Simpan Tarif</button>
-          </form>
-        )}
-
-        {retributions.length > 0 ? (
-          <div className="table-wrapper">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Tipe</th>
-                  <th>Lapak</th>
-                  <th>Nominal</th>
-                  <th>Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {retributions.map((r) => (
-                  <tr key={r.id}>
-                    <td>{r.retribution_type_name || '-'}</td>
-                    <td>{r.stall_id ? stalls.find(s => s.id === r.stall_id)?.code || '#' + r.stall_id : 'Semua'}</td>
-                    <td>Rp {Number(r.amount).toLocaleString('id-ID')}</td>
-                    <td>
-                      <button onClick={() => handleDeleteRetribution(r.id)} className="btn-delete" title="Hapus">🗑️</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <p className="no-data">Belum ada tarif retribusi.</p>
-        )}
-      </div>
-
       <div className="section">
         <h3>Data Lapak ({stalls.length})</h3>
         {stalls.length === 0 ? (
@@ -566,6 +485,55 @@ export function StallsPage({ marketId }: Props) {
                           title="Hapus"
                         >
                           🗑️
+                        </button>
+                      </div>
+                      <div className="retribution-row">
+                        <strong>Tarif:</strong>
+                        {retributions.filter(r => r.stall_id === stall.id).length === 0 && (
+                          <span className="no-data">-</span>
+                        )}
+                        {retributions.filter(r => r.stall_id === stall.id).map((r) => (
+                          <div key={r.id} className="retribution-chip">
+                            {retributionTypes.find(t => t.id === r.types_id)?.name}: Rp {Number(r.amount).toLocaleString('id-ID')}
+                            <button onClick={() => handleDeleteRetribution(r.id)} className="btn-xs btn-delete">×</button>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="retribution-form-row">
+                        <select
+                          value={selectedStallId === stall.id ? quickRetributionType : ''}
+                          onChange={(e) => {
+                            setSelectedStallId(stall.id)
+                            setQuickRetributionType(e.target.value)
+                          }}
+                        >
+                          <option value="">+ Tipe</option>
+                          {retributionTypes.map((t) => (
+                            <option key={t.id} value={t.id}>{t.name}</option>
+                          ))}
+                        </select>
+                        <input
+                          type="number"
+                          placeholder="Nominal"
+                          value={selectedStallId === stall.id ? quickRetributionAmount : ''}
+                          onChange={(e) => {
+                            setSelectedStallId(stall.id)
+                            setQuickRetributionAmount(e.target.value)
+                          }}
+                        />
+                          <button
+                            onClick={async () => {
+                              if (!quickRetributionType || !quickRetributionAmount) return
+                              const supabase = getSupabaseClient()
+                              await supabase.from('retribution_rates').insert([{ market_id: marketId, stall_id: stall.id, types_id: parseInt(quickRetributionType), amount: parseFloat(quickRetributionAmount) }])
+                              setQuickRetributionType('')
+                              setQuickRetributionAmount('')
+                              setSelectedStallId(null)
+                              loadData()
+                            }}
+                            className="btn-xs btn-primary"
+                          >
+                          Simpan
                         </button>
                       </div>
                     </td>
