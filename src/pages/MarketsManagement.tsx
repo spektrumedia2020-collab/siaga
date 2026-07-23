@@ -56,74 +56,48 @@ export function MarketsManagement({ onImpersonate }: Props) {
     try {
       const supabase = getSupabaseClient()
       
-      // Load markets
-      const { data: marketsData } = await supabase
+      // Load markets with head_user_id directly from markets table
+      const { data: marketsData, error: marketsError } = await supabase
         .from('markets')
         .select('*')
         .order('name')
+
+      if (marketsError) throw marketsError
       
-      // Load user_roles for head users (market_id not null)
-      const { data: userRolesData } = await supabase
-        .from('user_roles')
-        .select('market_id, user_id')
-        .not('market_id', 'is', null)
+      // Get all head users's auth_uid from markets table
+      const headUserIds = [...new Set((marketsData || [])
+        .filter((m: any) => m.head_user_id)
+        .map((m: any) => m.head_user_id))]
       
-      // Get user details for head users - using correct schema (id_user is integer, user_id is UUID)
-      const authUserIds = [...new Set((userRolesData || []).map((ur: any) => ur.user_id))]
-      
+      // Map head_user_id to user name from public.users table
       let userMap = new Map<string, string>()
-      if (authUserIds.length > 0) {
-        // Query users table by market_id to get head users
+      if (headUserIds.length > 0) {
         const { data: headUsers } = await supabase
           .from('users')
-          .select('id_user, email, nama, market_id')
-          .in('market_id', (marketsData || []).map((m: any) => m.id))
+          .select('nama, email, auth_uid')
+          .in('auth_uid', headUserIds)
         
-        // Map market_id to user name
         ;(headUsers || []).forEach((u: any) => {
-          userMap.set(u.market_id, u.nama || u.email || '-')
+          userMap.set(u.auth_uid, u.nama || u.email || '-')
         })
       }
       
       // Process markets
-      const processedMarkets = (marketsData || []).map((m: any) => {
-        const headInfo = (userRolesData || []).find((ur: any) => ur.market_id === m.id)
-        return {
-          ...m,
-          head_user_id: headInfo?.user_id || '',
-          head_name: headInfo ? (userMap.get(m.id) || '-') : '-'
-        }
-      })
+      const processedMarkets = (marketsData || []).map((m: any) => ({
+        ...m,
+        head_name: m.head_user_id ? (userMap.get(m.head_user_id) || '-') : '-'
+      }))
       
       setMarkets(processedMarkets)
 
-      // Load users with MARKET_HEAD role for dropdown - query public.users
-      const { data: rolesData } = await supabase.from('roles').select('id, name')
-      const roleMap = new Map((rolesData || []).map((r: any) => [r.id, r.name]))
-      
-      const { data: marketHeadRoles } = await supabase.from('user_roles').select('user_id, role_id')
-      const headUserIds = (marketHeadRoles || [])
-        .filter((ur: any) => (roleMap.get(ur.role_id) || '').toUpperCase() === 'MARKET_HEAD')
-        .map((ur: any) => ur.user_id)
-
-      const { data: dropdownUsers } = await supabase
+      // Load all users for the dropdown (to assign as head)
+      const { data: allUsers } = await supabase
         .from('users')
-        .select('id_user, email, nama')
+        .select('id_user, email, nama, auth_uid')
         .not('id_user', 'is', null)
       
-      // Map auth user_id to users table
-      const authToUserMap = new Map()
-      ;(dropdownUsers || []).forEach((u: any) => {
-        // For now, use id_user as unique identifier
-        authToUserMap.set(u.id_user.toString(), {
-          id: u.id_user.toString(),
-          email: u.email,
-          full_name: u.nama
-        })
-      })
-
-      setUsers((dropdownUsers || []).map((u: any) => ({
-        id: u.id_user.toString(),
+      setUsers((allUsers || []).map((u: any) => ({
+        id: u.auth_uid || u.id_user.toString(),
         email: u.email,
         full_name: u.nama || u.email
       })))
@@ -193,12 +167,10 @@ export function MarketsManagement({ onImpersonate }: Props) {
     try {
       setImpersonatingMarketId(market.id)
       const supabase = getSupabaseClient()
-      const { data: rolesData } = await supabase.from('roles').select('id, name')
-      const roleMap = new Map((rolesData || []).map((r: any) => [r.id, r.name]))
-      const { data: userRoleData } = await supabase.from('user_roles').select('id, user_id, role_id, market_id').eq('user_id', market.head_user_id)
-      const marketHeadRole = (userRoleData || []).find((ur: any) => (roleMap.get(ur.role_id) || '').toUpperCase() === 'MARKET_HEAD')
-      if (!marketHeadRole) { alert('Kepala pasar tidak memiliki role yang sesuai'); setImpersonatingMarketId(null); return }
-      const targetRole: UserRole = { id: marketHeadRole.id, user_id: marketHeadRole.user_id, role_id: marketHeadRole.role_id, role_name: 'MARKET_HEAD', market_id: market.id }
+      // Get role info from users table (new schema: users.id_role)
+      const { data: roleData } = await supabase.from('roles').select('id, name').eq('name', 'MARKET_HEAD').maybeSingle()
+      if (!roleData) { alert('Role MARKET_HEAD tidak ditemukan'); setImpersonatingMarketId(null); return }
+      const targetRole: UserRole = { id: 0, user_id: market.head_user_id, role_id: roleData.id, role_name: 'MARKET_HEAD', market_id: market.id }
       const currentUser = await supabase.auth.getUser()
       if (currentUser.data.user?.id) { setImpersonateSession(currentUser.data.user.id, market.head_user_id, targetRole) }
       if (onImpersonate) { onImpersonate(market.head_user_id, targetRole) } else { window.location.hash = 'market/dashboard' }
