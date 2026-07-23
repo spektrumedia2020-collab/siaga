@@ -39,7 +39,12 @@ export function CategoriesPage({ marketId }: CategoriesPageProps) {
         created_at: item.created_at || ''
       })))
     } catch (err: any) {
-      setError(err.message || 'Gagal memuat kategori')
+      const msg = err.message || 'Gagal memuat kategori'
+      if (msg.toLowerCase().includes('could not find the table') || msg.toLowerCase().includes('schema cache')) {
+        setError('Tabel kategori belum dibuat.')
+      } else {
+        setError(msg)
+      }
     } finally {
       setLoading(false)
     }
