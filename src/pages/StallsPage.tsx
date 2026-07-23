@@ -119,8 +119,17 @@ export function StallsPage({ marketId }: Props) {
         .eq('market_id', marketId)
         .order('number')
 
-      if (stallsErr) throw stallsErr
-      setStalls(stallsData || [])
+      if (stallsErr) {
+        const msg = stallsErr.message || ''
+        if (msg.toLowerCase().includes('could not find the column') || msg.toLowerCase().includes('schema cache')) {
+          setError('Kolom stalls.category_id belum dibuat. Jalankan migrasi SQL terlebih dahulu.')
+          setStalls([])
+        } else {
+          throw stallsErr
+        }
+      } else {
+        setStalls(stallsData || [])
+      }
 
       // Load sectors: prefer market_sectors
       const { data: sectorsData, error: sectorsErr } = await supabase
