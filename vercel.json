@@ -46,6 +46,10 @@
       "dest": "/api/markets.ts"
     },
     {
+      "src": "/@(.*)",
+      "dest": "/index.html"
+    },
+    {
       "src": "/(.*)",
       "dest": "/index.html"
     }
