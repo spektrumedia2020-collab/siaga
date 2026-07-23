@@ -7,10 +7,11 @@ import { SuperAdminDashboardImproved as SuperAdminDashboard } from './pages/Supe
 import { MarketDashboard } from './pages/MarketDashboard'
 import { MarketsManagement } from './pages/MarketsManagement'
 import { MarketEditPage } from './pages/MarketEditPage'
+import { MarketLandingPage } from './pages/MarketLandingPage'
 import './App.css'
 import './styles/layout.css'
 
-type Route = 'login' | 'superadmin' | 'market' | 'market-edit'
+type Route = 'login' | 'superadmin' | 'market' | 'market-edit' | 'market-landing'
 
 function App() {
   const [user, setUser] = useState<any>(null)
@@ -136,6 +137,11 @@ function App() {
 
   // URL Router - determines route based on hash
   const getCurrentRoute = (): Route => {
+    // Public routes - no auth required
+    if (window.location.hash.startsWith('#@')) {
+      return 'market-landing'
+    }
+    
     if (!user) return 'login'
     const hash = window.location.hash.slice(1)
     
@@ -212,6 +218,12 @@ function App() {
         />
       </Dashboard>
     )
+  }
+
+  // Public market landing page (no auth required)
+  if (currentRoute === 'market-landing') {
+    const slug = window.location.hash.slice(3) // Remove '#@' prefix
+    return <MarketLandingPage slug={slug} />
   }
 
   // Default login page
