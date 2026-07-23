@@ -1,7 +1,7 @@
 import { useState, useEffect, ReactNode } from 'react'
 import { getSupabaseClient } from '../lib/supabase'
 import './Dashboard.css'
-import { getRoleDisplayName } from '../lib/roleUtils'
+import { getRoleDisplayName, getUserRoles } from '../lib/roleUtils'
 import { MarketsPage } from '../pages/MarketsPage'
 import { UserManagement } from '../pages/UserManagement'
 import { TransactionsPage } from '../pages/TransactionsPage'

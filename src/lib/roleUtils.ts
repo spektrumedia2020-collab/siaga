@@ -22,6 +22,8 @@ export interface UserRole {
 export async function getUserRole(userId: string): Promise<UserRole | null> {
   try {
     const supabase = getSupabaseClient()
+
+    // 1) Coba dari tabel user_roles dulu
     const { data, error } = await supabase
       .from('user_roles')
       .select(`
@@ -35,24 +37,48 @@ export async function getUserRole(userId: string): Promise<UserRole | null> {
       .eq('user_id', userId)
       .limit(1)
 
-    if (error) {
-      console.error('Error fetching user role:', error)
+    if (!error && Array.isArray(data) && data.length > 0) {
+      const row = data[0]
+      return {
+        id: row.id,
+        user_id: row.user_id,
+        role_id: row.role_id,
+        role_name: extractRelatedName(row.roles) || 'UNKNOWN',
+        market_id: row.market_id,
+        market_name: extractRelatedName(row.markets) || undefined
+      }
+    }
+
+    // 2) Fallback: baca kolom id_role + market_id dari tabel users
+    const { data: userRow, error: userError } = await supabase
+      .from('users')
+      .select('id_user, id_role, market_id, auth_uid')
+      .eq('auth_uid', userId)
+      .maybeSingle()
+
+    if (userError || !userRow) {
+      console.error('Error fetching user fallback:', userError)
       return null
     }
 
-    if (!Array.isArray(data) || data.length === 0) {
-      return null
-    }
+    const roleId = userRow.id_role ?? null
 
-    const row = data[0]
+    let roleName = 'UNKNOWN'
+    if (roleId != null) {
+      const { data: roleData } = await supabase
+        .from('roles')
+        .select('name')
+        .eq('id', roleId)
+        .maybeSingle()
+      roleName = roleData?.name || 'UNKNOWN'
+    }
 
     return {
-      id: row.id,
-      user_id: row.user_id,
-      role_id: row.role_id,
-      role_name: extractRelatedName(row.roles) || 'UNKNOWN',
-      market_id: row.market_id,
-      market_name: extractRelatedName(row.markets) || undefined
+      id: 0,
+      user_id: userId,
+      role_id: roleId ?? 0,
+      role_name: (roleName || 'UNKNOWN').toString().toUpperCase(),
+      market_id: userRow.market_id ?? null
     }
   } catch (err) {
     console.error('Error in getUserRole:', err)
@@ -66,6 +92,7 @@ export async function getUserRole(userId: string): Promise<UserRole | null> {
 export async function getUserRoles(userId: string): Promise<UserRole[]> {
   try {
     const supabase = getSupabaseClient()
+
     const { data, error } = await supabase
       .from('user_roles')
       .select(`
@@ -78,21 +105,39 @@ export async function getUserRoles(userId: string): Promise<UserRole[]> {
       `)
       .eq('user_id', userId)
 
-    if (error) {
-      console.error('Error fetching user roles:', error)
-      return []
+    if (!error && Array.isArray(data) && data.length > 0) {
+      return data.map((d: any) => ({
+        id: d.id,
+        user_id: d.user_id,
+        role_id: d.role_id,
+        role_name: extractRelatedName(d.roles) || 'UNKNOWN',
+        market_id: d.market_id,
+        market_name: extractRelatedName(d.markets) || undefined
+      }))
     }
 
-    if (!data) return []
+    // Fallback schema: role stored in users.id_role
+    const { data: userRow } = await supabase
+      .from('users')
+      .select('id_user, id_role, market_id, auth_uid')
+      .eq('auth_uid', userId)
+      .maybeSingle()
 
-    return data.map((d: any) => ({
-      id: d.id,
-      user_id: d.user_id,
-      role_id: d.role_id,
-      role_name: extractRelatedName(d.roles) || 'UNKNOWN',
-      market_id: d.market_id,
-      market_name: extractRelatedName(d.markets) || undefined
-    }))
+    if (!userRow || userRow.id_role == null) return []
+
+    const { data: roleData } = await supabase
+      .from('roles')
+      .select('name')
+      .eq('id', userRow.id_role)
+      .maybeSingle()
+
+    return [{
+      id: 0,
+      user_id: userId,
+      role_id: userRow.id_role ?? 0,
+      role_name: (roleData?.name || 'UNKNOWN').toString().toUpperCase(),
+      market_id: userRow.market_id ?? null
+    }]
   } catch (err) {
     console.error('Error in getUserRoles:', err)
     return []
@@ -107,17 +152,31 @@ export async function hasRole(userId: string, roleName: string): Promise<boolean
     const supabase = getSupabaseClient()
     const { data, error } = await supabase
       .from('user_roles')
-      .select('id')
+      .select('id, role_id, roles(name)')
       .eq('user_id', userId)
-      .eq('roles.name', roleName)
       .limit(1)
 
-    if (error) {
-      console.error('Error fetching role check:', error)
-      return false
+    if (!error && Array.isArray(data) && data.length > 0) {
+      const found = data.some((r: any) => (r.roles?.name || '').toUpperCase() === roleName.toUpperCase())
+      if (found) return true
     }
 
-    return Array.isArray(data) && data.length > 0
+    // Fallback: cek dari users.id_role
+    const { data: userRow } = await supabase
+      .from('users')
+      .select('id_role, auth_uid')
+      .eq('auth_uid', userId)
+      .maybeSingle()
+
+    if (userRow?.id_role == null) return false
+
+    const { data: roleData } = await supabase
+      .from('roles')
+      .select('name')
+      .eq('id', userRow.id_role)
+      .maybeSingle()
+
+    return (roleData?.name || '').toUpperCase() === roleName.toUpperCase()
   } catch (err) {
     console.error('Error in hasRole:', err)
     return false
@@ -152,41 +211,55 @@ export async function getUserMarket(userId: string): Promise<any | null> {
       .select('market_id, role_id')
       .eq('user_id', userId)
 
-    if (roleRowsError) throw roleRowsError
-    if (!Array.isArray(userRoleRows) || userRoleRows.length === 0) return null
+    if (!roleRowsError && Array.isArray(userRoleRows) && userRoleRows.length > 0) {
+      const roleIds = [...new Set(userRoleRows.filter((r: any) => r.role_id).map((r: any) => r.role_id))]
+      let roleNameMap = new Map<number, string>()
 
-    const roleIds = [...new Set(userRoleRows.filter((r: any) => r.role_id).map((r: any) => r.role_id))]
+      if (roleIds.length > 0) {
+        const { data: rolesData } = await supabase
+          .from('roles')
+          .select('id, name')
+          .in('id', roleIds)
+        if (rolesData) {
+          roleNameMap = new Map((rolesData || []).map((r: any) => [r.id, r.name]))
+        }
+      }
 
-    let roleNameMap = new Map<number, string>()
-    if (roleIds.length > 0) {
-      const { data: rolesData, error: rolesError } = await supabase
-        .from('roles')
-        .select('id, name')
-        .in('id', roleIds)
+      const assignedRow = userRoleRows.find((row: any) => {
+        const roleName = (roleNameMap.get(row.role_id) || '').toUpperCase()
+        const hasMarket = row.market_id != null && row.market_id !== ''
+        return hasMarket && (
+          roleName === 'MARKET_HEAD' ||
+          roleName === 'ADMIN_PASAR' ||
+          roleName === 'PASAR_ADMIN' ||
+          roleName === 'MARKET_ADMIN' ||
+          roleName === 'ADMIN'
+        )
+      }) || userRoleRows.find((row: any) => row.market_id != null && row.market_id !== '') || userRoleRows[0]
 
-      if (!rolesError) {
-        roleNameMap = new Map((rolesData || []).map((r: any) => [r.id, r.name]))
+      if (assignedRow?.market_id) {
+        const { data: marketData, error: marketError } = await supabase
+          .from('markets')
+          .select('id, code, name, address, city, status')
+          .eq('id', assignedRow.market_id)
+          .single()
+        if (!marketError) return marketData
       }
     }
 
-    const assignedRow = userRoleRows.find((row: any) => {
-      const roleName = (roleNameMap.get(row.role_id) || '').toUpperCase()
-      const hasMarket = row.market_id != null && row.market_id !== ''
-      return hasMarket && (
-        roleName === 'MARKET_HEAD' ||
-        roleName === 'ADMIN_PASAR' ||
-        roleName === 'PASAR_ADMIN' ||
-        roleName === 'MARKET_ADMIN' ||
-        roleName === 'ADMIN'
-      )
-    }) || userRoleRows.find((row: any) => row.market_id != null && row.market_id !== '') || userRoleRows[0]
+    // Fallback schema: role + market stored in users table
+    const { data: userRow } = await supabase
+      .from('users')
+      .select('market_id, id_role, auth_uid')
+      .eq('auth_uid', userId)
+      .maybeSingle()
 
-    if (!assignedRow?.market_id) return null
+    if (!userRow?.market_id) return null
 
     const { data: marketData, error: marketError } = await supabase
       .from('markets')
       .select('id, code, name, address, city, status')
-      .eq('id', assignedRow.market_id)
+      .eq('id', userRow.market_id)
       .single()
 
     if (marketError) throw marketError

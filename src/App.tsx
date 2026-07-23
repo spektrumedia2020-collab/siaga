@@ -5,7 +5,7 @@ import { Auth } from './components/Auth'
 import { Dashboard } from './components/Dashboard'
 import { SuperAdminDashboardImproved as SuperAdminDashboard } from './pages/SuperAdminDashboardImproved'
 import { MarketDashboard } from './pages/MarketDashboard'
-import { MarketsManagement } from './pages/MarketsManagement'
+npm runimport { MarketsManagement } from './pages/MarketsManagement'
 import { MarketEditPage } from './pages/MarketEditPage'
 import './App.css'
 import './styles/layout.css'
@@ -50,8 +50,20 @@ function App() {
         setLoading(false)
       })
 
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
         setUser(session?.user ?? null)
+        
+        // Redirect based on user role after auth state change
+        if (session?.user) {
+          const role = await getUserRole(session.user.id)
+          const roleName = role?.role_name?.toUpperCase() || ''
+          
+          if (roleName === 'ADMIN') {
+            window.location.hash = 'superadmin/dashboard'
+          } else if (['MARKET_HEAD', 'MARKET_ADMIN', 'ADMIN_PASAR', 'PASAR_ADMIN'].includes(roleName)) {
+            window.location.hash = 'market/dashboard'
+          }
+        }
       })
 
       return () => {
