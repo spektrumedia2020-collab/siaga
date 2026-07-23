@@ -63,6 +63,21 @@ export function Dashboard({ user, onLogout, isDashboardHeader, children, imperso
 
         console.debug('Dashboard: fetched user_roles for header', enriched, urError)
         if (mounted) setRawUserRoles(enriched)
+
+        // Fallback: if user_roles is empty, try users.id_role
+        if ((enriched || []).length === 0) {
+          const { data: userData } = await supabase
+            .from('users')
+            .select('id_role')
+            .eq('auth_uid', user.id)
+            .maybeSingle()
+
+          const roleId = userData?.id_role
+          const roleName = roleId != null ? (roleMap.get(roleId) || 'UNKNOWN') : null
+          if (mounted && roleName) {
+            setRawUserRoles([{ role_name: roleName }])
+          }
+        }
       } catch (e) {
         console.error('Dashboard: error fetching user_roles', e)
       }

@@ -9,6 +9,7 @@ import { CategoriesPage } from './CategoriesPage'
 import { RetribusiPage } from './RetribusiPage'
 import { TransactionsPage } from './TransactionsPage'
 import { ReconciliationsPage } from './ReconciliationsPage'
+import { SetoranPage } from './SetoranPage'
 import { MarketDetailPage } from './MarketDetailPage'
 import {
   LineChart,
@@ -50,12 +51,13 @@ interface Props {
   onLogout?: () => void
 }
 
-type PageType = 'overview' | 'officers' | 'stalls' | 'sectors' | 'owners' | 'categories' | 'retribusi' | 'transactions' | 'reconciliations' | 'marketDetail'
+type PageType = 'overview' | 'officers' | 'stalls' | 'sectors' | 'owners' | 'categories' | 'retribusi' | 'transactions' | 'reconciliations' | 'setoran' | 'marketDetail'
 
 export function MarketDashboard({ userId, impersonating = false, onStopImpersonation, onLogout }: Props) {
   const [stats, setStats] = useState<MarketStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState<PageType>('overview')
+  const [chartData, setChartData] = useState<any[]>([])
   const [editingMarket, setEditingMarket] = useState(false)
   const [marketForm, setMarketForm] = useState<any>({ name: '', code: '', address: '', city: '', status: '' })
   const [profileOpen, setProfileOpen] = useState(false)
@@ -81,6 +83,74 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
         status: stats.market.status || ''
       })
     }
+  }, [stats])
+
+  useEffect(() => {
+    const computeChartData = async () => {
+      if (!stats?.market) return
+      const supabaseClient = getSupabaseClient()
+      const { data: stallsData } = await supabaseClient
+        .from('stalls')
+        .select('id')
+        .eq('market_id', stats.market.id)
+        .eq('status', 'AKTIF')
+
+      const stallIds = stallsData?.map(s => s.id) || []
+      const today = new Date()
+      const weekAgo = new Date(today)
+      weekAgo.setDate(today.getDate() - 6)
+      const weekStart = new Date(weekAgo.getFullYear(), weekAgo.getMonth(), weekAgo.getDate()).toISOString()
+      const weekEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).toISOString()
+
+      let weeklyTransactions: any[] = []
+      if (stallIds.length > 0) {
+        const { data } = await supabaseClient
+          .from('transactions')
+          .select('amount_paid, created_at')
+          .in('stall_id', stallIds)
+          .gte('created_at', weekStart)
+          .lt('created_at', weekEnd)
+        weeklyTransactions = data || []
+      }
+
+      const dailyMap = new Map<string, { revenue: number; transactions: number }>()
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(today)
+        d.setDate(today.getDate() - (6 - i))
+        const key = d.toISOString().split('T')[0]
+        dailyMap.set(key, { revenue: 0, transactions: 0 })
+      }
+
+      weeklyTransactions.forEach((tx: any) => {
+        const dayKey = (tx.created_at || '').split('T')[0]
+        if (dailyMap.has(dayKey)) {
+          const existing = dailyMap.get(dayKey)!
+          existing.revenue += parseFloat(tx.amount_paid || 0)
+          existing.transactions += 1
+        }
+      })
+
+      const dayLabels = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
+      const currentDayIndex = today.getDay()
+
+      const nextChartData = Array.from({ length: 7 }, (_, i) => {
+        const dayOffset = i - currentDayIndex + 1
+        const targetDate = new Date(today)
+        targetDate.setDate(today.getDate() + dayOffset)
+        const targetKey = targetDate.toISOString().split('T')[0]
+        const dayName = dayLabels[targetDate.getDay()]
+        const dataPoint = dailyMap.get(targetKey) || { revenue: 0, transactions: 0 }
+        return {
+          name: dayName,
+          revenue: dataPoint.revenue,
+          transactions: dataPoint.transactions
+        }
+      })
+
+      setChartData(nextChartData)
+    }
+
+    computeChartData()
   }, [stats])
 
   const loadUserProfile = async () => {
@@ -218,24 +288,25 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
         return
       }
 
-      // Count stalls in this market
+      // Count stalls in this market (only active)
       const supabaseClient = getSupabaseClient()
       const { count: stallCount } = await supabaseClient
         .from('stalls')
         .select('*', { count: 'exact' })
         .eq('market_id', market.id)
+        .eq('status', 'AKTIF')
 
-      // Count officers in this market
       const { count: officerCount } = await supabaseClient
         .from('users')
         .select('*', { count: 'exact' })
         .eq('market_id', market.id)
+        .eq('status', 'AKTIF')
 
-      // Get transactions for stalls in this market
       const { data: stallsData } = await supabaseClient
         .from('stalls')
         .select('id')
         .eq('market_id', market.id)
+        .eq('status', 'AKTIF')
 
       const stallIds = stallsData?.map(s => s.id) || []
 
@@ -245,7 +316,7 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
       if (stallIds.length > 0) {
         const { count, data: transactionData } = await supabaseClient
           .from('transactions')
-          .select('amount_paid', { count: 'exact' })
+          .select('amount_paid, created_at', { count: 'exact' })
           .in('stall_id', stallIds)
 
         transactionCount = count || 0
@@ -304,16 +375,18 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
         return <TransactionsPage marketId={stats.market.id} />
       case 'reconciliations':
         return <ReconciliationsPage marketId={stats.market.id} />
+      case 'setoran':
+        return <SetoranPage marketId={stats.market.id} />
       default:
         const avgRevenuePerTransaction = transactionCount > 0 ? totalRevenue / transactionCount : 0
-        const chartData = [
-          { name: 'Sen', revenue: totalRevenue * 0.14, transactions: Math.round(transactionCount * 0.12) },
-          { name: 'Sel', revenue: totalRevenue * 0.18, transactions: Math.round(transactionCount * 0.15) },
-          { name: 'Rab', revenue: totalRevenue * 0.2, transactions: Math.round(transactionCount * 0.17) },
-          { name: 'Kam', revenue: totalRevenue * 0.22, transactions: Math.round(transactionCount * 0.2) },
-          { name: 'Jum', revenue: totalRevenue * 0.16, transactions: Math.round(transactionCount * 0.18) },
-          { name: 'Sab', revenue: totalRevenue * 0.06, transactions: Math.round(transactionCount * 0.1) },
-          { name: 'Min', revenue: totalRevenue * 0.04, transactions: Math.round(transactionCount * 0.08) }
+        const displayChartData = chartData.length > 0 ? chartData : [
+          { name: 'Sen', revenue: 0, transactions: 0 },
+          { name: 'Sel', revenue: 0, transactions: 0 },
+          { name: 'Rab', revenue: 0, transactions: 0 },
+          { name: 'Kam', revenue: 0, transactions: 0 },
+          { name: 'Jum', revenue: 0, transactions: 0 },
+          { name: 'Sab', revenue: 0, transactions: 0 },
+          { name: 'Min', revenue: 0, transactions: 0 }
         ]
 
         const topCards = [
@@ -364,7 +437,7 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
                   </div>
                   <div className="chart-wrapper">
                     <ResponsiveContainer width="100%" height={260}>
-                      <LineChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+                      <LineChart data={displayChartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(29, 61, 7, 0.12)" />
                         <XAxis dataKey="name" stroke="#3d5224" tickLine={false} axisLine={false} />
                         <YAxis stroke="#3d5224" tickLine={false} axisLine={false} />
@@ -578,6 +651,13 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
                 >
                   <span className="sidebar-icon"><IconReconciliations /></span>
                   <span>Rekonsiliasi</span>
+                </button>
+                <button
+                  className={`sidebar-item ${currentPage === 'setoran' ? 'active' : ''}`}
+                  onClick={() => setCurrentPage('setoran')}
+                >
+                  <span className="sidebar-icon"><IconReconciliations /></span>
+                  <span>Setoran</span>
                 </button>
               </div>
               <div className="sidebar-group">

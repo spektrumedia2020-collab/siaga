@@ -2,15 +2,28 @@ import { useState, useEffect } from 'react'
 import { getSupabaseClient } from '../lib/supabase'
 import '../pages/OfficersPage.css'
 
+const ROLE_NAMES: Record<string, string> = {
+  'MARKET_HEAD': 'Kepala Pasar',
+  'ADMIN_PASAR': 'Admin Pasar',
+  'PASAR_ADMIN': 'Admin Pasar',
+  'MARKET_ADMIN': 'Admin Pasar',
+  'OFFICER': 'Petugas',
+  'CASHIER': 'Kasir',
+  'TREASURER': 'Bendahara',
+  'SUPER_ADMIN': 'Super Admin',
+  'ADMIN': 'Admin'
+}
+
 interface Officer {
   id: number
   user_id: string
   code: string
-  name: string
+  nama: string
   phone: string
   market_id: number
   status: string
   created_at: string
+  id_role?: number
 }
 
 interface Props {
@@ -25,13 +38,29 @@ export function OfficersPage({ marketId }: Props) {
   const [editingId, setEditingId] = useState<number | null>(null)
   const [formData, setFormData] = useState({
     code: '',
-    name: '',
-    phone: ''
+    nama: '',
+    phone: '',
+    id_role: '' as number | ''
   })
+  const [roles, setRoles] = useState<{ id: number; name: string }[]>([])
 
   useEffect(() => {
     loadOfficers()
+    loadRoles()
   }, [marketId])
+
+  const loadRoles = async () => {
+    try {
+      const supabase = getSupabaseClient()
+      const { data } = await supabase
+        .from('roles')
+        .select('id, name')
+        .order('name')
+      setRoles(data || [])
+    } catch (err) {
+      console.error('Error loading roles', err)
+    }
+  }
 
   const loadOfficers = async () => {
     try {
@@ -40,7 +69,7 @@ export function OfficersPage({ marketId }: Props) {
         .from('users')
         .select('*')
         .eq('market_id', marketId)
-        .order('name')
+        .order('nama')
 
       if (err) throw err
       setOfficers(data || [])
@@ -49,6 +78,12 @@ export function OfficersPage({ marketId }: Props) {
     } finally {
       setLoading(false)
     }
+  }
+
+  const getRoleLabel = (roleId?: number) => {
+    if (!roleId) return '-'
+    const role = roles.find(r => r.id === roleId)
+    return ROLE_NAMES[role?.name || ''] || role?.name || '-'
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -63,8 +98,9 @@ export function OfficersPage({ marketId }: Props) {
           .from('users')
           .update({
             code: formData.code,
-            name: formData.name,
-            phone: formData.phone
+            nama: formData.nama,
+            phone: formData.phone,
+            id_role: formData.id_role || null
           })
           .eq('id', editingId)
 
@@ -76,17 +112,18 @@ export function OfficersPage({ marketId }: Props) {
           .insert([
             {
               code: formData.code,
-              name: formData.name,
+              nama: formData.nama,
               phone: formData.phone,
               market_id: marketId,
-              status: 'AKTIF'
+              status: 'AKTIF',
+              id_role: formData.id_role || null
             }
           ])
 
         if (err) throw err
       }
 
-      setFormData({ code: '', name: '', phone: '' })
+      setFormData({ code: '', nama: '', phone: '', id_role: '' })
       setEditingId(null)
       setShowForm(false)
       loadOfficers()
@@ -98,8 +135,9 @@ export function OfficersPage({ marketId }: Props) {
   const handleEdit = (officer: Officer) => {
     setFormData({
       code: officer.code,
-      name: officer.name,
-      phone: officer.phone
+      nama: officer.nama,
+      phone: officer.phone,
+      id_role: officer.id_role || ''
     })
     setEditingId(officer.id)
     setShowForm(true)
@@ -123,7 +161,7 @@ export function OfficersPage({ marketId }: Props) {
   }
 
   const handleCancel = () => {
-    setFormData({ code: '', name: '', phone: '' })
+    setFormData({ code: '', nama: '', phone: '', id_role: '' })
     setEditingId(null)
     setShowForm(false)
   }
@@ -164,8 +202,8 @@ export function OfficersPage({ marketId }: Props) {
               <label>Nama Petugas</label>
               <input
                 type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                value={formData.nama}
+                onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
                 placeholder="Nama lengkap"
                 required
               />
@@ -179,6 +217,22 @@ export function OfficersPage({ marketId }: Props) {
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 placeholder="08xxxxxxxxxx"
               />
+            </div>
+
+            <div className="form-group">
+              <label>Role</label>
+              <select
+                value={formData.id_role}
+                onChange={(e) => setFormData({ ...formData, id_role: e.target.value ? Number(e.target.value) : '' })}
+                className="siaga-input"
+              >
+                <option value="">-- Pilih Role --</option>
+                {roles.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {ROLE_NAMES[r.name] || r.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="form-actions">
@@ -205,6 +259,7 @@ export function OfficersPage({ marketId }: Props) {
                   <th>Kode</th>
                   <th>Nama</th>
                   <th>Telepon</th>
+                  <th>Role</th>
                   <th>Status</th>
                   <th>Dibuat</th>
                   <th>Aksi</th>
@@ -214,8 +269,9 @@ export function OfficersPage({ marketId }: Props) {
                 {officers.map((officer) => (
                   <tr key={officer.id}>
                     <td>{officer.code}</td>
-                    <td>{officer.name}</td>
+                    <td>{officer.nama}</td>
                     <td>{officer.phone || '-'}</td>
+                    <td>{getRoleLabel(officer.id_role)}</td>
                     <td>
                       <span className={`status-badge status-${officer.status.toLowerCase()}`}>
                         {officer.status}
