@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../core/ui_helpers.dart';
 
 class SetoranFormDialog extends StatefulWidget {
   final String officerId;
@@ -154,22 +155,12 @@ class _SetoranFormDialogState extends State<SetoranFormDialog> {
 
       if (mounted) {
         Navigator.of(context).pop(true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Setoran berhasil dibuat!'),
-              backgroundColor: Colors.green,
-              behavior: SnackBarBehavior.floating),
-        );
+        showSuccessSnackBar(context, 'Setoran berhasil dibuat!');
       }
     } catch (e) {
       if (mounted) {
         setState(() => _loading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text('Gagal membuat setoran: ${e.toString()}'),
-              backgroundColor: Colors.red,
-              behavior: SnackBarBehavior.floating),
-        );
+        showErrorSnackBar(context, 'Gagal membuat setoran: ${e.toString()}');
       }
     }
   }

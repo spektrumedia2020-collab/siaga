@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/theme/app_theme.dart';
 import '../../services/sync_service.dart';
 import '../../services/local/database_service.dart';
+import '../../core/ui_helpers.dart';
 
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
@@ -48,12 +49,7 @@ class _LandingPageState extends State<LandingPage> {
     if (!_isOnlineMode) {
       // Show message that sync is not available in offline mode
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Sinkronisasi hanya tersedia dalam mode online'),
-            backgroundColor: Colors.orange,
-          ),
-        );
+        showInfoSnackBar(context, 'Sinkronisasi hanya tersedia dalam mode online');
       }
       return;
     }
@@ -73,12 +69,7 @@ class _LandingPageState extends State<LandingPage> {
           _syncing = false;
         });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Sinkronisasi berhasil: $syncedTx transaksi'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        showSuccessSnackBar(context, 'Sinkronisasi berhasil: $syncedTx transaksi');
       }
     } catch (e) {
       if (mounted) {
@@ -86,12 +77,7 @@ class _LandingPageState extends State<LandingPage> {
           _syncing = false;
         });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Sinkronisasi gagal: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        showErrorSnackBar(context, 'Sinkronisasi gagal: $e');
       }
     }
   }

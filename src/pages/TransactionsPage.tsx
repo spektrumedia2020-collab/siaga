@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react'
 import { getSupabaseClient } from '../lib/supabase'
 import { DateRangePicker } from '../components/DateRangePicker'
+import { Loading } from '../components/Loading'
+import { EmptyState } from '../components/EmptyState'
+import './TransactionsPage.css'
 
 interface TransactionsPageProps {
   marketId?: number | string
@@ -137,20 +140,20 @@ export function TransactionsPage({ marketId }: TransactionsPageProps) {
       <h2>🧾 Transaksi</h2>
       <p>Daftar transaksi yang tercatat di pasar ini.</p>
 
-      <div style={{ marginTop: 16, padding: 16, border: '1px solid #e5e7eb', borderRadius: 8, background: '#f9fafb' }}>
+      <div className="tx-summary-box">
         <strong>Total Transaksi:</strong> {transactions.length} | <strong>Total Pendapatan:</strong> Rp {totalAmount.toLocaleString('id-ID')}
       </div>
 
-      {error && <div style={{ marginTop: 12, color: '#b91c1c', padding: 8, background: '#fee', borderRadius: 6 }}>{error}</div>}
+      {error && <div className="tx-error-box">{error}</div>}
 
       {/* Filter Section */}
-      <div style={{ marginTop: 16, display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'end' }}>
-        <div>
-          <label style={{ display: 'block', fontSize: 13, marginBottom: 4, color: '#555' }}>Lapak</label>
+      <div className="tx-filter-section">
+        <div className="tx-filter-group">
+          <label>Lapak</label>
           <select
             value={stallFilter}
             onChange={(e) => setStallFilter(e.target.value)}
-            style={{ padding: '6px 12px', borderRadius: 6, border: '1px solid #d1d5db' }}
+            className="tx-filter-select"
           >
             <option value="">Semua Lapak</option>
             {stalls.map((s) => (
@@ -159,12 +162,12 @@ export function TransactionsPage({ marketId }: TransactionsPageProps) {
           </select>
         </div>
 
-        <div>
-          <label style={{ display: 'block', fontSize: 13, marginBottom: 4, color: '#555' }}>Status</label>
+        <div className="tx-filter-group">
+          <label>Status</label>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            style={{ padding: '6px 12px', borderRadius: 6, border: '1px solid #d1d5db' }}
+            className="tx-filter-select"
           >
             <option value="">Semua Status</option>
             <option value="LUNAS">LUNAS</option>
@@ -180,62 +183,49 @@ export function TransactionsPage({ marketId }: TransactionsPageProps) {
           onDateToChange={setDateTo}
         />
 
-        <button onClick={() => { setStallFilter(''); setStatusFilter(''); setDateFrom(''); setDateTo('') }} className="btn-secondary" style={{ padding: '6px 16px' }}>
+        <button onClick={() => { setStallFilter(''); setStatusFilter(''); setDateFrom(''); setDateTo('') }} className="btn-secondary tx-reset-btn">
           Reset Filter
         </button>
       </div>
 
       {/* Transaction Table */}
-      <div style={{ marginTop: 20, overflowX: 'auto' }}>
+      <div className="tx-table-wrap">
         {loading ? (
-          <p>Memuat data transaksi...</p>
+          <Loading label="Memuat data transaksi..." fullHeight={false} />
         ) : transactions.length === 0 ? (
-          <p style={{ color: '#6b7280', padding: '20px 0' }}>Belum ada transaksi untuk pasar ini.</p>
+          <EmptyState
+            icon="🧾"
+            title="Belum ada transaksi"
+            subtitle="Transaksi yang dicatat petugas di pasar ini akan muncul di sini."
+          />
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff', border: '1px solid #e5e7eb', fontSize: '0.95rem' }}>
+          <table className="tx-table">
             <thead>
-              <tr style={{ background: '#f9fafb', borderBottom: '2px solid #2D5016' }}>
-                <th style={{ padding: 10, border: '1px solid #e5e7eb', textAlign: 'left' }}>Lapak</th>
-                <th style={{ padding: 10, border: '1px solid #e5e7eb', textAlign: 'left' }}>Pembayar</th>
-                <th style={{ padding: 10, border: '1px solid #e5e7eb', textAlign: 'right' }}>Jumlah</th>
-                <th style={{ padding: 10, border: '1px solid #e5e7eb', textAlign: 'left' }}>Metode</th>
-                <th style={{ padding: 10, border: '1px solid #e5e7eb', textAlign: 'left' }}>Status</th>
-                <th style={{ padding: 10, border: '1px solid #e5e7eb', textAlign: 'left' }}>Catatan</th>
-                <th style={{ padding: 10, border: '1px solid #e5e7eb', textAlign: 'left' }}>Tanggal</th>
+              <tr>
+                <th>Lapak</th>
+                <th>Pembayar</th>
+                <th className="tx-amount">Jumlah</th>
+                <th>Metode</th>
+                <th>Status</th>
+                <th className="tx-note">Catatan</th>
+                <th className="tx-date">Tanggal</th>
               </tr>
             </thead>
             <tbody>
-              {transactions.map((t) => (
-                <tr key={t.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                  <td style={{ padding: 10, border: '1px solid #e5e7eb' }}>
-                    {t.stalls?.code || t.stalls?.number || `ID #${t.stall_id}`}
-                  </td>
-                  <td style={{ padding: 10, border: '1px solid #e5e7eb' }}>{t.payer_name || '-'}</td>
-                  <td style={{ padding: 10, border: '1px solid #e5e7eb', textAlign: 'right', fontWeight: 600 }}>
-                    Rp {Number(t.amount_paid || 0).toLocaleString('id-ID')}
-                  </td>
-                  <td style={{ padding: 10, border: '1px solid #e5e7eb' }}>{t.payment_method || '-'}</td>
-                  <td style={{ padding: 10, border: '1px solid #e5e7eb' }}>
-                    <span style={{
-                      display: 'inline-block',
-                      padding: '3px 10px',
-                      borderRadius: 4,
-                      fontSize: '0.85rem',
-                      fontWeight: 600,
-                      background: t.status === 'LUNAS' ? '#C8E6C9' : t.status === 'BATAL' ? '#FFCCBC' : '#FFF9C4',
-                      color: t.status === 'LUNAS' ? '#2D5016' : t.status === 'BATAL' ? '#D84315' : '#F57F17'
-                    }}>
-                      {t.status || '-'}
-                    </span>
-                  </td>
-                  <td style={{ padding: 10, border: '1px solid #e5e7eb', color: '#6b7280', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {t.note || '-'}
-                  </td>
-                  <td style={{ padding: 10, border: '1px solid #e5e7eb', fontSize: '0.85rem', color: '#6b7280' }}>
-                    {formatDate(t.created_at)}
-                  </td>
-                </tr>
-              ))}
+              {transactions.map((t) => {
+                const statusCls = t.status === 'LUNAS' ? 'tx-status-lunas' : t.status === 'BATAL' ? 'tx-status-batal' : 'tx-status-pending'
+                return (
+                  <tr key={t.id}>
+                    <td>{t.stalls?.code || t.stalls?.number || `ID #${t.stall_id}`}</td>
+                    <td>{t.payer_name || '-'}</td>
+                    <td className="tx-amount">Rp {Number(t.amount_paid || 0).toLocaleString('id-ID')}</td>
+                    <td>{t.payment_method || '-'}</td>
+                    <td><span className={`tx-status-badge ${statusCls}`}>{t.status || '-'}</span></td>
+                    <td className="tx-note">{t.note || '-'}</td>
+                    <td className="tx-date">{formatDate(t.created_at)}</td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         )}

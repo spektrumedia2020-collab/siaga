@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Centralized Supabase service for the mobile app
@@ -34,5 +35,9 @@ class SupabaseService {
   }
 }
 
-/// Global Supabase service instance
-final supabaseService = SupabaseService(Supabase.instance.client);
+/// Riverpod provider (lazy): SupabaseService hanya dibuat saat pertama kali
+/// diakses, yaitu SETELAH Supabase.initialize() selesai di main().
+/// Ganti pemakaian global `supabaseService` dengan ref.read(supabaseServiceProvider).
+final supabaseServiceProvider = Provider<SupabaseService>((ref) {
+  return SupabaseService(Supabase.instance.client);
+});

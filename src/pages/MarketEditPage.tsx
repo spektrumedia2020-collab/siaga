@@ -62,7 +62,7 @@ export function MarketEditPage({ marketId, onBack }: Props) {
       const supabase = getSupabaseClient()
       const { data } = await supabase
         .from('markets')
-        .select('id, name, code, city, address, photo_url, head_photo_url, head_user_id, status')
+        .select('id, name, code, city, address, photo_url, head_photo_url, id_head_market, status')
         .eq('id', marketId)
         .single()
       
@@ -75,7 +75,7 @@ export function MarketEditPage({ marketId, onBack }: Props) {
           address: data.address || '',
           photo_url: data.photo_url || '',
           head_photo_url: data.head_photo_url || '',
-          head_user_id: data.head_user_id || '',
+          head_user_id: data.id_head_market ? String(data.id_head_market) : '',
           status: data.status || 'AKTIF'
         })
       }
@@ -159,7 +159,7 @@ export function MarketEditPage({ marketId, onBack }: Props) {
           address: formData.address,
           photo_url: formData.photo_url,
           head_photo_url: formData.head_photo_url,
-          head_user_id: formData.head_user_id,
+          id_head_market: formData.head_user_id ? parseInt(formData.head_user_id, 10) : null,
           status: formData.status
         })
         .eq('id', marketId)
@@ -179,45 +179,61 @@ export function MarketEditPage({ marketId, onBack }: Props) {
   }
 
   if (loading) {
-    return <div className="siage-loading"><div>Memuat data pasar...</div></div>
+    return <div className="siaga-loading"><div>Memuat data pasar...</div></div>
   }
 
   if (!marketId || !market) {
     return (
-      <div className="siage-card">
+      <div className="siaga-card">
         <h3>Tidak ada pasar yang dipilih</h3>
-        <button className="siage-btn siage-btn-primary" onClick={onBack}>Kembali ke Manajemen Pasar</button>
+        <button className="siaga-btn siaga-btn-primary" onClick={onBack}>Kembali ke Manajemen Pasar</button>
       </div>
     )
   }
 
   return (
-    <div className="siage-card">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '1px solid #e5e7eb' }}>
-        <h2 style={{ margin: 0 }}>✏️ Edit Pasar: {market.name}</h2>
-        <button className="siage-btn siage-btn-outline" onClick={onBack}>← Kembali</button>
+    <div className="siaga-card" style={{ maxWidth: 900, margin: '0 auto' }}>
+      <div className="siaga-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h2 style={{ margin: 0, fontSize: '1.5rem', color: '#2D5016' }}>✏️ Edit Pasar: {market.name}</h2>
+        <button className="siaga-btn siaga-btn-outline" onClick={onBack}>← Kembali</button>
       </div>
 
       <form onSubmit={handleSubmit}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
+        <div className="siaga-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+          {/* Kolom kiri: info pasar */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div><label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Nama Pasar</label><input type="text" className="siage-input" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required /></div>
-            <div><label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Kode Pasar</label><input type="text" className="siage-input" value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} required /></div>
-            <div><label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Kota</label><input type="text" className="siage-input" value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} required /></div>
-            <div><label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Alamat</label><textarea className="siage-input" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} rows={3} /></div>
-            <div><label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Status</label><select className="siage-input" value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })}><option value="AKTIF">Aktif</option><option value="NONAKTIF">Non-Aktif</option></select></div>
+            <div className="form-group"><label>Nama Pasar</label><input type="text" className="siaga-input" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required /></div>
+            <div className="form-group"><label>Kode Pasar</label><input type="text" className="siaga-input" value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} required /></div>
+            <div className="form-group"><label>Kota</label><input type="text" className="siaga-input" value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} required /></div>
+            <div className="form-group"><label>Alamat</label><textarea className="siaga-input" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} rows={3} /></div>
+            <div className="form-group"><label>Status</label><select className="siaga-input" value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })}><option value="AKTIF">Aktif</option><option value="NONAKTIF">Non-Aktif</option></select></div>
           </div>
 
+          {/* Kolom kanan: foto & kepala pasar */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div><label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Foto Pasar</label><div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>{formData.photo_url && <img src={formData.photo_url} alt="Pasar" style={{ width: '100%', maxHeight: '120px', objectFit: 'cover', borderRadius: '6px' }} />}<input type="file" ref={fileInputRef} accept="image/*" onChange={(e) => handleFileChange(e, 'photo')} style={{ display: 'none' }} /><button type="button" className="siage-btn siage-btn-outline" onClick={() => fileInputRef.current?.click()}>📎 {formData.photo_url ? 'Ganti Foto' : 'Upload Foto'}</button></div></div>
-            <div><label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Kepala Pasar</label><select className="siage-input" value={formData.head_user_id} onChange={(e) => setFormData({ ...formData, head_user_id: e.target.value })}><option value="">-- Pilih Kepala Pasar --</option>{users.map(user => (<option key={user.id} value={user.id}>{user.full_name || user.email}</option>))}</select></div>
-            <div><label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Foto Kepala Pasar</label><div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>{formData.head_photo_url && <img src={formData.head_photo_url} alt="Kepala Pasar" style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '50%' }} />}<input type="file" ref={headPhotoInputRef} accept="image/*" onChange={(e) => handleFileChange(e, 'head')} style={{ display: 'none' }} /><button type="button" className="siage-btn siage-btn-outline" onClick={() => headPhotoInputRef.current?.click()}>📎 {formData.head_photo_url ? 'Ganti Foto' : 'Upload Foto'}</button></div></div>
+            <div className="form-group">
+              <label>Foto Pasar</label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {formData.photo_url && <img src={formData.photo_url} alt="Pasar" style={{ width: '100%', maxHeight: 140, objectFit: 'cover', borderRadius: 8, border: '1px solid #e5e7eb' }} />}
+                <input type="file" ref={fileInputRef} accept="image/*" onChange={(e) => handleFileChange(e, 'photo')} style={{ display: 'none' }} />
+                <button type="button" className="siaga-btn siaga-btn-outline" onClick={() => fileInputRef.current?.click()}>📎 {formData.photo_url ? 'Ganti Foto' : 'Upload Foto'}</button>
+              </div>
+            </div>
+            <div className="form-group"><label>Kepala Pasar</label><select className="siaga-input" value={formData.head_user_id} onChange={(e) => setFormData({ ...formData, head_user_id: e.target.value })}><option value="">-- Pilih Kepala Pasar --</option>{users.map(user => (<option key={user.id} value={user.id}>{user.full_name || user.email}</option>))}</select></div>
+            <div className="form-group">
+              <label>Foto Kepala Pasar</label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                {formData.head_photo_url && <img src={formData.head_photo_url} alt="Kepala Pasar" style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: '50%', border: '2px solid #2D5016' }} />}
+                <input type="file" ref={headPhotoInputRef} accept="image/*" onChange={(e) => handleFileChange(e, 'head')} style={{ display: 'none' }} />
+                <button type="button" className="siaga-btn siaga-btn-outline" onClick={() => headPhotoInputRef.current?.click()}>📎 {formData.head_photo_url ? 'Ganti Foto' : 'Upload Foto'}</button>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem' }}>
-          <button type="submit" className="siage-btn siage-btn-primary" disabled={saving}>{saving ? '💾 Menyimpan...' : '💾 Simpan Perubahan'}</button>
-          <button type="button" className="siage-btn siage-btn-outline" onClick={onBack} disabled={saving}>Batal</button>
+        <div style={{ marginTop: '2rem', display: 'flex', gap: '0.75rem' }}>
+          <button type="submit" className="siaga-btn siaga-btn-primary" disabled={saving}>{saving ? '💾 Menyimpan...' : '💾 Simpan Perubahan'}</button>
+          <button type="button" className="siaga-btn siaga-btn-outline" onClick={onBack} disabled={saving}>Batal</button>
         </div>
       </form>
     </div>

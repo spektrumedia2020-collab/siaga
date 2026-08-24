@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 // Imports for all pages
 import '../features/splash/splash_page.dart';
@@ -42,14 +43,41 @@ class RoutePaths {
 // Auth provider
 final authProvider = StateProvider<bool>((ref) => false);
 
-// Router notifier for auth state changes
+// Router notifier: me-refresh router saat state auth Supabase berubah
 class RouterNotifier extends ChangeNotifier {
-  // Will be connected to actual auth state
+  RouterNotifier() {
+    Supabase.instance.client.auth.onAuthStateChange.listen((_) {
+      notifyListeners();
+    });
+  }
 }
 
 final GoRouter router = GoRouter(
   initialLocation: RoutePaths.splash,
   refreshListenable: RouterNotifier(),
+  // Route guard: proteksi halaman yang memerlukan login
+  redirect: (context, state) {
+    final loggedIn = Supabase.instance.client.auth.currentUser != null;
+    final location = state.matchedLocation;
+
+    // Route publik yang boleh diakses tanpa login
+    final isPublicRoute =
+        location == RoutePaths.splash ||
+        location == RoutePaths.landing ||
+        location == RoutePaths.login;
+
+    // Belum login tapi mencoba akses halaman protected -> paksa ke login
+    if (!loggedIn && !isPublicRoute) {
+      return RoutePaths.login;
+    }
+
+    // Sudah login tapi masih di halaman login -> langsung ke dashboard
+    if (loggedIn && location == RoutePaths.login) {
+      return RoutePaths.dashboard;
+    }
+
+    return null;
+  },
   routes: [
     // Splash Screen - first page shown
     GoRoute(

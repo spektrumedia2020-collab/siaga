@@ -83,7 +83,7 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
     try {
       final supabase = Supabase.instance.client;
       final lapakId = widget.lapakId;
-      print('DEBUG TransactionPage: loading payment data for lapakId=$lapakId, typeId=${widget.typeId}');
+      debugPrint('DEBUG TransactionPage: loading payment data for lapakId=$lapakId, typeId=${widget.typeId}');
 
       Map<String, dynamic>? row;
 
@@ -91,14 +91,14 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
       final stallByCode = await supabase.from('stalls').select('id, owner_id, code, number').eq('code', lapakId).maybeSingle();
       if (stallByCode != null) {
         row = Map<String, dynamic>.from(stallByCode as Map);
-        print('DEBUG TransactionPage: Found stall by code=$lapakId, id=${row['id']}');
+        debugPrint('DEBUG TransactionPage: Found stall by code=$lapakId, id=${row['id']}');
       } else {
         final idNumeric = int.tryParse(lapakId);
         if (idNumeric != null) {
           final stallById = await supabase.from('stalls').select('id, owner_id, code, number').eq('id', idNumeric).maybeSingle();
           if (stallById != null) {
             row = Map<String, dynamic>.from(stallById as Map);
-            print('DEBUG TransactionPage: Found stall by id=$idNumeric, code=${row['code']}');
+            debugPrint('DEBUG TransactionPage: Found stall by id=$idNumeric, code=${row['code']}');
           }
         }
       }
@@ -114,16 +114,16 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
           }).toList();
           if (match.isNotEmpty) {
             row = Map<String, dynamic>.from(match.first as Map);
-            print('DEBUG TransactionPage: Found stall in legacy table');
+            debugPrint('DEBUG TransactionPage: Found stall in legacy table');
           }
         } catch (e) {
-          print('DEBUG TransactionPage: Legacy lookup failed: $e');
+          debugPrint('DEBUG TransactionPage: Legacy lookup failed: $e');
         }
       }
 
       if (row != null) {
         _stallId = (row['id'] ?? int.tryParse(row['id_lapak']?.toString() ?? ''));
-        print('DEBUG TransactionPage: stallId resolved to $_stallId');
+        debugPrint('DEBUG TransactionPage: stallId resolved to $_stallId');
         final ownerId = row['owner_id'] ?? row['id_pemilik'];
         if (ownerId != null) {
           try {
@@ -132,11 +132,11 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
               _nameController.text = owner['name'] as String;
             }
           } catch (e) {
-            print('DEBUG TransactionPage: Owner lookup failed: $e');
+            debugPrint('DEBUG TransactionPage: Owner lookup failed: $e');
           }
         }
       } else {
-        print('DEBUG TransactionPage: Stall not found for lapakId=$lapakId');
+        debugPrint('DEBUG TransactionPage: Stall not found for lapakId=$lapakId');
       }
 
       // Load retribution type info dan amount dari retribution_rates
@@ -147,7 +147,7 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
           if (typeResult != null) {
             _retributionTypeName = typeResult['name']?.toString();
             _typeLoaded = true;
-            print('DEBUG TransactionPage: Found type name: $_retributionTypeName');
+            debugPrint('DEBUG TransactionPage: Found type name: $_retributionTypeName');
             // Ambil amount dari retribution_rates sesuai stall_id atau market_id
             final stallIdLocal = _stallId;
             if (stallIdLocal != null) {
@@ -161,7 +161,7 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
                     .maybeSingle();
                 if (rateForStall != null && rateForStall['amount'] != null) {
                   _amountController.text = rateForStall['amount'].toString();
-                  print('DEBUG TransactionPage: Found amount for stall: ${rateForStall['amount']}');
+                  debugPrint('DEBUG TransactionPage: Found amount for stall: ${rateForStall['amount']}');
                 } else {
                   // Jika tidak ada, cari rate yang berlaku untuk semua stall di market ini
                   final ratesForType = await supabase
@@ -176,16 +176,16 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
                   );
                   if (rateForMarket.isNotEmpty && rateForMarket['amount'] != null) {
                     _amountController.text = rateForMarket['amount'].toString();
-                    print('DEBUG TransactionPage: Found amount for market: ${rateForMarket['amount']}');
+                    debugPrint('DEBUG TransactionPage: Found amount for market: ${rateForMarket['amount']}');
                   } else if (ratesList.isNotEmpty && ratesList.first['amount'] != null) {
                     _amountController.text = ratesList.first['amount'].toString();
-                    print('DEBUG TransactionPage: Found amount (any): ${ratesList.first['amount']}');
+                    debugPrint('DEBUG TransactionPage: Found amount (any): ${ratesList.first['amount']}');
                   } else {
-                    print('DEBUG TransactionPage: No rate found for types_id=$typeIdNumeric');
+                    debugPrint('DEBUG TransactionPage: No rate found for types_id=$typeIdNumeric');
                   }
                 }
               } catch (e) {
-                print('DEBUG TransactionPage: Rate lookup error: $e');
+                debugPrint('DEBUG TransactionPage: Rate lookup error: $e');
               }
             } else {
               // Fallback: ambil rate tanpa filter stall
@@ -201,21 +201,21 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
                 );
                 if (rateAny.isNotEmpty && rateAny['amount'] != null) {
                   _amountController.text = rateAny['amount'].toString();
-                  print('DEBUG TransactionPage: Found amount (no stall): ${rateAny['amount']}');
+                  debugPrint('DEBUG TransactionPage: Found amount (no stall): ${rateAny['amount']}');
                 }
               } catch (e) {
-                print('DEBUG TransactionPage: Rate lookup error: $e');
+                debugPrint('DEBUG TransactionPage: Rate lookup error: $e');
               }
             }
             _noteController.text = 'Jenis: $_retributionTypeName';
           } else {
-            print('DEBUG TransactionPage: Type not found for id=$typeIdNumeric');
+            debugPrint('DEBUG TransactionPage: Type not found for id=$typeIdNumeric');
           }
         } catch (e) {
-          print('DEBUG TransactionPage: Type lookup error: $e');
+          debugPrint('DEBUG TransactionPage: Type lookup error: $e');
         }
       } else {
-        print('DEBUG TransactionPage: typeId not numeric: ${widget.typeId}');
+        debugPrint('DEBUG TransactionPage: typeId not numeric: ${widget.typeId}');
       }
 
       if (mounted) {
@@ -224,7 +224,7 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
         });
       }
     } catch (e) {
-      print('DEBUG TransactionPage: _loadPaymentData error: $e');
+      debugPrint('DEBUG TransactionPage: _loadPaymentData error: $e');
       if (mounted) setState(() => _loadingPaymentData = false);
     }
   }
@@ -260,57 +260,22 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
         return;
       }
 
-      // Simpan ke database - sesuaikan kolom yang ada
+      // Simpan ke database — pakai kolom `amount` tunggal (finalisasi skema 2.4)
       final insertBody = <String, dynamic>{};
       if (_stallId != null) {
         insertBody['stall_id'] = _stallId;
       }
+      insertBody['amount'] = amount;
       insertBody['payer_name'] = payerName;
       insertBody['payment_method'] = _paymentMethod;
       insertBody['note'] = _noteController.text.trim();
       insertBody['status'] = 'paid';
 
-      Map<String, dynamic> response;
-      try {
-        // Coba dengan kolom amount terlebih dahulu
-        insertBody['amount'] = amount;
-        print('DEBUG TransactionPage: Mencoba insert dengan amount=$amount');
-        response = await supabase.from('transactions').insert(insertBody).select().single();
-        print('DEBUG TransactionPage: Insert berhasil dengan amount');
-      } on PostgrestException catch (e) {
-        if (e.message.contains('amount') || e.code == 'PGRST204') {
-          // Jika kolom amount tidak ada, coba dengan total_amount
-          insertBody.remove('amount');
-          insertBody['total_amount'] = amount;
-          print('DEBUG TransactionPage: amount gagal, mencoba total_amount=$amount');
-          try {
-            response = await supabase.from('transactions').insert(insertBody).select().single();
-            print('DEBUG TransactionPage: Insert berhasil dengan total_amount');
-          } on PostgrestException catch (e2) {
-            // Jika kedua kolom gagal, coba tanpa kolom amount
-            insertBody.remove('total_amount');
-            print('DEBUG TransactionPage: total_amount gagal, mencoba tanpa kolom amount. Error: $e2');
-            response = await supabase.from('transactions').insert(insertBody).select().single();
-          }
-        } else {
-          // RLS error atau error lain
-          print('DEBUG TransactionPage: RLS/insert error: code=${e.code}, message=${e.message}, details=${e.details}, hint=${e.hint}');
-          if (e.message.toLowerCase().contains('row-level security') || e.message.toLowerCase().contains('forbidden')) {
-            // Coba pakai service role key untuk bypass RLS
-            try {
-              final supabaseAdmin = Supabase.instance.client;
-              print('DEBUG TransactionPage: Mencoba insert dengan admin client');
-              response = await supabaseAdmin.from('transactions').insert(insertBody).select().single();
-              print('DEBUG TransactionPage: Insert berhasil dengan admin client');
-            } catch (eAdmin) {
-              print('DEBUG TransactionPage: Admin insert juga gagal: $eAdmin');
-              rethrow;
-            }
-          } else {
-            rethrow;
-          }
-        }
-      }
+      // CATATAN KEAMANAN: blok "bypass RLS" telah DIHAPUS (audit item 1.1).
+      // Validasi market kini ditangani server-side oleh trigger
+      // trg_validate_transaction_market di Supabase — client tidak boleh
+      // mencoba melewati kebijilan keamanan database.
+      final response = await supabase.from('transactions').insert(insertBody).select().single();
 
       if (!mounted) return;
 

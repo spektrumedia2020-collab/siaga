@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
 import { getSupabaseClient } from '../lib/supabase'
+import { ConfirmDialog } from '../components/ConfirmDialog'
+import { Loading } from '../components/Loading'
+import { EmptyState } from '../components/EmptyState'
 
 interface OwnersPageProps {
   marketId?: string
@@ -23,6 +26,8 @@ export function OwnersPage({ marketId }: OwnersPageProps) {
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const [marketName, setMarketName] = useState('')
+  const [deleteTarget, setDeleteTarget] = useState<Owner | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   const loadOwners = async () => {
     try {
@@ -133,9 +138,8 @@ export function OwnersPage({ marketId }: OwnersPageProps) {
   }
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Yakin hapus pemilik ini?')) return
-
     try {
+      setDeleting(true)
       const supabase = getSupabaseClient()
       const { error } = await supabase
         .from('stall_owners')
@@ -146,6 +150,9 @@ export function OwnersPage({ marketId }: OwnersPageProps) {
       await loadOwners()
     } catch (err: any) {
       setError(err.message || 'Gagal menghapus pemilik lapak')
+    } finally {
+      setDeleting(false)
+      setDeleteTarget(null)
     }
   }
 
@@ -195,9 +202,13 @@ export function OwnersPage({ marketId }: OwnersPageProps) {
       <div style={{ marginTop: 24 }}>
         <h3>Daftar Pemilik ({owners.length})</h3>
         {loading ? (
-          <p>Memuat pemilik lapak...</p>
+          <Loading label="Memuat pemilik lapak..." fullHeight={false} />
         ) : owners.length === 0 ? (
-          <p>Belum ada pemilik lapak yang terdaftar.</p>
+          <EmptyState
+            icon="👤"
+            title="Belum ada pemilik lapak"
+            subtitle="Daftarkan pemilik lapak untuk menghubungkannya dengan data lapak."
+          />
         ) : (
           <div style={{ display: 'grid', gap: 8 }}>
             {owners.map((owner) => (
@@ -210,7 +221,7 @@ export function OwnersPage({ marketId }: OwnersPageProps) {
                   <button type="button" className="btn-secondary" onClick={() => handleEdit(owner)}>
                     Edit
                   </button>
-                  <button type="button" className="btn-delete-user" onClick={() => handleDelete(owner.id)}>
+                  <button type="button" className="btn-delete-user" onClick={() => setDeleteTarget(owner)}>
                     Hapus
                   </button>
                 </div>
@@ -219,6 +230,17 @@ export function OwnersPage({ marketId }: OwnersPageProps) {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="Hapus Pemilik Lapak"
+        message={`Yakin hapus pemilik "${deleteTarget?.name ?? ''}"? Tindakan ini tidak bisa dibatalkan.`}
+        confirmLabel="Hapus"
+        danger
+        loading={deleting}
+        onConfirm={() => deleteTarget && handleDelete(deleteTarget.id)}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   )
 }

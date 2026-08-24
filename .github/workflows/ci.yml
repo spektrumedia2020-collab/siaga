@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  # ============================================================
+  # WEB — build + typecheck (React/TypeScript + Vite)
+  # ============================================================
+  web:
+    name: Web (build + typecheck)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck (tsc --noEmit)
+        run: npx tsc --noEmit
+
+      - name: Build
+        run: npm run build
+
+  # ============================================================
+  # MOBILE — flutter analyze + test (Flutter)
+  # ============================================================
+  mobile:
+    name: Mobile (analyze + test)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test
+        run: flutter test
+
+  # ============================================================
+  # SQL — lint sederhana: pastikan tidak ada placeholder "..." 
+  # dan tidak ada pola id_role IN ('...') yang salah (bigint)
+  # ============================================================
+  sql-lint:
+    name: SQL sanity check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for placeholder "..." in SQL
+        run: |
+          if grep -rn "\.\.\." --include="*.sql" .; then
+            echo "::error::Ditemukan placeholder '...' di file SQL. Ganti dengan kode lengkap."
+            exit 1
+          fi
+          echo "OK: tidak ada placeholder '...' di SQL"
+
+      - name: Check for wrong id_role IN ('...') pattern (bigint vs string)
+        run: |
+          if grep -rn "id_role IN" --include="*.sql" .; then
+            echo "::error::Pola 'id_role IN (...)' ditemukan. id_role adalah bigint, harus JOIN ke roles."
+            exit 1
+          fi
+          echo "OK: tidak ada pola id_role IN yang salah"

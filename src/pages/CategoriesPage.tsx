@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
 import { getSupabaseClient } from '../lib/supabase'
+import { ConfirmDialog } from '../components/ConfirmDialog'
+import { Loading } from '../components/Loading'
+import { EmptyState } from '../components/EmptyState'
 
 interface CategoriesPageProps {
   marketId?: string
@@ -21,6 +24,8 @@ export function CategoriesPage({ marketId }: CategoriesPageProps) {
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const [marketName, setMarketName] = useState('')
+  const [deleteTarget, setDeleteTarget] = useState<Category | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   const loadCategories = async () => {
     try {
@@ -125,15 +130,17 @@ export function CategoriesPage({ marketId }: CategoriesPageProps) {
   }
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Yakin hapus kategori ini?')) return
-
     try {
+      setDeleting(true)
       const supabase = getSupabaseClient()
       const { error } = await supabase.from('stall_categories').delete().eq('id', id)
       if (error) throw error
       await loadCategories()
     } catch (err: any) {
       setError(err.message || 'Gagal menghapus kategori')
+    } finally {
+      setDeleting(false)
+      setDeleteTarget(null)
     }
   }
 
@@ -183,9 +190,13 @@ export function CategoriesPage({ marketId }: CategoriesPageProps) {
       <div style={{ marginTop: 24 }}>
         <h3>Daftar Kategori ({categories.length})</h3>
         {loading ? (
-          <p>Memuat kategori...</p>
+          <Loading label="Memuat kategori..." fullHeight={false} />
         ) : categories.length === 0 ? (
-          <p>Belum ada kategori yang ditambahkan.</p>
+          <EmptyState
+            icon="📂"
+            title="Belum ada kategori"
+            subtitle="Tambahkan kategori usaha seperti sayur-sayuran, kelontong, atau daging."
+          />
         ) : (
           <div style={{ display: 'grid', gap: 8 }}>
             {categories.map((category) => (
@@ -198,7 +209,7 @@ export function CategoriesPage({ marketId }: CategoriesPageProps) {
                   <button type="button" className="btn-secondary" onClick={() => handleEdit(category)}>
                     Edit
                   </button>
-                  <button type="button" className="btn-delete-user" onClick={() => handleDelete(category.id)}>
+                  <button type="button" className="btn-delete-user" onClick={() => setDeleteTarget(category)}>
                     Hapus
                   </button>
                 </div>
@@ -207,6 +218,17 @@ export function CategoriesPage({ marketId }: CategoriesPageProps) {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="Hapus Kategori"
+        message={`Yakin hapus kategori "${deleteTarget?.name ?? ''}"? Tindakan ini tidak bisa dibatalkan.`}
+        confirmLabel="Hapus"
+        danger
+        loading={deleting}
+        onConfirm={() => deleteTarget && handleDelete(deleteTarget.id)}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   )
 }

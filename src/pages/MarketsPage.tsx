@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getSupabaseClient } from '../lib/supabase'
 import { getUserRole } from '../lib/roleUtils'
+import { ConfirmDialog } from '../components/ConfirmDialog'
 import './Markets.css'
 import { compressImageFile } from '../lib/imageUtils'
 
@@ -38,6 +39,8 @@ export function MarketsPage() {
   const isSuperAdmin = (userRoleName || '').toUpperCase() === 'ADMIN'
   const [users, setUsers] = useState<any[]>([])
   const [roles, setRoles] = useState<any[]>([])
+  const [deleteTarget, setDeleteTarget] = useState<Market | null>(null)
+  const [deleting, setDeleting] = useState(false)
   const [assignForMarket, setAssignForMarket] = useState<Record<number, { open: boolean; userId: string }>>({})
   const [assignedAdmins, setAssignedAdmins] = useState<Record<number, { userId: string; label: string }>>({})
 
@@ -448,9 +451,8 @@ export function MarketsPage() {
   }
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Yakin hapus pasar ini?')) return
-
     try {
+      setDeleting(true)
       const supabase = getSupabaseClient()
       const { error } = await supabase
         .from('markets')
@@ -461,6 +463,9 @@ export function MarketsPage() {
       loadMarkets()
     } catch (err: any) {
       setError(err.message)
+    } finally {
+      setDeleting(false)
+      setDeleteTarget(null)
     }
   }
 
@@ -741,7 +746,7 @@ export function MarketsPage() {
                   <button className="btn-sm btn-edit" onClick={() => handleEdit(market)}>
                     Edit
                   </button>
-                  <button className="btn-sm btn-delete" onClick={() => handleDelete(market.id)}>
+                  <button className="btn-sm btn-delete" onClick={() => setDeleteTarget(market)}>
                     Hapus
                   </button>
                 </>
@@ -753,6 +758,17 @@ export function MarketsPage() {
           )
         })}
       </div>
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="Hapus Pasar"
+        message={`Yakin hapus pasar "${deleteTarget?.name ?? ''}"? Semua data terkait juga akan terhapus. Tindakan ini tidak bisa dibatalkan.`}
+        confirmLabel="Hapus Pasar"
+        danger
+        loading={deleting}
+        onConfirm={() => deleteTarget && handleDelete(deleteTarget.id)}
+        onCancel={() => setDeleteTarget(null)}
+      />
       </div>
     )
   }

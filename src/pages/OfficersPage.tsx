@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getSupabaseClient } from '../lib/supabase'
+import { ConfirmDialog } from '../components/ConfirmDialog'
 import '../pages/OfficersPage.css'
 
 const ROLE_NAMES: Record<string, string> = {
@@ -43,6 +44,8 @@ export function OfficersPage({ marketId }: Props) {
     id_role: '' as number | ''
   })
   const [roles, setRoles] = useState<{ id: number; name: string }[]>([])
+  const [deleteTarget, setDeleteTarget] = useState<Officer | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     loadOfficers()
@@ -144,9 +147,8 @@ export function OfficersPage({ marketId }: Props) {
   }
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Yakin hapus petugas ini?')) return
-
     try {
+      setDeleting(true)
       const supabase = getSupabaseClient()
       const { error: err } = await supabase
         .from('users')
@@ -157,6 +159,9 @@ export function OfficersPage({ marketId }: Props) {
       loadOfficers()
     } catch (err: any) {
       setError(err.message || 'Error deleting officer')
+    } finally {
+      setDeleting(false)
+      setDeleteTarget(null)
     }
   }
 
@@ -288,7 +293,7 @@ export function OfficersPage({ marketId }: Props) {
                           ✏️
                         </button>
                         <button
-                          onClick={() => handleDelete(officer.id)}
+                          onClick={() => setDeleteTarget(officer)}
                           className="btn-delete"
                           title="Hapus"
                         >
@@ -303,6 +308,17 @@ export function OfficersPage({ marketId }: Props) {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="Hapus Petugas"
+        message={`Yakin hapus petugas "${deleteTarget?.nama ?? ''}"? Tindakan ini tidak bisa dibatalkan.`}
+        confirmLabel="Hapus"
+        danger
+        loading={deleting}
+        onConfirm={() => deleteTarget && handleDelete(deleteTarget.id)}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   )
 }

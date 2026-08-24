@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { api } from '../lib/api'
+import { ConfirmDialog } from '../components/ConfirmDialog'
 import '../styles/layout.css'
 
 interface User {
@@ -94,14 +95,20 @@ export function UserManagement() {
     setShowForm(true)
   }
 
+  const [deleteTarget, setDeleteTarget] = useState<User | null>(null)
+  const [deleting, setDeleting] = useState(false)
+
   const handleDelete = async (userId: number) => {
-    if (!confirm('Yakin hapus user ini?')) return
     try {
+      setDeleting(true)
       await api.supabase.from('user_roles').delete().eq('id', userId)
       await api.supabase.from('users').delete().eq('id_user', userId)
       loadData()
     } catch (err) {
       console.error('Error deleting user:', err)
+    } finally {
+      setDeleting(false)
+      setDeleteTarget(null)
     }
   }
 
@@ -193,13 +200,24 @@ export function UserManagement() {
                 </td>
                 <td style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb', textAlign: 'center' }}>
                   <button className="siage-btn siage-btn-outline" onClick={() => handleEdit(user)} style={{ padding: '0.25rem 0.5rem', marginRight: '0.25rem' }}>✏️</button>
-                  <button className="siage-btn siage-btn-accent" onClick={() => handleDelete(user.id)} style={{ padding: '0.25rem 0.5rem' }}>🗑️</button>
+                  <button className="siage-btn siage-btn-accent" onClick={() => setDeleteTarget(user)} style={{ padding: '0.25rem 0.5rem' }}>🗑️</button>
                 </td>
               </tr>
             ))
           )}
         </tbody>
       </table>
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="Hapus User"
+        message={`Yakin hapus user "${deleteTarget?.full_name || deleteTarget?.email || ''}"? Tindakan ini tidak bisa dibatalkan.`}
+        confirmLabel="Hapus"
+        danger
+        loading={deleting}
+        onConfirm={() => deleteTarget && handleDelete(deleteTarget.id)}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   )
 }

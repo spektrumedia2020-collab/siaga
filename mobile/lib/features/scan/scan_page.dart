@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import '../../core/ui_helpers.dart';
 
 class ScanPage extends ConsumerStatefulWidget {
   const ScanPage({super.key});
@@ -37,9 +38,7 @@ class _ScanPageState extends ConsumerState<ScanPage> {
                 if (value != null && value != scannedCode) {
                   setState(() => scannedCode = value);
                   if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('QR terdeteksi: $value')),
-                    );
+                    showInfoSnackBar(context, 'QR terdeteksi: $value');
                   }
                 }
               },

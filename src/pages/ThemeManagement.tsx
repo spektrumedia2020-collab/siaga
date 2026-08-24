@@ -120,10 +120,13 @@ export function ThemeManagement() {
     }
   }
 
+  const [applyTarget, setApplyTarget] = useState<{ themeId: string; themeName: string } | null>(null)
+  const [marketIdInput, setMarketIdInput] = useState('')
+  const [applying, setApplying] = useState(false)
+
   const handleApplyTheme = async (themeId: string, marketId: number) => {
-    if (!confirm('Terapkan tema ini ke pasar?')) return
-    
     try {
+      setApplying(true)
       const supabase = getSupabaseClient()
       const { error } = await supabase
         .from('markets')
@@ -135,6 +138,9 @@ export function ThemeManagement() {
     } catch (err) {
       console.error('Error applying theme:', err)
       alert('Gagal menerapkan tema')
+    } finally {
+      setApplying(false)
+      setApplyTarget(null)
     }
   }
 
@@ -285,8 +291,8 @@ export function ThemeManagement() {
                 className="siaga-btn siaga-btn-primary"
                 style={{ flex: 1, fontSize: '13px', padding: '8px' }}
                 onClick={() => {
-                  const marketId = prompt('Masukkan ID Pasar:')
-                  if (marketId) handleApplyTheme(theme.id, parseInt(marketId))
+                  setMarketIdInput('')
+                  setApplyTarget({ themeId: theme.id, themeName: theme.name })
                 }}
               >
                 🔄 Terapkan ke Pasar
@@ -301,6 +307,39 @@ export function ThemeManagement() {
           </div>
         ))}
       </div>
+
+      {applyTarget && (
+        <div className="confirm-dialog-backdrop" onClick={() => !applying && setApplyTarget(null)} role="presentation">
+          <div className="confirm-dialog" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+            <h3 className="confirm-dialog-title">Terapkan Tema</h3>
+            <p className="confirm-dialog-message">
+              Masukkan <strong>ID Pasar</strong> untuk menerapkan tema <strong>"{applyTarget.themeName}"</strong>.
+            </p>
+            <input
+              type="number"
+              min="1"
+              value={marketIdInput}
+              onChange={(e) => setMarketIdInput(e.target.value)}
+              placeholder="Contoh: 1"
+              style={{ width: '100%', padding: 10, borderRadius: 8, border: '1px solid #d1d5db', marginBottom: 16, textAlign: 'center', fontSize: '1rem' }}
+              autoFocus
+            />
+            <div className="confirm-dialog-actions">
+              <button type="button" className="confirm-dialog-btn cancel" onClick={() => setApplyTarget(null)} disabled={applying}>
+                Batal
+              </button>
+              <button
+                type="button"
+                className="confirm-dialog-btn primary"
+                disabled={!marketIdInput || applying}
+                onClick={() => applyTarget && handleApplyTheme(applyTarget.themeId, parseInt(marketIdInput))}
+              >
+                {applying ? 'Menerapkan...' : 'Terapkan'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

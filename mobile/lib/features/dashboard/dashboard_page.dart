@@ -10,6 +10,7 @@ import '../shop/shop_page.dart';
 import '../history/history_page.dart';
 import '../summary/summary_page.dart';
 import '../../services/sync_service.dart';
+import '../../core/ui_helpers.dart';
 
 class DashboardPage extends StatefulWidget {
   final int initialTab;
@@ -41,9 +42,7 @@ class _DashboardPageState extends State<DashboardPage> {
     setState(() => _isOfflineMode = !_isOfflineMode);
     final mode = _isOfflineMode ? 'Offline' : 'Online';
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Mode $mode aktif'), behavior: SnackBarBehavior.floating),
-      );
+      showInfoSnackBar(context, 'Mode $mode aktif');
     }
   }
 
@@ -66,20 +65,14 @@ class _DashboardPageState extends State<DashboardPage> {
 
       if (mounted) {
         if (total > 0) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Sinkronisasi selesai: ${parts.join(', ')}'), behavior: SnackBarBehavior.floating),
-          );
+          showSuccessSnackBar(context, 'Sinkronisasi selesai: ${parts.join(', ')}');
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Tidak ada data yang perlu disinkronkan'), behavior: SnackBarBehavior.floating),
-          );
+          showInfoSnackBar(context, 'Tidak ada data yang perlu disinkronkan');
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Sinkronisasi gagal'), behavior: SnackBarBehavior.floating),
-        );
+        showErrorSnackBar(context, 'Sinkronisasi gagal');
       }
     } finally {
       if (mounted) setState(() => _isSyncing = false);
@@ -179,6 +172,7 @@ class _DashboardPageState extends State<DashboardPage> {
       isSyncing: _isSyncing,
       onToggleOffline: _toggleOfflineMode,
       onSync: _syncData,
+      onRefresh: _loadTodayStats,
     ),
     const BottomScanPage(),
     const ShopPageBody(),
@@ -330,6 +324,7 @@ class DashboardHomePage extends StatelessWidget {
   final bool isSyncing;
   final VoidCallback onToggleOffline;
   final VoidCallback onSync;
+  final Future<void> Function() onRefresh;
 
   const DashboardHomePage({
     super.key,
@@ -343,6 +338,7 @@ class DashboardHomePage extends StatelessWidget {
     required this.isSyncing,
     required this.onToggleOffline,
     required this.onSync,
+    required this.onRefresh,
   });
 
   @override
@@ -351,7 +347,7 @@ class DashboardHomePage extends StatelessWidget {
     final userName = currentUser?.userMetadata?['name'] ?? 'Petugas';
 
     return RefreshIndicator(
-      onRefresh: () async {},
+      onRefresh: onRefresh,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16),
@@ -644,9 +640,7 @@ class _BottomScanPageState extends ConsumerState<BottomScanPage> {
                 if (value != null && value != scannedCode) {
                   setState(() => scannedCode = value);
                   if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('QR terdeteksi: $value')),
-                    );
+                    showInfoSnackBar(context, 'QR terdeteksi: $value');
                   }
                 }
               },
@@ -906,7 +900,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
                       if (mounted) {
                         setState(() => _avatarUrl = publicUrl);
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Foto profil berhasil diperbarui'), behavior: SnackBarBehavior.floating));
+                        showSuccessSnackBar(context, 'Foto profil berhasil diperbarui');
                       }
                         },
                         icon: const Icon(Icons.camera_alt),

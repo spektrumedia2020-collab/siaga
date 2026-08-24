@@ -38,13 +38,15 @@ const allowedOrigins = [
   process.env.FRONTEND_URL
 ].filter(Boolean)
 
+// CORS KETAT: semua request API wajib berasal dari origin terdaftar.
+// Catatan: aplikasi mobile SIAGA tidak memakai Express API ini
+// (langsung ke Supabase), sehingga request tanpa Origin ditolak.
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, curl, etc)
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true)
-    } else {
+    if (!origin || !allowedOrigins.includes(origin)) {
       callback(new Error('Not allowed by CORS'))
+    } else {
+      callback(null, true)
     }
   },
   credentials: true,
@@ -53,16 +55,18 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 
+// Health check DIPASANG SEBELUM CORS agar monitoring tools
+// (tanpa Origin header) tetap bisa mengaksesnya.
+// Endpoint ini tidak membocorkan data apa pun.
+app.get('/api/health', (_req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() })
+})
+
 // Supabase admin client (service role)
 const supabaseAdmin = createClient(
   process.env.SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
-
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() })
-})
 
 // API routes
 import marketsRouter from './routes/markets'
@@ -70,12 +74,16 @@ import officersRouter from './routes/officers'
 import stallsRouter from './routes/stalls'
 import transactionsRouter from './routes/transactions'
 import usersRouter from './routes/users'
+import { authenticateToken, requireAdmin } from './middleware/auth'
 
-app.use('/api/markets', marketsRouter)
-app.use('/api/officers', officersRouter)
-app.use('/api/stalls', stallsRouter)
-app.use('/api/transactions', transactionsRouter)
-app.use('/api/users', usersRouter)
+// Protected routes - require authentication
+app.use('/api/markets', authenticateToken, marketsRouter)
+app.use('/api/officers', authenticateToken, officersRouter)
+app.use('/api/stalls', authenticateToken, stallsRouter)
+app.use('/api/transactions', authenticateToken, transactionsRouter)
+
+// User management routes - require admin role
+app.use('/api/users', authenticateToken, requireAdmin, usersRouter)
 
 // Error handling middleware
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {

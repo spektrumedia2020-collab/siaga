@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/ui_helpers.dart';
 import 'setoran_form_dialog.dart';
 
 class SetoranPage extends ConsumerStatefulWidget {
@@ -139,11 +140,7 @@ class _SetoranPageState extends ConsumerState<SetoranPage> {
 
       if (officerData == null) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text('Data petugas tidak ditemukan'),
-                behavior: SnackBarBehavior.floating),
-          );
+          showErrorSnackBar(context, 'Data petugas tidak ditemukan');
         }
         return;
       }
@@ -152,12 +149,7 @@ class _SetoranPageState extends ConsumerState<SetoranPage> {
       await _showCreateSetoranDialog(user.id, marketId);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text('Gagal: ${e.toString()}'),
-              backgroundColor: Colors.red,
-              behavior: SnackBarBehavior.floating),
-        );
+        showErrorSnackBar(context, 'Gagal: ${e.toString()}');
       }
     }
   }

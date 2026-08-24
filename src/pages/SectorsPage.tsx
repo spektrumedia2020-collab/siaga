@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
 import { getSupabaseClient } from '../lib/supabase'
+import { ConfirmDialog } from '../components/ConfirmDialog'
+import { Loading } from '../components/Loading'
+import { EmptyState } from '../components/EmptyState'
 
 interface SectorsPageProps {
   marketId?: string
@@ -117,16 +120,21 @@ export function SectorsPage({ marketId }: SectorsPageProps) {
     setCode(sector.code || '')
   }
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('Yakin hapus sektor ini?')) return
+  const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
+  const handleDelete = async (id: number) => {
     try {
+      setDeleting(true)
       const supabase = getSupabaseClient()
       const { error } = await supabase.from('market_sectors').delete().eq('id', id)
       if (error) throw error
       await loadSectors()
     } catch (err: any) {
       setError(err.message || 'Gagal menghapus sektor')
+    } finally {
+      setDeleting(false)
+      setDeleteTarget(null)
     }
   }
 
@@ -176,9 +184,13 @@ export function SectorsPage({ marketId }: SectorsPageProps) {
       <div style={{ marginTop: 24 }}>
         <h3>Daftar Sektor</h3>
         {loading ? (
-          <p>Memuat sektor...</p>
+          <Loading label="Memuat sektor..." fullHeight={false} />
         ) : sectors.length === 0 ? (
-          <p>Belum ada sektor untuk pasar ini.</p>
+          <EmptyState
+            icon="🏷️"
+            title="Belum ada sektor"
+            subtitle="Tambahkan sektor untuk mengelompokkan lapak di pasar ini, misalnya Blok A atau Blok B."
+          />
         ) : (
           <div style={{ display: 'grid', gap: 8 }}>
             {sectors.map((sector) => (
@@ -191,7 +203,7 @@ export function SectorsPage({ marketId }: SectorsPageProps) {
                   <button type="button" className="btn-secondary" onClick={() => handleEdit(sector)}>
                     Edit
                   </button>
-                  <button type="button" className="btn-delete-user" onClick={() => handleDelete(sector.id)}>
+                  <button type="button" className="btn-delete-user" onClick={() => setDeleteTarget({ id: sector.id, name: sector.name })}>
                     Hapus
                   </button>
                 </div>
@@ -200,6 +212,17 @@ export function SectorsPage({ marketId }: SectorsPageProps) {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="Hapus Sektor"
+        message={`Yakin hapus sektor "${deleteTarget?.name ?? ''}"? Tindakan ini tidak bisa dibatalkan.`}
+        confirmLabel="Hapus"
+        danger
+        loading={deleting}
+        onConfirm={() => deleteTarget && handleDelete(deleteTarget.id)}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   )
 }

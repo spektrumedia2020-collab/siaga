@@ -1,5 +1,8 @@
 import { type ChangeEvent, type FormEvent, useEffect, useState } from 'react'
 import { getSupabaseClient } from '../lib/supabase'
+import { ConfirmDialog } from '../components/ConfirmDialog'
+import { Loading } from '../components/Loading'
+import { EmptyState } from '../components/EmptyState'
 import { DEFAULT_RETRIBUTION_TYPES } from '../lib/retributionMasterData'
 
 interface RetribusiPageProps {
@@ -30,7 +33,7 @@ export function RetribusiPage({ marketId }: RetribusiPageProps) {
     try {
       const supabase = getSupabaseClient()
       const { data, error } = await supabase
-        .from('market_retribusi')
+        .from('retribution_types')
         .select('*')
         .order('name')
 
@@ -106,10 +109,10 @@ export function RetribusiPage({ marketId }: RetribusiPageProps) {
       }
 
       if (editingId) {
-        const { error } = await supabase.from('market_retribusi').update(payload).eq('id', editingId)
+        const { error } = await supabase.from('retribution_types').update(payload).eq('id', editingId)
         if (error) throw error
       } else {
-        const { error } = await supabase.from('market_retribusi').insert([payload])
+        const { error } = await supabase.from('retribution_types').insert([payload])
         if (error) throw error
       }
 
@@ -131,16 +134,21 @@ export function RetribusiPage({ marketId }: RetribusiPageProps) {
     setDescription(item.description || '')
   }
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('Yakin hapus data retribusi ini?')) return
+  const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
+  const handleDelete = async (id: number) => {
     try {
+      setDeleting(true)
       const supabase = getSupabaseClient()
-      const { error } = await supabase.from('market_retribusi').delete().eq('id', id)
+      const { error } = await supabase.from('retribution_types').delete().eq('id', id)
       if (error) throw error
       await loadItems()
     } catch (err: any) {
       setError(err.message || 'Gagal menghapus retribusi')
+    } finally {
+      setDeleting(false)
+      setDeleteTarget(null)
     }
   }
 
@@ -240,9 +248,13 @@ export function RetribusiPage({ marketId }: RetribusiPageProps) {
       <div style={{ marginTop: 24 }}>
         <h3>Daftar Retribusi ({items.length})</h3>
         {loading ? (
-          <p>Memuat data retribusi...</p>
+          <Loading label="Memuat data retribusi..." fullHeight={false} />
         ) : items.length === 0 ? (
-          <p>Belum ada data retribusi.</p>
+          <EmptyState
+            icon="💰"
+            title="Belum ada data retribusi"
+            subtitle="Tambahkan jenis retribusi dan tarif yang berlaku di pasar ini."
+          />
         ) : (
           <div style={{ display: 'grid', gap: 8 }}>
             {items.map((item) => (
@@ -258,7 +270,7 @@ export function RetribusiPage({ marketId }: RetribusiPageProps) {
                   <button type="button" className="btn-secondary" onClick={() => handleEdit(item)}>
                     Edit
                   </button>
-                  <button type="button" className="btn-delete-user" onClick={() => handleDelete(item.id)}>
+                  <button type="button" className="btn-delete-user" onClick={() => setDeleteTarget({ id: item.id, name: (item as any).nama_retribusi || (item as any).name || `#${item.id}` })}>
                     Hapus
                   </button>
                 </div>
@@ -267,6 +279,17 @@ export function RetribusiPage({ marketId }: RetribusiPageProps) {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="Hapus Data Retribusi"
+        message={`Yakin hapus data retribusi "${deleteTarget?.name ?? ''}"? Tindakan ini tidak bisa dibatalkan.`}
+        confirmLabel="Hapus"
+        danger
+        loading={deleting}
+        onConfirm={() => deleteTarget && handleDelete(deleteTarget.id)}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   )
 }

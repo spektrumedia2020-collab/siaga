@@ -3,19 +3,27 @@ import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'config/router.dart';
 import 'core/theme/app_theme.dart';
-
-// Hardcoded Supabase config for development
-const String _supabaseUrl = 'https://hlvsbmxpkqvniemunygh.supabase.co';
-const String _supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhsdnNibXhwa3F2bmllbXVueWdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5ODY4ODUsImV4cCI6MjA5OTU2Mjg4NX0.ZlCbywivmbGMpeF8tRnkW0OipTSB_mKMUa_auz7vfrk';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Load environment variables from .env file
+  await dotenv.load(fileName: '.env');
+
+  // Supabase config from environment variables
+  final supabaseUrl = dotenv.env['SUPABASE_URL'] ?? '';
+  final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY'] ?? '';
+
+  if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
+    throw Exception('SUPABASE_URL dan SUPABASE_ANON_KEY harus diisi di file .env');
+  }
+
   await Supabase.initialize(
-    url: _supabaseUrl,
-    publishableKey: _supabaseAnonKey,
+    url: supabaseUrl,
+    publishableKey: supabaseAnonKey,
   );
 
   await initializeDateFormatting('id', null);

@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react'
 import QRCodeGenerator from '../components/QRCodeGenerator'
 import { getSupabaseClient } from '../lib/supabase'
+import { ConfirmDialog } from '../components/ConfirmDialog'
+import { Loading } from '../components/Loading'
+import { EmptyState } from '../components/EmptyState'
+import { IconEdit, IconTrash, IconMoney } from '../components/Icons'
 import '../pages/StallsPage.css'
 
 interface Stall {
@@ -90,6 +94,10 @@ export function StallsPage({ marketId }: Props) {
   const [rateFormAmount, setRateFormAmount] = useState('')
   const [rateSaving, setRateSaving] = useState(false)
   const [retributionTypes, setRetributionTypes] = useState<DbRetributionType[]>([])
+  const [deleteTarget, setDeleteTarget] = useState<Stall | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const [rateDeleteTarget, setRateDeleteTarget] = useState<RetributionRate | null>(null)
+  const [rateDeleting, setRateDeleting] = useState(false)
 
   const filteredStalls = sectorFilter
     ? stalls.filter(s => s.sector_id === parseInt(sectorFilter))
@@ -240,9 +248,8 @@ export function StallsPage({ marketId }: Props) {
   }
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Yakin hapus lapak ini?')) return
-
     try {
+      setDeleting(true)
       const supabase = getSupabaseClient()
       const { error: err } = await supabase
         .from('stalls')
@@ -253,6 +260,9 @@ export function StallsPage({ marketId }: Props) {
       loadData()
     } catch (err: any) {
       setError(err.message || 'Error deleting stall')
+    } finally {
+      setDeleting(false)
+      setDeleteTarget(null)
     }
   }
 
@@ -380,9 +390,8 @@ export function StallsPage({ marketId }: Props) {
   }
 
   const handleRateDelete = async (id: number) => {
-    if (!confirm('Yakin hapus rate retribusi ini?')) return
-
     try {
+      setRateDeleting(true)
       const supabase = getSupabaseClient()
       const { error } = await supabase
         .from('retribution_rates')
@@ -397,6 +406,9 @@ export function StallsPage({ marketId }: Props) {
     } catch (err: any) {
       const msg = err?.message || 'Gagal menghapus rate retribusi'
       setError(msg)
+    } finally {
+      setRateDeleting(false)
+      setRateDeleteTarget(null)
     }
   }
 
@@ -408,7 +420,7 @@ export function StallsPage({ marketId }: Props) {
   }
 
   if (loading) {
-    return <div className="loading">Memuat data lapak...</div>
+    return <Loading label="Memuat data lapak..." />
   }
 
   return (
@@ -546,7 +558,11 @@ export function StallsPage({ marketId }: Props) {
           </div>
         </div>
         {filteredStalls.length === 0 ? (
-          <p className="no-data">Tidak ada data lapak.</p>
+          <EmptyState
+            icon="🏪"
+            title="Belum ada data lapak"
+            subtitle="Tambahkan lapak pertama untuk mulai mencatat transaksi retribusi."
+          />
         ) : (
           <div className="table-wrapper">
             <table className="data-table">
@@ -586,22 +602,25 @@ export function StallsPage({ marketId }: Props) {
                           onClick={() => handleOpenRateDialog(stall)}
                           className="btn-rate"
                           title="Atur Retribusi"
+                          aria-label={`Atur retribusi lapak ${stall.code || stall.number}`}
                         >
-                          💰
+                          <IconMoney />
                         </button>
                         <button
                           onClick={() => handleEdit(stall)}
                           className="btn-edit"
                           title="Edit"
+                          aria-label={`Edit lapak ${stall.code || stall.number}`}
                         >
-                          ✏️
+                          <IconEdit />
                         </button>
                         <button
-                          onClick={() => handleDelete(stall.id)}
+                          onClick={() => setDeleteTarget(stall)}
                           className="btn-delete"
                           title="Hapus"
+                          aria-label={`Hapus lapak ${stall.code || stall.number}`}
                         >
-                          🗑️
+                          <IconTrash />
                         </button>
                       </div>
                     </td>
@@ -689,7 +708,7 @@ export function StallsPage({ marketId }: Props) {
                       </div>
                       <div style={{ display: 'flex', gap: 8 }}>
                         <button className="btn-secondary" onClick={() => handleRateEdit(rate)} style={{ padding: '4px 12px', fontSize: 13 }}>Edit</button>
-                        <button className="btn-delete-user" onClick={() => handleRateDelete(rate.id)} style={{ padding: '4px 12px', fontSize: 13 }}>Hapus</button>
+                        <button className="btn-delete-user" onClick={() => setRateDeleteTarget(rate)} style={{ padding: '4px 12px', fontSize: 13 }}>Hapus</button>
                       </div>
                     </div>
                   ))}
@@ -699,6 +718,28 @@ export function StallsPage({ marketId }: Props) {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="Hapus Lapak"
+        message={`Yakin hapus lapak "${deleteTarget?.code || deleteTarget?.number || ''}"? Tindakan ini tidak bisa dibatalkan.`}
+        confirmLabel="Hapus"
+        danger
+        loading={deleting}
+        onConfirm={() => deleteTarget && handleDelete(deleteTarget.id)}
+        onCancel={() => setDeleteTarget(null)}
+      />
+
+      <ConfirmDialog
+        open={!!rateDeleteTarget}
+        title="Hapus Rate Retribusi"
+        message={`Yakin hapus rate retribusi "${rateDeleteTarget?.retribution_types?.name || `Tipe #${rateDeleteTarget?.types_id}` || ''}"? Tindakan ini tidak bisa dibatalkan.`}
+        confirmLabel="Hapus"
+        danger
+        loading={rateDeleting}
+        onConfirm={() => rateDeleteTarget && handleRateDelete(rateDeleteTarget.id)}
+        onCancel={() => setRateDeleteTarget(null)}
+      />
     </div>
   )
 }

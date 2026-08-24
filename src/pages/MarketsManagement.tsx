@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { getSupabaseClient } from '../lib/supabase'
 import { setImpersonateSession, UserRole } from '../lib/roleUtils'
+import { ConfirmDialog } from '../components/ConfirmDialog'
 import '../styles/layout.css'
 import './SuperAdminDashboardImproved.css'
 
@@ -37,6 +38,8 @@ export function MarketsManagement({ onImpersonate }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const headPhotoInputRef = useRef<HTMLInputElement>(null)
   const [impersonatingMarketId, setImpersonatingMarketId] = useState<number | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<Market | null>(null)
+  const [deleting, setDeleting] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
     code: '',
@@ -167,12 +170,17 @@ export function MarketsManagement({ onImpersonate }: Props) {
 
   const handleEdit = (marketId: number) => { window.location.hash = `superadmin/market-edit/${marketId}` }
   const handleDelete = async (id: number) => {
-    if (!confirm('Yakin hapus pasar ini?')) return
     try {
+      setDeleting(true)
       const supabase = getSupabaseClient()
       await supabase.from('markets').delete().eq('id', id)
       loadAllData()
-    } catch (err) { console.error('Error deleting market:', err) }
+    } catch (err) {
+      console.error('Error deleting market:', err)
+    } finally {
+      setDeleting(false)
+      setDeleteTarget(null)
+    }
   }
 
   const handleImpersonate = async (market: Market) => {
@@ -242,7 +250,7 @@ export function MarketsManagement({ onImpersonate }: Props) {
                 <div style={{ marginTop: 'auto', paddingTop: '1rem' }}>
                   <div className="market-actions-row">
                     <button className="siaga-btn siaga-btn-outline" onClick={() => handleEdit(market.id)} style={{ flex: 1 }}>✏️ Edit</button>
-                    <button className="siaga-btn siaga-btn-accent" onClick={() => handleDelete(market.id)} style={{ flex: 1 }}>🗑️ Hapus</button>
+                    <button className="siaga-btn siaga-btn-accent" onClick={() => setDeleteTarget(market)} style={{ flex: 1 }}>🗑️ Hapus</button>
                   </div>
                   {market.head_user_id && (
                     <button className="btn-impersonate" onClick={() => handleImpersonate(market)} disabled={impersonatingMarketId === market.id} style={{ marginTop: '0.5rem' }}>
@@ -258,6 +266,17 @@ export function MarketsManagement({ onImpersonate }: Props) {
           ))
         )}
       </div>
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="Hapus Pasar"
+        message={`Yakin hapus pasar "${deleteTarget?.name ?? ''}"? Semua data terkait (lapak, transaksi) juga akan terhapus. Tindakan ini tidak bisa dibatalkan.`}
+        confirmLabel="Hapus Pasar"
+        danger
+        loading={deleting}
+        onConfirm={() => deleteTarget && handleDelete(deleteTarget.id)}
+        onCancel={() => setDeleteTarget(null)}
+      />
 
       <button className="floating-add-btn" onClick={() => setShowForm(!showForm)} title={showForm ? 'Tutup Form' : 'Tambah Pasar'}>{showForm ? '✕' : '+'}</button>
     </div>
