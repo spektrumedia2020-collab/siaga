@@ -31,6 +31,14 @@ export function JuriDocumentationPage() {
             dari pencatatan transaksi lapangan, setoran petugas, hingga rekonsiliasi keuangan
             pasar. Dilengkapi web admin + aplikasi mobile petugas dengan konektivitas offline.
           </p>
+          <a
+            className="juri-drive-btn"
+            href="https://drive.google.com/drive/folders/1RMOtTkinfgmxTGujOMI0jNNDwW7Yp6jX"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            📁 Google Drive — Semua Dokumentasi &amp; Demo
+          </a>
         </div>
       </header>
 
@@ -53,6 +61,12 @@ function JuriNav() {
       <a className="juri-tab" href="#juri-akun">🔑 Akun Demo</a>
       <a className="juri-tab" href="#juri-fitur">⚙️ Fitur</a>
       <a className="juri-tab" href="#juri-arsitektur">🏗️ Arsitektur</a>
+      <a
+        className="juri-tab juri-tab-drive"
+        href="https://drive.google.com/drive/folders/1RMOtTkinfgmxTGujOMI0jNNDwW7Yp6jX"
+        target="_blank"
+        rel="noopener noreferrer"
+      >📁 Google Drive</a>
     </div>
   )
 }

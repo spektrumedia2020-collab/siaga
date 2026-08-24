@@ -29,6 +29,23 @@
   letter-spacing: 0.4px;
   margin-bottom: 16px;
 }
+.juri-drive-btn {
+  display: inline-block;
+  margin-top: 20px;
+  background: #ffffff;
+  color: #065f46;
+  font-weight: 600;
+  padding: 13px 22px;
+  border-radius: 10px;
+  font-size: 15px;
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  transition: transform 0.15s, background 0.15s;
+}
+.juri-drive-btn:hover {
+  background: #f0fdf4;
+  transform: translateY(-1px);
+}
 .juri-hero h1 {
   font-size: 56px;
   margin: 0;
@@ -71,6 +88,11 @@
   font-weight: 600;
   font-size: 14px;
   transition: background 0.15s, color 0.15s;
+}
+.juri-tab-drive {
+  background: #d1fae5;
+  border-color: #10b981;
+  color: #065f46;
 }
 .juri-tab:hover {
   background: #ecfdf5;
