@@ -46,6 +46,34 @@
   background: #f0fdf4;
   transform: translateY(-1px);
 }
+.juri-access-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin: 6px 0 8px;
+}
+.juri-access-btn {
+  display: inline-block;
+  font-weight: 700;
+  padding: 13px 20px;
+  border-radius: 10px;
+  font-size: 15px;
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  transition: transform 0.15s;
+}
+.juri-access-btn:hover {
+  transform: translateY(-1px);
+}
+.juri-access-web {
+  background: #ffffff;
+  color: #065f46;
+}
+.juri-access-mobile {
+  background: #0f172a;
+  color: #ffffff;
+}
 .juri-hero h1 {
   font-size: 56px;
   margin: 0;

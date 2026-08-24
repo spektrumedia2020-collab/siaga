@@ -10,6 +10,12 @@ interface AccountRow {
   akses: string
 }
 
+// ---- Link akses aplikasi (ISI SESUAI DADO LIVE) ----
+const WEB_APP_URL = 'https://siaga-pi.vercel.app'
+const DRIVE_URL = 'https://drive.google.com/drive/folders/1RMOtTkinfgmxTGujOMI0jNNDwW7Yp6jX'
+// Mobile APK link — hanya role PETUGAS (OFFICER) memakai apps mobile
+const MOBILE_APP_URL = 'https://drive.google.com/drive/folders/1RMOtTkinfgmxTGujOMI0jNNDwW7Yp6jX'
+
 // ---- Blok kredensial demo (ISI SESUAI SEED SUPABASE ANDA) ----
 const DEMO_ACCOUNTS: AccountRow[] = [
   { role: 'ADMIN', roleBadge: 'Superadmin', nama: 'Super Admin', email: 'admin@siaga.id', password: 'DemiSiaga2026!', platform: 'Web', akses: '#superadmin/dashboard — kelola semua pasar, petugas, lapak, retribusi, pengguna, impersonate' },
@@ -31,9 +37,27 @@ export function JuriDocumentationPage() {
             dari pencatatan transaksi lapangan, setoran petugas, hingga rekonsiliasi keuangan
             pasar. Dilengkapi web admin + aplikasi mobile petugas dengan konektivitas offline.
           </p>
+          <div className="juri-access-buttons">
+            <a
+              className="juri-access-btn juri-access-web"
+              href={WEB_APP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              🌐 Akses Web — Admin / Kepala Pasar
+            </a>
+            <a
+              className="juri-access-btn juri-access-mobile"
+              href={MOBILE_APP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              📱 Mobile Demo — Hanya Petugas
+            </a>
+          </div>
           <a
             className="juri-drive-btn"
-            href="https://drive.google.com/drive/folders/1RMOtTkinfgmxTGujOMI0jNNDwW7Yp6jX"
+            href={DRIVE_URL}
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -65,7 +89,7 @@ function JuriNav() {
       <a className="juri-tab" href="#juri-download">📥 Download Apps</a>
       <a
         className="juri-tab juri-tab-drive"
-        href="https://drive.google.com/drive/folders/1RMOtTkinfgmxTGujOMI0jNNDwW7Yp6jX"
+        href={DRIVE_URL}
         target="_blank"
         rel="noopener noreferrer"
       >📁 Google Drive</a>
@@ -256,10 +280,12 @@ function JuriDownload() {
         ))}
       </div>
       <div className="juri-note">
-        📥 <strong>Link directo Drive:</strong>&nbsp;
-        <a href="https://drive.google.com/drive/folders/1RMOtTkinfgmxTGujOMI0jNNDwW7Yp6jX" target="_blank" rel="noopener noreferrer">
-          Buka Google Drive — SiAga App Files
-        </a>
+        📥 <strong>Link akses:</strong>&nbsp;
+        <a href={WEB_APP_URL} target="_blank" rel="noopener noreferrer">🌐 Web App</a> &nbsp;·&nbsp;
+        <a href={MOBILE_APP_URL} target="_blank" rel="noopener noreferrer">📱 Mobile (Petugas)</a> &nbsp;·&nbsp;
+        <a href={DRIVE_URL} target="_blank" rel="noopener noreferrer">📁 Google Drive</a>
+        <br />
+        <span style={{ fontSize: '12.5px' }}>⚠️ Aplikasi mobile dikhususkan untuk <strong>PETUGAS (OFFICER)</strong>.</span>
       </div>
     </section>
   )
