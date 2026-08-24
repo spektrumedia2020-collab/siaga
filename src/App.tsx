@@ -8,10 +8,11 @@ import { MarketDashboard } from './pages/MarketDashboard'
 import { MarketsManagement } from './pages/MarketsManagement'
 import { MarketEditPage } from './pages/MarketEditPage'
 import { MarketLandingPage } from './pages/MarketLandingPage'
+import { JuriDocumentationPage } from './pages/JuriDocumentationPage'
 import './App.css'
 import './styles/layout.css'
 
-type Route = 'login' | 'superadmin' | 'market' | 'market-edit' | 'market-landing'
+type Route = 'login' | 'superadmin' | 'market' | 'market-edit' | 'market-landing' | 'juri-docs'
 
 function App() {
   const [user, setUser] = useState<any>(null)
@@ -141,6 +142,11 @@ function App() {
     if (window.location.pathname.startsWith('/@')) {
       return 'market-landing'
     }
+
+    // Public documentation route for judges (no auth required)
+    if (window.location.pathname === '/juri' || window.location.pathname === '/docs') {
+      return 'juri-docs'
+    }
     
     if (!user) return 'login'
     const hash = window.location.hash.slice(1)
@@ -218,6 +224,11 @@ function App() {
         />
       </Dashboard>
     )
+  }
+
+  // Public judge documentation page (no auth required)
+  if (currentRoute === 'juri-docs') {
+    return <JuriDocumentationPage />
   }
 
   // Public market landing page (no auth required)

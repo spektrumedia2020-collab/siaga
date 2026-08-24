@@ -1,0 +1,258 @@
+/* ============================================================
+   Halaman Dokumentasi Juri — Hackathon Pid 2026
+   ============================================================ */
+.juri-docs {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  color: #1f2937;
+  background: #f9fafb;
+  min-height: 100vh;
+}
+
+/* Hero */
+.juri-hero {
+  background: linear-gradient(135deg, #059669 0%, #047857 55%, #065f46 100%);
+  color: #fff;
+  padding: 56px 24px 48px;
+  text-align: center;
+}
+.juri-hero-inner {
+  max-width: 880px;
+  margin: 0 auto;
+}
+.juri-badge {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  letter-spacing: 0.4px;
+  margin-bottom: 16px;
+}
+.juri-hero h1 {
+  font-size: 56px;
+  margin: 0;
+  letter-spacing: 1px;
+}
+.juri-tagline {
+  font-size: 18px;
+  opacity: 0.95;
+  margin: 6px 0 18px;
+  font-weight: 500;
+}
+.juri-desc {
+  max-width: 720px;
+  margin: 0 auto;
+  line-height: 1.6;
+  opacity: 0.92;
+  font-size: 15px;
+}
+
+/* Tabs */
+.juri-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 12px 16px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.juri-tab {
+  padding: 9px 16px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #047857;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  transition: background 0.15s, color 0.15s;
+}
+.juri-tab:hover {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+}
+
+/* Body */
+.juri-body {
+  max-width: 1020px;
+  margin: 0 auto;
+  padding: 32px 20px 64px;
+}
+.juri-section {
+  margin-bottom: 56px;
+}
+.juri-section-title h2 {
+  font-size: 26px;
+  margin: 0 0 6px;
+  color: #065f46;
+}
+.juri-section-title p {
+  margin: 0 0 18px;
+  color: #6b7280;
+}
+
+/* Cards (Tentang) */
+.juri-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+.juri-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+.juri-card h3 {
+  margin: 0 0 8px;
+  font-size: 17px;
+}
+.juri-card p {
+  margin: 0;
+  line-height: 1.6;
+  color: #4b5563;
+  font-size: 14px;
+}
+
+/* Note */
+.juri-note {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+/* Table (Akun) */
+.juri-table-wrap {
+  overflow-x: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+}
+.juri-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  min-width: 820px;
+}
+.juri-table th,
+.juri-table td {
+  padding: 12px;
+  border-bottom: 1px solid #f0f0f0;
+  text-align: left;
+  vertical-align: top;
+}
+.juri-table thead th {
+  background: #f3f4f6;
+  font-weight: 600;
+  color: #374151;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.juri-table tbody tr:last-child td {
+  border-bottom: none;
+}
+.juri-table code {
+  background: #f3f4f6;
+  padding: 2px 6px;
+  border-radius: 5px;
+  font-size: 12.5px;
+}
+.juri-role-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 12px;
+  color: #fff;
+  margin-bottom: 4px;
+}
+.juri-role-code {
+  font-size: 11px;
+  color: #9ca3af;
+  letter-spacing: 0.5px;
+}
+.juri-role-admin { background: #dc2626; }
+.juri-role-market_head { background: #ea580c; }
+.juri-role-officer { background: #2563eb; }
+.juri-role-treasurer { background: #7c3aed; }
+.juri-role-cashier { background: #0891b2; }
+.juri-role-merchant { background: #65a30d; }
+.juri-akses { color: #4b5563; font-size: 12.5px; }
+
+/* Fitur */
+.juri-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+.juri-feature {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 18px 20px;
+}
+.juri-feature-icon {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+.juri-feature h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+}
+.juri-feature p {
+  margin: 0;
+  line-height: 1.55;
+  color: #4b5563;
+  font-size: 13.5px;
+}
+
+/* Arsitektur */
+.juri-arch-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+.juri-arch-table th,
+.juri-arch-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #f0f0f0;
+  text-align: left;
+}
+.juri-arch-table thead th {
+  background: #f3f4f6;
+  font-weight: 600;
+  color: #374151;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.juri-arch-table tbody tr:last-child td {
+  border-bottom: none;
+}
+.juri-arch-table code {
+  background: #f3f4f6;
+  padding: 2px 6px;
+  border-radius: 5px;
+  font-size: 12.5px;
+}
+
+@media (max-width: 640px) {
+  .juri-hero h1 { font-size: 40px; }
+  .juri-hero { padding: 40px 16px 36px; }
+}
