@@ -15,7 +15,7 @@ const DEMO_ACCOUNTS: AccountRow[] = [
   { role: 'ADMIN', roleBadge: 'Superadmin', nama: 'Super Admin', email: 'admin@siaga.id', password: 'DemiSiaga2026!', platform: 'Web', akses: '#superadmin/dashboard — kelola semua pasar, petugas, lapak, retribusi, pengguna, impersonate' },
   { role: 'MARKET_HEAD', roleBadge: 'Kepala Pasar', nama: 'Kepala Pasar', email: 'kepala@siaga.id', password: 'DemiSiaga2026!', platform: 'Web', akses: '#market/dashboard — dashboard pasar, kelola lapak, petugas, retribusi & transaksi pasar miliknya' },
   { role: 'OFFICER', roleBadge: 'Petugas', nama: 'Petugas Lapangan', email: 'petugas@siaga.id', password: 'DemiSiaga2026!', platform: 'Mobile', akses: 'Aplikasi mobile — scan QR lapak, catat transaksi retribusi, absensi, setoran harian' },
-  { role: 'TREASURER', roleBadge: 'Bendahara', nama: 'Bendahara', email: 'bendahara@siaga.id', password: 'DemiSiaga2026!', platform: 'Mobile', akses: 'Aplikasi mobile — verifikasi/approve setoran petugas, rekonsiliasi' },
+  { role: 'TREASURER', roleBadge: 'Bendahara', nama: 'Bendahara', email: 'bendahara@siaga.id', password: 'DemiSiaga2026!', platform: 'Web', akses: 'Aplikasi mobile — verifikasi/approve setoran petugas, rekonsiliasi' },
   ]
 
 export function JuriDocumentationPage() {
