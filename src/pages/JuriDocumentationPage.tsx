@@ -46,6 +46,7 @@ export function JuriDocumentationPage() {
 
       <div className="juri-body">
         <JuriTentang />
+        <JuriDownload />
         <JuriDaftarAkun />
         <JuriFitur />
         <JuriArsitektur />
@@ -61,6 +62,7 @@ function JuriNav() {
       <a className="juri-tab" href="#juri-akun">🔑 Akun Demo</a>
       <a className="juri-tab" href="#juri-fitur">⚙️ Fitur</a>
       <a className="juri-tab" href="#juri-arsitektur">🏗️ Arsitektur</a>
+      <a className="juri-tab" href="#juri-download">📥 Download Apps</a>
       <a
         className="juri-tab juri-tab-drive"
         href="https://drive.google.com/drive/folders/1RMOtTkinfgmxTGujOMI0jNNDwW7Yp6jX"
@@ -182,6 +184,82 @@ function JuriArsitektur() {
         🔐 Semua akun memakai autentikasi <strong>Supabase Auth</strong> (email + password).
         Akses data dijaga <strong>Row Level Security</strong> berdasarkan role &amp; lingkup pasar,
         sehingga demo antar role aman dan sesuai batas wewenang.
+      </div>
+    </section>
+  )
+}
+function JuriDownload() {
+  const apps = [
+    {
+      icon: '🗂️',
+      name: 'File Instalasi & Build',
+      desc: 'Semua file build dijaga di folder Drive — web build &amp; mobile APK.',
+      steps: [
+        'Buka tombol <strong>📁 Google Drive</strong> di atas (au tab navigasi).',
+        'Klick folder <strong>"SiAga-Web"</strong> au <strong>"SiAga-Mobile"</strong> di Drive.',
+        'Klick file <code>.zip</code> / <code>.apk</code> dan pilih <em>Download</em>.',
+        'Extrai file <code>.zip</code> (web) au install <code>.apk</code> (mobile) na device Anda.',
+      ],
+    },
+    {
+      icon: '🌐',
+      name: 'Web App (Superadmin / Kepala Pasar)',
+      desc: 'Aplikasi web dashboard manajemen — deploy via Vercel. Login direct di browser.',
+      steps: [
+        'Download folder/zip <strong>SiAga-Web</strong> di Drive.',
+        'Unzip dan trot waktu build na Vercel (au pakai langsung).',
+        'Buka halaman login au platform dan pakai demo direct.',
+        'Login uba kredencial ADMIN/MARKET_HEAD (Sección Akun Demo).',
+      ],
+    },
+    {
+      icon: '📱',
+      name: 'Mobile App (Petugas / Bendahara) — Android',
+      desc: 'Aplikasi Flutter mobile petugas lapangan: scan QR, catat transaksi, absensi &amp; setoran.',
+      steps: [
+        'Download file <code>SiAga-Mobile.apk</code> di Drive.',
+        'Transfer file ba Android device (nau download direct).',
+        'Tap file <code>.apk</code> lalu install (allow "Unknown sources").',
+        'Login uba akun OFFICOR / TREASURER di aplikasi mobile.',
+      ],
+    },
+    {
+      icon: '🔐',
+      name: 'Google Drive — Dokumentasi, Demo &amp; Binari',
+      desc: 'Folder Drive punya build log demo, nota brief, installer binario, wireframe &amp; apk mobile.',
+      steps: [
+        'Link: <code>1RMOtTmS...</code> (shesutilia na buka secara online).',
+        'Buka link direct Drive untuk download dokumentasi &amp; binary.',
+        'Semua file version update dikusi &amp; sinkron na Drive.',
+      ],
+    },
+  ]
+  return (
+    <section className="juri-section">
+      <SectionTitle
+        id="juri-download"
+        title="Download Aplikasi (Apps)"
+        subtitle="Cara download &amp; instalasi aplikasi SiAga Web + Mobile dari Google Drive."
+      />
+      <div className="juri-download-grid">
+        {apps.map((a) => (
+          <div className="juri-download-card" key={a.name}>
+            <div className="juri-feature-icon">{a.icon}</div>
+            <h3>{a.name}</h3>
+            <p>{a.desc}</p>
+            <ol>
+              {a.steps.map((s) => (
+                <li key={s}>{s}</li>
+              ))}
+            </ol>
+          </div>
+        ))}
+      </div>
+      <div className="juri-note">
+        📥 <strong>Link directo Drive:</strong>&nbsp;
+        <a href="https://drive.google.com/drive/folders/1RMOtTkinfgmxTGujOMI0jNNDwW7Yp6jX" target="_blank" rel="noopener noreferrer">
+          Buka Google Drive — SiAga App Files
+        </a>
       </div>
     </section>
   )
