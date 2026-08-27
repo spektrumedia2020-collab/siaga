@@ -55,6 +55,27 @@ export default async function handler(req: any, res: any) {
         }
       }
 
+      // Insert juga ke tabel public.users agar tampil di dashboard
+      const { error: usersTableError } = await supabaseAdmin
+        .from('users')
+        .insert([{
+          nama: fullName || email,
+          username: email.split('@')[0],
+          email,
+          no_hp: phone || '',
+          status: 'AKTIF',
+          akses_global: false,
+          id_role: roleId ? Number(roleId) : null,
+          market_id: marketId ? Number(marketId) : null,
+          auth_uid: authUser.user.id
+        }])
+
+      if (usersTableError) {
+        console.error('Insert public.users failed:', usersTableError.message)
+        await supabaseAdmin.auth.admin.deleteUser(authUser.user.id)
+        return res.status(400).json({ error: `Gagal menyimpan data user: ${usersTableError.message}` })
+      }
+
       return res.status(201).json({ success: true, user: authUser.user })
     } catch (err: any) {
       console.error('Create user error:', err)
@@ -104,6 +125,7 @@ export default async function handler(req: any, res: any) {
 
     try {
       await supabaseAdmin.from('user_roles').delete().eq('user_id', id)
+      await supabaseAdmin.from('users').delete().eq('auth_uid', id)
       const { error } = await supabaseAdmin.auth.admin.deleteUser(id as string)
 
       if (error) {
