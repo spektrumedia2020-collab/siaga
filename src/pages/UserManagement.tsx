@@ -123,7 +123,7 @@ export function UserManagement() {
           market_id: formData.marketId ? parseInt(formData.marketId) : null
         }).eq('id_user', editingUser.id)
       } else {
-        await fetch('/api/users', {
+        const res = await fetch('/api/users', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -131,10 +131,17 @@ export function UserManagement() {
             password: formData.password,
             fullName: formData.fullName,
             phone: formData.phone,
-            roleId: parseInt(formData.roleId),
+            roleId: formData.roleId ? parseInt(formData.roleId) : null,
             marketId: formData.marketId ? parseInt(formData.marketId) : null
           })
         })
+        const result = await res.json().catch(() => ({}))
+        if (!res.ok) {
+          const msg = result?.error || `Gagal membuat user (HTTP ${res.status})`
+          console.error('Create user failed:', msg)
+          alert(`Gagal membuat user: ${msg}`)
+          return
+        }
       }
       setFormData({ email: '', password: '', fullName: '', phone: '', roleId: '', marketId: '' })
       setEditingUser(null)
