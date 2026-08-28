@@ -144,8 +144,13 @@ export function SectorsPage({ marketId }: SectorsPageProps) {
       }
 
       if (editingId) {
-        const { error } = await supabase.from('market_sectors').update(payload).eq('id', editingId)
+        const { data, error } = await supabase
+          .from('market_sectors')
+          .update(payload)
+          .eq('id', editingId)
+          .select('id')
         if (error) throw error
+        if (!data?.length) throw new Error('Assignment tidak tersimpan. Anda tidak memiliki izin mengubah sektor ini.')
       } else {
         const { error } = await supabase.from('market_sectors').insert([payload])
         if (error) throw error
