@@ -11,6 +11,10 @@
     {
       "src": "api/users.ts",
       "use": "@vercel/node"
+    },
+    {
+      "src": "api/lapak.ts",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
