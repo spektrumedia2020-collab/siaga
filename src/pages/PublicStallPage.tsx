@@ -62,7 +62,7 @@ export function PublicStallPage({ marketId, stallCode }: Props) {
       <main className="public-stall-page">
         <div className="public-stall-panel public-stall-pin-panel">
           <div className="public-stall-brand">
-            <span>SiAga</span>
+            <img src="/logo.jpeg" alt="Logo SiAga" />
             <div><p>Akses pemilik lapak</p><h1>Informasi Lapak</h1></div>
           </div>
           <form className="public-stall-pin-form" onSubmit={(event) => { event.preventDefault(); loadStall(pin) }}>
@@ -104,12 +104,15 @@ export function PublicStallPage({ marketId, stallCode }: Props) {
     <main className="public-stall-page">
       <div className="public-stall-panel">
         <div className="public-stall-brand">
-          {market.photo_url ? <img src={market.photo_url} alt={`Logo ${market.name}`} /> : <span>SiAga</span>}
+          <img src={market.photo_url || '/logo.jpeg'} alt={`Logo Pasar ${market.name}`} />
           <div>
-            <p>Informasi Lapak</p>
-            <h1>{market.name}</h1>
+            <h1>Pasar {market.name}</h1>
+            {market.address ? <p>{market.address}</p> : null}
+            {market.city ? <p>{market.city}</p> : null}
           </div>
         </div>
+
+        <div className="public-stall-body-title">Informasi Lapak</div>
 
         <section className="public-stall-identity">
           <span className="public-stall-label">Kode Lapak</span>
@@ -121,8 +124,7 @@ export function PublicStallPage({ marketId, stallCode }: Props) {
           <div><dt>Sektor</dt><dd>{stall.sector_name || '-'}</dd></div>
           <div><dt>Nomor Lapak</dt><dd>{stall.number || '-'}</dd></div>
           <div><dt>Pemilik</dt><dd>{stall.owner_name || 'Belum terdaftar'}</dd></div>
-          {market.city ? <div><dt>Kota</dt><dd>{market.city}</dd></div> : null}
-          <div><dt>Alamat Pasar</dt><dd>{market.address || 'Alamat belum diatur'}</dd></div>
+          <div><dt>Kota</dt><dd>{market.city || '-'}</dd></div>
         </dl>
 
         <div className="public-stall-tabs" role="tablist" aria-label="Informasi lapak">

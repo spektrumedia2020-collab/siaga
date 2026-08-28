@@ -51,12 +51,20 @@
 .public-stall-brand p {
   color: #64748b;
   font-size: 0.85rem;
+  margin: 4px 0 0;
 }
 
 .public-stall-brand h1 {
-  margin-top: 4px;
+  margin: 0;
   color: #1f5f2a;
   font-size: 1.55rem;
+}
+
+.public-stall-body-title {
+  margin-top: 24px;
+  color: #1f5f2a;
+  font-size: 1.1rem;
+  font-weight: 700;
 }
 
 .public-stall-identity {
