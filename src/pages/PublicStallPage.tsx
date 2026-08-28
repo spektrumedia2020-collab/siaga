@@ -31,6 +31,7 @@ export function PublicStallPage({ marketId, stallCode }: Props) {
   const [error, setError] = useState('')
   const [pin, setPin] = useState('')
   const [unlocked, setUnlocked] = useState(false)
+  const [activeTab, setActiveTab] = useState<'rates' | 'transactions'>('rates')
 
   const loadStall = async (accessPin: string) => {
     try {
@@ -124,23 +125,34 @@ export function PublicStallPage({ marketId, stallCode }: Props) {
           {market.address ? <div><dt>Alamat Pasar</dt><dd>{market.address}</dd></div> : null}
         </dl>
 
-        <section className="public-stall-section">
-          <div className="public-stall-section-heading"><h2>Tarif Retribusi</h2><span>{stall.rates.length} tarif</span></div>
-          {stall.rates.length === 0 ? <p className="public-stall-muted">Belum ada tarif terdaftar.</p> : (
-            <div className="public-stall-list">
-              {stall.rates.map((rate, index) => <div className="public-stall-list-row" key={`${rate.name}-${index}`}><span>{rate.name || 'Tarif retribusi'}{rate.unit ? ` / ${rate.unit}` : ''}</span><strong>Rp {Number(rate.amount).toLocaleString('id-ID')}</strong></div>)}
-            </div>
-          )}
-        </section>
+        <div className="public-stall-tabs" role="tablist" aria-label="Informasi lapak">
+          <button type="button" className={activeTab === 'rates' ? 'active' : ''} onClick={() => setActiveTab('rates')} role="tab" aria-selected={activeTab === 'rates'}>
+            Tarif <span>{stall.rates.length}</span>
+          </button>
+          <button type="button" className={activeTab === 'transactions' ? 'active' : ''} onClick={() => setActiveTab('transactions')} role="tab" aria-selected={activeTab === 'transactions'}>
+            Riwayat Transaksi <span>{stall.transactions.length}</span>
+          </button>
+        </div>
 
-        <section className="public-stall-section">
-          <div className="public-stall-section-heading"><h2>Riwayat Transaksi</h2><span>{stall.transactions.length} transaksi</span></div>
-          {stall.transactions.length === 0 ? <p className="public-stall-muted">Belum ada transaksi pembayaran.</p> : (
-            <div className="public-stall-list">
-              {stall.transactions.map((transaction, index) => <div className="public-stall-list-row" key={`${transaction.created_at}-${index}`}><span>{new Date(transaction.transaction_date || transaction.created_at).toLocaleDateString('id-ID')}<small>{transaction.payment_method || 'Pembayaran'}</small></span><strong>Rp {Number(transaction.amount).toLocaleString('id-ID')}</strong></div>)}
-            </div>
-          )}
-        </section>
+        {activeTab === 'rates' ? (
+          <section className="public-stall-section" role="tabpanel">
+            <div className="public-stall-section-heading"><h2>Tarif Retribusi</h2><span>{stall.rates.length} tarif</span></div>
+            {stall.rates.length === 0 ? <p className="public-stall-muted">Belum ada tarif terdaftar.</p> : (
+              <div className="public-stall-list">
+                {stall.rates.map((rate, index) => <div className="public-stall-list-row" key={`${rate.name}-${index}`}><span>{rate.name || 'Tarif retribusi'}{rate.unit ? ` / ${rate.unit}` : ''}</span><strong>Rp {Number(rate.amount).toLocaleString('id-ID')}</strong></div>)}
+              </div>
+            )}
+          </section>
+        ) : (
+          <section className="public-stall-section" role="tabpanel">
+            <div className="public-stall-section-heading"><h2>Riwayat Transaksi</h2><span>{stall.transactions.length} transaksi</span></div>
+            {stall.transactions.length === 0 ? <p className="public-stall-muted">Belum ada transaksi pembayaran.</p> : (
+              <div className="public-stall-list">
+                {stall.transactions.map((transaction, index) => <div className="public-stall-list-row" key={`${transaction.created_at}-${index}`}><span>{new Date(transaction.transaction_date || transaction.created_at).toLocaleDateString('id-ID')}<small>{transaction.payment_method || 'Pembayaran'}</small></span><strong>Rp {Number(transaction.amount).toLocaleString('id-ID')}</strong></div>)}
+              </div>
+            )}
+          </section>
+        )}
 
         <footer>Data resmi SiAga • {market.code || market.name}</footer>
       </div>
