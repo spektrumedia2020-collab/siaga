@@ -53,6 +53,19 @@ interface Props {
 
 type PageType = 'overview' | 'officers' | 'stalls' | 'sectors' | 'owners' | 'categories' | 'retribusi' | 'transactions' | 'reconciliations' | 'setoran' | 'marketDetail'
 
+function formatMarketAddress(market: any) {
+  const clean = (value: unknown) => String(value || '').trim().replace(/^[,\s]+|[,\s]+$/g, '')
+  const structured = [
+    [clean(market.street), clean(market.street_number)].filter(Boolean).join(' '),
+    clean(market.kecamatan) ? `Kecamatan ${clean(market.kecamatan)}` : '',
+    clean(market.city),
+    clean(market.province),
+    clean(market.postal_code)
+  ].filter(Boolean).join(', ')
+
+  return structured || clean(market.address) || '-'
+}
+
 export function MarketDashboard({ userId, impersonating = false, onStopImpersonation, onLogout }: Props) {
   const [stats, setStats] = useState<MarketStats | null>(null)
   const [loading, setLoading] = useState(true)
@@ -578,7 +591,7 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
                         <>
                           <div>
                             <span>Alamat</span>
-                            <strong>{market.address}, {market.city}</strong>
+                            <strong>{formatMarketAddress(market)}</strong>
                           </div>
                           <div>
                             <span>Kode Pasar</span>
