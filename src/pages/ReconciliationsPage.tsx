@@ -10,6 +10,7 @@ interface StallSummary {
   stall_id: number
   stall_code: string
   stall_number: string
+  sector_id: number | null
   sector_name: string
   owner_name: string
   expected_amount: number
@@ -29,6 +30,7 @@ export function ReconciliationsPage({ marketId }: ReconciliationsPageProps) {
   })
   const [dateTo, setDateTo] = useState(() => new Date().toISOString().split('T')[0])
   const [showOnlyDiscrepancy, setShowOnlyDiscrepancy] = useState(false)
+  const [selectedSectorId, setSelectedSectorId] = useState('')
 
   const marketIdNum = Number(marketId) || 0
 
@@ -117,6 +119,7 @@ export function ReconciliationsPage({ marketId }: ReconciliationsPageProps) {
           stall_id: stall.id,
           stall_code: stall.code || '',
           stall_number: stall.number || '',
+          sector_id: stall.sector_id ?? null,
           sector_name: sectorMap.get(stall.sector_id) || '-',
           owner_name: ownerMap.get(stall.owner_id) || '-',
           expected_amount: expected,
@@ -138,8 +141,20 @@ export function ReconciliationsPage({ marketId }: ReconciliationsPageProps) {
     ? stallSummaries.filter(s => s.difference !== 0)
     : stallSummaries
 
-  const totalExpected = stallSummaries.reduce((sum, s) => sum + s.expected_amount, 0)
-  const totalActual = stallSummaries.reduce((sum, s) => sum + s.actual_amount, 0)
+  const sectorSummaries = selectedSectorId
+    ? filteredSummaries.filter(s => String(s.sector_id) === selectedSectorId)
+    : filteredSummaries
+
+  const sectors = Array.from(
+    new Map(
+      stallSummaries
+        .filter(s => s.sector_id !== null)
+        .map(s => [s.sector_id, s.sector_name])
+    ).entries()
+  )
+
+  const totalExpected = sectorSummaries.reduce((sum, s) => sum + s.expected_amount, 0)
+  const totalActual = sectorSummaries.reduce((sum, s) => sum + s.actual_amount, 0)
   const totalDiff = totalExpected - totalActual
 
   if (!marketId || marketIdNum === 0) {
@@ -182,6 +197,19 @@ export function ReconciliationsPage({ marketId }: ReconciliationsPageProps) {
           onDateFromChange={setDateFrom}
           onDateToChange={setDateTo}
         />
+        <label style={{ display: 'grid', gap: 4, fontSize: 14, color: '#555' }}>
+          <span>Sektor</span>
+          <select
+            value={selectedSectorId}
+            onChange={(e) => setSelectedSectorId(e.target.value)}
+            style={{ padding: '6px 10px', border: '1px solid #d1d5db', borderRadius: 6 }}
+          >
+            <option value="">Semua sektor</option>
+            {sectors.map(([id, name]) => (
+              <option key={id} value={id ?? ''}>{name}</option>
+            ))}
+          </select>
+        </label>
         <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', paddingBottom: 6 }}>
           <input
             type="checkbox"
@@ -201,7 +229,7 @@ export function ReconciliationsPage({ marketId }: ReconciliationsPageProps) {
       <div style={{ marginTop: 20, overflowX: 'auto' }}>
         {loading ? (
           <p>Memuat data rekonsiliasi...</p>
-        ) : filteredSummaries.length === 0 ? (
+        ) : sectorSummaries.length === 0 ? (
           <p style={{ color: '#6b7280', padding: '20px 0' }}>
             {showOnlyDiscrepancy ? 'Semua lapak sudah lunas! ✅' : 'Belum ada data untuk periode ini.'}
           </p>
@@ -220,7 +248,7 @@ export function ReconciliationsPage({ marketId }: ReconciliationsPageProps) {
               </tr>
             </thead>
             <tbody>
-              {filteredSummaries.map((s) => {
+              {sectorSummaries.map((s) => {
                 const diffColor = s.difference === 0 ? '#166534' : s.difference > 0 ? '#9a3412' : '#1e40af'
                 const diffBg = s.difference === 0 ? '#f0fdf4' : s.difference > 0 ? '#fff7ed' : '#f0f9ff'
 
