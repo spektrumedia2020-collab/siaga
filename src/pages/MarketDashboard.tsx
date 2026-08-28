@@ -106,7 +106,7 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
       if (stallIds.length > 0) {
         const { data } = await supabaseClient
           .from('transactions')
-          .select('amount_paid, created_at')
+          .select('amount, created_at')
           .in('stall_id', stallIds)
           .gte('created_at', weekStart)
           .lt('created_at', weekEnd)
@@ -125,7 +125,7 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
         const dayKey = (tx.created_at || '').split('T')[0]
         if (dailyMap.has(dayKey)) {
           const existing = dailyMap.get(dayKey)!
-          existing.revenue += parseFloat(tx.amount_paid || 0)
+          existing.revenue += parseFloat(tx.amount || 0)
           existing.transactions += 1
         }
       })
@@ -316,12 +316,12 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
       if (stallIds.length > 0) {
         const { count, data: transactionData } = await supabaseClient
           .from('transactions')
-          .select('amount_paid, created_at', { count: 'exact' })
+          .select('amount, created_at', { count: 'exact' })
           .in('stall_id', stallIds)
 
         transactionCount = count || 0
         totalRevenue = (transactionData || []).reduce(
-          (sum, t: any) => sum + (parseFloat(t.amount_paid) || 0),
+          (sum, t: any) => sum + (parseFloat(t.amount) || 0),
           0
         )
       }

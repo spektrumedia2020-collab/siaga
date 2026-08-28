@@ -12,7 +12,7 @@ interface TransactionsPageProps {
 interface Transaction {
   id: number
   stall_id: number
-  amount_paid: number
+  amount: number
   payment_method: string
   status: string
   payer_name?: string
@@ -124,7 +124,7 @@ export function TransactionsPage({ marketId }: TransactionsPageProps) {
     })
   }
 
-  const totalAmount = transactions.reduce((sum, t) => sum + Number(t.amount_paid || 0), 0)
+  const totalAmount = transactions.reduce((sum, t) => sum + Number(t.amount || 0), 0)
 
   if (!marketId || marketIdNum === 0) {
     return (
@@ -218,7 +218,7 @@ export function TransactionsPage({ marketId }: TransactionsPageProps) {
                   <tr key={t.id}>
                     <td>{t.stalls?.code || t.stalls?.number || `ID #${t.stall_id}`}</td>
                     <td>{t.payer_name || '-'}</td>
-                    <td className="tx-amount">Rp {Number(t.amount_paid || 0).toLocaleString('id-ID')}</td>
+                    <td className="tx-amount">Rp {Number(t.amount || 0).toLocaleString('id-ID')}</td>
                     <td>{t.payment_method || '-'}</td>
                     <td><span className={`tx-status-badge ${statusCls}`}>{t.status || '-'}</span></td>
                     <td className="tx-note">{t.note || '-'}</td>

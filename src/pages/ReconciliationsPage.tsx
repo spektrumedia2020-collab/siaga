@@ -83,7 +83,7 @@ export function ReconciliationsPage({ marketId }: ReconciliationsPageProps) {
       // Get transactions for these stalls within date range
       const { data: transactionsData } = await supabase
         .from('transactions')
-        .select('stall_id, amount_paid')
+        .select('stall_id, amount')
         .in('stall_id', stallIds)
         .gte('created_at', `${dateFrom}T00:00:00`)
         .lte('created_at', `${dateTo}T23:59:59`)
@@ -94,7 +94,7 @@ export function ReconciliationsPage({ marketId }: ReconciliationsPageProps) {
         if (!actualByStall[t.stall_id]) {
           actualByStall[t.stall_id] = { total: 0, count: 0 }
         }
-        actualByStall[t.stall_id].total += Number(t.amount_paid || 0)
+        actualByStall[t.stall_id].total += Number(t.amount || 0)
         actualByStall[t.stall_id].count += 1
       }
 
