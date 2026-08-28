@@ -49,7 +49,15 @@ function App() {
     if (supabase) {
       supabase.auth.getUser().then(({ data: { user } }) => {
         setUser(user)
-        setLoading(false)
+        if (!user) {
+          setLoading(false)
+          return
+        }
+
+        getUserRole(user.id).then((role) => {
+          setActiveRoleName(role?.role_name?.toUpperCase() || null)
+          setLoading(false)
+        })
       })
 
       const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
@@ -59,6 +67,7 @@ function App() {
         if (session?.user) {
           const role = await getUserRole(session.user.id)
           const roleName = role?.role_name?.toUpperCase() || ''
+          setActiveRoleName(roleName || null)
           
           if (roleName === 'ADMIN') {
             window.location.hash = 'superadmin/dashboard'
@@ -79,11 +88,24 @@ function App() {
     }
   }, [])
 
+  useEffect(() => {
+    const marketHeadRoles = ['MARKET_HEAD', 'MARKET_ADMIN', 'ADMIN_PASAR', 'PASAR_ADMIN']
+    if (
+      user &&
+      activeRoleName &&
+      marketHeadRoles.includes(activeRoleName) &&
+      window.location.hash.slice(1).startsWith('superadmin')
+    ) {
+      window.location.hash = 'market/dashboard'
+    }
+  }, [user, activeRoleName])
+
   const handleLoginSuccess = async () => {
     const currentUser = await supabase?.auth.getUser()
     if (!currentUser?.data?.user?.id) return
     const role = await getUserRole(currentUser.data.user.id)
     const roleName = role?.role_name?.toUpperCase() || ''
+    setActiveRoleName(roleName || null)
 
     if (roleName === 'ADMIN') {
       window.location.hash = 'superadmin/dashboard'
@@ -150,6 +172,11 @@ function App() {
     
     if (!user) return 'login'
     const hash = window.location.hash.slice(1)
+    const marketHeadRoles = ['MARKET_HEAD', 'MARKET_ADMIN', 'ADMIN_PASAR', 'PASAR_ADMIN']
+
+    if (activeRoleName && marketHeadRoles.includes(activeRoleName)) {
+      return 'market'
+    }
     
     if (hash.startsWith('superadmin/market-edit/')) {
       return 'market-edit'
