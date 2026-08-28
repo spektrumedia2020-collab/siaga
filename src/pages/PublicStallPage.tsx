@@ -122,7 +122,7 @@ export function PublicStallPage({ marketId, stallCode }: Props) {
           <div><dt>Nomor Lapak</dt><dd>{stall.number || '-'}</dd></div>
           <div><dt>Pemilik</dt><dd>{stall.owner_name || 'Belum terdaftar'}</dd></div>
           {market.city ? <div><dt>Kota</dt><dd>{market.city}</dd></div> : null}
-          {market.address ? <div><dt>Alamat Pasar</dt><dd>{market.address}</dd></div> : null}
+          <div><dt>Alamat Pasar</dt><dd>{market.address || 'Alamat belum diatur'}</dd></div>
         </dl>
 
         <div className="public-stall-tabs" role="tablist" aria-label="Informasi lapak">

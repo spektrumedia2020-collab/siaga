@@ -67,8 +67,10 @@ export default async function handler(req: any, res: any) {
     if (ratesError) throw ratesError
     if (transactionsError) throw transactionsError
 
+    const publicAddress = market.address?.startsWith('Belum ditemukan data lokasi') ? null : market.address
+
     return res.json({
-      market,
+      market: { ...market, address: publicAddress },
       stall: {
         code: stall.code,
         number: stall.number,
