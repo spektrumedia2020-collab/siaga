@@ -54,25 +54,33 @@ export function ReconciliationsPage({ marketId }: ReconciliationsPageProps) {
       if (stallsErr) throw stallsErr
 
       // Get sector and owner names
-      const { data: sectorsData } = await supabase
+      const { data: sectorsData, error: sectorsErr } = await supabase
         .from('market_sectors')
         .select('id, name')
         .eq('market_id', marketIdNum)
+      if (sectorsErr) throw sectorsErr
 
-      const { data: ownersData } = await supabase
+      const { data: ownersData, error: ownersErr } = await supabase
         .from('stall_owners')
         .select('id, name')
         .order('name')
+      if (ownersErr) throw ownersErr
 
       const sectorMap = new Map((sectorsData || []).map(s => [s.id, s.name]))
       const ownerMap = new Map((ownersData || []).map(o => [o.id, o.name]))
 
       // Get all retribution rates for these stalls
       const stallIds = (stallsData || []).map(s => s.id)
-      const { data: ratesData } = await supabase
+      if (stallIds.length === 0) {
+        setStallSummaries([])
+        return
+      }
+
+      const { data: ratesData, error: ratesErr } = await supabase
         .from('retribution_rates')
         .select('stall_id, amount')
         .in('stall_id', stallIds)
+      if (ratesErr) throw ratesErr
 
       // Group rates by stall_id and sum
       const ratesByStall: Record<number, number> = {}
@@ -81,12 +89,14 @@ export function ReconciliationsPage({ marketId }: ReconciliationsPageProps) {
       }
 
       // Get transactions for these stalls within date range
-      const { data: transactionsData } = await supabase
+      const { data: transactionsData, error: transactionsErr } = await supabase
         .from('transactions')
         .select('stall_id, amount')
         .in('stall_id', stallIds)
+        .eq('status', 'paid')
         .gte('created_at', `${dateFrom}T00:00:00`)
         .lte('created_at', `${dateTo}T23:59:59`)
+      if (transactionsErr) throw transactionsErr
 
       // Group transactions by stall_id and sum
       const actualByStall: Record<number, { total: number; count: number }> = {}
