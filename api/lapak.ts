@@ -26,7 +26,7 @@ export default async function handler(req: any, res: any) {
 
     const { data: market, error: marketError } = await supabaseAdmin
       .from('markets')
-      .select('id, name, code, city, address, photo_url, status')
+      .select('id, name, code, city, address, street, street_number, kecamatan, province, postal_code, photo_url, status')
       .eq('id', marketId)
       .maybeSingle()
 
@@ -68,9 +68,16 @@ export default async function handler(req: any, res: any) {
     if (transactionsError) throw transactionsError
 
     const publicAddress = market.address?.startsWith('Belum ditemukan data lokasi') ? null : market.address
+    const structuredAddress = [
+      [market.street, market.street_number].filter(Boolean).join(' '),
+      market.kecamatan ? `Kecamatan ${market.kecamatan}` : null,
+      market.city,
+      market.province,
+      market.postal_code
+    ].filter(Boolean).join(', ')
 
     return res.json({
-      market: { ...market, address: publicAddress },
+      market: { ...market, address: structuredAddress || publicAddress },
       stall: {
         code: stall.code,
         number: stall.number,

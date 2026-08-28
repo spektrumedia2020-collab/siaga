@@ -59,7 +59,7 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
   const [currentPage, setCurrentPage] = useState<PageType>('overview')
   const [chartData, setChartData] = useState<any[]>([])
   const [editingMarket, setEditingMarket] = useState(false)
-  const [marketForm, setMarketForm] = useState<any>({ name: '', code: '', address: '', city: '', status: '' })
+  const [marketForm, setMarketForm] = useState<any>({ name: '', code: '', address: '', street: '', street_number: '', kecamatan: '', city: '', province: '', postal_code: '', status: '' })
   const [profileOpen, setProfileOpen] = useState(false)
   const [profileName, setProfileName] = useState('')
   const [profilePhotoUrl, setProfilePhotoUrl] = useState('')
@@ -79,7 +79,12 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
         name: stats.market.name || '',
         code: stats.market.code || '',
         address: stats.market.address || '',
+        street: stats.market.street || '',
+        street_number: stats.market.street_number || '',
+        kecamatan: stats.market.kecamatan || '',
         city: stats.market.city || '',
+        province: stats.market.province || '',
+        postal_code: stats.market.postal_code || '',
         status: stats.market.status || ''
       })
     }
@@ -512,12 +517,28 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
                           </div>
                           <div className="form-group">
                             <label>Alamat</label>
-                            <input value={marketForm.address} onChange={(e) => setMarketForm({ ...marketForm, address: e.target.value })} />
+                            <input placeholder="Nama jalan" value={marketForm.street} onChange={(e) => setMarketForm({ ...marketForm, street: e.target.value })} />
+                          </div>
+                          <div className="form-group">
+                            <label>Nomor</label>
+                            <input placeholder="No. 10" value={marketForm.street_number} onChange={(e) => setMarketForm({ ...marketForm, street_number: e.target.value })} />
+                          </div>
+                          <div className="form-group">
+                            <label>Kecamatan</label>
+                            <input value={marketForm.kecamatan} onChange={(e) => setMarketForm({ ...marketForm, kecamatan: e.target.value })} />
                           </div>
                           <div className="form-row">
                             <div className="form-group">
                               <label>Kota</label>
                               <input value={marketForm.city} onChange={(e) => setMarketForm({ ...marketForm, city: e.target.value })} />
+                            </div>
+                            <div className="form-group">
+                              <label>Provinsi</label>
+                              <input value={marketForm.province} onChange={(e) => setMarketForm({ ...marketForm, province: e.target.value })} />
+                            </div>
+                            <div className="form-group">
+                              <label>Kode Pos</label>
+                              <input inputMode="numeric" value={marketForm.postal_code} onChange={(e) => setMarketForm({ ...marketForm, postal_code: e.target.value.replace(/\D/g, '') })} />
                             </div>
                             <div className="form-group">
                               <label>Status</label>
@@ -533,7 +554,12 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
                                 const payload: any = {
                                   name: marketForm.name,
                                   address: marketForm.address,
+                                  street: marketForm.street,
+                                  street_number: marketForm.street_number,
+                                  kecamatan: marketForm.kecamatan,
                                   city: marketForm.city,
+                                  province: marketForm.province,
+                                  postal_code: marketForm.postal_code,
                                   status: marketForm.status
                                 }
                                 const supabase = getSupabaseClient()
@@ -545,7 +571,7 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
                                 console.error('Error updating market', err)
                               }
                             }}>Simpan</button>
-                            <button className="btn-secondary" onClick={() => { setEditingMarket(false); setMarketForm({ name: market.name, code: market.code, address: market.address, city: market.city, status: market.status }) }}>Batal</button>
+                            <button className="btn-secondary" onClick={() => { setEditingMarket(false); setMarketForm({ name: market.name, code: market.code, address: market.address, street: market.street, street_number: market.street_number, kecamatan: market.kecamatan, city: market.city, province: market.province, postal_code: market.postal_code, status: market.status }) }}>Batal</button>
                           </div>
                         </div>
                       ) : (

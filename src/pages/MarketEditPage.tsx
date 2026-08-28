@@ -8,6 +8,11 @@ interface Market {
   code: string
   city: string
   address?: string
+  street?: string
+  street_number?: string
+  kecamatan?: string
+  province?: string
+  postal_code?: string
   photo_url?: string
   head_photo_url?: string
   status: string
@@ -38,6 +43,11 @@ export function MarketEditPage({ marketId, onBack }: Props) {
     code: '',
     city: '',
     address: '',
+    street: '',
+    street_number: '',
+    kecamatan: '',
+    province: '',
+    postal_code: '',
     photo_url: '',
     head_photo_url: '',
     head_user_id: '',
@@ -62,7 +72,7 @@ export function MarketEditPage({ marketId, onBack }: Props) {
       const supabase = getSupabaseClient()
       const { data } = await supabase
         .from('markets')
-        .select('id, name, code, city, address, photo_url, head_photo_url, id_head_market, status')
+        .select('id, name, code, city, address, street, street_number, kecamatan, province, postal_code, photo_url, head_photo_url, id_head_market, status')
         .eq('id', marketId)
         .single()
       
@@ -73,6 +83,11 @@ export function MarketEditPage({ marketId, onBack }: Props) {
           code: data.code || '',
           city: data.city || '',
           address: data.address || '',
+          street: data.street || '',
+          street_number: data.street_number || '',
+          kecamatan: data.kecamatan || '',
+          province: data.province || '',
+          postal_code: data.postal_code || '',
           photo_url: data.photo_url || '',
           head_photo_url: data.head_photo_url || '',
           head_user_id: data.id_head_market ? String(data.id_head_market) : '',
@@ -157,6 +172,11 @@ export function MarketEditPage({ marketId, onBack }: Props) {
           code: formData.code,
           city: formData.city,
           address: formData.address,
+          street: formData.street,
+          street_number: formData.street_number,
+          kecamatan: formData.kecamatan,
+          province: formData.province,
+          postal_code: formData.postal_code,
           photo_url: formData.photo_url,
           head_photo_url: formData.head_photo_url,
           id_head_market: formData.head_user_id ? parseInt(formData.head_user_id, 10) : null,
@@ -205,7 +225,11 @@ export function MarketEditPage({ marketId, onBack }: Props) {
             <div className="form-group"><label>Nama Pasar</label><input type="text" className="siaga-input" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required /></div>
             <div className="form-group"><label>Kode Pasar</label><input type="text" className="siaga-input" value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} required /></div>
             <div className="form-group"><label>Kota</label><input type="text" className="siaga-input" value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} required /></div>
-            <div className="form-group"><label>Alamat</label><textarea className="siaga-input" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} rows={3} /></div>
+            <div className="form-group"><label>Nama Jalan</label><input type="text" className="siaga-input" value={formData.street} onChange={(e) => setFormData({ ...formData, street: e.target.value })} placeholder="Jl. Pasar Niaga Daya" /></div>
+            <div className="form-group"><label>Nomor</label><input type="text" className="siaga-input" value={formData.street_number} onChange={(e) => setFormData({ ...formData, street_number: e.target.value })} placeholder="No. 10" /></div>
+                <div className="form-group"><label>Kecamatan</label><input type="text" className="siaga-input" value={formData.kecamatan} onChange={(e) => setFormData({ ...formData, kecamatan: e.target.value })} /></div>
+                <div className="form-group"><label>Provinsi</label><input type="text" className="siaga-input" value={formData.province} onChange={(e) => setFormData({ ...formData, province: e.target.value })} placeholder="Sulawesi Selatan" /></div>
+                <div className="form-group"><label>Kode Pos</label><input type="text" inputMode="numeric" maxLength={10} className="siaga-input" value={formData.postal_code} onChange={(e) => setFormData({ ...formData, postal_code: e.target.value.replace(/\D/g, '') })} placeholder="90241" /></div>
             <div className="form-group"><label>Status</label><select className="siaga-input" value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })}><option value="AKTIF">Aktif</option><option value="NONAKTIF">Non-Aktif</option></select></div>
           </div>
 
