@@ -9,10 +9,11 @@ import { MarketsManagement } from './pages/MarketsManagement'
 import { MarketEditPage } from './pages/MarketEditPage'
 import { MarketLandingPage } from './pages/MarketLandingPage'
 import { JuriDocumentationPage } from './pages/JuriDocumentationPage'
+import { PublicStallPage } from './pages/PublicStallPage'
 import './App.css'
 import './styles/layout.css'
 
-type Route = 'login' | 'superadmin' | 'market' | 'market-edit' | 'market-landing' | 'juri-docs'
+type Route = 'login' | 'superadmin' | 'market' | 'market-edit' | 'market-landing' | 'public-stall' | 'juri-docs'
 
 function App() {
   const [user, setUser] = useState<any>(null)
@@ -165,6 +166,10 @@ function App() {
       return 'market-landing'
     }
 
+    if (/^\/lapak\/\d+\/[^/]+\/?$/.test(window.location.pathname)) {
+      return 'public-stall'
+    }
+
     // Public documentation route for judges (no auth required)
     if (window.location.pathname === '/juri' || window.location.pathname === '/docs') {
       return 'juri-docs'
@@ -191,6 +196,11 @@ function App() {
   }
 
   const currentRoute = getCurrentRoute()
+
+  if (currentRoute === 'public-stall') {
+    const pathParts = window.location.pathname.split('/').filter(Boolean)
+    return <PublicStallPage marketId={pathParts[1]} stallCode={decodeURIComponent(pathParts[2])} />
+  }
 
   // Determine which user ID to use (impersonated or actual)
   const effectiveUserId = impersonate?.targetUserId || user?.id

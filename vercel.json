@@ -26,6 +26,10 @@
       "dest": "/api/users.ts"
     },
     {
+      "src": "/api/lapak",
+      "dest": "/api/lapak.ts"
+    },
+    {
       "src": "/@(.*)",
       "dest": "/index.html"
     },
