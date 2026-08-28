@@ -9,11 +9,21 @@ WITH CHECK (
     SELECT 1
     FROM public.markets
     WHERE markets.id = market_sectors.market_id
-      AND markets.id_head_market = (
-        SELECT users.id_user
-        FROM public.users
-        WHERE users.auth_uid = auth.uid()
-        LIMIT 1
+      AND (
+        markets.id_head_market = (
+          SELECT users.id_user
+          FROM public.users
+          WHERE users.auth_uid = auth.uid()
+          LIMIT 1
+        )
+        OR EXISTS (
+          SELECT 1
+          FROM public.users head_user
+          JOIN public.roles head_role ON head_role.id = head_user.id_role
+          WHERE head_user.auth_uid = auth.uid()
+            AND head_user.market_id = markets.id
+            AND head_role.name = 'MARKET_HEAD'
+        )
       )
   )
 );
@@ -28,11 +38,21 @@ USING (
     SELECT 1
     FROM public.markets
     WHERE markets.id = market_sectors.market_id
-      AND markets.id_head_market = (
-        SELECT users.id_user
-        FROM public.users
-        WHERE users.auth_uid = auth.uid()
-        LIMIT 1
+      AND (
+        markets.id_head_market = (
+          SELECT users.id_user
+          FROM public.users
+          WHERE users.auth_uid = auth.uid()
+          LIMIT 1
+        )
+        OR EXISTS (
+          SELECT 1
+          FROM public.users head_user
+          JOIN public.roles head_role ON head_role.id = head_user.id_role
+          WHERE head_user.auth_uid = auth.uid()
+            AND head_user.market_id = markets.id
+            AND head_role.name = 'MARKET_HEAD'
+        )
       )
   )
 )
@@ -42,11 +62,21 @@ WITH CHECK (
     SELECT 1
     FROM public.markets
     WHERE markets.id = market_sectors.market_id
-      AND markets.id_head_market = (
-        SELECT users.id_user
-        FROM public.users
-        WHERE users.auth_uid = auth.uid()
-        LIMIT 1
+      AND (
+        markets.id_head_market = (
+          SELECT users.id_user
+          FROM public.users
+          WHERE users.auth_uid = auth.uid()
+          LIMIT 1
+        )
+        OR EXISTS (
+          SELECT 1
+          FROM public.users head_user
+          JOIN public.roles head_role ON head_role.id = head_user.id_role
+          WHERE head_user.auth_uid = auth.uid()
+            AND head_user.market_id = markets.id
+            AND head_role.name = 'MARKET_HEAD'
+        )
       )
   )
 );
