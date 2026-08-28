@@ -13,13 +13,22 @@ interface Sector {
   name: string
   code?: string
   market_id?: number
+  officer_id?: number | null
   created_at?: string
+}
+
+interface Officer {
+  id_user: number
+  nama?: string
+  email?: string
 }
 
 export function SectorsPage({ marketId }: SectorsPageProps) {
   const [sectors, setSectors] = useState<Sector[]>([])
   const [name, setName] = useState('')
   const [code, setCode] = useState('')
+  const [officerId, setOfficerId] = useState('')
+  const [officers, setOfficers] = useState<Officer[]>([])
   const [editingId, setEditingId] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -42,6 +51,40 @@ export function SectorsPage({ marketId }: SectorsPageProps) {
       setError(err.message || 'Gagal memuat sektor')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadOfficers = async () => {
+    if (!marketId) {
+      setOfficers([])
+      return
+    }
+
+    try {
+      const supabase = getSupabaseClient()
+      const { data: officerRole, error: roleError } = await supabase
+        .from('roles')
+        .select('id')
+        .eq('name', 'OFFICER')
+        .maybeSingle()
+
+      if (roleError) throw roleError
+      if (!officerRole) {
+        setOfficers([])
+        return
+      }
+
+      const { data, error } = await supabase
+        .from('users')
+        .select('id_user, nama, email')
+        .eq('market_id', Number(marketId))
+        .eq('id_role', officerRole.id)
+        .order('nama')
+
+      if (error) throw error
+      setOfficers((data || []) as Officer[])
+    } catch (err: any) {
+      setError(err.message || 'Gagal memuat daftar petugas')
     }
   }
 
@@ -71,12 +114,14 @@ export function SectorsPage({ marketId }: SectorsPageProps) {
     }
 
     loadSectors()
+    loadOfficers()
     fetchMarketName()
   }, [marketId])
 
   const resetForm = () => {
     setName('')
     setCode('')
+    setOfficerId('')
     setEditingId(null)
   }
 
@@ -94,7 +139,8 @@ export function SectorsPage({ marketId }: SectorsPageProps) {
       const payload: any = {
         name: name.trim(),
         code: code.trim() || undefined,
-        market_id: marketId ? Number(marketId) : null
+        market_id: marketId ? Number(marketId) : null,
+        officer_id: officerId ? Number(officerId) : null
       }
 
       if (editingId) {
@@ -118,6 +164,7 @@ export function SectorsPage({ marketId }: SectorsPageProps) {
     setEditingId(sector.id)
     setName(sector.name)
     setCode(sector.code || '')
+    setOfficerId(sector.officer_id?.toString() || '')
   }
 
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null)
@@ -169,6 +216,25 @@ export function SectorsPage({ marketId }: SectorsPageProps) {
             style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #d1d5db' }}
           />
         </div>
+        <div>
+          <label style={{ display: 'block', marginBottom: 6 }}>Petugas Penarik</label>
+          <select
+            value={officerId}
+            onChange={(e) => setOfficerId(e.target.value)}
+            style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #d1d5db' }}
+            disabled={!marketId || officers.length === 0}
+          >
+            <option value="">-- Belum ditugaskan --</option>
+            {officers.map((officer) => (
+              <option key={officer.id_user} value={officer.id_user}>
+                {officer.nama || officer.email || `User ${officer.id_user}`}
+                {officer.nama && officer.email ? ` (${officer.email})` : ''}
+              </option>
+            ))}
+          </select>
+          {!marketId ? <small>Pasar belum dipilih.</small> : null}
+          {marketId && officers.length === 0 ? <small>Tidak ada user yang terdaftar di pasar ini.</small> : null}
+        </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button type="submit" disabled={saving} className="btn-primary" style={{ width: 'fit-content' }}>
             {saving ? 'Menyimpan...' : editingId ? 'Simpan Perubahan' : 'Tambah Sektor'}
@@ -198,6 +264,9 @@ export function SectorsPage({ marketId }: SectorsPageProps) {
                 <div>
                   <strong>{sector.name}</strong>
                   {sector.code ? <span style={{ marginLeft: 8, color: '#6b7280' }}>({sector.code})</span> : null}
+                  <div style={{ marginTop: 4, color: '#6b7280', fontSize: 13 }}>
+                    Petugas: {officers.find((officer) => officer.id_user === sector.officer_id)?.nama || 'Belum ditugaskan'}
+                  </div>
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button type="button" className="btn-secondary" onClick={() => handleEdit(sector)}>

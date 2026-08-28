@@ -61,6 +61,36 @@ export function Auth({ onLoginSuccess }: AuthProps) {
         
         {error && <div className="error-message">{error}</div>}
 
+        {isLogin && (
+          <div className="test-accounts" aria-label="Akun test">
+            <p className="test-accounts-title">Akun test</p>
+            <div className="test-account-actions">
+              <button
+                type="button"
+                className="test-account-button"
+                onClick={() => {
+                  setEmail('kepala@siaga.id')
+                  setPassword('DemiSiaga2026!')
+                  setError('')
+                }}
+              >
+                Kepala
+              </button>
+              <button
+                type="button"
+                className="test-account-button"
+                onClick={() => {
+                  setEmail('admin@siaga.id')
+                  setPassword('DemiSiaga2026!')
+                  setError('')
+                }}
+              >
+                Admin
+              </button>
+            </div>
+          </div>
+        )}
+
         <form onSubmit={handleAuth}>
           <div className="form-group">
             <label htmlFor="email">Email</label>

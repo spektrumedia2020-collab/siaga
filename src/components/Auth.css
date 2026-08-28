@@ -123,6 +123,42 @@
   font-size: 0.9rem;
 }
 
+.test-accounts {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background-color: #f6f8f3;
+  border: 1px solid #dce6d5;
+  border-radius: 4px;
+}
+
+.test-accounts-title {
+  margin: 0 0 0.6rem;
+  color: #555;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.test-account-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.test-account-button {
+  flex: 1;
+  padding: 0.55rem;
+  background: white;
+  border: 1px solid #2D5016;
+  border-radius: 4px;
+  color: #2D5016;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.test-account-button:hover {
+  background-color: #eef4e9;
+}
+
 .toggle-auth {
   text-align: center;
   margin-top: 1.5rem;
