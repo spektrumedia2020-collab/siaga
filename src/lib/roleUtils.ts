@@ -240,7 +240,7 @@ export async function getUserMarket(userId: string): Promise<any | null> {
       if (assignedRow?.market_id) {
         const { data: marketData, error: marketError } = await supabase
           .from('markets')
-          .select('id, code, name, address, city, status')
+          .select('id, code, name, address, street, street_number, kecamatan, city, province, postal_code, status')
           .eq('id', assignedRow.market_id)
           .single()
         if (!marketError) return marketData
@@ -258,7 +258,7 @@ export async function getUserMarket(userId: string): Promise<any | null> {
 
     const { data: marketData, error: marketError } = await supabase
       .from('markets')
-      .select('id, code, name, address, city, status')
+      .select('id, code, name, address, street, street_number, kecamatan, city, province, postal_code, status')
       .eq('id', userRow.market_id)
       .single()
 

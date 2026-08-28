@@ -516,7 +516,7 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
                             <input value={marketForm.name} onChange={(e) => setMarketForm({ ...marketForm, name: e.target.value })} />
                           </div>
                           <div className="form-group">
-                            <label>Alamat</label>
+                            <label>Nama Jalan</label>
                             <input placeholder="Nama jalan" value={marketForm.street} onChange={(e) => setMarketForm({ ...marketForm, street: e.target.value })} />
                           </div>
                           <div className="form-group">
