@@ -9,12 +9,18 @@ interface MarketData {
   address: string
   photo_url: string
   status: string
+  description?: string
+  street?: string
+  street_number?: string
+  kecamatan?: string
+  province?: string
+  postal_code?: string
 }
 
 interface SectorData {
   id: number
   name: string
-  description: string
+  description?: string
 }
 
 interface StallData {
@@ -51,36 +57,13 @@ export function MarketLandingPage({ slug }: Props) {
       const { data: marketData, error: marketError } = await supabase
         .from('markets')
         .select('*')
-        .ilike('code', slug)
+        .or(`code.ilike.${slug},name.ilike.%${slug}%`)
         .maybeSingle()
 
-      if (marketError || !marketData) {
-        // Try finding by name
-        const { data: marketByName } = await supabase
-          .from('markets')
-          .select('*')
-          .ilike('name', `%${slug}%`)
-          .maybeSingle()
-
-        if (marketByName) {
-          setMarket(marketByName)
-          await loadSectorsAndStalls(marketByName.id)
-        } else {
-          setError('Pasar tidak ditemukan')
-          setMarket({
-            id: 0,
-            name: 'Pasar ' + slug.toUpperCase(),
-            code: slug.toUpperCase(),
-            city: 'Makassar',
-            address: 'Jl. Merdeka No. 1 - Kota Makassar',
-            photo_url: '',
-            status: 'AKTIF'
-          })
-        }
-      } else {
-        setMarket(marketData)
-        await loadSectorsAndStalls(marketData.id)
-      }
+      if (marketError) throw marketError
+      if (!marketData) throw new Error('Pasar tidak ditemukan')
+      setMarket(marketData)
+      await loadSectorsAndStalls(marketData.id)
     } catch (err) {
       console.error('Error loading market:', err)
       setError('Gagal memuat data pasar')
@@ -92,28 +75,37 @@ export function MarketLandingPage({ slug }: Props) {
   const loadSectorsAndStalls = async (marketId: number) => {
     const supabase = getSupabaseClient()
 
-    // Load sectors
-    const { data: sectorsData } = await supabase
-      .from('sectors')
+    const { data: sectorsData, error: sectorsError } = await supabase
+      .from('market_sectors')
       .select('*')
       .eq('market_id', marketId)
       .order('name')
+    if (sectorsError) throw sectorsError
 
     setSectors(sectorsData || [])
 
     // Load stalls with owner info
-    const { data: stallsData } = await supabase
+    const { data: stallsData, error: stallsError } = await supabase
       .from('stalls')
-      .select('*, sectors(name), stall_owners(name)')
+      .select('id, code, number, status, sector_id, owner_id')
       .eq('market_id', marketId)
       .order('code')
+    if (stallsError) throw stallsError
+
+    const { data: ownersData, error: ownersError } = await supabase
+      .from('stall_owners')
+      .select('id, name')
+    if (ownersError) throw ownersError
+
+    const sectorMap = new Map((sectorsData || []).map((sector: any) => [sector.id, sector.name]))
+    const ownerMap = new Map((ownersData || []).map((owner: any) => [owner.id, owner.name]))
 
     setStalls((stallsData || []).map((s: any) => ({
       id: s.id,
       code: s.code || '',
-      name: s.name || '',
-      sector_name: s.sectors?.name || '-',
-      owner_name: s.stall_owners?.name || '-',
+      name: s.number || '',
+      sector_name: sectorMap.get(s.sector_id) || '-',
+      owner_name: ownerMap.get(s.owner_id) || '-',
       status: s.status || 'AKTIF'
     })))
   }
@@ -127,15 +119,20 @@ export function MarketLandingPage({ slug }: Props) {
     )
   }
 
-  const displayMarket: MarketData = market || {
-    id: 0,
-    name: 'Pasar Sentral',
-    code: slug.toUpperCase(),
-    city: 'Makassar',
-    address: 'Jl. Merdeka No. 1 - Kota Makassar',
-    photo_url: '',
-    status: 'AKTIF'
+  if (!market) {
+    return <div className="market-landing-error"><div className="error-card"><h1>Pasar tidak ditemukan</h1><p>{error || 'Data pasar tidak tersedia.'}</p><a href="/" className="btn-back">Kembali</a></div></div>
   }
+
+  const displayMarket = market
+  const clean = (value: unknown) => String(value || '').trim().replace(/^[,\s]+|[,\s]+$/g, '')
+  const structuredAddress = [
+    [clean(displayMarket.street), clean(displayMarket.street_number)].filter(Boolean).join(' '),
+    clean(displayMarket.kecamatan) ? `Kecamatan ${clean(displayMarket.kecamatan)}` : '',
+    clean(displayMarket.city),
+    clean(displayMarket.province),
+    clean(displayMarket.postal_code)
+  ].filter(Boolean).join(', ')
+  const displayAddress = structuredAddress || clean(displayMarket.address) || '-'
 
   return (
     <div className="market-landing">
@@ -147,8 +144,8 @@ export function MarketLandingPage({ slug }: Props) {
       }}>
         <div className="hero-overlay">
           <div className="hero-content">
-              <h1>{displayMarket.name}</h1>
-            <p className="hero-subtitle">{displayMarket.address}, {displayMarket.city}</p>
+              <h1>Pasar {displayMarket.name}</h1>
+              <p className="hero-subtitle">{displayAddress}</p>
             <div className="hero-badges">
               <span className="badge badge-code">Kode: {displayMarket.code}</span>
               <span className="badge badge-status">{displayMarket.status}</span>
@@ -183,9 +180,13 @@ export function MarketLandingPage({ slug }: Props) {
       <div className="landing-content">
         {activeTab === 'info' && (
           <div className="info-panel">
+            <div className="info-card wide">
+              <h3>📝 Tentang Pasar</h3>
+              <p>{displayMarket.description || 'Informasi pasar belum tersedia.'}</p>
+            </div>
             <div className="info-card">
               <h3>📍 Alamat</h3>
-              <p>{displayMarket.address || '-'}</p>
+              <p>{displayAddress}</p>
             </div>
             <div className="info-card">
               <h3>🏙️ Kota</h3>
@@ -276,7 +277,7 @@ export function MarketLandingPage({ slug }: Props) {
       {/* Footer */}
       <div className="landing-footer">
         <p>© 2026 SiAga - Sistem Informasi Manajemen Pasar</p>
-        <p>Data pasar {displayMarket.name} - {displayMarket.city}</p>
+        <p>Data pasar {displayMarket.name} - {displayMarket.city || '-'}</p>
       </div>
     </div>
   )
