@@ -18,7 +18,7 @@ export default async function handler(req: any, res: any) {
 
   // Create user (POST)
   if (req.method === 'POST') {
-    const { email, password, fullName, roleId, marketId } = req.body || {}
+    const { email, password, fullName, phone, roleId, marketId } = req.body || {}
 
     if (!email || !password) {
       return res.status(400).json({ error: 'Email dan password required' })
