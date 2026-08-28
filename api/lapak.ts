@@ -68,12 +68,13 @@ export default async function handler(req: any, res: any) {
     if (transactionsError) throw transactionsError
 
     const publicAddress = market.address?.startsWith('Belum ditemukan data lokasi') ? null : market.address
+    const cleanPart = (value: string | null) => value?.trim().replace(/^[,\s]+|[,\s]+$/g, '') || null
     const structuredAddress = [
-      [market.street, market.street_number].filter(Boolean).join(' '),
-      market.kecamatan ? `Kecamatan ${market.kecamatan}` : null,
-      market.city,
-      market.province,
-      market.postal_code
+      [cleanPart(market.street), cleanPart(market.street_number)].filter(Boolean).join(' '),
+      cleanPart(market.kecamatan) ? `Kecamatan ${cleanPart(market.kecamatan)}` : null,
+      cleanPart(market.city),
+      cleanPart(market.province),
+      cleanPart(market.postal_code)
     ].filter(Boolean).join(', ')
 
     return res.json({

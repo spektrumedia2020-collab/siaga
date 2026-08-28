@@ -108,7 +108,6 @@ export function PublicStallPage({ marketId, stallCode }: Props) {
           <div>
             <h1>Pasar {market.name}</h1>
             {market.address ? <p>{market.address}</p> : null}
-            {market.city ? <p>{market.city}</p> : null}
           </div>
         </div>
 
