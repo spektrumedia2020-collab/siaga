@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import './PublicStallPage.css'
 
 interface Props {
@@ -20,35 +20,70 @@ interface StallResponse {
     status: string | null
     sector_name: string | null
     owner_name: string | null
+    rates: { amount: number; name: string | null; unit: string | null }[]
+    transactions: { amount: number; payment_method: string | null; created_at: string; transaction_date: string | null; status: string }[]
   }
 }
 
 export function PublicStallPage({ marketId, stallCode }: Props) {
   const [data, setData] = useState<StallResponse | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [pin, setPin] = useState('')
+  const [unlocked, setUnlocked] = useState(false)
 
-  useEffect(() => {
-    const loadStall = async () => {
-      try {
-        setLoading(true)
-        setError('')
-        const response = await fetch(`/api/lapak?marketId=${encodeURIComponent(marketId)}&code=${encodeURIComponent(stallCode)}`)
-        const result = await response.json()
-        if (!response.ok) throw new Error(result.error || 'Lapak tidak ditemukan')
-        setData(result)
-      } catch (err: any) {
-        setError(err.message || 'Gagal memuat data lapak')
-      } finally {
-        setLoading(false)
-      }
+  const loadStall = async (accessPin: string) => {
+    try {
+      setLoading(true)
+      setError('')
+      const response = await fetch('/api/lapak', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ marketId, code: stallCode, pin: accessPin })
+      })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || 'Lapak tidak ditemukan')
+      setData(result)
+      setUnlocked(true)
+    } catch (err: any) {
+      setError(err.message || 'Gagal memuat data lapak')
+    } finally {
+      setLoading(false)
     }
-
-    loadStall()
-  }, [marketId, stallCode])
+  }
 
   if (loading) {
     return <main className="public-stall-page"><div className="public-stall-panel">Memuat data lapak...</div></main>
+  }
+
+  if (!unlocked) {
+    return (
+      <main className="public-stall-page">
+        <div className="public-stall-panel public-stall-pin-panel">
+          <div className="public-stall-brand">
+            <span>SiAga</span>
+            <div><p>Akses pemilik lapak</p><h1>Informasi Lapak</h1></div>
+          </div>
+          <form className="public-stall-pin-form" onSubmit={(event) => { event.preventDefault(); loadStall(pin) }}>
+            <label htmlFor="stall-pin">Masukkan PIN</label>
+            <input
+              id="stall-pin"
+              type="password"
+              inputMode="numeric"
+              maxLength={4}
+              value={pin}
+              onChange={(event) => setPin(event.target.value.replace(/\D/g, ''))}
+              placeholder="••••"
+              autoFocus
+              required
+            />
+            <button type="submit" disabled={loading || pin.length !== 4}>Buka informasi</button>
+          </form>
+          {error ? <p className="public-stall-pin-error">{error}</p> : null}
+          <footer>Masukkan PIN untuk melihat tarif dan riwayat transaksi.</footer>
+        </div>
+      </main>
+    )
   }
 
   if (error || !data) {
@@ -88,6 +123,24 @@ export function PublicStallPage({ marketId, stallCode }: Props) {
           {market.city ? <div><dt>Kota</dt><dd>{market.city}</dd></div> : null}
           {market.address ? <div><dt>Alamat Pasar</dt><dd>{market.address}</dd></div> : null}
         </dl>
+
+        <section className="public-stall-section">
+          <div className="public-stall-section-heading"><h2>Tarif Retribusi</h2><span>{stall.rates.length} tarif</span></div>
+          {stall.rates.length === 0 ? <p className="public-stall-muted">Belum ada tarif terdaftar.</p> : (
+            <div className="public-stall-list">
+              {stall.rates.map((rate, index) => <div className="public-stall-list-row" key={`${rate.name}-${index}`}><span>{rate.name || 'Tarif retribusi'}{rate.unit ? ` / ${rate.unit}` : ''}</span><strong>Rp {Number(rate.amount).toLocaleString('id-ID')}</strong></div>)}
+            </div>
+          )}
+        </section>
+
+        <section className="public-stall-section">
+          <div className="public-stall-section-heading"><h2>Riwayat Transaksi</h2><span>{stall.transactions.length} transaksi</span></div>
+          {stall.transactions.length === 0 ? <p className="public-stall-muted">Belum ada transaksi pembayaran.</p> : (
+            <div className="public-stall-list">
+              {stall.transactions.map((transaction, index) => <div className="public-stall-list-row" key={`${transaction.created_at}-${index}`}><span>{new Date(transaction.transaction_date || transaction.created_at).toLocaleDateString('id-ID')}<small>{transaction.payment_method || 'Pembayaran'}</small></span><strong>Rp {Number(transaction.amount).toLocaleString('id-ID')}</strong></div>)}
+            </div>
+          )}
+        </section>
 
         <footer>Data resmi SiAga • {market.code || market.name}</footer>
       </div>

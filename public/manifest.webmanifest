@@ -1,0 +1,13 @@
+{
+  "name": "SiAga Informasi Lapak",
+  "short_name": "SiAga",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#eef4e9",
+  "theme_color": "#1f7a1f",
+  "description": "Informasi tarif dan riwayat transaksi lapak pasar.",
+  "icons": [
+    { "src": "/logo.jpeg", "sizes": "192x192", "type": "image/jpeg" },
+    { "src": "/logo.jpeg", "sizes": "512x512", "type": "image/jpeg" }
+  ]
+}
