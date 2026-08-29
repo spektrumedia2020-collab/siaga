@@ -98,10 +98,24 @@ export function StallsPage({ marketId }: Props) {
   const [deleting, setDeleting] = useState(false)
   const [rateDeleteTarget, setRateDeleteTarget] = useState<RetributionRate | null>(null)
   const [rateDeleting, setRateDeleting] = useState(false)
+  const [searchText, setSearchText] = useState('')
 
-  const filteredStalls = sectorFilter
-    ? stalls.filter(s => s.sector_id === parseInt(sectorFilter))
-    : stalls
+  const filteredStalls = stalls.filter(s => {
+    // Filter by sector if selected
+    const matchesSector = !sectorFilter || s.sector_id === parseInt(sectorFilter)
+    
+    // Filter by search text (code or owner name)
+    if (!searchText.trim()) {
+      return matchesSector
+    }
+    
+    const searchLower = searchText.toLowerCase()
+    const matchesCode = s.code.toLowerCase().includes(searchLower)
+    const ownerName = owners.find(o => o.id === s.owner_id)?.name || ''
+    const matchesOwner = ownerName.toLowerCase().includes(searchLower)
+    
+    return matchesSector && (matchesCode || matchesOwner)
+  })
   // sector management removed from UI; keep sectors list only
 
   useEffect(() => {
@@ -541,20 +555,33 @@ export function StallsPage({ marketId }: Props) {
       <div className="section">
         <div className="section-header-row">
           <h3>Data Lapak ({filteredStalls.length})</h3>
-          <div className="filter-group">
-            <label>Filter Sektor:</label>
-            <select
-              value={sectorFilter}
-              onChange={(e) => setSectorFilter(e.target.value)}
-              className="filter-select"
-            >
-              <option value="">Semua Sektor</option>
-              {sectors.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
+          <div className="filter-group" style={{ display: 'flex', gap: '12px', alignItems: 'flex-end' }}>
+            <div>
+              <label>Cari:</label>
+              <input
+                type="text"
+                placeholder="Cari kode lapak atau nama pemilik..."
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                className="filter-input"
+                style={{ padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '14px' }}
+              />
+            </div>
+            <div>
+              <label>Filter Sektor:</label>
+              <select
+                value={sectorFilter}
+                onChange={(e) => setSectorFilter(e.target.value)}
+                className="filter-select"
+              >
+                <option value="">Semua Sektor</option>
+                {sectors.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
         {filteredStalls.length === 0 ? (
