@@ -342,6 +342,53 @@
   font-size: 12.5px;
 }
 
+/* Halaman Publik */
+.juri-public-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+.juri-public-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.juri-public-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+.juri-public-card .juri-feature-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+}
+.juri-public-card h3 {
+  margin: 0 0 8px;
+  font-size: 17px;
+  color: #1f2937;
+}
+.juri-public-card p {
+  margin: 0 0 12px;
+  flex: 1;
+  line-height: 1.6;
+  color: #4b5563;
+  font-size: 14px;
+}
+.juri-public-link {
+  display: inline-block;
+  color: #059669;
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.juri-public-link:hover {
+  color: #047857;
+}
+
 @media (max-width: 640px) {
   .juri-hero h1 { font-size: 40px; }
   .juri-hero { padding: 40px 16px 36px; }

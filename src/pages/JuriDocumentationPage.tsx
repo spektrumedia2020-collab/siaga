@@ -16,6 +16,10 @@ const DRIVE_URL = 'https://drive.google.com/drive/folders/1RMOtTkinfgmxTGujOMI0j
 // Mobile APK link — hanya role PETUGAS (OFFICER) memakai apps mobile
 const MOBILE_APP_URL = 'https://drive.google.com/drive/folders/1RMOtTkinfgmxTGujOMI0jNNDwW7Yp6jX'
 
+// ---- Link akses halaman publik (landing page & lapak) ----
+const PUBLIC_LANDING_PAGE = 'https://siaga-pi.vercel.app/@niaga'
+const PUBLIC_STALL_DEMO = 'https://siaga-pi.vercel.app/lapak/1/A-001'
+
 // ---- Blok kredensial demo (ISI SESUAI SEED SUPABASE ANDA) ----
 const DEMO_ACCOUNTS: AccountRow[] = [
   { role: 'ADMIN', roleBadge: 'Superadmin', nama: 'Super Admin', email: 'admin@siaga.id', password: 'DemiSiaga2026!', platform: 'Web', akses: '#superadmin/dashboard — kelola semua pasar, petugas, lapak, retribusi, pengguna, impersonate' },
@@ -54,6 +58,7 @@ export function JuriDocumentationPage() {
       <JuriNav />
 
       <div className="juri-body">
+        <JuriPublikPages />
         <JuriTentang />
         <JuriDownload />
         <JuriDaftarAkun />
@@ -66,6 +71,7 @@ export function JuriDocumentationPage() {
 function JuriNav() {
   return (
     <div className="juri-tabs">
+      <a className="juri-tab" href="#juri-publik">🌍 Halaman Publik</a>
       <a className="juri-tab" href="#juri-tentang">📘 Tentang</a>
       <a className="juri-tab" href="#juri-akun">🔑 Akun Demo</a>
       <a className="juri-tab" href="#juri-download">📥 Download Apps</a>
@@ -87,6 +93,58 @@ function SectionTitle({ id, title, subtitle }: { id: string; title: string; subt
       <h2>{title}</h2>
       {subtitle && <p>{subtitle}</p>}
     </div>
+  )
+}
+
+function JuriPublikPages() {
+  const publicPages = [
+    {
+      icon: '🏪',
+      title: 'Landing Page Pasar',
+      desc: 'Halaman publik untuk setiap pasar yang menampilkan profil, sektor, lapak, dan informasi penting pasar secara menarik. Tanpa autentikasi — dapat diakses siapa saja.',
+      url: PUBLIC_LANDING_PAGE,
+      label: 'Lihat Landing Page Niaga Daya',
+    },
+    {
+      icon: '🏬',
+      title: 'Halaman Detail Lapak',
+      desc: 'Halaman publik untuk detail lapak (toko) tertentu yang menampilkan nama, pemilik, sektor, lokasi, dan status lapak. Dapat diakses dari landing page atau langsung via URL.',
+      url: PUBLIC_STALL_DEMO,
+      label: 'Lihat Detail Lapak A-001',
+    },
+  ]
+
+  return (
+    <section className="juri-section">
+      <SectionTitle
+        id="juri-publik"
+        title="Halaman Publik (Tanpa Login)"
+        subtitle="Halaman yang dapat diakses siapa saja tanpa autentikasi — untuk transparansi pasar kepada pedagang dan masyarakat."
+      />
+      <div className="juri-public-grid">
+        {publicPages.map((page) => (
+          <div className="juri-public-card" key={page.title}>
+            <div className="juri-feature-icon">{page.icon}</div>
+            <h3>{page.title}</h3>
+            <p>{page.desc}</p>
+            <a
+              href={page.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="juri-public-link"
+            >
+              {page.label} →
+            </a>
+          </div>
+        ))}
+      </div>
+      <div className="juri-note">
+        🌍 <strong>Transparansi Pasar:</strong> Halaman publik dirancang untuk menampilkan informasi pasar ke pedagang dan masyarakat umum.
+        Setiap pasar punya landing page di URL <code>/@nama-pasar</code> dan setiap lapak punya halaman detail di <code>/lapak/[id]/[kode]</code>.
+        <br />
+        💡 <strong>Format URL:</strong> Buka halaman publik dengan pola <code>https://siaga-pi.vercel.app/@niaga</code> untuk melihat pasar yang terdaftar.
+      </div>
+    </section>
   )
 }
 
