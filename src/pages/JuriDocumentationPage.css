@@ -631,6 +631,23 @@
   text-decoration: none;
 }
 
+.juri-aux-hint {
+  display: block;
+  margin-top: 0.6rem;
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.juri-aux-hint code {
+  background: #f1f5f9;
+  color: #1d4ed8;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Monaco', 'Menlo', monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
 .juri-impact-grid {
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 }

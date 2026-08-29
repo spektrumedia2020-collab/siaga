@@ -368,6 +368,7 @@ export function JuriDocumentationPage() {
 
           <div className="juri-aux-links">
             <a href={PUBLIC_STALL_DEMO} target="_blank" rel="noopener noreferrer">Lihat detail lapak demo →</a>
+            <span className="juri-aux-hint">PIN: <code>1234</code></span>
           </div>
         </section>
 
