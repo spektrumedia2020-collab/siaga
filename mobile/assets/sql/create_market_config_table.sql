@@ -21,8 +21,19 @@ alter table market_config enable row level security;
 create policy "Authenticated users can read market_config"
   on market_config for select using (auth.uid() is not null);
 
--- Owner/Manager: bisa edit konfig pasar-mereka
+-- Owner/Manager: bisa menambah dan edit konfig pasar-mereka
 -- NOTE: id_role adalah bigint (FK ke roles.id), jadi harus JOIN ke roles
+create policy "Market officers can insert their market config"
+  on market_config for insert with check (
+    EXISTS (
+      SELECT 1 FROM users u
+      JOIN roles r ON u.id_role = r.id
+      WHERE u.auth_uid = auth.uid()
+        AND u.market_id = market_config.market_id
+        AND r.name IN ('ADMIN', 'MARKET_HEAD', 'TREASURER')
+    )
+  );
+
 create policy "Market officers can update their market config"
   on market_config for update using (
     EXISTS (

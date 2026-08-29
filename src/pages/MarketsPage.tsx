@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getSupabaseClient } from '../lib/supabase'
+import { getSupabaseClient, STORAGE_BUCKET } from '../lib/supabase'
 import { getUserRole } from '../lib/roleUtils'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import './Markets.css'
@@ -271,17 +271,25 @@ export function MarketsPage() {
     }
 
     const normalized = trimmed.replace(/^\/+/, '')
-    const bucketPrefix = 'data siaga/'
+    const storageBucketName = STORAGE_BUCKET
+    const bucketPrefix = `${storageBucketName.toLowerCase()}/`
     const bucketMatch = normalized.match(/^([^/]+)\/(.+)$/i)
-    if (bucketMatch && bucketMatch[1].toLowerCase() === 'data siaga') {
+    if (bucketMatch && bucketMatch[1].toLowerCase() === storageBucketName.toLowerCase()) {
       return {
         bucketName: bucketMatch[1],
         objectPath: bucketMatch[2]
       }
     }
 
+    if (normalized.toLowerCase().startsWith(bucketPrefix)) {
+      return {
+        bucketName: storageBucketName,
+        objectPath: normalized.slice(bucketPrefix.length)
+      }
+    }
+
     return {
-      bucketName: 'Data Siaga',
+      bucketName: storageBucketName,
       objectPath: normalized
     }
   }
@@ -328,7 +336,7 @@ export function MarketsPage() {
     const safeFileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`
     const fileName = `${normalizedPath ? `${normalizedPath}/` : ''}${safeFileName}`
     const supabase = getSupabaseClient()
-    const bucketName = 'Data Siaga'
+    const bucketName = STORAGE_BUCKET
 
     try {
       const { error } = await supabase.storage.from(bucketName).upload(fileName, compressedFile, {

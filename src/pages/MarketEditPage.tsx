@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { getSupabaseClient } from '../lib/supabase'
+import { getSupabaseClient, STORAGE_BUCKET } from '../lib/supabase'
 import '../styles/layout.css'
 
 interface Market {
@@ -119,7 +119,7 @@ export function MarketEditPage({ marketId, onBack }: Props) {
   const uploadPhoto = async (file: File, type: 'photo' | 'head'): Promise<string | null> => {
     try {
       const supabase = getSupabaseClient()
-      const bucket = 'Data Siaga'
+      const bucket = STORAGE_BUCKET
       const fileName = `${type}_${Date.now()}_${file.name}`
       
       const { data, error } = await supabase.storage

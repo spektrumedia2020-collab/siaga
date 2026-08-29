@@ -145,6 +145,18 @@ DROP POLICY IF EXISTS "Authenticated users can read market_config" ON public.mar
 CREATE POLICY "Authenticated users can read market_config"
   ON public.market_config FOR SELECT USING (auth.uid() IS NOT NULL);
 
+DROP POLICY IF EXISTS "Market officers can insert their market config" ON public.market_config;
+CREATE POLICY "Market officers can insert their market config"
+  ON public.market_config FOR INSERT WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM users u
+      JOIN roles r ON u.id_role = r.id
+      WHERE u.auth_uid = auth.uid()
+        AND u.market_id = market_config.market_id
+        AND r.name IN ('ADMIN', 'MARKET_HEAD', 'TREASURER')
+    )
+  );
+
 DROP POLICY IF EXISTS "Market officers can update their market config" ON public.market_config;
 CREATE POLICY "Market officers can update their market config"
   ON public.market_config FOR UPDATE USING (

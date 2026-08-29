@@ -26,7 +26,9 @@ if (!hasValidConfig) {
   }
 }
 
-export const STORAGE_BUCKET = (import.meta.env.VITE_SUPABASE_STORAGE_BUCKET || 'Data Siaga').trim()
+const normalizeBucketName = (value: string) => value.trim().replace(/\s+/g, '-').toLowerCase()
+
+export const STORAGE_BUCKET = normalizeBucketName(import.meta.env.VITE_SUPABASE_STORAGE_BUCKET || 'data-siaga')
 
 export function getStorageConfigurationMessage(error?: any, fallback = 'Gagal mengunggah file') {
   const rawMessage = String(error?.message || error?.statusText || error?.code || '')

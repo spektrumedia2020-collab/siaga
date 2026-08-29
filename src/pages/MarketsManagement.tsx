@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { getSupabaseClient } from '../lib/supabase'
+import { getSupabaseClient, STORAGE_BUCKET } from '../lib/supabase'
 import { setImpersonateSession, UserRole } from '../lib/roleUtils'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import '../styles/layout.css'
@@ -127,7 +127,7 @@ export function MarketsManagement({ onImpersonate }: Props) {
   const uploadPhoto = async (file: File, type: 'market' | 'head'): Promise<string | null> => {
     try {
       const supabase = getSupabaseClient()
-      const bucket = 'Data Siaga'
+      const bucket = STORAGE_BUCKET
       const fileName = `${type}_${Date.now()}_${file.name}`
       const { data, error } = await supabase.storage.from(bucket).upload(fileName, file)
       if (error) throw error

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { getSupabaseClient } from '../lib/supabase'
 import './MarketLandingPage.css'
 
@@ -56,10 +56,9 @@ interface Props {
 
 function parseJsonArray<T>(value: unknown): T[] {
   if (!value || typeof value !== 'string') return []
-
   try {
     const parsed = JSON.parse(value)
-    return Array.isArray(parsed) ? parsed as T[] : []
+    return Array.isArray(parsed) ? (parsed as T[]) : []
   } catch {
     return []
   }
@@ -72,8 +71,8 @@ export function MarketLandingPage({ slug }: Props) {
   const [cms, setCms] = useState<CmsContent>({ logoUrl: '', heroSlides: [], announcement: '', aboutMarket: '', news: [] })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<'info' | 'sectors' | 'stalls'>('info')
   const [heroIndex, setHeroIndex] = useState(0)
+  const [isNavOpen, setIsNavOpen] = useState(false)
 
   useEffect(() => {
     loadMarketData()
@@ -83,7 +82,7 @@ export function MarketLandingPage({ slug }: Props) {
     if (!cms.heroSlides || cms.heroSlides.length <= 1) return
     const interval = window.setInterval(() => {
       setHeroIndex((current) => (current + 1) % cms.heroSlides.length)
-    }, 4500)
+    }, 5000)
     return () => window.clearInterval(interval)
   }, [cms.heroSlides])
 
@@ -153,14 +152,16 @@ export function MarketLandingPage({ slug }: Props) {
     const sectorMap = new Map((sectorsData || []).map((sector: any) => [sector.id, sector.name]))
     const ownerMap = new Map((ownersData || []).map((owner: any) => [owner.id, owner.name]))
 
-    setStalls((stallsData || []).map((s: any) => ({
-      id: s.id,
-      code: s.code || '',
-      name: s.number || '',
-      sector_name: sectorMap.get(s.sector_id) || '-',
-      owner_name: ownerMap.get(s.owner_id) || '-',
-      status: s.status || 'AKTIF'
-    })))
+    setStalls(
+      (stallsData || []).map((s: any) => ({
+        id: s.id,
+        code: s.code || '',
+        name: s.number || '',
+        sector_name: sectorMap.get(s.sector_id) || '-',
+        owner_name: ownerMap.get(s.owner_id) || '-',
+        status: s.status || 'AKTIF'
+      }))
+    )
   }
 
   if (loading) {
@@ -173,228 +174,276 @@ export function MarketLandingPage({ slug }: Props) {
   }
 
   if (!market) {
-    return <div className="market-landing-error"><div className="error-card"><h1>Pasar tidak ditemukan</h1><p>{error || 'Data pasar tidak tersedia.'}</p><a href="/" className="btn-back">Kembali</a></div></div>
+    return (
+      <div className="market-landing-error">
+        <div className="error-card">
+          <h1>Pasar tidak ditemukan</h1>
+          <p>{error || 'Data pasar tidak tersedia.'}</p>
+          <a href="/" className="btn-back">
+            Kembali
+          </a>
+        </div>
+      </div>
+    )
   }
 
-  const displayMarket = market
+  // Helper functions
   const clean = (value: unknown) => String(value || '').trim().replace(/^[,\s]+|[,\s]+$/g, '')
   const structuredAddress = [
-    [clean(displayMarket.street), clean(displayMarket.street_number)].filter(Boolean).join(' '),
-    clean(displayMarket.kecamatan) ? `Kecamatan ${clean(displayMarket.kecamatan)}` : '',
-    clean(displayMarket.city),
-    clean(displayMarket.province),
-    clean(displayMarket.postal_code)
-  ].filter(Boolean).join(', ')
-  const displayAddress = structuredAddress || clean(displayMarket.address) || '-'
-  const commerceLogo = cms.logoUrl || displayMarket.logo_url || displayMarket.head_photo_url || displayMarket.photo_url || '/logo.jpeg'
-  const heroSlides = cms.heroSlides.length > 0 ? cms.heroSlides.filter(Boolean) : [displayMarket.photo_url || '/pasar.jpeg']
+    [clean(market.street), clean(market.street_number)].filter(Boolean).join(' '),
+    clean(market.kecamatan) ? `Kecamatan ${clean(market.kecamatan)}` : '',
+    clean(market.city),
+    clean(market.province),
+    clean(market.postal_code)
+  ]
+    .filter(Boolean)
+    .join(', ')
+  const displayAddress = structuredAddress || clean(market.address) || '-'
+  const commerceLogo = cms.logoUrl || market.logo_url || market.head_photo_url || market.photo_url || '/logo.jpeg'
+  const heroSlides = cms.heroSlides.length > 0 ? cms.heroSlides.filter(Boolean) : [market.photo_url || '/pasar.jpeg']
   const heroImage = heroSlides[Math.min(heroIndex, heroSlides.length - 1)] || '/pasar.jpeg'
-  const newsItems = cms.news.filter((item) => item.title || item.summary || item.image)
+  const newsItems = cms.news.filter((item) => item.title || item.summary || item.image).slice(0, 3)
   const activeStallCount = stalls.filter((stall) => (stall.status || '').toUpperCase() === 'AKTIF').length
-  const sectorSummaries = sectors.map((sector) => ({
-    ...sector,
-    count: stalls.filter((stall) => stall.sector_name === sector.name).length
-  }))
-  const featuredStalls = stalls.slice(0, 8)
+  const galleryImages = heroSlides.slice(0, 9) // Use hero images for gallery
 
   return (
     <div className="market-landing">
-      <div className="landing-hero" style={{
-        backgroundImage: `url(${heroImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center'
-      }}>
-        <div className="hero-overlay">
-          <div className="hero-content">
-            <div className="hero-brand-row">
-              <img src={commerceLogo} alt={`Logo Pasar ${displayMarket.name}`} className="hero-logo" onError={(event) => { (event.currentTarget as HTMLImageElement).src = '/logo.jpeg' }} />
-              <div>
-                <h1>Pasar {displayMarket.name}</h1>
-                <p className="hero-subtitle">{displayAddress}</p>
-              </div>
+      {/* Navigation Bar */}
+      <nav className="navbar">
+        <div className="navbar-container">
+          <div className="navbar-brand">
+            <img src={commerceLogo} alt={`Logo ${market.name}`} className="navbar-logo" onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/logo.jpeg' }} />
+            <span className="navbar-title">{market.name}</span>
+          </div>
+
+          <button className="navbar-toggle" onClick={() => setIsNavOpen(!isNavOpen)} aria-label="Toggle menu">
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+
+          <ul className={`navbar-menu ${isNavOpen ? 'active' : ''}`}>
+            <li><a href="#beranda" onClick={() => setIsNavOpen(false)}>Beranda</a></li>
+            <li><a href="#tentang" onClick={() => setIsNavOpen(false)}>Tentang</a></li>
+            <li><a href="#keunggulan" onClick={() => setIsNavOpen(false)}>Keunggulan</a></li>
+            <li><a href="#kegiatan" onClick={() => setIsNavOpen(false)}>Kegiatan</a></li>
+            <li><a href="#kontak" onClick={() => setIsNavOpen(false)}>Kontak</a></li>
+          </ul>
+
+          <button className="navbar-cta">Jelajahi Niaga</button>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <section id="beranda" className="hero">
+        <div className="hero-background" style={{ backgroundImage: `url(${heroImage})` }}></div>
+        <div className="hero-overlay"></div>
+        <div className="hero-content-wrapper">
+          <div className="hero-text">
+            <h1 className="hero-title">Pasar {market.name}</h1>
+            <p className="hero-subtitle">Pasar modern yang terintegrasi dengan teknologi SIAGA</p>
+            <p className="hero-description">{displayAddress}</p>
+            <div className="hero-buttons">
+              <button className="btn btn-primary">Mulai Jelajah</button>
+              <button className="btn btn-secondary">Pelajari Lebih Lanjut</button>
             </div>
-            <div className="hero-badges">
-              <span className="badge badge-code">Kode: {displayMarket.code}</span>
-              <span className="badge badge-status">{displayMarket.status}</span>
-            </div>
-            <div className="hero-actions">
-              <button type="button" className="hero-action primary" onClick={() => setActiveTab('info')}>Lihat informasi</button>
-              <button type="button" className="hero-action secondary" onClick={() => setActiveTab('stalls')}>Lihat lapak</button>
-            </div>
-            {heroSlides.length > 1 && (
-              <div className="hero-dots" aria-label="Slide hero pasar">
-                {heroSlides.map((_, idx) => (
-                  <button
-                    key={`${heroImage}-${idx}`}
-                    type="button"
-                    className={`hero-dot ${idx === heroIndex ? 'active' : ''}`}
-                    onClick={() => setHeroIndex(idx)}
-                    aria-label={`Lihat slide ${idx + 1}`}
-                  />
-                ))}
-              </div>
-            )}
           </div>
         </div>
-      </div>
+        {heroSlides.length > 1 && (
+          <div className="hero-dots">
+            {heroSlides.map((_, idx) => (
+              <button
+                key={idx}
+                className={`dot ${idx === heroIndex ? 'active' : ''}`}
+                onClick={() => setHeroIndex(idx)}
+                aria-label={`Slide ${idx + 1}`}
+              />
+            ))}
+          </div>
+        )}
+      </section>
 
-      <div className="market-summary-strip">
-        <div className="summary-strip-card">
-          <span>Sektor</span>
-          <strong>{sectors.length}</strong>
-        </div>
-        <div className="summary-strip-card">
-          <span>Lapak</span>
-          <strong>{stalls.length}</strong>
-        </div>
-        <div className="summary-strip-card">
-          <span>Aktif</span>
-          <strong>{activeStallCount}</strong>
-        </div>
-        <div className="summary-strip-card">
-          <span>Status</span>
-          <strong>{displayMarket.status || 'AKTIF'}</strong>
-        </div>
-      </div>
+      {/* About Market Section */}
+      <section id="tentang" className="section about-market">
+        <div className="container">
+          <h2>Tentang Pasar {market.name}</h2>
+          <p className="section-description">
+            {cms.aboutMarket || market.description || 'Informasi pasar belum tersedia.'}
+          </p>
 
-      <div className="landing-nav">
-        <button className={`tab-btn ${activeTab === 'info' ? 'active' : ''}`} onClick={() => setActiveTab('info')}>📋 Informasi</button>
-        <button className={`tab-btn ${activeTab === 'sectors' ? 'active' : ''}`} onClick={() => setActiveTab('sectors')}>📂 Sektor ({sectors.length})</button>
-        <button className={`tab-btn ${activeTab === 'stalls' ? 'active' : ''}`} onClick={() => setActiveTab('stalls')}>🏪 Lapak ({stalls.length})</button>
-      </div>
-
-      <div className="landing-content">
-        {activeTab === 'info' && (
-          <div className="info-panel">
-            <div className="info-card wide market-intro-card">
-              <h3>📝 Tentang Pasar</h3>
-              <p>{cms.aboutMarket || displayMarket.description || 'Informasi pasar belum tersedia.'}</p>
+          <div className="highlights-grid">
+            <div className="highlight-card">
+              <div className="highlight-icon">👥</div>
+              <h3>Pedagang Aktif</h3>
+              <p>{stalls.length} lapak siap melayani</p>
             </div>
+            <div className="highlight-card">
+              <div className="highlight-icon">📂</div>
+              <h3>Berbagai Kategori</h3>
+              <p>{sectors.length} sektor tersedia</p>
+            </div>
+            <div className="highlight-card">
+              <div className="highlight-icon">✅</div>
+              <h3>Terpercaya</h3>
+              <p>{activeStallCount} lapak aktif beroperasi</p>
+            </div>
+            <div className="highlight-card">
+              <div className="highlight-icon">📍</div>
+              <h3>Lokasi Strategis</h3>
+              <p>{market.city || '-'}, {market.kecamatan || '-'}</p>
+            </div>
+          </div>
+        </div>
+      </section>
 
-            {cms.announcement && (
-              <div className="info-card wide announcement-card">
-                <h3>📣 Pengumuman</h3>
-                <p>{cms.announcement}</p>
+      {/* Advantages Section */}
+      <section id="keunggulan" className="section advantages">
+        <div className="container">
+          <h2>Keunggulan Pasar Niaga Daya</h2>
+          <p className="section-description">Mengapa memilih pasar kami</p>
+
+          <div className="advantages-grid">
+            <div className="advantage-card">
+              <div className="advantage-icon">💳</div>
+              <h3>Pembayaran Digital</h3>
+              <p>Kemudahan transaksi dengan sistem pembayaran digital terintegrasi</p>
+            </div>
+            <div className="advantage-card">
+              <div className="advantage-icon">🔗</div>
+              <h3>Terintegrasi</h3>
+              <p>Sistem terpadu untuk manajemen pasar yang efisien dan transparan</p>
+            </div>
+            <div className="advantage-card">
+              <div className="advantage-icon">🏪</div>
+              <h3>Nyaman</h3>
+              <p>Fasilitas lengkap dan suasana pasar yang bersih dan menyenangkan</p>
+            </div>
+            <div className="advantage-card">
+              <div className="advantage-icon">👁️</div>
+              <h3>Transparan</h3>
+              <p>Informasi pasar yang terbuka dan akses data yang mudah untuk semua</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* About SIAGA Section */}
+      <section className="section siaga-info">
+        <div className="container">
+          <div className="siaga-content">
+            <div className="siaga-text">
+              <h2>SIAGA untuk Pasar yang Lebih Modern</h2>
+              <p>
+                Sistem Informasi Retribusi Pasar (SIAGA) adalah solusi teknologi terpadu yang dirancang untuk mengubah cara pengelolaan pasar modern. Dengan SIAGA, pasar dapat beroperasi dengan lebih efisien, transparan, dan berkelanjutan.
+              </p>
+              <ul className="siaga-features">
+                <li>📊 Dashboard analitik real-time untuk manajemen pasar</li>
+                <li>💰 Sistem retribusi digital yang terintegrasi</li>
+                <li>📱 Aplikasi mobile untuk kemudahan akses</li>
+                <li>🔐 Keamanan data dengan enkripsi tingkat enterprise</li>
+              </ul>
+            </div>
+            <div className="siaga-visual">
+              <div className="siaga-icon-box">
+                <div className="siaga-icon">🚀</div>
+                <p>Teknologi Modern</p>
               </div>
-            )}
+            </div>
+          </div>
+        </div>
+      </section>
 
-            <div className="info-card">
-              <h3>📍 Alamat</h3>
+      {/* News/Activities Section */}
+      {newsItems.length > 0 && (
+        <section id="kegiatan" className="section news">
+          <div className="container">
+            <h2>Kegiatan Terbaru</h2>
+            <p className="section-description">Berita dan informasi terkini dari Pasar {market.name}</p>
+
+            <div className="news-grid">
+              {newsItems.map((item, index) => (
+                <article key={index} className="news-card">
+                  {item.image && (
+                    <div className="news-image" style={{ backgroundImage: `url(${item.image})` }}></div>
+                  )}
+                  <div className="news-body">
+                    <h3>{item.title || 'Berita Pasar'}</h3>
+                    <p>{item.summary || 'Informasi terbaru mengenai pasar ini.'}</p>
+                    {item.link && (
+                      <a href={item.link} className="news-link" target="_blank" rel="noreferrer">
+                        Baca Selengkapnya →
+                      </a>
+                    )}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Gallery Section */}
+      {galleryImages.length > 0 && (
+        <section className="section gallery">
+          <div className="container">
+            <h2>Galeri Pasar</h2>
+            <p className="section-description">Suasana dan fasilitas Pasar {market.name}</p>
+
+            <div className="gallery-grid">
+              {galleryImages.map((img, index) => (
+                <div key={index} className="gallery-item">
+                  <img
+                    src={img}
+                    alt={`Galeri pasar ${index + 1}`}
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* CTA Section */}
+      <section className="section cta-section">
+        <div className="container">
+          <h2>Siap Bergabung dengan Pasar Modern?</h2>
+          <p>Jadilah bagian dari Pasar Niaga Daya dan rasakan pengalaman berbelanja dan berdagang yang lebih baik</p>
+          <button className="btn btn-primary btn-large">Jelajahi Lebih Lanjut</button>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer id="kontak" className="footer">
+        <div className="container">
+          <div className="footer-grid">
+            <div className="footer-section">
+              <h4>Pasar {market.name}</h4>
               <p>{displayAddress}</p>
             </div>
-            <div className="info-card">
-              <h3>🏙️ Kota</h3>
-              <p>{displayMarket.city || '-'}</p>
+            <div className="footer-section">
+              <h4>Informasi</h4>
+              <ul>
+                <li><a href="#tentang">Tentang Pasar</a></li>
+                <li><a href="#keunggulan">Keunggulan</a></li>
+                <li><a href="#kegiatan">Kegiatan</a></li>
+              </ul>
             </div>
-            <div className="info-card">
-              <h3>🔢 Kode Pasar</h3>
-              <p>{displayMarket.code || '-'}</p>
-            </div>
-            <div className="info-card">
-              <h3>📊 Status</h3>
-              <p className={`status-${(displayMarket.status || '').toLowerCase()}`}>{displayMarket.status}</p>
-            </div>
-            <div className="info-card wide">
-              <h3>📈 Statistik</h3>
-              <div className="stats-row">
-                <div className="stat-item">
-                  <span className="stat-number">{sectors.length}</span>
-                  <span className="stat-label">Sektor</span>
-                </div>
-                <div className="stat-item">
-                  <span className="stat-number">{stalls.length}</span>
-                  <span className="stat-label">Lapak</span>
-                </div>
-                <div className="stat-item">
-                  <span className="stat-number">{activeStallCount}</span>
-                  <span className="stat-label">Aktif</span>
-                </div>
-              </div>
-            </div>
-
-            {newsItems.length > 0 && (
-              <div className="info-card wide news-card">
-                <h3>📰 Berita</h3>
-                <div className="news-grid">
-                  {newsItems.map((item, index) => (
-                    <article key={`${item.title || 'news'}-${index}`} className="news-item">
-                      {item.image && <img src={item.image} alt={item.title || 'Berita pasar'} className="news-image" onError={(event) => { (event.currentTarget as HTMLImageElement).style.display = 'none' }} />}
-                      <div className="news-item-body">
-                        <h4>{item.title || 'Berita pasar'}</h4>
-                        <p>{item.summary || 'Informasi terbaru mengenai pasar ini.'}</p>
-                        {item.link && <a href={item.link} target="_blank" rel="noreferrer">Baca selengkapnya</a>}
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'sectors' && (
-          <div className="summary-panel">
-            <div className="summary-box highlight">
-              <span>Jumlah sektor</span>
-              <strong>{sectors.length}</strong>
-            </div>
-            <div className="summary-box muted">
-              <span>Status pasar</span>
-              <strong>{displayMarket.status || 'AKTIF'}</strong>
-            </div>
-            <div className="sector-list">
-              {sectorSummaries.length > 0 ? sectorSummaries.map((sector) => (
-                <div key={sector.id} className="sector-card public-sector-card">
-                  <div className="sector-card-header">
-                    <h3>{sector.name}</h3>
-                    <span className="sector-count">{sector.count} lapak</span>
-                  </div>
-                  <p>{sector.description || 'Sektor pasar yang aktif dan siap melayani pembeli.'}</p>
-                </div>
-              )) : (
-                <div className="empty-msg">Belum ada sektor yang ditambahkan untuk pasar ini.</div>
-              )}
+            <div className="footer-section">
+              <h4>Statistik</h4>
+              <ul>
+                <li>Sektor: {sectors.length}</li>
+                <li>Lapak: {stalls.length}</li>
+                <li>Aktif: {activeStallCount}</li>
+              </ul>
             </div>
           </div>
-        )}
-
-        {activeTab === 'stalls' && (
-          <div className="summary-panel">
-            <div className="summary-box highlight">
-              <span>Jumlah lapak</span>
-              <strong>{stalls.length}</strong>
-            </div>
-            <div className="summary-box muted">
-              <span>Lapak aktif</span>
-              <strong>{activeStallCount}</strong>
-            </div>
-            <div className="summary-box muted">
-              <span>Lapak nonaktif</span>
-              <strong>{Math.max(stalls.length - activeStallCount, 0)}</strong>
-            </div>
-            <div className="stall-list">
-              {featuredStalls.length > 0 ? featuredStalls.map((stall) => (
-                <div key={stall.id} className="stall-mini-row">
-                  <div>
-                    <strong>{stall.code || 'Lapak'}</strong>
-                    <span>{stall.name || 'Nama lapak belum diisi'}</span>
-                  </div>
-                  <span className={`badge-sm ${stall.status === 'AKTIF' ? 'badge-aktif' : 'badge-nonaktif'}`}>
-                    {stall.status || 'AKTIF'}
-                  </span>
-                </div>
-              )) : (
-                <div className="empty-msg">Belum ada lapak yang terdaftar di pasar ini.</div>
-              )}
-            </div>
+          <div className="footer-bottom">
+            <p>&copy; 2024 Pasar {market.name}. Diperkuat oleh SIAGA.</p>
+            <p>Sistem Informasi Retribusi Pasar</p>
           </div>
-        )}
-      </div>
-
-      <div className="landing-footer">
-        <p>© 2026 SiAga - Sistem Informasi Manajemen Pasar</p>
-        <p>Data pasar {displayMarket.name} - {displayMarket.city || '-'}</p>
-      </div>
+        </div>
+      </footer>
     </div>
   )
 }
