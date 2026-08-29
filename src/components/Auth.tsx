@@ -87,6 +87,17 @@ export function Auth({ onLoginSuccess }: AuthProps) {
               >
                 Admin
               </button>
+              <button
+                type="button"
+                className="test-account-button"
+                onClick={() => {
+                  setEmail('bendahara@siaga.id')
+                  setPassword('DemiSiaga2026!')
+                  setError('')
+                }}
+              >
+                Bendahara
+              </button>
             </div>
           </div>
         )}
