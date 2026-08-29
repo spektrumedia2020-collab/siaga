@@ -91,6 +91,7 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
     logoUrl: '',
     heroSlides: [] as string[],
     announcement: '',
+    aboutMarket: '',
     news: [{ title: '', summary: '', image: '', link: '' }] as PublicNewsItem[]
   })
   const [publicContentSaving, setPublicContentSaving] = useState(false)
@@ -394,6 +395,7 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
         logoUrl: values.public_logo_url || '',
         heroSlides: heroSlides.length > 0 ? heroSlides : [],
         announcement: values.public_announcement || '',
+        aboutMarket: values.public_about_market || '',
         news: news.length > 0 ? news : [{ title: '', summary: '', image: '', link: '' }]
       })
     } catch (err) {
@@ -412,6 +414,7 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
         { market_id: stats.market.id, key: 'public_logo_url', value: publicContent.logoUrl.trim() },
         { market_id: stats.market.id, key: 'public_hero_images', value: JSON.stringify(publicContent.heroSlides.filter(Boolean)) },
         { market_id: stats.market.id, key: 'public_announcement', value: publicContent.announcement.trim() },
+        { market_id: stats.market.id, key: 'public_about_market', value: publicContent.aboutMarket.trim() },
         { market_id: stats.market.id, key: 'public_news', value: JSON.stringify(publicContent.news.filter((item) => item.title || item.summary || item.image || item.link)) }
       ]
 
@@ -605,6 +608,11 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
               <label className="content-editor-field full-width">
                 <span>Pengumuman</span>
                 <textarea rows={5} value={publicContent.announcement} onChange={(e) => setPublicContent({ ...publicContent, announcement: e.target.value })} placeholder="Tulis pengumuman pasar yang akan tampil di landing page" />
+              </label>
+
+              <label className="content-editor-field full-width">
+                <span>Tentang Pasar</span>
+                <textarea rows={5} value={publicContent.aboutMarket} onChange={(e) => setPublicContent({ ...publicContent, aboutMarket: e.target.value })} placeholder="Tulis deskripsi atau informasi tentang pasar" />
               </label>
 
               <div className="content-editor-field full-width">

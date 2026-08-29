@@ -46,6 +46,7 @@ interface CmsContent {
   logoUrl: string
   heroSlides: string[]
   announcement: string
+  aboutMarket: string
   news: PublicNewsItem[]
 }
 
@@ -68,7 +69,7 @@ export function MarketLandingPage({ slug }: Props) {
   const [market, setMarket] = useState<MarketData | null>(null)
   const [sectors, setSectors] = useState<SectorData[]>([])
   const [stalls, setStalls] = useState<StallData[]>([])
-  const [cms, setCms] = useState<CmsContent>({ logoUrl: '', heroSlides: [], announcement: '', news: [] })
+  const [cms, setCms] = useState<CmsContent>({ logoUrl: '', heroSlides: [], announcement: '', aboutMarket: '', news: [] })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'info' | 'sectors' | 'stalls'>('info')
@@ -105,11 +106,12 @@ export function MarketLandingPage({ slug }: Props) {
         .select('key, value')
         .eq('market_id', marketData.id)
 
-      let cmsContent: CmsContent = { logoUrl: '', heroSlides: [], announcement: '', news: [] }
+      let cmsContent: CmsContent = { logoUrl: '', heroSlides: [], announcement: '', aboutMarket: '', news: [] }
       ;(configRows || []).forEach((row: any) => {
         if (row.key === 'public_logo_url') cmsContent.logoUrl = row.value || ''
         if (row.key === 'public_hero_images') cmsContent.heroSlides = parseJsonArray<string>(row.value)
         if (row.key === 'public_announcement') cmsContent.announcement = row.value || ''
+        if (row.key === 'public_about_market') cmsContent.aboutMarket = row.value || ''
         if (row.key === 'public_news') cmsContent.news = parseJsonArray<PublicNewsItem>(row.value)
       })
 
@@ -266,7 +268,7 @@ export function MarketLandingPage({ slug }: Props) {
           <div className="info-panel">
             <div className="info-card wide market-intro-card">
               <h3>📝 Tentang Pasar</h3>
-              <p>{displayMarket.description || 'Informasi pasar belum tersedia.'}</p>
+              <p>{cms.aboutMarket || displayMarket.description || 'Informasi pasar belum tersedia.'}</p>
             </div>
 
             {cms.announcement && (
