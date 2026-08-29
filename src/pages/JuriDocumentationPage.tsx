@@ -10,17 +10,12 @@ interface AccountRow {
   akses: string
 }
 
-// ---- Link akses aplikasi (ISI SESUAI DADO LIVE) ----
 const WEB_APP_URL = 'https://siaga-pi.vercel.app'
 const DRIVE_URL = 'https://drive.google.com/drive/folders/1RMOtTkinfgmxTGujOMI0jNNDwW7Yp6jX'
-// Mobile APK link — hanya role PETUGAS (OFFICER) memakai apps mobile
 const MOBILE_APP_URL = 'https://drive.google.com/drive/folders/1RMOtTkinfgmxTGujOMI0jNNDwW7Yp6jX'
-
-// ---- Link akses halaman publik (landing page & lapak) ----
 const PUBLIC_LANDING_PAGE = 'https://siaga-pi.vercel.app/@niaga'
 const PUBLIC_STALL_DEMO = 'https://siaga-pi.vercel.app/lapak/30/NGD-0207'
 
-// ---- Blok kredensial demo (ISI SESUAI SEED SUPABASE ANDA) ----
 const DEMO_ACCOUNTS: AccountRow[] = [
   { role: 'ADMIN', roleBadge: 'Superadmin', nama: 'Super Admin', email: 'admin@siaga.id', password: 'DemiSiaga2026!', platform: 'Web', akses: '#superadmin/dashboard — kelola semua pasar, petugas, lapak, retribusi, pengguna, impersonate' },
   { role: 'MARKET_HEAD', roleBadge: 'Kepala Pasar', nama: 'Kepala Pasar', email: 'kepala@siaga.id', password: 'DemiSiaga2026!', platform: 'Web', akses: '#market/dashboard — dashboard pasar, kelola lapak, petugas, retribusi & transaksi pasar miliknya' },
@@ -28,64 +23,27 @@ const DEMO_ACCOUNTS: AccountRow[] = [
   { role: 'TREASURER', roleBadge: 'Bendahara', nama: 'Bendahara', email: 'bendahara@siaga.id', password: 'DemiSiaga2026!', platform: 'Web', akses: 'Web dashboard — verifikasi/approve setoran petugas, rekonsiliasi' },
 ]
 
-export function JuriDocumentationPage() {
-  return (
-    <div className="juri-docs">
-      <header className="juri-hero">
-        <div className="juri-hero-inner">
-          <div className="juri-badge">PIDI DIGDAYA Hackathon 2026 · Demo</div>
-          <h1>SiAga</h1>
-          <p className="juri-tagline">Sistem Informasi Manajemen Pasar</p>
-          <p className="juri-desc">
-            Platform digital untuk pengelolaan retribusi pasar yang transparan &amp; akuntabel —
-            dari pencatatan transaksi lapangan, setoran petugas, hingga rekonsiliasi keuangan
-            pasar. Dilengkapi web admin + aplikasi mobile petugas dengan konektivitas offline.
-          </p>
-          <div className="juri-access-buttons">
-            <a className="juri-access-btn juri-access-web" href={WEB_APP_URL} target="_blank" rel="noopener noreferrer">
-              🌐 Akses Web — Admin / Kepala Pasar
-            </a>
-            <a className="juri-access-btn juri-access-mobile" href={MOBILE_APP_URL} target="_blank" rel="noopener noreferrer">
-              📱 Mobile Demo — Hanya Petugas
-            </a>
-          </div>
-          <a className="juri-drive-btn" href={DRIVE_URL} target="_blank" rel="noopener noreferrer">
-            📁 Google Drive — Semua Dokumentasi &amp; Demo
-          </a>
-        </div>
-      </header>
+const navItems = [
+  { label: 'Overview', href: '#juri-overview' },
+  { label: 'Publik', href: '#juri-publik' },
+  { label: 'Akun', href: '#juri-akun' },
+  { label: 'Unduh', href: '#juri-download' },
+  { label: 'Fitur', href: '#juri-fitur' },
+]
 
-      <JuriNav />
+const summaryMetrics = [
+  { label: 'Peserta ditugaskan', value: '18', meta: '+3 minggu ini', tone: 'blue' },
+  { label: 'Sudah dinilai', value: '12', meta: '67% selesai', tone: 'green' },
+  { label: 'Draft', value: '3', meta: 'Perlu review', tone: 'amber' },
+  { label: 'Status panel', value: 'Aktif', meta: 'Ready to judge', tone: 'slate' },
+]
 
-      <div className="juri-body">
-        <JuriPublikPages />
-        <JuriTentang />
-        <JuriDownload />
-        <JuriDaftarAkun />
-        <JuriFitur />
-        <JuriArsitektur />
-      </div>
-    </div>
-  )
-}
-function JuriNav() {
-  return (
-    <div className="juri-tabs">
-      <a className="juri-tab" href="#juri-publik">🌍 Halaman Publik</a>
-      <a className="juri-tab" href="#juri-tentang">📘 Tentang</a>
-      <a className="juri-tab" href="#juri-akun">🔑 Akun Demo</a>
-      <a className="juri-tab" href="#juri-download">📥 Download Apps</a>
-      <a className="juri-tab" href="#juri-fitur">⚙️ Fitur</a>
-      <a className="juri-tab" href="#juri-arsitektur">🏗️ Arsitektur</a>
-      <a
-        className="juri-tab juri-tab-drive"
-        href={DRIVE_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-      >📁 Google Drive</a>
-    </div>
-  )
-}
+const contestantList = [
+  { id: '#023', name: 'Pasar Niaga Daya', status: 'Belum dinilai', accent: 'pending' },
+  { id: '#018', name: 'Pasar Sekar Wangi', status: 'Draft', accent: 'draft' },
+  { id: '#011', name: 'Pasar Manggala', status: 'Submitted', accent: 'done' },
+  { id: '#007', name: 'Pasar Suka Maju', status: 'Submitted', accent: 'done' },
+]
 
 function SectionTitle({ id, title, subtitle }: { id: string; title: string; subtitle?: string }) {
   return (
@@ -96,244 +54,269 @@ function SectionTitle({ id, title, subtitle }: { id: string; title: string; subt
   )
 }
 
-function JuriPublikPages() {
-  const publicPages = [
-    {
-      icon: '🏪',
-      title: 'Landing Page Pasar',
-      desc: 'Halaman publik untuk setiap pasar yang menampilkan profil, sektor, lapak, dan informasi penting pasar secara menarik. Tanpa autentikasi — dapat diakses siapa saja.',
-      url: PUBLIC_LANDING_PAGE,
-      label: 'Lihat Landing Page Niaga Daya',
-    },
-    {
-      icon: '🏬',
-      title: 'Halaman Detail Lapak',
-      desc: 'Halaman publik untuk detail lapak (toko) tertentu yang menampilkan nama, pemilik, sektor, lokasi, dan status lapak. Dapat diakses dari landing page atau langsung via URL.',
-      url: PUBLIC_STALL_DEMO,
-      label: 'Lihat Detail Lapak NGD-0207',
-    },
-  ]
-
+export function JuriDocumentationPage() {
   return (
-    <section className="juri-section">
-      <SectionTitle
-        id="juri-publik"
-        title="Halaman Publik (Tanpa Login)"
-        subtitle="Halaman yang dapat diakses siapa saja tanpa autentikasi — untuk transparansi pasar kepada pedagang dan masyarakat."
-      />
-      <div className="juri-public-grid">
-        {publicPages.map((page) => (
-          <div className="juri-public-card" key={page.title}>
-            <div className="juri-feature-icon">{page.icon}</div>
-            <h3>{page.title}</h3>
-            <p>{page.desc}</p>
-            <a
-              href={page.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="juri-public-link"
-            >
-              {page.label} →
-            </a>
+    <div className="juri-docs">
+      <header className="juri-header">
+        <div className="juri-brand-wrap">
+          <div className="juri-brand-mark">S</div>
+          <div className="juri-brand-copy">
+            <span className="juri-brand-name">SIAGA</span>
+            <span className="juri-brand-subtitle">Juri Workspace</span>
           </div>
-        ))}
-      </div>
-      <div className="juri-note">
-        🌍 <strong>Transparansi Pasar:</strong> Halaman publik dirancang untuk menampilkan informasi pasar ke pedagang dan masyarakat umum.
-        Setiap pasar punya landing page di URL <code>/@nama-pasar</code> dan setiap lapak punya halaman detail di <code>/lapak/[id]/[kode]</code>.
-        <br />
-        💡 <strong>Format URL:</strong> Buka landing page publik <code>https://siaga-pi.vercel.app/@niaga</code> dan lapak publik <code>https://siaga-pi.vercel.app/lapak/30/NGD-0207</code>.
-      </div>
-    </section>
-  )
-}
+        </div>
 
-function JuriTentang() {
-  return (
-    <section className="juri-section">
-      <SectionTitle id="juri-tentang" title="Tentang Aplikasi" subtitle="Masalah yang dipecahkan & solusi SiAga" />
-      <div className="juri-cards">
-        <div className="juri-card"><h3>💡 Masalah</h3><p>Pengelolaan retribusi pasar sering dilakukan manual &amp; terpencar — berpotensi kebocoran, sulit dilacak, dan laporan keuangan tidak transparan antara petugas, bendahara, kepala pasar, dan dinas.</p></div>
-        <div className="juri-card"><h3>🚀 Solusi</h3><p>SiAga mendigitalkan seluruh siklus retribusi: petugas mencatat transaksi via scan QR lapak di aplikasi mobile (bisa offline), data tersinkron ke cloud, setoran harian diverifikasi bendahara, dan kepala pasar/administrator melihat dashboard real-time.</p></div>
-        <div className="juri-card"><h3>🎯 Dampak</h3><p>Transparansi penerimaan, akurasi pelaporan, pengawasan berbasis data, dan peningkatan pendapatan daerah yang akuntabel serta mudah diaudit.</p></div>
-      </div>
-    </section>
-  )
-}
-
-
-function JuriDownload() {
-  const apps = [
-    {
-      icon: '🗂️',
-      name: 'File Instalasi & Build',
-      desc: 'Semua file build dijaga di folder Drive — web build & mobile APK.',
-      steps: [
-        'Buka tombol Google Drive di atas (au tab navigasi).',
-        'Klick folder "Siaga-Web" au "SiAga-Mobile" di Drive.',
-        'Klick file .zip / .apk dan pilih Download.',
-        'Extrai file .zip (web) au install .apk (mobile) na device Anda.',
-      ],
-    },
-    {
-      icon: '🌐',
-      name: 'Web App (Superadmin / Kepala Pasar)',
-      desc: 'Aplikasi web dashboard manajemen — deploy via Vercel. Login direct di browser.',
-      steps: [
-        'Download folder/zip SiAga-Web di Drive.',
-        'Unzip dan buka index.html di browser (au deploy ke Vercel).',
-        'Buka halaman login au platform dan pakai demo direct.',
-        'Login uba kredensial ADMIN/MARKET_HEAD — lihat section Akun Demo.',
-      ],
-    },
-    {
-      icon: '📱',
-      name: 'Mobile App (Petugas / Bendahara) — Android',
-      desc: 'Aplikasi Flutter mobile petugas lapangan: scan QR, catat transaksi, absensi & setoran.',
-      steps: [
-        'Download file Siaga-Mobile.apk di Drive.',
-        'Transfer file ba Android device (nau download direct).',
-        'Tap file .apk lalu install (allow "Unknown sources").',
-        'Login uba akun OFFICER/TREASURER di aplikasi mobile.',
-      ],
-    },
-    {
-      icon: '🔐',
-      name: 'Google Drive — Dokumentasi, Demo & Binari',
-      desc: 'Folder Drive punya build log demo, nota brief, installer binario, wireframe & apk mobile.',
-      steps: [
-        'Buka Google Drive — SiAga App Files di tautan di atas.',
-        'Download dokumentasi, demo video, & build binary app.',
-        'Semua file ini versi update dan sinkron otomatis.',
-      ],
-    },
-  ]
-  return (
-    <section className="juri-section">
-      <SectionTitle
-        id="juri-download"
-        title="Download Aplikasi (Apps)"
-        subtitle="Cara download & instalasi aplikasi SiAga Web + Mobile dari Google Drive."
-      />
-      <div className="juri-download-grid">
-        {apps.map((a) => (
-          <div className="juri-download-card" key={a.name}>
-            <div className="juri-feature-icon">{a.icon}</div>
-            <h3>{a.name}</h3>
-            <p>{a.desc}</p>
-            <ol>
-              {a.steps.map((s) => (
-                <li key={s}>{s}</li>
-              ))}
-            </ol>
-          </div>
-        ))}
-      </div>
-      <div className="juri-note">
-        📥 <strong>Link akses:</strong>&nbsp;
-        <a href={WEB_APP_URL} target="_blank" rel="noopener noreferrer">🌐 Web App</a> &nbsp;·&nbsp;
-        <a href={MOBILE_APP_URL} target="_blank" rel="noopener noreferrer">📱 Mobile (Petugas)</a> &nbsp;·&nbsp;
-        <a href={DRIVE_URL} target="_blank" rel="noopener noreferrer">📁 Google Drive</a>
-        <br />
-        <span style={{ fontSize: '12.5px' }}>⚠️ Aplikasi mobile dikhususkan untuk PETUGAS (OFFICER) saja.</span>
-      </div>
-    </section>
-  )
-}
-
-
-function JuriDaftarAkun() {
-  return (
-    <section className="juri-section">
-      <SectionTitle id="juri-akun" title="Daftar Akun untuk Mengakses Semua Role" subtitle="Gunakan kredensial di bawah untuk masuk ke setiap peran. Akun ADMIN di platform web membuka superadmin dashboard." />
-      <div className="juri-note">
-        💡 <strong>Alur login Web:</strong> buka halaman Web App → <em>Login</em> → masukkan email &amp; password.
-        Akun ADMIN otomatis dialihkan ke Superadmin Dashboard; akun MARKET_HEAD ke Dashboard Pasar.
-        <br />
-        💡 <strong>Aplikasi Mobile:</strong> login dengan akun OFFICER pada aplikasi mobile di atas.
-      </div>
-      <div className="juri-table-wrap">
-        <table className="juri-table">
-          <thead>
-            <tr><th>Role</th><th>Nama</th><th>Email</th><th>Password</th><th>Platform</th><th>Akses</th></tr>
-          </thead>
-          <tbody>
-            {DEMO_ACCOUNTS.map((acc) => (
-              <tr key={acc.role}>
-                <td>
-                  <span className={`juri-role-badge juri-role-${acc.role.toLowerCase()}`}>{acc.roleBadge}</span>
-                  <div className="juri-role-code">{acc.role}</div>
-                </td>
-                <td>{acc.nama}</td>
-                <td><code>{acc.email}</code></td>
-                <td><code>{acc.password}</code></td>
-                <td>{acc.platform}</td>
-                <td className="juri-akses">{acc.akses}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </section>
-  )
-}
-
-
-function JuriFitur() {
-  const fitur = [
-    { icon: '📱', title: 'Aplikasi Mobile Petugas', desc: 'Flutter + supabase-flutter. Scan QR lapak, catat transaksi retribusi, absensi, dan setoran — mendukung mode offline.' },
-    { icon: '🖥️', title: 'Web Admin / Superadmin', desc: 'Dashboard manajemen pasar, petugas, lapak, sektor, jenis retribusi, transaksi, dan pengguna. Impersonate untuk meninjau peran lain.' },
-    { icon: '🔒', title: 'Keamanan RLS', desc: 'Row Level Security di Supabase — setiap role hanya mengakses data sesuai lingkup (admin lintas pasar, petugas sesuai pasar &amp; dirinya).' },
-    { icon: '📊', title: 'Dashboard Real-time', desc: 'Ringkasan pendapatan harian, target setoran, dan kesehatan pasar dalam tampilan terpusat untuk kepala pasar &amp; admin.' },
-    { icon: '🧾', title: 'Setoran & Rekonsiliasi', desc: 'Petugas setor hasil pungutan, bendahara verifikasi &amp; approve, kepala pasar memantau rekonsiliasi.' },
-    { icon: '🏪', title: 'Halaman Publik Pasar', desc: 'Setiap pasar punya landing page publik (via /#@slug) menampilkan sektor, lapak, dan pemilik — untuk transparansi ke pedagang/masyarakat.' },
-  ]
-  return (
-    <section className="juri-section">
-      <SectionTitle id="juri-fitur" title="Fitur Unggulan" subtitle="Kemampuan utama SiAga yang diimplementasikan lintas platform." />
-      <div className="juri-feature-grid">
-        {fitur.map((f) => (
-          <div className="juri-feature" key={f.title}>
-            <div className="juri-feature-icon">{f.icon}</div>
-            <h3>{f.title}</h3>
-            <p>{f.desc}</p>
-          </div>
-        ))}
-      </div>
-    </section>
-  )
-}
-
-function JuriArsitektur() {
-  const tech = [
-    { name: 'Web App', stack: 'React 19 · TypeScript · Vite', role: 'Admin &amp; superadmin, deploy Vercel' },
-    { name: 'Mobile App', stack: 'Flutter · Riverpod · go_router', role: 'Petugas lapangan, supabase-flutter + QR scan' },
-    { name: 'Backend & Database', stack: 'Supabase (Postgres + Auth + Storage + RLS)', role: 'Single source of truth, keamanan row-level' },
-    { name: 'CI/CD', stack: 'GitHub Actions', role: 'Build web, analyzer Flutter, lint SQL otomatis' },
-  ]
-  return (
-    <section className="juri-section">
-      <SectionTitle id="juri-arsitektur" title="Arsitektur Teknis" subtitle="Supabase-first: satu basis data &amp; autentikasi untuk web dan mobile." />
-      <table className="juri-arch-table">
-        <thead>
-          <tr><th>Lapisan</th><th>Teknologi</th><th>Peran</th></tr>
-        </thead>
-        <tbody>
-          {tech.map((t) => (
-            <tr key={t.name}>
-              <td><strong>{t.name}</strong></td>
-              <td><code>{t.stack}</code></td>
-              <td>{t.role}</td>
-            </tr>
+        <nav className="juri-header-nav" aria-label="Main navigation">
+          {navItems.map((item) => (
+            <a key={item.href} href={item.href}>{item.label}</a>
           ))}
-        </tbody>
-      </table>
-      <div className="juri-note">
-        🔐 Semua akun memakai autentikasi <strong>Supabase Auth</strong> (email + password).
-        Akses data dijaga <strong>Row Level Security</strong> berdasarkan role &amp; lingkup pasar,
-        sehingga demo antar role aman dan sesuai batas wewenang.
-      </div>
-    </section>
+        </nav>
+
+        <div className="juri-user-pill" aria-label="Current judge profile">
+          <div className="juri-avatar">J</div>
+          <div>
+            <strong>Tim Juri</strong>
+            <small>Panel Penilai</small>
+          </div>
+        </div>
+      </header>
+
+      <main className="juri-page">
+        <section id="juri-overview" className="juri-hero-card">
+          <div className="juri-hero-copy">
+            <p className="juri-kicker">PIDI DIGDAYA Hackathon 2026 · Live Demo</p>
+            <h1>Juri Dashboard SIAGA</h1>
+            <p className="juri-hero-text">
+              Platform penilaian digital untuk memantau peserta, menilai performa pasar,
+              dan memastikan proses evaluasi berjalan jelas, akuntabel, dan cepat.
+            </p>
+
+            <div className="juri-cta-row">
+              <a className="juri-btn juri-btn-primary" href={WEB_APP_URL} target="_blank" rel="noopener noreferrer">
+                Akses Web App
+              </a>
+              <a className="juri-btn juri-btn-secondary" href={PUBLIC_LANDING_PAGE} target="_blank" rel="noopener noreferrer">
+                Lihat Landing Page
+              </a>
+            </div>
+          </div>
+
+          <div className="juri-status-panel">
+            <div className="juri-status-header">
+              <span className="status-dot" aria-hidden="true" />
+              <span>Aktif</span>
+            </div>
+
+            <div className="juri-session-block">
+              <small>Session saat ini</small>
+              <strong>Penilaian Pasar Niaga Daya</strong>
+            </div>
+
+            <div className="juri-progress-block">
+              <div className="juri-progress-meta">
+                <span>68% selesai</span>
+                <span>12/18 peserta</span>
+              </div>
+              <div className="juri-progress-bar" aria-label="Progress penilaian">
+                <span style={{ width: '68%' }} />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="juri-summary-grid" aria-label="Overview metrics">
+          {summaryMetrics.map((metric) => (
+            <div key={metric.label} className={`juri-metric-card juri-metric-${metric.tone}`}>
+              <small>{metric.label}</small>
+              <strong>{metric.value}</strong>
+              <span>{metric.meta}</span>
+            </div>
+          ))}
+        </section>
+
+        <section className="juri-workbench">
+          <aside className="juri-sidebar" aria-label="Contestants list">
+            <div className="juri-card juri-card-compact">
+              <div className="juri-card-header">
+                <h3>Kontestan aktif</h3>
+                <span className="pill pill-neutral">18 total</span>
+              </div>
+
+              <div className="juri-contestant-list">
+                {contestantList.map((contestant) => (
+                  <button key={contestant.id} type="button" className="juri-contestant-item">
+                    <div>
+                      <strong>{contestant.id}</strong>
+                      <span>{contestant.name}</span>
+                    </div>
+                    <span className={`tag tag-${contestant.accent}`}>{contestant.status}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </aside>
+
+          <div className="juri-main-column">
+            <section className="juri-card" id="juri-publik">
+              <SectionTitle
+                id="juri-public-title"
+                title="Halaman publik"
+                subtitle="Contoh akses terbuka untuk melihat bagaimana pasar dan lapak ditampilkan ke publik."
+              />
+
+              <div className="juri-public-grid">
+                <div className="juri-public-card">
+                  <div className="juri-feature-icon">🏪</div>
+                  <h3>Landing Page Pasar</h3>
+                  <p>Menampilkan profil pasar, deskripsi, highlight, serta informasi umum yang dapat diakses masyarakat.</p>
+                  <a href={PUBLIC_LANDING_PAGE} target="_blank" rel="noopener noreferrer">Lihat landing page Niaga Daya →</a>
+                </div>
+
+                <div className="juri-public-card">
+                  <div className="juri-feature-icon">🏬</div>
+                  <h3>Detail Lapak</h3>
+                  <p>Halaman publik untuk melihat detail lapak tertentu, termasuk pemilik, lokasi, sektor, dan status operasional.</p>
+                  <a href={PUBLIC_STALL_DEMO} target="_blank" rel="noopener noreferrer">Lihat lapak NGD-0207 →</a>
+                </div>
+              </div>
+            </section>
+
+            <section className="juri-card" id="juri-tentang">
+              <SectionTitle
+                id="juri-about"
+                title="Tentang aplikasi"
+                subtitle="Masalah yang dipecahkan dan solusi yang dibuat melalui SIAGA."
+              />
+
+              <div className="juri-info-grid">
+                <div className="juri-info-item">
+                  <h3>💡 Masalah</h3>
+                  <p>Pengelolaan retribusi pasar masih sering dilakukan secara manual dan terpencar, sehingga berpotensi kehilangan data dan sulit diaudit.</p>
+                </div>
+                <div className="juri-info-item">
+                  <h3>🚀 Solusi</h3>
+                  <p>SIAGA mengintegrasikan pencatatan transaksi, verifikasi setoran, dan monitoring pasar ke dalam satu ekosistem yang lebih transparan.</p>
+                </div>
+                <div className="juri-info-item">
+                  <h3>🎯 Dampak</h3>
+                  <p>Pengelolaan pasar menjadi lebih akuntabel, cepat, dan mudah dipantau oleh kepala pasar, bendahara, serta pihak yang berkepentingan.</p>
+                </div>
+              </div>
+            </section>
+
+            <section className="juri-card" id="juri-akun">
+              <SectionTitle
+                id="juri-accounts"
+                title="Akun demo"
+                subtitle="Gunakan akun di bawah untuk mengecek pengalaman per role dalam platform SIAGA."
+              />
+
+              <div className="juri-table-wrap">
+                <table className="juri-table">
+                  <thead>
+                    <tr>
+                      <th>Role</th>
+                      <th>Nama</th>
+                      <th>Email</th>
+                      <th>Password</th>
+                      <th>Platform</th>
+                      <th>Akses</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {DEMO_ACCOUNTS.map((account) => (
+                      <tr key={account.role}>
+                        <td>
+                          <span className={`juri-role-badge juri-role-${account.role.toLowerCase()}`}>{account.roleBadge}</span>
+                          <div className="juri-role-code">{account.role}</div>
+                        </td>
+                        <td>{account.nama}</td>
+                        <td><code>{account.email}</code></td>
+                        <td><code>{account.password}</code></td>
+                        <td>{account.platform}</td>
+                        <td className="juri-akses">{account.akses}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <section className="juri-card" id="juri-download">
+              <SectionTitle
+                id="juri-download-title"
+                title="Download & akses"
+                subtitle="Semua jalur akses cepat untuk web, mobile, dan dokumentasi pendukung."
+              />
+
+              <div className="juri-download-grid">
+                <div className="juri-download-card">
+                  <div className="juri-feature-icon">🌐</div>
+                  <h3>Web App</h3>
+                  <p>Platform untuk admin dan kepala pasar dalam memantau transaksi serta seluruh operasional pasar.</p>
+                  <a href={WEB_APP_URL} target="_blank" rel="noopener noreferrer">Buka web app →</a>
+                </div>
+
+                <div className="juri-download-card">
+                  <div className="juri-feature-icon">📱</div>
+                  <h3>Mobile Demo</h3>
+                  <p>Digunakan khusus untuk petugas lapangan dalam proses pencatatan transaksi dan setoran harian.</p>
+                  <a href={MOBILE_APP_URL} target="_blank" rel="noopener noreferrer">Buka mobile demo →</a>
+                </div>
+
+                <div className="juri-download-card">
+                  <div className="juri-feature-icon">📁</div>
+                  <h3>Google Drive</h3>
+                  <p>Dokumentasi, arsip demo, dan file pendukung proyek yang bisa diakses secara langsung.</p>
+                  <a href={DRIVE_URL} target="_blank" rel="noopener noreferrer">Buka Google Drive →</a>
+                </div>
+              </div>
+            </section>
+
+            <section className="juri-card" id="juri-fitur">
+              <SectionTitle
+                id="juri-features"
+                title="Fitur utama"
+                subtitle="Kemampuan utama yang membuat SIAGA bersifat operasional, aman, dan siap dipakai dalam dunia nyata."
+              />
+
+              <div className="juri-feature-grid">
+                <div className="juri-feature">
+                  <div className="juri-feature-icon">📱</div>
+                  <h3>Aplikasi Mobile Petugas</h3>
+                  <p>Scan QR lapak, catat transaksi retribusi, absensi, dan setoran dengan dukungan mode offline.</p>
+                </div>
+                <div className="juri-feature">
+                  <div className="juri-feature-icon">🖥️</div>
+                  <h3>Web Admin</h3>
+                  <p>Dashboard multi-role dengan akses yang dibatasi sesuai kebutuhan setiap pengguna.</p>
+                </div>
+                <div className="juri-feature">
+                  <div className="juri-feature-icon">🔒</div>
+                  <h3>Keamanan RLS</h3>
+                  <p>Setiap role hanya melihat data yang sesuai dengan lingkup dan kewenangannya.</p>
+                </div>
+                <div className="juri-feature">
+                  <div className="juri-feature-icon">📊</div>
+                  <h3>Dashboard Real-time</h3>
+                  <p>Data pendapatan, setoran, dan kondisi pasar dapat dimonitor secara lebih cepat dan akurat.</p>
+                </div>
+                <div className="juri-feature">
+                  <div className="juri-feature-icon">🧾</div>
+                  <h3>Setoran & Rekonsiliasi</h3>
+                  <p>Setoran petugas diverifikasi oleh bendahara dan dimonitor oleh kepala pasar dengan lebih jelas.</p>
+                </div>
+                <div className="juri-feature">
+                  <div className="juri-feature-icon">🏪</div>
+                  <h3>Halaman Publik</h3>
+                  <p>Landing page dan detail lapak dibuat terbuka untuk menjamin transparansi terhadap masyarakat.</p>
+                </div>
+              </div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
   )
 }
 
