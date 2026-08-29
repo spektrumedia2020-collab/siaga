@@ -39,6 +39,8 @@ export function TransactionsPage({ marketId }: TransactionsPageProps) {
   const [statusFilter, setStatusFilter] = useState('')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const pageSize = 10
 
   const marketIdNum = Number(marketId) || 0
 
@@ -114,6 +116,10 @@ export function TransactionsPage({ marketId }: TransactionsPageProps) {
     }
   }, [marketIdNum, stallFilter, statusFilter, dateFrom, dateTo])
 
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [stallFilter, statusFilter, dateFrom, dateTo, marketIdNum])
+
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('id-ID', {
       day: 'numeric',
@@ -125,6 +131,9 @@ export function TransactionsPage({ marketId }: TransactionsPageProps) {
   }
 
   const totalAmount = transactions.reduce((sum, t) => sum + Number(t.amount || 0), 0)
+  const totalPages = Math.max(1, Math.ceil(transactions.length / pageSize))
+  const safeCurrentPage = Math.min(currentPage, totalPages)
+  const paginatedTransactions = transactions.slice((safeCurrentPage - 1) * pageSize, safeCurrentPage * pageSize)
 
   if (!marketId || marketIdNum === 0) {
     return (
@@ -212,7 +221,7 @@ export function TransactionsPage({ marketId }: TransactionsPageProps) {
               </tr>
             </thead>
             <tbody>
-              {transactions.map((t) => {
+              {paginatedTransactions.map((t) => {
                 const statusCls = t.status === 'LUNAS' ? 'tx-status-lunas' : t.status === 'BATAL' ? 'tx-status-batal' : 'tx-status-pending'
                 return (
                   <tr key={t.id}>
@@ -230,6 +239,25 @@ export function TransactionsPage({ marketId }: TransactionsPageProps) {
           </table>
         )}
       </div>
+
+      {transactions.length > pageSize && (
+        <div style={{ marginTop: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ fontSize: 14, color: '#475569' }}>
+            Menampilkan {Math.min((safeCurrentPage - 1) * pageSize + 1, transactions.length)}-{Math.min(safeCurrentPage * pageSize, transactions.length)} dari {transactions.length} data
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            <button type="button" className="btn-secondary" disabled={safeCurrentPage === 1} onClick={() => setCurrentPage((page) => Math.max(1, page - 1))} style={{ opacity: safeCurrentPage === 1 ? 0.5 : 1 }}>
+              Sebelumnya
+            </button>
+            <span style={{ fontSize: 14, color: '#475569', minWidth: 90, textAlign: 'center' }}>
+              Halaman {safeCurrentPage}/{totalPages}
+            </span>
+            <button type="button" className="btn-secondary" disabled={safeCurrentPage === totalPages} onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))} style={{ opacity: safeCurrentPage === totalPages ? 0.5 : 1 }}>
+              Selanjutnya
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

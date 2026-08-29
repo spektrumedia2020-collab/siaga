@@ -517,16 +517,60 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
 
   const isTreasurer = (userRoleName || profileRole || '').toUpperCase() === 'TREASURER'
 
+  const getPageFromHash = (): PageType | null => {
+    const hash = window.location.hash.slice(1)
+    const pageSegment = hash.replace(/^market\/dashboard\/?/, '').replace(/^\//, '')
+
+    if (!pageSegment || pageSegment === 'overview') return 'overview'
+
+    const pageMap: Record<string, PageType> = {
+      treasurer: 'treasurer',
+      transactions: 'transactions',
+      setoran: 'setoran',
+      reconciliations: 'reconciliations',
+      stalls: 'stalls',
+      sectors: 'sectors',
+      owners: 'owners',
+      categories: 'categories',
+      retribusi: 'retribusi',
+      marketdetail: 'marketDetail',
+      publiccontent: 'publicContent',
+      officers: 'officers'
+    }
+
+    return pageMap[pageSegment.toLowerCase()] || null
+  }
+
+  const updatePageRoute = (page: PageType) => {
+    const pageKey = page === 'overview' ? 'overview' : page
+    const nextHash = page === 'overview' ? 'market/dashboard' : `market/dashboard/${pageKey}`
+    if (window.location.hash.slice(1) !== nextHash) {
+      window.location.hash = nextHash
+    }
+    setCurrentPage(page)
+  }
+
   useEffect(() => {
-    if (isTreasurer) {
-      setCurrentPage('treasurer')
+    const hashPage = getPageFromHash()
+
+    if (hashPage) {
+      setCurrentPage(hashPage)
       return
     }
 
-    if (!isTreasurer && currentPage === 'treasurer') {
-      setCurrentPage('overview')
+    if (isTreasurer) {
+      setCurrentPage('treasurer')
+      if (!window.location.hash || !window.location.hash.includes('/treasurer')) {
+        window.location.hash = 'market/dashboard/treasurer'
+      }
+      return
     }
-  }, [isTreasurer, currentPage])
+
+    setCurrentPage('overview')
+    if (!window.location.hash || window.location.hash === '#market/dashboard') {
+      window.location.hash = 'market/dashboard'
+    }
+  }, [isTreasurer])
 
   if (loading) {
     return <div className="loading">Memuat data pasar...</div>
@@ -566,7 +610,7 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
       case 'owners':
         return <OwnersPage marketId={stats.market.id} />
       case 'marketDetail':
-        return <MarketDetailPage marketId={stats.market.id} onBack={() => setCurrentPage('overview')} onSaved={() => loadMarketStats()} />
+        return <MarketDetailPage marketId={stats.market.id} onBack={() => updatePageRoute('overview')} onSaved={() => loadMarketStats()} />
       case 'categories':
         return <CategoriesPage marketId={stats.market.id} />
       case 'retribusi':
@@ -817,7 +861,7 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
                         <strong>{market.name}</strong>
                       </div>
                       <div className="card-actions">
-                        <button className="icon-action" title="Lihat detail" aria-label="Lihat detail pasar" onClick={() => setCurrentPage('marketDetail')}>
+                        <button className="icon-action" title="Lihat detail" aria-label="Lihat detail pasar" onClick={() => updatePageRoute('marketDetail')}>
                           <span className="sidebar-icon" aria-hidden="true">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg">
                               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z" />
@@ -949,28 +993,28 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
                     <div className="sidebar-group-title">Bendahara</div>
                     <button
                       className={`sidebar-item ${currentPage === 'treasurer' ? 'active' : ''}`}
-                      onClick={() => setCurrentPage('treasurer')}
+                      onClick={() => updatePageRoute('treasurer')}
                     >
                       <span className="sidebar-icon">💼</span>
                       <span>Dashboard Bendahara</span>
                     </button>
                     <button
                       className={`sidebar-item ${currentPage === 'transactions' ? 'active' : ''}`}
-                      onClick={() => setCurrentPage('transactions')}
+                      onClick={() => updatePageRoute('transactions')}
                     >
                       <span className="sidebar-icon"><IconTransactions /></span>
                       <span>Transaksi</span>
                     </button>
                     <button
                       className={`sidebar-item ${currentPage === 'setoran' ? 'active' : ''}`}
-                      onClick={() => setCurrentPage('setoran')}
+                      onClick={() => updatePageRoute('setoran')}
                     >
                       <span className="sidebar-icon"><IconReconciliations /></span>
                       <span>Setoran</span>
                     </button>
                     <button
                       className={`sidebar-item ${currentPage === 'reconciliations' ? 'active' : ''}`}
-                      onClick={() => setCurrentPage('reconciliations')}
+                      onClick={() => updatePageRoute('reconciliations')}
                     >
                       <span className="sidebar-icon"><IconReconciliations /></span>
                       <span>Rekonsiliasi</span>
@@ -983,7 +1027,7 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
                     <div className="sidebar-group-title">Overview</div>
                     <button
                       className={`sidebar-item ${currentPage === 'overview' ? 'active' : ''}`}
-                      onClick={() => setCurrentPage('overview')}
+                      onClick={() => updatePageRoute('overview')}
                     >
                       <span className="sidebar-icon"><IconOverview /></span>
                       <span>Overview</span>
@@ -993,21 +1037,21 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
                     <div className="sidebar-group-title">Data Pasar</div>
                     <button
                       className={`sidebar-item ${currentPage === 'stalls' ? 'active' : ''}`}
-                      onClick={() => setCurrentPage('stalls')}
+                      onClick={() => updatePageRoute('stalls')}
                     >
                       <span className="sidebar-icon"><IconStalls /></span>
                       <span>Lapak</span>
                     </button>
                     <button
                       className={`sidebar-item ${currentPage === 'sectors' ? 'active' : ''}`}
-                      onClick={() => setCurrentPage('sectors')}
+                      onClick={() => updatePageRoute('sectors')}
                     >
                       <span className="sidebar-icon"><IconSectors /></span>
                       <span>Sektor</span>
                     </button>
                     <button
                       className={`sidebar-item ${currentPage === 'owners' ? 'active' : ''}`}
-                      onClick={() => setCurrentPage('owners')}
+                      onClick={() => updatePageRoute('owners')}
                     >
                       <span className="sidebar-icon"><IconOwners /></span>
                       <span>Pemilik</span>
@@ -1017,14 +1061,14 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
                     <div className="sidebar-group-title">Konfigurasi</div>
                     <button
                       className={`sidebar-item ${currentPage === 'categories' ? 'active' : ''}`}
-                      onClick={() => setCurrentPage('categories')}
+                      onClick={() => updatePageRoute('categories')}
                     >
                       <span className="sidebar-icon"><IconCategories /></span>
                       <span>Kategori</span>
                     </button>
                     <button
                       className={`sidebar-item ${currentPage === 'retribusi' ? 'active' : ''}`}
-                      onClick={() => setCurrentPage('retribusi')}
+                      onClick={() => updatePageRoute('retribusi')}
                     >
                       <span className="sidebar-icon"><IconRetribusi /></span>
                       <span>Retribusi</span>
@@ -1034,21 +1078,21 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
                     <div className="sidebar-group-title">Keuangan</div>
                     <button
                       className={`sidebar-item ${currentPage === 'transactions' ? 'active' : ''}`}
-                      onClick={() => setCurrentPage('transactions')}
+                      onClick={() => updatePageRoute('transactions')}
                     >
                       <span className="sidebar-icon"><IconTransactions /></span>
                       <span>Transaksi</span>
                     </button>
                     <button
                       className={`sidebar-item ${currentPage === 'reconciliations' ? 'active' : ''}`}
-                      onClick={() => setCurrentPage('reconciliations')}
+                      onClick={() => updatePageRoute('reconciliations')}
                     >
                       <span className="sidebar-icon"><IconReconciliations /></span>
                       <span>Rekonsiliasi</span>
                     </button>
                     <button
                       className={`sidebar-item ${currentPage === 'setoran' ? 'active' : ''}`}
-                      onClick={() => setCurrentPage('setoran')}
+                      onClick={() => updatePageRoute('setoran')}
                     >
                       <span className="sidebar-icon"><IconReconciliations /></span>
                       <span>Setoran</span>
@@ -1056,7 +1100,7 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
                     {isTreasurer && (
                       <button
                         className={`sidebar-item ${currentPage === 'treasurer' ? 'active' : ''}`}
-                        onClick={() => setCurrentPage('treasurer')}
+                        onClick={() => updatePageRoute('treasurer')}
                       >
                         <span className="sidebar-icon">💼</span>
                         <span>Dashboard Bendahara</span>
@@ -1067,14 +1111,14 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
                     <div className="sidebar-group-title">Operasional</div>
                     <button
                       className={`sidebar-item ${currentPage === 'officers' ? 'active' : ''}`}
-                      onClick={() => setCurrentPage('officers')}
+                      onClick={() => updatePageRoute('officers')}
                     >
                       <span className="sidebar-icon"><IconOfficers /></span>
                       <span>Petugas</span>
                     </button>
                     <button
                       className={`sidebar-item ${currentPage === 'publicContent' ? 'active' : ''}`}
-                      onClick={() => setCurrentPage('publicContent')}
+                      onClick={() => updatePageRoute('publicContent')}
                     >
                       <span className="sidebar-icon">📰</span>
                       <span>Publikasi</span>

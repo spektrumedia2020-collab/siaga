@@ -50,6 +50,9 @@ export function SetoranPage({ marketId }: SetoranPageProps) {
   const [dateTo, setDateTo] = useState(() => new Date().toISOString().split('T')[0])
   const [statusFilter, setStatusFilter] = useState('')
   const [viewMode, setViewMode] = useState<'summary' | 'detail'>('summary')
+  const [summaryPage, setSummaryPage] = useState(1)
+  const [detailPage, setDetailPage] = useState(1)
+  const pageSize = 8
 
   const marketIdNum = Number(marketId) || 0
 
@@ -58,6 +61,11 @@ export function SetoranPage({ marketId }: SetoranPageProps) {
       loadData()
     }
   }, [marketIdNum])
+
+  useEffect(() => {
+    setSummaryPage(1)
+    setDetailPage(1)
+  }, [selectedOfficer, statusFilter, dateFrom, dateTo, marketIdNum, viewMode])
 
   const loadData = async () => {
     try {
@@ -136,6 +144,13 @@ export function SetoranPage({ marketId }: SetoranPageProps) {
     if (dateTo && s.created_at > `${dateTo}T23:59:59`) return false
     return true
   })
+
+  const summaryTotalPages = Math.max(1, Math.ceil(officerSummaries.length / pageSize))
+  const detailTotalPages = Math.max(1, Math.ceil(filteredSetoran.length / pageSize))
+  const safeSummaryPage = Math.min(summaryPage, summaryTotalPages)
+  const safeDetailPage = Math.min(detailPage, detailTotalPages)
+  const paginatedSummary = officerSummaries.slice((safeSummaryPage - 1) * pageSize, safeSummaryPage * pageSize)
+  const paginatedDetail = filteredSetoran.slice((safeDetailPage - 1) * pageSize, safeDetailPage * pageSize)
 
   const statusLabel = (status: string) => {
     const labels: Record<string, string> = {
@@ -280,7 +295,7 @@ export function SetoranPage({ marketId }: SetoranPageProps) {
                 </tr>
               </thead>
               <tbody>
-                {officerSummaries.map((o) => (
+                {paginatedSummary.map((o) => (
                   <tr key={o.officer_id} style={{ borderBottom: '1px solid #e5e7eb' }}>
                     <td style={{ padding: 10, border: '1px solid #e5e7eb', fontWeight: 600 }}>{o.officer_name}</td>
                     <td style={{ padding: 10, border: '1px solid #e5e7eb', textAlign: 'right', fontWeight: 600 }}>
@@ -326,7 +341,7 @@ export function SetoranPage({ marketId }: SetoranPageProps) {
                 </tr>
               </thead>
               <tbody>
-                {filteredSetoran.map((s) => {
+                {paginatedDetail.map((s) => {
                   const sc = statusColor(s.status)
                   return (
                     <tr key={s.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
@@ -371,6 +386,44 @@ export function SetoranPage({ marketId }: SetoranPageProps) {
           )
         )}
       </div>
+
+      {viewMode === 'summary' && officerSummaries.length > pageSize && (
+        <div style={{ marginTop: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ fontSize: 14, color: '#475569' }}>
+            Menampilkan {Math.min((safeSummaryPage - 1) * pageSize + 1, officerSummaries.length)}-{Math.min(safeSummaryPage * pageSize, officerSummaries.length)} dari {officerSummaries.length} petugas
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            <button type="button" className="btn-secondary" disabled={safeSummaryPage === 1} onClick={() => setSummaryPage((page) => Math.max(1, page - 1))} style={{ opacity: safeSummaryPage === 1 ? 0.5 : 1 }}>
+              Sebelumnya
+            </button>
+            <span style={{ fontSize: 14, color: '#475569', minWidth: 90, textAlign: 'center' }}>
+              Halaman {safeSummaryPage}/{summaryTotalPages}
+            </span>
+            <button type="button" className="btn-secondary" disabled={safeSummaryPage === summaryTotalPages} onClick={() => setSummaryPage((page) => Math.min(summaryTotalPages, page + 1))} style={{ opacity: safeSummaryPage === summaryTotalPages ? 0.5 : 1 }}>
+              Selanjutnya
+            </button>
+          </div>
+        </div>
+      )}
+
+      {viewMode === 'detail' && filteredSetoran.length > pageSize && (
+        <div style={{ marginTop: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ fontSize: 14, color: '#475569' }}>
+            Menampilkan {Math.min((safeDetailPage - 1) * pageSize + 1, filteredSetoran.length)}-{Math.min(safeDetailPage * pageSize, filteredSetoran.length)} dari {filteredSetoran.length} data
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            <button type="button" className="btn-secondary" disabled={safeDetailPage === 1} onClick={() => setDetailPage((page) => Math.max(1, page - 1))} style={{ opacity: safeDetailPage === 1 ? 0.5 : 1 }}>
+              Sebelumnya
+            </button>
+            <span style={{ fontSize: 14, color: '#475569', minWidth: 90, textAlign: 'center' }}>
+              Halaman {safeDetailPage}/{detailTotalPages}
+            </span>
+            <button type="button" className="btn-secondary" disabled={safeDetailPage === detailTotalPages} onClick={() => setDetailPage((page) => Math.min(detailTotalPages, page + 1))} style={{ opacity: safeDetailPage === detailTotalPages ? 0.5 : 1 }}>
+              Selanjutnya
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

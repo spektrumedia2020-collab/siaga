@@ -31,6 +31,8 @@ export function ReconciliationsPage({ marketId }: ReconciliationsPageProps) {
   const [dateTo, setDateTo] = useState(() => new Date().toISOString().split('T')[0])
   const [showOnlyDiscrepancy, setShowOnlyDiscrepancy] = useState(false)
   const [selectedSectorId, setSelectedSectorId] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize] = useState(10)
 
   const marketIdNum = Number(marketId) || 0
 
@@ -156,6 +158,13 @@ export function ReconciliationsPage({ marketId }: ReconciliationsPageProps) {
   const totalExpected = sectorSummaries.reduce((sum, s) => sum + s.expected_amount, 0)
   const totalActual = sectorSummaries.reduce((sum, s) => sum + s.actual_amount, 0)
   const totalDiff = totalExpected - totalActual
+  const totalPages = Math.max(1, Math.ceil(sectorSummaries.length / pageSize))
+  const safeCurrentPage = Math.min(currentPage, totalPages)
+  const paginatedSummaries = sectorSummaries.slice((safeCurrentPage - 1) * pageSize, safeCurrentPage * pageSize)
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [showOnlyDiscrepancy, selectedSectorId, dateFrom, dateTo, marketIdNum])
 
   if (!marketId || marketIdNum === 0) {
     return (
@@ -248,7 +257,7 @@ export function ReconciliationsPage({ marketId }: ReconciliationsPageProps) {
               </tr>
             </thead>
             <tbody>
-              {sectorSummaries.map((s) => {
+              {paginatedSummaries.map((s) => {
                 const diffColor = s.difference === 0 ? '#166534' : s.difference > 0 ? '#9a3412' : '#1e40af'
                 const diffBg = s.difference === 0 ? '#f0fdf4' : s.difference > 0 ? '#fff7ed' : '#f0f9ff'
 
@@ -289,6 +298,37 @@ export function ReconciliationsPage({ marketId }: ReconciliationsPageProps) {
           </table>
         )}
       </div>
+
+      {sectorSummaries.length > pageSize && (
+        <div style={{ marginTop: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ fontSize: 14, color: '#475569' }}>
+            Menampilkan {Math.min((safeCurrentPage - 1) * pageSize + 1, sectorSummaries.length)}-{Math.min(safeCurrentPage * pageSize, sectorSummaries.length)} dari {sectorSummaries.length} data
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              className="btn-secondary"
+              disabled={safeCurrentPage === 1}
+              onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+              style={{ opacity: safeCurrentPage === 1 ? 0.5 : 1 }}
+            >
+              Sebelumnya
+            </button>
+            <span style={{ fontSize: 14, color: '#475569', minWidth: 90, textAlign: 'center' }}>
+              Halaman {safeCurrentPage}/{totalPages}
+            </span>
+            <button
+              type="button"
+              className="btn-secondary"
+              disabled={safeCurrentPage === totalPages}
+              onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+              style={{ opacity: safeCurrentPage === totalPages ? 0.5 : 1 }}
+            >
+              Selanjutnya
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
