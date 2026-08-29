@@ -318,28 +318,33 @@ export function TreasurerDashboard({ marketId }: TreasurerDashboardProps) {
   return (
     <div className="treasurer-page">
       <header className="treasurer-header">
-        <div className="treasurer-badge">Premium treasury access</div>
+        <div className="treasurer-badge">💎 Premium Treasury Access</div>
         <h1>Dashboard Bendahara</h1>
         <p>Kelola approval setoran, monitoring kinerja, dan rekonsiliasi keuangan pasar secara real-time.</p>
       </header>
 
       <section className="treasurer-hero-strip">
         <div className="treasurer-hero-card emphasis">
+          <div className="hero-icon">💰</div>
           <span className="kicker">Saldo kas pasar</span>
           <strong>Rp {(treasuryBalance / 1000000).toFixed(1)}M</strong>
           <small>Setelah menunggu approval</small>
+          <div className="hero-sparkle"></div>
         </div>
         <div className="treasurer-hero-card">
+          <div className="hero-icon">📈</div>
           <span className="kicker">Approval rate</span>
           <strong>{approvalRate.toFixed(1)}%</strong>
           <small>Efisiensi validasi bendahara</small>
         </div>
         <div className="treasurer-hero-card">
+          <div className="hero-icon">⏳</div>
           <span className="kicker">Outstanding</span>
           <strong>{stats?.pending_count || 0}</strong>
           <small>Setoran menunggu konfirmasi</small>
         </div>
         <div className="treasurer-hero-card">
+          <div className="hero-icon">⚠️</div>
           <span className="kicker">Rekonsiliasi</span>
           <strong>{stats?.discrepancy_count || 0}</strong>
           <small>Item perlu perhatian</small>
@@ -350,17 +355,19 @@ export function TreasurerDashboard({ marketId }: TreasurerDashboardProps) {
 
       {/* TAB NAVIGATION */}
       <div className="treasurer-tabs">
-        <button className={activeTab === 'overview' ? 'active' : ''} onClick={() => setActiveTab('overview')}>
-          📊 Overview
+        <button className={`treasurer-tab-btn ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}>
+          <span className="tab-icon">📊</span> Overview
         </button>
-        <button className={activeTab === 'approvals' ? 'active' : ''} onClick={() => setActiveTab('approvals')}>
-          ✓ Persetujuan ({stats?.pending_count || 0})
+        <button className={`treasurer-tab-btn ${activeTab === 'approvals' ? 'active' : ''}`} onClick={() => setActiveTab('approvals')}>
+          <span className="tab-icon">✓</span> Persetujuan
+          {stats?.pending_count ? <span className="tab-badge">{stats.pending_count}</span> : null}
         </button>
-        <button className={activeTab === 'performance' ? 'active' : ''} onClick={() => setActiveTab('performance')}>
-          ⭐ Kinerja
+        <button className={`treasurer-tab-btn ${activeTab === 'performance' ? 'active' : ''}`} onClick={() => setActiveTab('performance')}>
+          <span className="tab-icon">⭐</span> Kinerja
         </button>
-        <button className={activeTab === 'discrepancies' ? 'active' : ''} onClick={() => setActiveTab('discrepancies')}>
-          ⚠️ Perbedaan ({stats?.discrepancy_count || 0})
+        <button className={`treasurer-tab-btn ${activeTab === 'discrepancies' ? 'active' : ''}`} onClick={() => setActiveTab('discrepancies')}>
+          <span className="tab-icon">⚠️</span> Perbedaan
+          {stats?.discrepancy_count ? <span className="tab-badge">{stats.discrepancy_count}</span> : null}
         </button>
       </div>
 

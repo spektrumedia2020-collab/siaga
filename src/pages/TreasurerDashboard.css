@@ -63,16 +63,60 @@
   background: rgba(255, 255, 255, 0.74);
   border: 1px solid rgba(148, 163, 184, 0.2);
   border-radius: 18px;
-  padding: 20px 18px;
+  padding: 24px 20px;
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.treasurer-hero-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.treasurer-hero-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+.hero-icon {
+  font-size: 2rem;
+  display: inline-block;
+  width: fit-content;
 }
 
 .treasurer-hero-card.emphasis {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(16, 185, 129, 0.1));
-  border-color: rgba(99, 102, 241, 0.2);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(16, 185, 129, 0.12));
+  border-color: rgba(99, 102, 241, 0.25);
+  box-shadow: 0 12px 32px rgba(99, 102, 241, 0.12);
+}
+
+.hero-sparkle {
+  position: absolute;
+  bottom: -10px;
+  right: -10px;
+  width: 80px;
+  height: 80px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: sparkle 3s ease-in-out infinite;
+}
+
+@keyframes sparkle {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.1); opacity: 0.8; }
 }
 
 .kicker {
@@ -106,33 +150,60 @@
 
 .treasurer-tabs {
   display: flex;
-  gap: 12px;
+  gap: 8px;
   max-width: 1400px;
   margin: 0 auto 32px;
   flex-wrap: wrap;
+  border-bottom: 2px solid rgba(148, 163, 184, 0.15);
+  padding-bottom: 0;
 }
 
-.treasurer-tabs button {
-  padding: 12px 20px;
-  border: 2px solid #cbd5e1;
-  background: white;
-  border-radius: 8px;
+.treasurer-tab-btn {
+  padding: 14px 20px;
+  border: none;
+  background: transparent;
+  border-radius: 0;
+  border-bottom: 3px solid transparent;
   cursor: pointer;
-  font-weight: 600;
-  color: #475569;
-  transition: all 0.2s;
+  font-weight: 700;
+  color: #64748b;
+  transition: all 0.3s ease;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  letter-spacing: 0.3px;
 }
 
-.treasurer-tabs button:hover {
-  border-color: #2563eb;
+.tab-icon {
+  display: inline-block;
+  font-size: 1.1rem;
+}
+
+.tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  margin-left: 4px;
+}
+
+.treasurer-tab-btn:hover {
   color: #2563eb;
 }
 
-.treasurer-tabs button.active {
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-  color: white;
-  border-color: transparent;
-  box-shadow: 0 14px 28px rgba(79, 70, 229, 0.26);
+.treasurer-tab-btn.active {
+  color: #2563eb;
+  border-bottom-color: #2563eb;
+  box-shadow: 0 2px 0 #2563eb inset;
 }
 
 .treasurer-content {
@@ -162,8 +233,28 @@
   display: flex;
   gap: 16px;
   align-items: flex-start;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   border-left: 4px solid;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.treasurer-stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 60px;
+  height: 60px;
+  background: radial-gradient(circle, currentColor, transparent 70%);
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+.treasurer-stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
 .treasurer-stat-card.pending {
@@ -217,16 +308,24 @@
 /* CHART SECTION */
 .treasurer-chart-section {
   background: white;
-  border-radius: 12px;
-  padding: 24px;
+  border-radius: 16px;
+  padding: 28px;
   margin-bottom: 32px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(226, 232, 240, 0.6);
+  transition: all 0.3s ease;
+}
+
+.treasurer-chart-section:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
 .treasurer-chart-section h2 {
-  margin: 0 0 20px;
+  margin: 0 0 24px;
   color: #0f172a;
-  font-size: 1.3rem;
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
 .treasurer-chart {
@@ -237,16 +336,24 @@
 /* RECENT SECTION */
 .treasurer-recent-section {
   background: white;
-  border-radius: 12px;
-  padding: 24px;
+  border-radius: 16px;
+  padding: 28px;
   margin-bottom: 32px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(226, 232, 240, 0.6);
+  transition: all 0.3s ease;
+}
+
+.treasurer-recent-section:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
 .treasurer-recent-section h2 {
-  margin: 0 0 16px;
+  margin: 0 0 20px;
   color: #0f172a;
-  font-size: 1.3rem;
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
 .treasurer-list {
@@ -259,17 +366,36 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px;
+  padding: 18px 20px;
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  border-radius: 10px;
   background: #f8fafc;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.treasurer-list-row::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 3px;
+  background: linear-gradient(180deg, #2563eb, #059669);
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 0.3s ease;
 }
 
 .treasurer-list-row:hover {
   border-color: #cbd5e1;
   background: white;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.treasurer-list-row:hover::before {
+  transform: scaleY(1);
 }
 
 .list-info {
@@ -295,57 +421,69 @@
 }
 
 .btn-small {
-  padding: 8px 16px;
+  padding: 10px 18px;
   border: none;
-  border-radius: 6px;
-  font-weight: 600;
+  border-radius: 8px;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   font-size: 0.9rem;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
 }
 
 .btn-approve {
-  background: #10b981;
+  background: linear-gradient(135deg, #10b981, #059669);
   color: white;
-}
-
-.btn-approve:hover {
-  background: #059669;
-  transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
+.btn-approve:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+}
+
 .btn-reject {
-  background: #ef4444;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
   color: white;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
 .btn-reject:hover {
-  background: #dc2626;
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
 }
 
 .btn-cancel {
   background: #e2e8f0;
   color: #475569;
+  transition: all 0.3s ease;
 }
 
 .btn-cancel:hover {
   background: #cbd5e1;
+  transform: translateY(-2px);
 }
 
 .btn-primary {
-  padding: 10px 20px;
-  background: #2563eb;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
   color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
-  font-weight: 600;
-  transition: all 0.2s;
+  font-weight: 700;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  letter-spacing: 0.3px;
 }
 
 .btn-primary:hover {
-  background: #1d4ed8;
+  background: linear-gradient(135deg, #1d4ed8, #1e40af);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
 }
 
 .treasurer-empty {
@@ -388,14 +526,29 @@
 .approval-card {
   background: white;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  transition: all 0.2s;
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.approval-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, currentColor, transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .approval-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border-color: #cbd5e1;
 }
 
 .approval-card.status-pending_head,
@@ -559,15 +712,30 @@
 
 .performance-card {
   background: white;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(226, 232, 240, 0.6);
+}
+
+.performance-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.1), transparent 70%);
+  pointer-events: none;
 }
 
 .performance-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+  transform: translateY(-6px);
+  border-color: rgba(226, 232, 240, 0.9);
 }
 
 .perf-rank {
@@ -660,16 +828,18 @@
 }
 
 .treasurer-discrepancy-table thead {
-  background: #f1f5f9;
+  background: linear-gradient(135deg, #f1f5f9, #eef4ff);
   border-bottom: 2px solid #cbd5e1;
 }
 
 .treasurer-discrepancy-table th {
-  padding: 12px 16px;
+  padding: 16px;
   text-align: left;
-  font-weight: 700;
-  color: #475569;
-  font-size: 0.9rem;
+  font-weight: 800;
+  color: #0f172a;
+  font-size: 0.92rem;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
 }
 
 .treasurer-discrepancy-table td {
