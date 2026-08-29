@@ -563,6 +563,7 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
             <div className="content-editor-grid">
               <label className="content-editor-field">
                 <span>Logo pasar</span>
+                {publicContent.logoUrl && <img src={publicContent.logoUrl} alt="Preview logo" style={{ maxWidth: '120px', maxHeight: '120px', borderRadius: '8px', marginBottom: '0.5rem' }} onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />}
                 <input value={publicContent.logoUrl} onChange={(e) => setPublicContent({ ...publicContent, logoUrl: e.target.value })} placeholder="https://.../logo.png" />
                 <input
                   type="file"
