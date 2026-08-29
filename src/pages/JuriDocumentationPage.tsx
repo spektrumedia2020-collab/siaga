@@ -481,6 +481,11 @@ export function JuriDocumentationPage() {
             </a>
           </div>
         </section>
+
+        <footer className="juri-footer">
+          <p>Spektrumedia - P0544</p>
+          <p>SIAGA Hackathon Judge Portal © 2026</p>
+        </footer>
       </main>
     </div>
   )
