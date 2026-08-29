@@ -277,6 +277,18 @@ export function JuriDocumentationPage() {
             ))}
           </div>
 
+          <div className="juri-youtube-embed">
+            <iframe
+              width="100%"
+              height="520"
+              src="https://www.youtube.com/embed/R8Fk9bJZj1w"
+              title="SIAGA Demo"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            ></iframe>
+          </div>
+
           <div className="juri-demo-center">
             <div className="juri-demo-card juri-demo-primary">
               <div className="juri-demo-icon">🌐</div>

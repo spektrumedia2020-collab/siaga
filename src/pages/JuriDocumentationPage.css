@@ -466,6 +466,26 @@
   color: #0f172a;
 }
 
+.juri-youtube-embed {
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%;
+  height: 0;
+  overflow: hidden;
+  border-radius: 12px;
+  margin: 2rem 0;
+  box-shadow: 0 10px 30px rgba(29, 78, 216, 0.15);
+}
+
+.juri-youtube-embed iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+}
+
 .juri-demo-center {
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 }
