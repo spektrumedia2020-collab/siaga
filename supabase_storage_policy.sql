@@ -1,14 +1,22 @@
 -- Supabase Storage Policy for uploads
 -- Jalankan di SQL Editor Supabase
 
--- 1. Buat bucket jika belum ada
--- Catatan: Bucket dibuat lewat dashboard Supabase Storage
--- Buat bucket dengan nama: data-siaga (tanpa spasi)
+-- 1. Pastikan bucket yang dipakai ada dan public
+-- Default yang dipakai aplikasi adalah: data-siaga
+-- Jika Anda ingin memakai bucket lain, sesuaikan nama di VITE_SUPABASE_STORAGE_BUCKET
 
--- 2. Enable public access untuk bucket
--- Di dashboard: Storage → Settings → [x] Public bucket
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('data-siaga', 'data-siaga', true)
+ON CONFLICT (id) DO UPDATE
+SET public = true;
 
--- 3. Storage Policies
+-- 2. Storage Policies
+-- Drop existing policies jika ada
+drop policy if exists "Allow authenticated uploads" on storage.objects;
+drop policy if exists "Allow public view" on storage.objects;
+drop policy if exists "Allow authenticated update" on storage.objects;
+drop policy if exists "Allow authenticated delete" on storage.objects;
+
 -- Policy untuk insert (upload)
 create policy "Allow authenticated uploads"
 on storage.objects for insert
@@ -41,5 +49,5 @@ using (
   bucket_id = 'data-siaga'
 );
 
--- 4. Alternatif: pakai bucket yang sudah ada (pasar images)
--- Jika bucket "pasar-images" sudah ada, pakai nama itu di kode
+-- 3. Jika Anda ingin memakai bucket lain, ganti semua 'data-siaga' di bawah dengan nama bucket Anda.
+-- Contoh: 'pasar-images'
