@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { getSupabaseClient } from '../lib/supabase'
 import { DateRangePicker } from '../components/DateRangePicker'
+import { ExportButtons } from '../components/ExportButtons'
 
 interface ReconciliationsPageProps {
   marketId?: number | string
@@ -230,6 +231,20 @@ export function ReconciliationsPage({ marketId }: ReconciliationsPageProps) {
         <button onClick={loadReconciliation} className="btn-secondary" style={{ padding: '6px 16px' }}>
           ↻ Muat Ulang
         </button>
+        <ExportButtons
+          data={paginatedSummaries.map(s => ({
+            'Lapak': s.stall_code || s.stall_number || `#${s.stall_id}`,
+            'Sektor': s.sector_name,
+            'Pemilik': s.owner_name,
+            'Tagihan (Rp)': s.expected_amount,
+            'Realisasi (Rp)': s.actual_amount,
+            'Selisih (Rp)': s.difference,
+            'Transaksi': s.transaction_count,
+            'Status': s.difference === 0 ? 'LUNAS' : 'SELISIH'
+          }))}
+          filename={`Rekonsiliasi_${dateFrom}_${dateTo}`}
+          sheetName="Rekonsiliasi"
+        />
       </div>
 
       {error && <div style={{ marginTop: 12, color: '#b91c1c', padding: 8, background: '#fee', borderRadius: 6 }}>{error}</div>}

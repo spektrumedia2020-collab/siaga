@@ -22,6 +22,7 @@
     "express-rate-limit": "^8.6.0",
     "helmet": "^7.2.0",
     "jsonwebtoken": "^9.0.2",
+    "papaparse": "^5.7.0",
     "pg": "^8.22.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
@@ -29,6 +30,7 @@
     "recharts": "^3.9.2",
     "swagger-ui-dist": "^4.19.1",
     "vite": "^8.1.5",
+    "xlsx": "^0.18.5",
     "zustand": "^5.0.14"
   },
   "devDependencies": {

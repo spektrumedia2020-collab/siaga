@@ -3,6 +3,7 @@ import { getSupabaseClient } from '../lib/supabase'
 import { DateRangePicker } from '../components/DateRangePicker'
 import { Loading } from '../components/Loading'
 import { EmptyState } from '../components/EmptyState'
+import { ExportButtons } from '../components/ExportButtons'
 import './TransactionsPage.css'
 
 interface TransactionsPageProps {
@@ -195,6 +196,20 @@ export function TransactionsPage({ marketId }: TransactionsPageProps) {
         <button onClick={() => { setStallFilter(''); setStatusFilter(''); setDateFrom(''); setDateTo('') }} className="btn-secondary tx-reset-btn">
           Reset Filter
         </button>
+
+        <ExportButtons
+          data={paginatedTransactions.map(t => ({
+            'Lapak': t.stalls?.code || t.stalls?.number || `ID #${t.stall_id}`,
+            'Pembayar': t.payer_name || '-',
+            'Jumlah': t.amount,
+            'Metode': t.payment_method,
+            'Status': t.status,
+            'Catatan': t.note || '-',
+            'Tanggal': new Date(t.created_at).toLocaleDateString('id-ID')
+          }))}
+          filename={`Transaksi_${new Date().toISOString().split('T')[0]}`}
+          sheetName="Transaksi"
+        />
       </div>
 
       {/* Transaction Table */}

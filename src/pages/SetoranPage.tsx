@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { getSupabaseClient } from '../lib/supabase'
 import { DateRangePicker } from '../components/DateRangePicker'
+import { ExportButtons } from '../components/ExportButtons'
 
 interface SetoranPageProps {
   marketId?: number | string
@@ -273,6 +274,37 @@ export function SetoranPage({ marketId }: SetoranPageProps) {
         <button onClick={loadData} className="btn-secondary" style={{ padding: '6px 16px' }}>
           ↻ Muat Ulang
         </button>
+        {viewMode === 'summary' && (
+          <ExportButtons
+            data={paginatedSummary.map(o => ({
+              'Petugas': o.officer_name,
+              'Total Setoran': o.total_setoran,
+              'Total Terkumpul': o.total_collected,
+              'Jumlah Transaksi': o.transaction_count,
+              'Pending': o.pending_count,
+              'Disetujui': o.approved_count,
+              'Ditolak': o.rejected_count
+            }))}
+            filename={`Setoran_Summary_${dateFrom}_${dateTo}`}
+            sheetName="Ringkasan Setoran"
+          />
+        )}
+        {viewMode === 'detail' && (
+          <ExportButtons
+            data={paginatedDetail.map(s => ({
+              'ID': s.id,
+              'Petugas': officerNameMap.get(s.officer_id) || s.officer_id,
+              'Jumlah': s.total_amount,
+              'Transaksi': s.transaction_count,
+              'Status': s.status,
+              'Catatan': s.note || '-',
+              'Tanggal': new Date(s.created_at).toLocaleDateString('id-ID'),
+              'Alasan Penolakan': s.rejection_reason || '-'
+            }))}
+            filename={`Setoran_Detail_${dateFrom}_${dateTo}`}
+            sheetName="Detail Setoran"
+          />
+        )}
       </div>
 
       <div style={{ marginTop: 20, overflowX: 'auto' }}>
