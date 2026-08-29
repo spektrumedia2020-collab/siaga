@@ -72,7 +72,7 @@ function App() {
           
           if (roleName === 'ADMIN') {
             window.location.hash = 'superadmin/dashboard'
-          } else if (['MARKET_HEAD', 'MARKET_ADMIN', 'ADMIN_PASAR', 'PASAR_ADMIN'].includes(roleName)) {
+          } else if (['MARKET_HEAD', 'MARKET_ADMIN', 'ADMIN_PASAR', 'PASAR_ADMIN', 'TREASURER'].includes(roleName)) {
             window.location.hash = 'market/dashboard'
           }
         }
@@ -90,11 +90,11 @@ function App() {
   }, [])
 
   useEffect(() => {
-    const marketHeadRoles = ['MARKET_HEAD', 'MARKET_ADMIN', 'ADMIN_PASAR', 'PASAR_ADMIN']
+    const marketRoles = ['MARKET_HEAD', 'MARKET_ADMIN', 'ADMIN_PASAR', 'PASAR_ADMIN', 'TREASURER']
     if (
       user &&
       activeRoleName &&
-      marketHeadRoles.includes(activeRoleName) &&
+      marketRoles.includes(activeRoleName) &&
       window.location.hash.slice(1).startsWith('superadmin')
     ) {
       window.location.hash = 'market/dashboard'
@@ -110,7 +110,7 @@ function App() {
 
     if (roleName === 'ADMIN') {
       window.location.hash = 'superadmin/dashboard'
-    } else if (['MARKET_HEAD', 'MARKET_ADMIN', 'ADMIN_PASAR', 'PASAR_ADMIN'].includes(roleName)) {
+    } else if (['MARKET_HEAD', 'MARKET_ADMIN', 'ADMIN_PASAR', 'PASAR_ADMIN', 'TREASURER'].includes(roleName)) {
       window.location.hash = 'market/dashboard'
     } else {
       window.location.hash = 'login'
@@ -177,9 +177,9 @@ function App() {
     
     if (!user) return 'login'
     const hash = window.location.hash.slice(1)
-    const marketHeadRoles = ['MARKET_HEAD', 'MARKET_ADMIN', 'ADMIN_PASAR', 'PASAR_ADMIN']
+    const marketRoles = ['MARKET_HEAD', 'MARKET_ADMIN', 'ADMIN_PASAR', 'PASAR_ADMIN', 'TREASURER']
 
-    if (activeRoleName && marketHeadRoles.includes(activeRoleName)) {
+    if (activeRoleName && marketRoles.includes(activeRoleName)) {
       return 'market'
     }
     

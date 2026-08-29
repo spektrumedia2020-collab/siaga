@@ -1,6 +1,9 @@
 .treasurer-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f8fafc 0%, #eef5ff 100%);
+  background:
+    radial-gradient(circle at top left, rgba(167, 139, 250, 0.18), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.12), transparent 25%),
+    linear-gradient(135deg, #f8fafc 0%, #eef4ff 45%, #f5f3ff 100%);
   padding: 24px;
   font-family: Inter, 'Segoe UI', sans-serif;
 }
@@ -8,17 +11,43 @@
 .treasurer-header {
   max-width: 1400px;
   margin: 0 auto 32px;
+  padding: 28px 30px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 22px 48px rgba(15, 23, 42, 0.08);
+}
+
+.treasurer-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.12), rgba(59, 130, 246, 0.12));
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  color: #6d28d9;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 800;
+  margin-bottom: 12px;
 }
 
 .treasurer-header h1 {
   margin: 0 0 8px;
   font-size: clamp(1.8rem, 4vw, 2.5rem);
   color: #0f172a;
+  letter-spacing: -0.04em;
+  background: linear-gradient(135deg, #0f172a 0%, #4f46e5 52%, #0ea5e9 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .treasurer-header p {
   margin: 0;
-  color: #64748b;
+  color: #475569;
   font-size: 1rem;
 }
 
@@ -58,9 +87,10 @@
 }
 
 .treasurer-tabs button.active {
-  background: #2563eb;
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
   color: white;
-  border-color: #2563eb;
+  border-color: transparent;
+  box-shadow: 0 14px 28px rgba(79, 70, 229, 0.26);
 }
 
 .treasurer-content {

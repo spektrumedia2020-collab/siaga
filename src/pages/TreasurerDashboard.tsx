@@ -314,8 +314,9 @@ export function TreasurerDashboard({ marketId }: TreasurerDashboardProps) {
   return (
     <div className="treasurer-page">
       <header className="treasurer-header">
+        <div className="treasurer-badge">Premium treasury access</div>
         <h1>Dashboard Bendahara</h1>
-        <p>Kelola approval setoran, monitoring kinerja, dan rekonsiliasi</p>
+        <p>Kelola approval setoran, monitoring kinerja, dan rekonsiliasi keuangan pasar secara real-time.</p>
       </header>
 
       {error && <div className="treasurer-error">{error}</div>}

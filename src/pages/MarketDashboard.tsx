@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getSupabaseClient, STORAGE_BUCKET, getStorageConfigurationMessage } from '../lib/supabase'
-import { getUserMarket } from '../lib/roleUtils'
+import { getUserMarket, getUserRole } from '../lib/roleUtils'
 import { OfficersPage } from './OfficersPage'
 import { StallsPage } from './StallsPage'
 import { SectorsPage } from './SectorsPage'
@@ -85,6 +85,7 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
   const [profileName, setProfileName] = useState('')
   const [profilePhotoUrl, setProfilePhotoUrl] = useState('')
   const [profileRole, setProfileRole] = useState('Administrator')
+  const [userRoleName, setUserRoleName] = useState('')
   const [profilePhotoFile, setProfilePhotoFile] = useState<File | null>(null)
   const [profileSaving, setProfileSaving] = useState(false)
   const [profileError, setProfileError] = useState('')
@@ -102,6 +103,7 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
   useEffect(() => {
     loadMarketStats()
     loadUserProfile()
+    loadUserRole()
   }, [userId])
 
   useEffect(() => {
@@ -194,6 +196,20 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
 
     computeChartData()
   }, [stats])
+
+  const loadUserRole = async () => {
+    try {
+      const role = await getUserRole(userId)
+      const normalized = (role?.role_name || '').toUpperCase()
+      setUserRoleName(normalized)
+      if (normalized) {
+        setProfileRole(normalized)
+        localStorage.setItem('siaga_profile_role', normalized)
+      }
+    } catch (err) {
+      console.error('Error loading user role', err)
+    }
+  }
 
   const loadUserProfile = async () => {
     try {
@@ -515,6 +531,13 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
   const { market, stallCount, officerCount, transactionCount, totalRevenue } = stats
   const publicMarketSlug = encodeURIComponent((market.code || market.name || 'pasar').trim()).replace(/%20/g, '-').replace(/%/g, '')
   const publicMarketUrl = `/@${publicMarketSlug}`
+  const isTreasurer = (userRoleName || profileRole || '').toUpperCase() === 'TREASURER'
+
+  useEffect(() => {
+    if (!isTreasurer && currentPage === 'treasurer') {
+      setCurrentPage('overview')
+    }
+  }, [isTreasurer, currentPage])
 
   const handleCopyPublicLink = async () => {
     try {
@@ -988,13 +1011,15 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
                   <span className="sidebar-icon"><IconReconciliations /></span>
                   <span>Setoran</span>
                 </button>
-                <button
-                  className={`sidebar-item ${currentPage === 'treasurer' ? 'active' : ''}`}
-                  onClick={() => setCurrentPage('treasurer')}
-                >
-                  <span className="sidebar-icon">💼</span>
-                  <span>Dashboard Bendahara</span>
-                </button>
+                {isTreasurer && (
+                  <button
+                    className={`sidebar-item ${currentPage === 'treasurer' ? 'active' : ''}`}
+                    onClick={() => setCurrentPage('treasurer')}
+                  >
+                    <span className="sidebar-icon">💼</span>
+                    <span>Dashboard Bendahara</span>
+                  </button>
+                )}
               </div>
               <div className="sidebar-group">
                 <div className="sidebar-group-title">Operasional</div>
