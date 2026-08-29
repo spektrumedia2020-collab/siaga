@@ -10,6 +10,7 @@ import { RetribusiPage } from './RetribusiPage'
 import { TransactionsPage } from './TransactionsPage'
 import { ReconciliationsPage } from './ReconciliationsPage'
 import { SetoranPage } from './SetoranPage'
+import { TreasurerDashboard } from './TreasurerDashboard'
 import { MarketDetailPage } from './MarketDetailPage'
 import {
   LineChart,
@@ -58,7 +59,7 @@ interface PublicNewsItem {
   link: string
 }
 
-type PageType = 'overview' | 'officers' | 'stalls' | 'sectors' | 'owners' | 'categories' | 'retribusi' | 'transactions' | 'reconciliations' | 'setoran' | 'marketDetail' | 'publicContent'
+type PageType = 'overview' | 'officers' | 'stalls' | 'sectors' | 'owners' | 'categories' | 'retribusi' | 'transactions' | 'reconciliations' | 'setoran' | 'treasurer' | 'marketDetail' | 'publicContent'
 
 function formatMarketAddress(market: any) {
   const clean = (value: unknown) => String(value || '').trim().replace(/^[,\s]+|[,\s]+$/g, '')
@@ -547,6 +548,8 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
         return <ReconciliationsPage marketId={stats.market.id} />
       case 'setoran':
         return <SetoranPage marketId={stats.market.id} />
+      case 'treasurer':
+        return <TreasurerDashboard marketId={stats.market.id} />
       case 'publicContent':
         return (
           <div className="content-editor-panel">
@@ -984,6 +987,13 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
                 >
                   <span className="sidebar-icon"><IconReconciliations /></span>
                   <span>Setoran</span>
+                </button>
+                <button
+                  className={`sidebar-item ${currentPage === 'treasurer' ? 'active' : ''}`}
+                  onClick={() => setCurrentPage('treasurer')}
+                >
+                  <span className="sidebar-icon">💼</span>
+                  <span>Dashboard Bendahara</span>
                 </button>
               </div>
               <div className="sidebar-group">
