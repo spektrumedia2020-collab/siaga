@@ -81,6 +81,12 @@ export function PublicStallPage({ marketId, stallCode }: Props) {
             <button type="submit" disabled={loading || pin.length !== 4}>Buka informasi</button>
           </form>
           {error ? <p className="public-stall-pin-error">{error}</p> : null}
+          <div className="public-stall-demo-section">
+            <p className="public-stall-demo-label">atau akses demo</p>
+            <button type="button" className="public-stall-demo-button" onClick={() => loadStall('1234')} disabled={loading}>
+              Demo Pedagang
+            </button>
+          </div>
           <footer>Masukkan PIN untuk melihat tarif dan riwayat transaksi.</footer>
         </div>
       </main>

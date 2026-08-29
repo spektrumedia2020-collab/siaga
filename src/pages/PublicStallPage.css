@@ -176,6 +176,11 @@
 .public-stall-pin-form button { padding: 13px; border: 0; border-radius: 8px; background: #1f7a1f; color: white; font-weight: 700; cursor: pointer; }
 .public-stall-pin-form button:disabled { opacity: .55; cursor: not-allowed; }
 .public-stall-pin-error { margin: 12px 0 0; color: #b91c1c; text-align: center; font-size: .9rem; }
+.public-stall-demo-section { margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; }
+.public-stall-demo-label { color: #64748b; font-size: .85rem; margin: 0 0 10px; }
+.public-stall-demo-button { padding: 12px 20px; border: 1px solid #cbd5e1; border-radius: 8px; background: white; color: #1f5f2a; font-weight: 700; cursor: pointer; font-size: .9rem; transition: all 0.2s; }
+.public-stall-demo-button:hover { background: #f8fafc; border-color: #1f5f2a; }
+.public-stall-demo-button:disabled { opacity: .55; cursor: not-allowed; }
 .public-stall-section { margin-top: 26px; padding-top: 22px; border-top: 1px solid #e5e7eb; }
 .public-stall-section-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .public-stall-section-heading h2 { margin: 0; color: #1f5f2a; font-size: 1.05rem; }
