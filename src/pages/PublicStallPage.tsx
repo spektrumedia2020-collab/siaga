@@ -100,6 +100,14 @@ export function PublicStallPage({ marketId, stallCode }: Props) {
   }
 
   const { market, stall } = data
+  const sortedTransactions = [...stall.transactions].sort((a, b) => {
+    const aTime = new Date(a.transaction_date || a.created_at).getTime()
+    const bTime = new Date(b.transaction_date || b.created_at).getTime()
+    return bTime - aTime
+  })
+  const totalRevenue = sortedTransactions.reduce((sum, tx) => sum + Number(tx.amount || 0), 0)
+  const latestTransaction = sortedTransactions[0]
+
   return (
     <main className="public-stall-page">
       <div className="public-stall-panel">
@@ -125,6 +133,25 @@ export function PublicStallPage({ marketId, stallCode }: Props) {
           <div><dt>Pemilik</dt><dd>{stall.owner_name || 'Belum terdaftar'}</dd></div>
           <div><dt>Kota</dt><dd>{market.city || '-'}</dd></div>
         </dl>
+
+        <div className="public-stall-summary-row">
+          <div className="public-stall-summary-card">
+            <span>Total pendapatan</span>
+            <strong>Rp {totalRevenue.toLocaleString('id-ID')}</strong>
+          </div>
+          <div className="public-stall-summary-card">
+            <span>Transaksi</span>
+            <strong>{sortedTransactions.length}</strong>
+          </div>
+          <div className="public-stall-summary-card">
+            <span>Tarif aktif</span>
+            <strong>{stall.rates.length}</strong>
+          </div>
+          <div className="public-stall-summary-card">
+            <span>Terakhir</span>
+            <strong>{latestTransaction ? new Date(latestTransaction.transaction_date || latestTransaction.created_at).toLocaleDateString('id-ID') : '-'}</strong>
+          </div>
+        </div>
 
         <div className="public-stall-tabs" role="tablist" aria-label="Informasi lapak">
           <button type="button" className={activeTab === 'rates' ? 'active' : ''} onClick={() => setActiveTab('rates')} role="tab" aria-selected={activeTab === 'rates'}>

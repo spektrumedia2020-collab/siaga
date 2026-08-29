@@ -51,7 +51,14 @@ interface Props {
   onLogout?: () => void
 }
 
-type PageType = 'overview' | 'officers' | 'stalls' | 'sectors' | 'owners' | 'categories' | 'retribusi' | 'transactions' | 'reconciliations' | 'setoran' | 'marketDetail'
+interface PublicNewsItem {
+  title: string
+  summary: string
+  image: string
+  link: string
+}
+
+type PageType = 'overview' | 'officers' | 'stalls' | 'sectors' | 'owners' | 'categories' | 'retribusi' | 'transactions' | 'reconciliations' | 'setoran' | 'marketDetail' | 'publicContent'
 
 function formatMarketAddress(market: any) {
   const clean = (value: unknown) => String(value || '').trim().replace(/^[,\s]+|[,\s]+$/g, '')
@@ -80,11 +87,25 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
   const [profilePhotoFile, setProfilePhotoFile] = useState<File | null>(null)
   const [profileSaving, setProfileSaving] = useState(false)
   const [profileError, setProfileError] = useState('')
+  const [publicContent, setPublicContent] = useState({
+    logoUrl: '',
+    heroSlides: [] as string[],
+    announcement: '',
+    news: [{ title: '', summary: '', image: '', link: '' }] as PublicNewsItem[]
+  })
+  const [publicContentSaving, setPublicContentSaving] = useState(false)
+  const [publicContentError, setPublicContentError] = useState('')
+  const [publicLinkCopied, setPublicLinkCopied] = useState(false)
 
   useEffect(() => {
     loadMarketStats()
     loadUserProfile()
   }, [userId])
+
+  useEffect(() => {
+    if (!stats?.market) return
+    loadPublicCms(stats.market.id)
+  }, [stats?.market?.id])
 
   useEffect(() => {
     if (stats?.market) {
@@ -297,6 +318,118 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
     }
   }
 
+  const parseJsonArray = <T,>(value: unknown): T[] => {
+    if (!value || typeof value !== 'string') return []
+    try {
+      const parsed = JSON.parse(value)
+      return Array.isArray(parsed) ? parsed as T[] : []
+    } catch {
+      return []
+    }
+  }
+
+  const uploadPublicAsset = async (file: File) => {
+    try {
+      const supabaseClient = getSupabaseClient()
+      const fileExt = file.name.split('.').pop() || 'jpg'
+      const filePath = `market-public/${stats?.market?.id || userId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`
+
+      const { error: uploadError } = await supabaseClient.storage.from('Data Siaga').upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: true
+      })
+
+      if (uploadError) throw uploadError
+
+      const { data: publicUrlData } = supabaseClient.storage.from('Data Siaga').getPublicUrl(filePath)
+      return publicUrlData.publicUrl
+    } catch (err) {
+      console.warn('Public asset upload failed, using local fallback', err)
+      return URL.createObjectURL(file)
+    }
+  }
+
+  const updateNewsItem = (index: number, field: keyof PublicNewsItem, value: string) => {
+    setPublicContent((current) => ({
+      ...current,
+      news: current.news.map((item, idx) => idx === index ? { ...item, [field]: value } : item)
+    }))
+  }
+
+  const addNewsItem = () => {
+    setPublicContent((current) => ({
+      ...current,
+      news: [...current.news, { title: '', summary: '', image: '', link: '' }]
+    }))
+  }
+
+  const removeNewsItem = (index: number) => {
+    setPublicContent((current) => ({
+      ...current,
+      news: current.news.filter((_, idx) => idx !== index)
+    }))
+  }
+
+  const loadPublicCms = async (marketId: number) => {
+    try {
+      const supabaseClient = getSupabaseClient()
+      const { data, error } = await supabaseClient
+        .from('market_config')
+        .select('key, value')
+        .eq('market_id', marketId)
+
+      if (error) throw error
+
+      const values: Record<string, string> = {}
+      ;(data || []).forEach((row: any) => {
+        values[row.key] = row.value || ''
+      })
+
+      const heroSlides = parseJsonArray<string>(values.public_hero_images)
+      const news = parseJsonArray<PublicNewsItem>(values.public_news)
+
+      setPublicContent({
+        logoUrl: values.public_logo_url || '',
+        heroSlides: heroSlides.length > 0 ? heroSlides : [],
+        announcement: values.public_announcement || '',
+        news: news.length > 0 ? news : [{ title: '', summary: '', image: '', link: '' }]
+      })
+    } catch (err) {
+      console.warn('Could not load public content config', err)
+    }
+  }
+
+  const savePublicCms = async () => {
+    try {
+      if (!stats?.market) return
+      setPublicContentSaving(true)
+      setPublicContentError('')
+
+      const supabaseClient = getSupabaseClient()
+      const rows = [
+        { market_id: stats.market.id, key: 'public_logo_url', value: publicContent.logoUrl.trim() },
+        { market_id: stats.market.id, key: 'public_hero_images', value: JSON.stringify(publicContent.heroSlides.filter(Boolean)) },
+        { market_id: stats.market.id, key: 'public_announcement', value: publicContent.announcement.trim() },
+        { market_id: stats.market.id, key: 'public_news', value: JSON.stringify(publicContent.news.filter((item) => item.title || item.summary || item.image || item.link)) }
+      ]
+
+      for (const row of rows) {
+        const payload = { market_id: row.market_id, key: row.key, value: row.value }
+        const { error } = await supabaseClient
+          .from('market_config')
+          .upsert(payload, { onConflict: 'market_id,key' })
+
+        if (error) throw error
+      }
+
+      await loadPublicCms(stats.market.id)
+    } catch (err: any) {
+      setPublicContentError(err.message || 'Gagal menyimpan pengaturan publikasi pasar')
+    } finally {
+      setPublicContentSaving(false)
+    }
+  }
+
   const loadMarketStats = async () => {
     try {
       // Get user's market
@@ -373,6 +506,18 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
   }
 
   const { market, stallCount, officerCount, transactionCount, totalRevenue } = stats
+  const publicMarketSlug = encodeURIComponent((market.code || market.name || 'pasar').trim()).replace(/%20/g, '-').replace(/%/g, '')
+  const publicMarketUrl = `/@${publicMarketSlug}`
+
+  const handleCopyPublicLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.origin + publicMarketUrl)
+      setPublicLinkCopied(true)
+      window.setTimeout(() => setPublicLinkCopied(false), 1800)
+    } catch (error) {
+      console.error('Failed to copy public market URL', error)
+    }
+  }
 
   const renderCurrentPage = () => {
     switch (currentPage) {
@@ -396,6 +541,130 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
         return <ReconciliationsPage marketId={stats.market.id} />
       case 'setoran':
         return <SetoranPage marketId={stats.market.id} />
+      case 'publicContent':
+        return (
+          <div className="content-editor-panel">
+            <div className="content-editor-header">
+              <div>
+                <span className="content-editor-kicker">Publikasi pasar</span>
+                <h2>CMS Halaman publik</h2>
+              </div>
+              <div className="content-editor-header-actions">
+                <button className="btn-secondary small public-link-btn" type="button" onClick={handleCopyPublicLink}>
+                  {publicLinkCopied ? 'Link tersalin' : 'Salin link'}
+                </button>
+                <a className="btn-secondary small public-link-btn" href={publicMarketUrl} target="_blank" rel="noreferrer">Lihat halaman publik</a>
+              </div>
+            </div>
+
+            <div className="content-editor-grid">
+              <label className="content-editor-field">
+                <span>Logo pasar</span>
+                <input value={publicContent.logoUrl} onChange={(e) => setPublicContent({ ...publicContent, logoUrl: e.target.value })} placeholder="https://.../logo.png" />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0]
+                    if (!file) return
+                    const uploadedUrl = await uploadPublicAsset(file)
+                    setPublicContent((current) => ({ ...current, logoUrl: uploadedUrl }))
+                    e.target.value = ''
+                  }}
+                />
+              </label>
+
+              <label className="content-editor-field full-width">
+                <span>Slide hero gambar</span>
+                <div className="content-editor-list">
+                  {(publicContent.heroSlides.length > 0 ? publicContent.heroSlides : ['']).map((slide, index) => (
+                    <div key={`slide-${index}`} className="content-editor-inline-row">
+                      <input
+                        value={slide}
+                        onChange={(e) => {
+                          const nextSlides = [...publicContent.heroSlides]
+                          nextSlides[index] = e.target.value
+                          setPublicContent({ ...publicContent, heroSlides: nextSlides })
+                        }}
+                        placeholder="https://.../slide.jpg"
+                      />
+                      <button type="button" className="btn-secondary small" onClick={() => {
+                        const nextSlides = publicContent.heroSlides.filter((_, idx) => idx !== index)
+                        setPublicContent({ ...publicContent, heroSlides: nextSlides.length > 0 ? nextSlides : [] })
+                      }}>Hapus</button>
+                    </div>
+                  ))}
+                  <button type="button" className="btn-secondary small" onClick={() => setPublicContent({ ...publicContent, heroSlides: [...publicContent.heroSlides, ''] })}>Tambah slide</button>
+                </div>
+              </label>
+
+              <label className="content-editor-field full-width">
+                <span>Pengumuman</span>
+                <textarea rows={5} value={publicContent.announcement} onChange={(e) => setPublicContent({ ...publicContent, announcement: e.target.value })} placeholder="Tulis pengumuman pasar yang akan tampil di landing page" />
+              </label>
+
+              <div className="content-editor-field full-width">
+                <span>Berita pasar</span>
+                <div className="content-editor-list">
+                  {publicContent.news.map((item, index) => (
+                    <div key={`news-${index}`} className="content-editor-news-card">
+                      <div className="content-editor-inline-row" style={{ marginBottom: '0.5rem' }}>
+                        <input value={item.title} onChange={(e) => updateNewsItem(index, 'title', e.target.value)} placeholder="Judul berita" />
+                        <button type="button" className="btn-secondary small" onClick={() => removeNewsItem(index)}>Hapus</button>
+                      </div>
+                      <textarea rows={3} value={item.summary} onChange={(e) => updateNewsItem(index, 'summary', e.target.value)} placeholder="Ringkasan berita" />
+                      <input value={item.image} onChange={(e) => updateNewsItem(index, 'image', e.target.value)} placeholder="https://.../gambar.jpg" />
+                      <input value={item.link} onChange={(e) => updateNewsItem(index, 'link', e.target.value)} placeholder="https://.../link-berita" />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0]
+                          if (!file) return
+                          const uploadedUrl = await uploadPublicAsset(file)
+                          updateNewsItem(index, 'image', uploadedUrl)
+                          e.target.value = ''
+                        }}
+                      />
+                    </div>
+                  ))}
+                  <button type="button" className="btn-secondary small" onClick={addNewsItem}>Tambah berita</button>
+                </div>
+              </div>
+            </div>
+
+            <div className="content-editor-preview">
+              <h3>Preview real-time</h3>
+              <div className="content-editor-preview-card">
+                <div className="preview-hero" style={{ backgroundImage: `url(${(publicContent.heroSlides.find(Boolean) || stats?.market?.photo_url || '/pasar.jpeg')})` }}>
+                  <div className="preview-overlay">
+                    <img src={publicContent.logoUrl || stats?.market?.photo_url || '/logo.jpeg'} alt="Logo preview" className="preview-logo" onError={(event) => { (event.currentTarget as HTMLImageElement).src = '/logo.jpeg' }} />
+                    <div>
+                      <strong>Pasar {stats?.market?.name || 'Nama pasar'}</strong>
+                      <p>{publicContent.announcement || 'Pengumuman pasar akan tampil di sini.'}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="preview-news-row">
+                  {(publicContent.news.filter((item) => item.title || item.summary || item.image || item.link)).slice(0, 2).map((item, idx) => (
+                    <div key={`preview-news-${idx}`} className="preview-news-item">
+                      {item.image && <img src={item.image} alt={item.title || 'Preview berita'} />}
+                      <div>
+                        <strong>{item.title || 'Judul berita'}</strong>
+                        <span>{item.summary || 'Ringkasan berita...'}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {publicContentError && <div className="content-editor-error">{publicContentError}</div>}
+            <div className="content-editor-actions">
+              <button className="btn-primary" type="button" onClick={savePublicCms} disabled={publicContentSaving}>{publicContentSaving ? 'Menyimpan...' : 'Simpan perubahan'}</button>
+            </div>
+          </div>
+        )
       default:
         const avgRevenuePerTransaction = transactionCount > 0 ? totalRevenue / transactionCount : 0
         const displayChartData = chartData.length > 0 ? chartData : [
@@ -714,10 +983,20 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
                   <span className="sidebar-icon"><IconOfficers /></span>
                   <span>Petugas</span>
                 </button>
+                <button
+                  className={`sidebar-item ${currentPage === 'publicContent' ? 'active' : ''}`}
+                  onClick={() => setCurrentPage('publicContent')}
+                >
+                  <span className="sidebar-icon">📰</span>
+                  <span>Publikasi</span>
+                </button>
               </div>
             </div>
 
             <div className="sidebar-footer">
+              <a className="sidebar-public-link" href={publicMarketUrl} target="_blank" rel="noreferrer">
+                Lihat halaman publik
+              </a>
               <button className="sidebar-profile" type="button" onClick={() => setProfileOpen((open) => !open)}>
               <div className="sidebar-profile-avatar">
                 {profilePhotoUrl ? (
