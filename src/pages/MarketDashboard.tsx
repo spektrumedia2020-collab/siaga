@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getSupabaseClient } from '../lib/supabase'
+import { getSupabaseClient, STORAGE_BUCKET, getStorageConfigurationMessage } from '../lib/supabase'
 import { getUserMarket } from '../lib/roleUtils'
 import { OfficersPage } from './OfficersPage'
 import { StallsPage } from './StallsPage'
@@ -251,14 +251,14 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
       const filePath = `profile-photos/${userId}/${Date.now()}.${fileExt}`
 
       const supabaseClient = getSupabaseClient()
-      const { error: uploadError } = await supabaseClient.storage.from('Data Siaga').upload(filePath, compressedFile, {
+      const { error: uploadError } = await supabaseClient.storage.from(STORAGE_BUCKET).upload(filePath, compressedFile, {
         cacheControl: '3600',
         upsert: true
       })
 
       if (uploadError) throw uploadError
 
-      const { data: publicUrlData } = supabaseClient.storage.from('Data Siaga').getPublicUrl(filePath)
+      const { data: publicUrlData } = supabaseClient.storage.from(STORAGE_BUCKET).getPublicUrl(filePath)
       return { url: publicUrlData.publicUrl, stored: true }
     } catch (err) {
       console.warn('Storage upload blocked, using inline avatar fallback', err)
@@ -334,17 +334,19 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
       const fileExt = file.name.split('.').pop() || 'jpg'
       const filePath = `market-public/${stats?.market?.id || userId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`
 
-      const { error: uploadError } = await supabaseClient.storage.from('Data Siaga').upload(filePath, file, {
+      const { error: uploadError } = await supabaseClient.storage.from(STORAGE_BUCKET).upload(filePath, file, {
         cacheControl: '3600',
         upsert: true
       })
 
       if (uploadError) throw uploadError
 
-      const { data: publicUrlData } = supabaseClient.storage.from('Data Siaga').getPublicUrl(filePath)
+      const { data: publicUrlData } = supabaseClient.storage.from(STORAGE_BUCKET).getPublicUrl(filePath)
       return publicUrlData.publicUrl
-    } catch (err) {
+    } catch (err: any) {
       console.warn('Public asset upload failed, using local fallback', err)
+      const actionableMessage = getStorageConfigurationMessage(err, 'Upload gambar publik gagal')
+      setPublicContentError(actionableMessage)
       return URL.createObjectURL(file)
     }
   }
@@ -424,7 +426,8 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
 
       await loadPublicCms(stats.market.id)
     } catch (err: any) {
-      setPublicContentError(err.message || 'Gagal menyimpan pengaturan publikasi pasar')
+      const message = getStorageConfigurationMessage(err, err.message || 'Gagal menyimpan pengaturan publikasi pasar')
+      setPublicContentError(message)
     } finally {
       setPublicContentSaving(false)
     }

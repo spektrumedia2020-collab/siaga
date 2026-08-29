@@ -26,6 +26,28 @@ if (!hasValidConfig) {
   }
 }
 
+export const STORAGE_BUCKET = (import.meta.env.VITE_SUPABASE_STORAGE_BUCKET || 'Data Siaga').trim()
+
+export function getStorageConfigurationMessage(error?: any, fallback = 'Gagal mengunggah file') {
+  const rawMessage = String(error?.message || error?.statusText || error?.code || '')
+  const normalized = rawMessage.toLowerCase()
+
+  if (normalized.includes('bucket') || normalized.includes('not found')) {
+    return 'Bucket Supabase belum dibuat atau nama bucket salah. Pastikan bucket tersedia di Storage dan nilainya sesuai dengan VITE_SUPABASE_STORAGE_BUCKET.'
+  }
+
+  if (
+    normalized.includes('row-level security') ||
+    normalized.includes('policy') ||
+    normalized.includes('forbidden') ||
+    normalized.includes('permission denied')
+  ) {
+    return 'Kebijakan akses storage/RLS belum diizinkan. Pastikan bucket publik atau policy upload untuk auth pengguna sudah aktif.'
+  }
+
+  return fallback
+}
+
 export { supabase, supabaseConfigError, hasValidConfig }
 export const safeSupabase = supabase ?? emptySupabaseClient
 
