@@ -393,14 +393,36 @@ export function SetoranPage({ marketId }: SetoranPageProps) {
             Menampilkan {Math.min((safeSummaryPage - 1) * pageSize + 1, officerSummaries.length)}-{Math.min(safeSummaryPage * pageSize, officerSummaries.length)} dari {officerSummaries.length} petugas
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-            <button type="button" className="btn-secondary" disabled={safeSummaryPage === 1} onClick={() => setSummaryPage((page) => Math.max(1, page - 1))} style={{ opacity: safeSummaryPage === 1 ? 0.5 : 1 }}>
-              Sebelumnya
+            <button type="button" disabled={safeSummaryPage === 1} onClick={() => setSummaryPage((page) => Math.max(1, page - 1))} style={{
+              padding: '8px 16px',
+              background: '#2563eb',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              fontWeight: 600,
+              cursor: safeSummaryPage === 1 ? 'not-allowed' : 'pointer',
+              opacity: safeSummaryPage === 1 ? 0.5 : 1,
+              transition: 'all 0.2s',
+              fontSize: '0.9rem'
+            }}>
+              ← Sebelumnya
             </button>
-            <span style={{ fontSize: 14, color: '#475569', minWidth: 90, textAlign: 'center' }}>
+            <span style={{ fontSize: 14, color: '#475569', minWidth: 90, textAlign: 'center', fontWeight: 600 }}>
               Halaman {safeSummaryPage}/{summaryTotalPages}
             </span>
-            <button type="button" className="btn-secondary" disabled={safeSummaryPage === summaryTotalPages} onClick={() => setSummaryPage((page) => Math.min(summaryTotalPages, page + 1))} style={{ opacity: safeSummaryPage === summaryTotalPages ? 0.5 : 1 }}>
-              Selanjutnya
+            <button type="button" disabled={safeSummaryPage === summaryTotalPages} onClick={() => setSummaryPage((page) => Math.min(summaryTotalPages, page + 1))} style={{
+              padding: '8px 16px',
+              background: '#2563eb',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              fontWeight: 600,
+              cursor: safeSummaryPage === summaryTotalPages ? 'not-allowed' : 'pointer',
+              opacity: safeSummaryPage === summaryTotalPages ? 0.5 : 1,
+              transition: 'all 0.2s',
+              fontSize: '0.9rem'
+            }}>
+              Selanjutnya →
             </button>
           </div>
         </div>
@@ -412,14 +434,36 @@ export function SetoranPage({ marketId }: SetoranPageProps) {
             Menampilkan {Math.min((safeDetailPage - 1) * pageSize + 1, filteredSetoran.length)}-{Math.min(safeDetailPage * pageSize, filteredSetoran.length)} dari {filteredSetoran.length} data
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-            <button type="button" className="btn-secondary" disabled={safeDetailPage === 1} onClick={() => setDetailPage((page) => Math.max(1, page - 1))} style={{ opacity: safeDetailPage === 1 ? 0.5 : 1 }}>
-              Sebelumnya
+            <button type="button" disabled={safeDetailPage === 1} onClick={() => setDetailPage((page) => Math.max(1, page - 1))} style={{
+              padding: '8px 16px',
+              background: '#2563eb',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              fontWeight: 600,
+              cursor: safeDetailPage === 1 ? 'not-allowed' : 'pointer',
+              opacity: safeDetailPage === 1 ? 0.5 : 1,
+              transition: 'all 0.2s',
+              fontSize: '0.9rem'
+            }}>
+              ← Sebelumnya
             </button>
-            <span style={{ fontSize: 14, color: '#475569', minWidth: 90, textAlign: 'center' }}>
+            <span style={{ fontSize: 14, color: '#475569', minWidth: 90, textAlign: 'center', fontWeight: 600 }}>
               Halaman {safeDetailPage}/{detailTotalPages}
             </span>
-            <button type="button" className="btn-secondary" disabled={safeDetailPage === detailTotalPages} onClick={() => setDetailPage((page) => Math.min(detailTotalPages, page + 1))} style={{ opacity: safeDetailPage === detailTotalPages ? 0.5 : 1 }}>
-              Selanjutnya
+            <button type="button" disabled={safeDetailPage === detailTotalPages} onClick={() => setDetailPage((page) => Math.min(detailTotalPages, page + 1))} style={{
+              padding: '8px 16px',
+              background: '#2563eb',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              fontWeight: 600,
+              cursor: safeDetailPage === detailTotalPages ? 'not-allowed' : 'pointer',
+              opacity: safeDetailPage === detailTotalPages ? 0.5 : 1,
+              transition: 'all 0.2s',
+              fontSize: '0.9rem'
+            }}>
+              Selanjutnya →
             </button>
           </div>
         </div>

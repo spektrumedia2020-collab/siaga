@@ -246,14 +246,36 @@ export function TransactionsPage({ marketId }: TransactionsPageProps) {
             Menampilkan {Math.min((safeCurrentPage - 1) * pageSize + 1, transactions.length)}-{Math.min(safeCurrentPage * pageSize, transactions.length)} dari {transactions.length} data
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-            <button type="button" className="btn-secondary" disabled={safeCurrentPage === 1} onClick={() => setCurrentPage((page) => Math.max(1, page - 1))} style={{ opacity: safeCurrentPage === 1 ? 0.5 : 1 }}>
-              Sebelumnya
+            <button type="button" disabled={safeCurrentPage === 1} onClick={() => setCurrentPage((page) => Math.max(1, page - 1))} style={{
+              padding: '8px 16px',
+              background: '#2563eb',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              fontWeight: 600,
+              cursor: safeCurrentPage === 1 ? 'not-allowed' : 'pointer',
+              opacity: safeCurrentPage === 1 ? 0.5 : 1,
+              transition: 'all 0.2s',
+              fontSize: '0.9rem'
+            }}>
+              ← Sebelumnya
             </button>
-            <span style={{ fontSize: 14, color: '#475569', minWidth: 90, textAlign: 'center' }}>
+            <span style={{ fontSize: 14, color: '#475569', minWidth: 90, textAlign: 'center', fontWeight: 600 }}>
               Halaman {safeCurrentPage}/{totalPages}
             </span>
-            <button type="button" className="btn-secondary" disabled={safeCurrentPage === totalPages} onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))} style={{ opacity: safeCurrentPage === totalPages ? 0.5 : 1 }}>
-              Selanjutnya
+            <button type="button" disabled={safeCurrentPage === totalPages} onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))} style={{
+              padding: '8px 16px',
+              background: '#2563eb',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              fontWeight: 600,
+              cursor: safeCurrentPage === totalPages ? 'not-allowed' : 'pointer',
+              opacity: safeCurrentPage === totalPages ? 0.5 : 1,
+              transition: 'all 0.2s',
+              fontSize: '0.9rem'
+            }}>
+              Selanjutnya →
             </button>
           </div>
         </div>
