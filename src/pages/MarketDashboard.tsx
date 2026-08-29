@@ -515,6 +515,19 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
     }
   }
 
+  const isTreasurer = (userRoleName || profileRole || '').toUpperCase() === 'TREASURER'
+
+  useEffect(() => {
+    if (isTreasurer) {
+      setCurrentPage('treasurer')
+      return
+    }
+
+    if (!isTreasurer && currentPage === 'treasurer') {
+      setCurrentPage('overview')
+    }
+  }, [isTreasurer, currentPage])
+
   if (loading) {
     return <div className="loading">Memuat data pasar...</div>
   }
@@ -531,13 +544,6 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
   const { market, stallCount, officerCount, transactionCount, totalRevenue } = stats
   const publicMarketSlug = encodeURIComponent((market.code || market.name || 'pasar').trim()).replace(/%20/g, '-').replace(/%/g, '')
   const publicMarketUrl = `/@${publicMarketSlug}`
-  const isTreasurer = (userRoleName || profileRole || '').toUpperCase() === 'TREASURER'
-
-  useEffect(() => {
-    if (!isTreasurer && currentPage === 'treasurer') {
-      setCurrentPage('overview')
-    }
-  }, [isTreasurer, currentPage])
 
   const handleCopyPublicLink = async () => {
     try {
@@ -937,107 +943,145 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
         <div className="dashboard-layout">
           <aside className="sidebar">
             <div className="sidebar-nav">
-              <div className="sidebar-group">
-                <div className="sidebar-group-title">Overview</div>
-                <button
-                  className={`sidebar-item ${currentPage === 'overview' ? 'active' : ''}`}
-                  onClick={() => setCurrentPage('overview')}
-                >
-                  <span className="sidebar-icon"><IconOverview /></span>
-                  <span>Overview</span>
-                </button>
-              </div>
-              <div className="sidebar-group">
-                <div className="sidebar-group-title">Data Pasar</div>
-                <button
-                  className={`sidebar-item ${currentPage === 'stalls' ? 'active' : ''}`}
-                  onClick={() => setCurrentPage('stalls')}
-                >
-                  <span className="sidebar-icon"><IconStalls /></span>
-                  <span>Lapak</span>
-                </button>
-                <button
-                  className={`sidebar-item ${currentPage === 'sectors' ? 'active' : ''}`}
-                  onClick={() => setCurrentPage('sectors')}
-                >
-                  <span className="sidebar-icon"><IconSectors /></span>
-                  <span>Sektor</span>
-                </button>
-                <button
-                  className={`sidebar-item ${currentPage === 'owners' ? 'active' : ''}`}
-                  onClick={() => setCurrentPage('owners')}
-                >
-                  <span className="sidebar-icon"><IconOwners /></span>
-                  <span>Pemilik</span>
-                </button>
-              </div>
-              <div className="sidebar-group">
-                <div className="sidebar-group-title">Konfigurasi</div>
-                <button
-                  className={`sidebar-item ${currentPage === 'categories' ? 'active' : ''}`}
-                  onClick={() => setCurrentPage('categories')}
-                >
-                  <span className="sidebar-icon"><IconCategories /></span>
-                  <span>Kategori</span>
-                </button>
-                <button
-                  className={`sidebar-item ${currentPage === 'retribusi' ? 'active' : ''}`}
-                  onClick={() => setCurrentPage('retribusi')}
-                >
-                  <span className="sidebar-icon"><IconRetribusi /></span>
-                  <span>Retribusi</span>
-                </button>
-              </div>
-              <div className="sidebar-group">
-                <div className="sidebar-group-title">Keuangan</div>
-                <button
-                  className={`sidebar-item ${currentPage === 'transactions' ? 'active' : ''}`}
-                  onClick={() => setCurrentPage('transactions')}
-                >
-                  <span className="sidebar-icon"><IconTransactions /></span>
-                  <span>Transaksi</span>
-                </button>
-                <button
-                  className={`sidebar-item ${currentPage === 'reconciliations' ? 'active' : ''}`}
-                  onClick={() => setCurrentPage('reconciliations')}
-                >
-                  <span className="sidebar-icon"><IconReconciliations /></span>
-                  <span>Rekonsiliasi</span>
-                </button>
-                <button
-                  className={`sidebar-item ${currentPage === 'setoran' ? 'active' : ''}`}
-                  onClick={() => setCurrentPage('setoran')}
-                >
-                  <span className="sidebar-icon"><IconReconciliations /></span>
-                  <span>Setoran</span>
-                </button>
-                {isTreasurer && (
-                  <button
-                    className={`sidebar-item ${currentPage === 'treasurer' ? 'active' : ''}`}
-                    onClick={() => setCurrentPage('treasurer')}
-                  >
-                    <span className="sidebar-icon">💼</span>
-                    <span>Dashboard Bendahara</span>
-                  </button>
-                )}
-              </div>
-              <div className="sidebar-group">
-                <div className="sidebar-group-title">Operasional</div>
-                <button
-                  className={`sidebar-item ${currentPage === 'officers' ? 'active' : ''}`}
-                  onClick={() => setCurrentPage('officers')}
-                >
-                  <span className="sidebar-icon"><IconOfficers /></span>
-                  <span>Petugas</span>
-                </button>
-                <button
-                  className={`sidebar-item ${currentPage === 'publicContent' ? 'active' : ''}`}
-                  onClick={() => setCurrentPage('publicContent')}
-                >
-                  <span className="sidebar-icon">📰</span>
-                  <span>Publikasi</span>
-                </button>
-              </div>
+              {isTreasurer ? (
+                <>
+                  <div className="sidebar-group">
+                    <div className="sidebar-group-title">Bendahara</div>
+                    <button
+                      className={`sidebar-item ${currentPage === 'treasurer' ? 'active' : ''}`}
+                      onClick={() => setCurrentPage('treasurer')}
+                    >
+                      <span className="sidebar-icon">💼</span>
+                      <span>Dashboard Bendahara</span>
+                    </button>
+                    <button
+                      className={`sidebar-item ${currentPage === 'transactions' ? 'active' : ''}`}
+                      onClick={() => setCurrentPage('transactions')}
+                    >
+                      <span className="sidebar-icon"><IconTransactions /></span>
+                      <span>Transaksi</span>
+                    </button>
+                    <button
+                      className={`sidebar-item ${currentPage === 'setoran' ? 'active' : ''}`}
+                      onClick={() => setCurrentPage('setoran')}
+                    >
+                      <span className="sidebar-icon"><IconReconciliations /></span>
+                      <span>Setoran</span>
+                    </button>
+                    <button
+                      className={`sidebar-item ${currentPage === 'reconciliations' ? 'active' : ''}`}
+                      onClick={() => setCurrentPage('reconciliations')}
+                    >
+                      <span className="sidebar-icon"><IconReconciliations /></span>
+                      <span>Rekonsiliasi</span>
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="sidebar-group">
+                    <div className="sidebar-group-title">Overview</div>
+                    <button
+                      className={`sidebar-item ${currentPage === 'overview' ? 'active' : ''}`}
+                      onClick={() => setCurrentPage('overview')}
+                    >
+                      <span className="sidebar-icon"><IconOverview /></span>
+                      <span>Overview</span>
+                    </button>
+                  </div>
+                  <div className="sidebar-group">
+                    <div className="sidebar-group-title">Data Pasar</div>
+                    <button
+                      className={`sidebar-item ${currentPage === 'stalls' ? 'active' : ''}`}
+                      onClick={() => setCurrentPage('stalls')}
+                    >
+                      <span className="sidebar-icon"><IconStalls /></span>
+                      <span>Lapak</span>
+                    </button>
+                    <button
+                      className={`sidebar-item ${currentPage === 'sectors' ? 'active' : ''}`}
+                      onClick={() => setCurrentPage('sectors')}
+                    >
+                      <span className="sidebar-icon"><IconSectors /></span>
+                      <span>Sektor</span>
+                    </button>
+                    <button
+                      className={`sidebar-item ${currentPage === 'owners' ? 'active' : ''}`}
+                      onClick={() => setCurrentPage('owners')}
+                    >
+                      <span className="sidebar-icon"><IconOwners /></span>
+                      <span>Pemilik</span>
+                    </button>
+                  </div>
+                  <div className="sidebar-group">
+                    <div className="sidebar-group-title">Konfigurasi</div>
+                    <button
+                      className={`sidebar-item ${currentPage === 'categories' ? 'active' : ''}`}
+                      onClick={() => setCurrentPage('categories')}
+                    >
+                      <span className="sidebar-icon"><IconCategories /></span>
+                      <span>Kategori</span>
+                    </button>
+                    <button
+                      className={`sidebar-item ${currentPage === 'retribusi' ? 'active' : ''}`}
+                      onClick={() => setCurrentPage('retribusi')}
+                    >
+                      <span className="sidebar-icon"><IconRetribusi /></span>
+                      <span>Retribusi</span>
+                    </button>
+                  </div>
+                  <div className="sidebar-group">
+                    <div className="sidebar-group-title">Keuangan</div>
+                    <button
+                      className={`sidebar-item ${currentPage === 'transactions' ? 'active' : ''}`}
+                      onClick={() => setCurrentPage('transactions')}
+                    >
+                      <span className="sidebar-icon"><IconTransactions /></span>
+                      <span>Transaksi</span>
+                    </button>
+                    <button
+                      className={`sidebar-item ${currentPage === 'reconciliations' ? 'active' : ''}`}
+                      onClick={() => setCurrentPage('reconciliations')}
+                    >
+                      <span className="sidebar-icon"><IconReconciliations /></span>
+                      <span>Rekonsiliasi</span>
+                    </button>
+                    <button
+                      className={`sidebar-item ${currentPage === 'setoran' ? 'active' : ''}`}
+                      onClick={() => setCurrentPage('setoran')}
+                    >
+                      <span className="sidebar-icon"><IconReconciliations /></span>
+                      <span>Setoran</span>
+                    </button>
+                    {isTreasurer && (
+                      <button
+                        className={`sidebar-item ${currentPage === 'treasurer' ? 'active' : ''}`}
+                        onClick={() => setCurrentPage('treasurer')}
+                      >
+                        <span className="sidebar-icon">💼</span>
+                        <span>Dashboard Bendahara</span>
+                      </button>
+                    )}
+                  </div>
+                  <div className="sidebar-group">
+                    <div className="sidebar-group-title">Operasional</div>
+                    <button
+                      className={`sidebar-item ${currentPage === 'officers' ? 'active' : ''}`}
+                      onClick={() => setCurrentPage('officers')}
+                    >
+                      <span className="sidebar-icon"><IconOfficers /></span>
+                      <span>Petugas</span>
+                    </button>
+                    <button
+                      className={`sidebar-item ${currentPage === 'publicContent' ? 'active' : ''}`}
+                      onClick={() => setCurrentPage('publicContent')}
+                    >
+                      <span className="sidebar-icon">📰</span>
+                      <span>Publikasi</span>
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="sidebar-footer">

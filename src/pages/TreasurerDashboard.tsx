@@ -310,6 +310,10 @@ export function TreasurerDashboard({ marketId }: TreasurerDashboardProps) {
   }
 
   const pendingSetoran = setorans.filter(s => s.status === 'pending_treasurer' || s.status === 'pending_head').slice(0, 5)
+  const treasuryBalance = (stats?.total_collected || 0) - (stats?.pending_amount || 0)
+  const approvalRate = (stats && (stats.pending_count + stats.approved_count + stats.rejected_count) > 0)
+    ? ((stats.approved_count / (stats.pending_count + stats.approved_count + stats.rejected_count)) * 100)
+    : 0
 
   return (
     <div className="treasurer-page">
@@ -318,6 +322,29 @@ export function TreasurerDashboard({ marketId }: TreasurerDashboardProps) {
         <h1>Dashboard Bendahara</h1>
         <p>Kelola approval setoran, monitoring kinerja, dan rekonsiliasi keuangan pasar secara real-time.</p>
       </header>
+
+      <section className="treasurer-hero-strip">
+        <div className="treasurer-hero-card emphasis">
+          <span className="kicker">Saldo kas pasar</span>
+          <strong>Rp {(treasuryBalance / 1000000).toFixed(1)}M</strong>
+          <small>Setelah menunggu approval</small>
+        </div>
+        <div className="treasurer-hero-card">
+          <span className="kicker">Approval rate</span>
+          <strong>{approvalRate.toFixed(1)}%</strong>
+          <small>Efisiensi validasi bendahara</small>
+        </div>
+        <div className="treasurer-hero-card">
+          <span className="kicker">Outstanding</span>
+          <strong>{stats?.pending_count || 0}</strong>
+          <small>Setoran menunggu konfirmasi</small>
+        </div>
+        <div className="treasurer-hero-card">
+          <span className="kicker">Rekonsiliasi</span>
+          <strong>{stats?.discrepancy_count || 0}</strong>
+          <small>Item perlu perhatian</small>
+        </div>
+      </section>
 
       {error && <div className="treasurer-error">{error}</div>}
 
