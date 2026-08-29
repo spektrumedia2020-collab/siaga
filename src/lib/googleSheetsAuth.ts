@@ -7,20 +7,36 @@ const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || '';
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive'];
 
 /**
+ * Check if Google credentials are configured
+ */
+export const hasGoogleCredentials = (): boolean => {
+  return !!(GOOGLE_CLIENT_ID && GOOGLE_API_KEY);
+};
+
+/**
  * Inisialisasi Google API
  */
 export const initializeGoogleAPI = async (): Promise<void> => {
+  if (!hasGoogleCredentials()) {
+    throw new Error('Google credentials tidak dikonfigurasi. Silakan hubungi administrator.');
+  }
+
   if (!window.gapi) {
     // Load Google API script
     return new Promise((resolve, reject) => {
       const script = document.createElement('script');
       script.src = 'https://apis.google.com/js/api.js';
       script.onload = () => {
-        window.gapi?.load('client:auth2', () => {
-          resolve();
-        });
+        try {
+          window.gapi?.load('client:auth2', () => {
+            resolve();
+          });
+        } catch (error) {
+          reject(new Error('Gagal menginisialisasi Google API'));
+        }
       };
-      script.onerror = reject;
+      script.onerror = () => reject(new Error('Gagal memuat Google API script'));
+      script.onabort = () => reject(new Error('Google API script loading dibatalkan'));
       document.head.appendChild(script);
     });
   }
@@ -31,23 +47,36 @@ export const initializeGoogleAPI = async (): Promise<void> => {
  */
 export const googleLogin = async (): Promise<string | null> => {
   try {
+    if (!hasGoogleCredentials()) {
+      throw new Error('Google credentials tidak dikonfigurasi. Silakan hubungi administrator untuk setup Google Sheets integration.');
+    }
+
     await initializeGoogleAPI();
 
     if (!window.gapi?.auth2) {
       throw new Error('Google API not initialized');
     }
 
-    const auth = window.gapi.auth2.getAuthInstance() || 
-      await window.gapi.auth2.init({
-        client_id: GOOGLE_CLIENT_ID,
-        scope: SCOPES.join(' ')
-      });
+    let token: string | null = null;
 
-    const user = await auth.signIn();
-    const token = user.getAuthResponse().id_token;
+    try {
+      const auth = window.gapi.auth2.getAuthInstance() || 
+        await window.gapi.auth2.init({
+          client_id: GOOGLE_CLIENT_ID,
+          scope: SCOPES.join(' ')
+        });
 
-    localStorage.setItem('google_access_token', token);
-    localStorage.setItem('google_user', JSON.stringify(user.getBasicProfile()));
+      const user = await auth.signIn();
+      token = user.getAuthResponse().id_token;
+
+      localStorage.setItem('google_access_token', token);
+      localStorage.setItem('google_user', JSON.stringify(user.getBasicProfile()));
+    } catch (authError: any) {
+      if (authError.error === 'idpiframe_initialization_failed' || authError.error === 'popup_closed_by_user') {
+        throw new Error('Google login dibatalkan');
+      }
+      throw new Error('Gagal login ke Google. Pastikan credentials sudah dikonfigurasi dengan benar.');
+    }
 
     return token;
   } catch (error) {

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { exportToCSV, exportToXLSX, exportToGoogleSheets } from '../lib/exportUtils';
-import { googleLogin, isGoogleLoggedIn as checkGoogleLogin, googleLogout } from '../lib/googleSheetsAuth';
+import { googleLogin, isGoogleLoggedIn as checkGoogleLogin, googleLogout, hasGoogleCredentials } from '../lib/googleSheetsAuth';
 
 interface ExportButtonsProps {
   data: any[];
@@ -20,6 +20,12 @@ export const ExportButtons: React.FC<ExportButtonsProps> = ({
   const [isExporting, setIsExporting] = useState(false);
   const [isGoogleLoggedIn, setIsGoogleLoggedIn] = useState(checkGoogleLogin());
   const [showMenu, setShowMenu] = useState(false);
+  
+  // Check if Google Sheets is available
+  const googleSheetsAvailable = useMemo(() => hasGoogleCredentials(), []);
+  const googleSheetsTooltip = googleSheetsAvailable 
+    ? 'Ekspor ke Google Sheets' 
+    : 'Google Sheets belum dikonfigurasi';
 
   const handleExportCSV = () => {
     onExportStart?.();
@@ -47,23 +53,37 @@ export const ExportButtons: React.FC<ExportButtonsProps> = ({
 
   const handleExportGoogleSheets = async () => {
     try {
+      if (!googleSheetsAvailable) {
+        alert('Google Sheets belum dikonfigurasi. Silakan hubungi administrator untuk setup Google integration.');
+        return;
+      }
+
       if (!isGoogleLoggedIn) {
         onExportStart?.();
         setIsExporting(true);
-        await googleLogin();
-        setIsGoogleLoggedIn(true);
+        try {
+          await googleLogin();
+          setIsGoogleLoggedIn(true);
+        } catch (loginError: any) {
+          const errorMsg = loginError?.message || 'Gagal login ke Google';
+          alert(`Login ke Google gagal: ${errorMsg}`);
+          return;
+        } finally {
+          setIsExporting(false);
+        }
       }
 
       onExportStart?.();
       setIsExporting(true);
       await exportToGoogleSheets(data, undefined, sheetName);
-    } catch (error) {
+      setShowMenu(false);
+    } catch (error: any) {
+      const errorMsg = error?.message || 'Gagal mengekspor ke Google Sheets';
       console.error('Export error:', error);
-      alert('Gagal mengekspor ke Google Sheets. Silakan coba lagi.');
+      alert(errorMsg);
     } finally {
       setIsExporting(false);
       onExportEnd?.();
-      setShowMenu(false);
     }
   };
 
@@ -161,24 +181,26 @@ export const ExportButtons: React.FC<ExportButtonsProps> = ({
           {/* Google Sheets Export */}
           <button
             onClick={handleExportGoogleSheets}
-            disabled={isExporting}
+            disabled={isExporting || !googleSheetsAvailable}
             style={{
               display: 'block',
               width: '100%',
               padding: '12px 16px',
               background: 'transparent',
-              color: '#374151',
+              color: !googleSheetsAvailable ? '#d1d5db' : '#374151',
               border: 'none',
               borderBottom: isGoogleLoggedIn ? '1px solid #e5e7eb' : 'none',
-              cursor: isExporting ? 'not-allowed' : 'pointer',
+              cursor: isExporting || !googleSheetsAvailable ? 'not-allowed' : 'pointer',
               textAlign: 'left',
               fontSize: '0.9rem',
-              transition: 'background 0.2s'
+              transition: 'background 0.2s',
+              opacity: !googleSheetsAvailable ? 0.5 : 1
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = '#f3f4f6')}
+            title={googleSheetsTooltip}
+            onMouseEnter={(e) => !googleSheetsAvailable || isExporting ? null : (e.currentTarget.style.background = '#f3f4f6')}
             onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
           >
-            🗂️ Google Sheets
+            🗂️ Google Sheets {!googleSheetsAvailable && '❌'}
           </button>
 
           {/* Google Logout (show if logged in) */}

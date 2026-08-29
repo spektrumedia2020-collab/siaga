@@ -105,69 +105,82 @@ export const exportToGoogleSheets = async (
     const accessToken = localStorage.getItem('google_access_token');
 
     if (!accessToken) {
-      alert('Silakan login ke Google terlebih dahulu untuk mengekspor ke Google Sheets');
-      // Trigger Google login (akan diimplementasikan di component)
-      return;
+      throw new Error('Silakan login ke Google terlebih dahulu untuk mengekspor ke Google Sheets');
     }
 
     // Jika spreadsheet ID tidak diberikan, buat spreadsheet baru
     let targetSpreadsheetId = spreadsheetId;
 
     if (!targetSpreadsheetId) {
-      const createResponse = await fetch(
-        'https://sheets.googleapis.com/v4/spreadsheets',
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            properties: {
-              title: `Export ${new Date().toLocaleDateString('id-ID')}`
-            }
-          })
+      try {
+        const createResponse = await fetch(
+          'https://sheets.googleapis.com/v4/spreadsheets',
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              properties: {
+                title: `Export ${new Date().toLocaleDateString('id-ID')}`
+              }
+            })
+          }
+        );
+
+        if (!createResponse.ok) {
+          if (createResponse.status === 401) {
+            throw new Error('Sesi Google Sheets expired. Silakan logout dan login kembali.');
+          }
+          const error = await createResponse.json();
+          throw new Error(error.error?.message || 'Gagal membuat spreadsheet baru');
         }
-      );
 
-      if (!createResponse.ok) {
-        throw new Error('Gagal membuat spreadsheet baru');
+        const createData = await createResponse.json();
+        targetSpreadsheetId = createData.spreadsheetId;
+      } catch (createError: any) {
+        throw new Error(`Gagal membuat Google Sheet: ${createError?.message || 'Unknown error'}`);
       }
-
-      const createData = await createResponse.json();
-      targetSpreadsheetId = createData.spreadsheetId;
     }
 
     // Update sheet dengan data
     const headers = Object.keys(data[0] || {});
     const values = [headers, ...data.map((row) => headers.map((h) => row[h] || ''))];
 
-    const updateResponse = await fetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${targetSpreadsheetId}/values/${sheetName}!A1?valueInputOption=USER_ENTERED`,
-      {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ values })
+    try {
+      const updateResponse = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${targetSpreadsheetId}/values/${sheetName}!A1?valueInputOption=USER_ENTERED`,
+        {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ values })
+        }
+      );
+
+      if (!updateResponse.ok) {
+        if (updateResponse.status === 401) {
+          throw new Error('Sesi Google Sheets expired. Silakan logout dan login kembali.');
+        }
+        throw new Error('Gagal mengupdate sheet');
       }
-    );
 
-    if (!updateResponse.ok) {
-      throw new Error('Gagal mengupdate sheet');
+      const spreadsheetUrl = `https://docs.google.com/spreadsheets/d/${targetSpreadsheetId}`;
+      alert(
+        `✓ Data berhasil diekspor ke Google Sheets!\n\nBuka: ${spreadsheetUrl}`
+      );
+
+      // Buka spreadsheet di tab baru
+      window.open(spreadsheetUrl, '_blank');
+    } catch (updateError: any) {
+      throw new Error(`Gagal mengupdate Google Sheet: ${updateError?.message || 'Unknown error'}`);
     }
-
-    const spreadsheetUrl = `https://docs.google.com/spreadsheets/d/${targetSpreadsheetId}`;
-    alert(
-      `✓ Data berhasil diekspor ke Google Sheets!\n\nKlik untuk membuka: ${spreadsheetUrl}`
-    );
-
-    // Buka spreadsheet di tab baru
-    window.open(spreadsheetUrl, '_blank');
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error exporting to Google Sheets:', error);
-    alert('Gagal mengekspor data ke Google Sheets');
+    throw error; // Re-throw untuk ditangani di component
   }
 };
 
