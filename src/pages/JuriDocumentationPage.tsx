@@ -18,7 +18,7 @@ const MOBILE_APP_URL = 'https://drive.google.com/drive/folders/1RMOtTkinfgmxTGuj
 
 // ---- Link akses halaman publik (landing page & lapak) ----
 const PUBLIC_LANDING_PAGE = 'https://siaga-pi.vercel.app/@niaga'
-const PUBLIC_STALL_DEMO = 'https://siaga-pi.vercel.app/lapak/1/A-001'
+const PUBLIC_STALL_DEMO = 'https://siaga-pi.vercel.app/lapak/30/NGD-0207'
 
 // ---- Blok kredensial demo (ISI SESUAI SEED SUPABASE ANDA) ----
 const DEMO_ACCOUNTS: AccountRow[] = [
@@ -110,7 +110,7 @@ function JuriPublikPages() {
       title: 'Halaman Detail Lapak',
       desc: 'Halaman publik untuk detail lapak (toko) tertentu yang menampilkan nama, pemilik, sektor, lokasi, dan status lapak. Dapat diakses dari landing page atau langsung via URL.',
       url: PUBLIC_STALL_DEMO,
-      label: 'Lihat Detail Lapak A-001',
+      label: 'Lihat Detail Lapak NGD-0207',
     },
   ]
 
@@ -142,7 +142,7 @@ function JuriPublikPages() {
         🌍 <strong>Transparansi Pasar:</strong> Halaman publik dirancang untuk menampilkan informasi pasar ke pedagang dan masyarakat umum.
         Setiap pasar punya landing page di URL <code>/@nama-pasar</code> dan setiap lapak punya halaman detail di <code>/lapak/[id]/[kode]</code>.
         <br />
-        💡 <strong>Format URL:</strong> Buka halaman publik dengan pola <code>https://siaga-pi.vercel.app/@niaga</code> untuk melihat pasar yang terdaftar.
+        💡 <strong>Format URL:</strong> Buka landing page publik <code>https://siaga-pi.vercel.app/@niaga</code> dan lapak publik <code>https://siaga-pi.vercel.app/lapak/30/NGD-0207</code>.
       </div>
     </section>
   )
