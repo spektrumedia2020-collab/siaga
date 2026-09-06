@@ -16,6 +16,7 @@ interface Market {
   status: string
   head_user_id?: string
   head_name?: string
+  stall_count: number
 }
 
 interface User {
@@ -66,8 +67,18 @@ export function MarketsManagement({ onImpersonate }: Props) {
         .order('name')
 
       if (marketsError) throw marketsError
+
+      const marketsWithStallCounts = await Promise.all((marketsData || []).map(async (market: any) => {
+        const { count, error } = await supabase
+          .from('stalls')
+          .select('id', { count: 'exact', head: true })
+          .eq('market_id', market.id)
+
+        if (error) throw error
+        return { ...market, stall_count: count || 0 }
+      }))
       
-      const marketIds = (marketsData || []).map((m: any) => m.id)
+      const marketIds = marketsWithStallCounts.map((m: any) => m.id)
       
       // Get MARKET_HEAD role id
       const { data: headRole } = await supabase
@@ -95,14 +106,14 @@ export function MarketsManagement({ onImpersonate }: Props) {
       }
       
       // Process markets
-      const processedMarkets = (marketsData || []).map((m: any) => {
+      const processedMarkets = marketsWithStallCounts.map((m: any) => {
         const headInfo = userMap.get(m.id)
         return {
           ...m,
           head_user_id: headInfo?.auth_uid || m.head_user_id || '',
           head_name: headInfo?.name || '-'
         }
-      })
+      }).sort((a, b) => b.stall_count - a.stall_count || a.name.localeCompare(b.name))
       
       setMarkets(processedMarkets)
 
@@ -247,6 +258,11 @@ export function MarketsManagement({ onImpersonate }: Props) {
                     <p style={{ margin: '0.25rem 0' }}><strong>Kota:</strong> {market.city}</p>
                     <p style={{ margin: '0.25rem 0' }}><strong>Alamat:</strong> {market.address || '-'}</p>
                     <p style={{ margin: '0.25rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><strong>Kepala Pasar:</strong> {market.head_name || '-'}</p>
+                    <p style={{ margin: '0.5rem 0 0' }}>
+                      <span className={`stall-count-badge ${market.stall_count > 0 ? 'has-stalls' : 'no-stalls'}`}>
+                        {market.stall_count > 0 ? `✓ ${market.stall_count} lapak` : 'Belum ada lapak'}
+                      </span>
+                    </p>
                   </div>
                 </div>
                 <div style={{ marginTop: 'auto', paddingTop: '1rem' }}>
