@@ -184,17 +184,19 @@ export function MarketsManagement({ onImpersonate }: Props) {
   }
 
   const handleImpersonate = async (market: Market) => {
-    if (!market.head_user_id) { alert('Pasar ini belum memiliki kepala pasar yang ditugaskan'); return }
     try {
       setImpersonatingMarketId(market.id)
       const supabase = getSupabaseClient()
-      // Get role info from users table (new schema: users.id_role)
       const { data: roleData } = await supabase.from('roles').select('id, name').eq('name', 'MARKET_HEAD').maybeSingle()
       if (!roleData) { alert('Role MARKET_HEAD tidak ditemukan'); setImpersonatingMarketId(null); return }
-      const targetRole: UserRole = { id: 0, user_id: market.head_user_id, role_id: roleData.id, role_name: 'MARKET_HEAD', market_id: market.id }
       const currentUser = await supabase.auth.getUser()
-      if (currentUser.data.user?.id) { setImpersonateSession(currentUser.data.user.id, market.head_user_id, targetRole) }
-      if (onImpersonate) { onImpersonate(market.head_user_id, targetRole) } else { window.location.hash = 'market/dashboard' }
+      const originalUserId = currentUser.data.user?.id
+      if (!originalUserId) { alert('Sesi super admin tidak ditemukan'); return }
+
+      const targetUserId = market.head_user_id || originalUserId
+      const targetRole: UserRole = { id: 0, user_id: targetUserId, role_id: roleData.id, role_name: 'MARKET_HEAD', market_id: market.id }
+      setImpersonateSession(originalUserId, targetUserId, targetRole)
+      if (onImpersonate) { onImpersonate(targetUserId, targetRole) } else { window.location.hash = 'market/dashboard' }
     } catch (err) { console.error('Error during impersonation:', err); alert('Gagal login sebagai kepala pasar') } finally { setImpersonatingMarketId(null) }
   }
 
@@ -252,14 +254,9 @@ export function MarketsManagement({ onImpersonate }: Props) {
                     <button className="siaga-btn siaga-btn-outline" onClick={() => handleEdit(market.id)} style={{ flex: 1 }}>✏️ Edit</button>
                     <button className="siaga-btn siaga-btn-accent" onClick={() => setDeleteTarget(market)} style={{ flex: 1 }}>🗑️ Hapus</button>
                   </div>
-                  {market.head_user_id && (
-                    <button className="btn-impersonate" onClick={() => handleImpersonate(market)} disabled={impersonatingMarketId === market.id} style={{ marginTop: '0.5rem' }}>
-                      {impersonatingMarketId === market.id ? '⏳ Memproses...' : '🔑 Login sebagai Kepala Pasar'}
-                    </button>
-                  )}
-                  {!market.head_user_id && (
-                    <button className="siaga-btn siaga-btn-outline" style={{ width: '100%', marginTop: '0.5rem', opacity: 0.6, cursor: 'not-allowed' }}>⚠️ Belum ada Kepala Pasar</button>
-                  )}
+                  <button className="btn-impersonate" onClick={() => handleImpersonate(market)} disabled={impersonatingMarketId === market.id} style={{ marginTop: '0.5rem' }}>
+                    {impersonatingMarketId === market.id ? '⏳ Memproses...' : market.head_user_id ? '🔑 Login sebagai Kepala Pasar' : '🔑 Buka sebagai Admin Pasar'}
+                  </button>
                 </div>
               </div>
             </div>

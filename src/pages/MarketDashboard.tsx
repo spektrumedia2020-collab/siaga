@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getSupabaseClient, STORAGE_BUCKET, getStorageConfigurationMessage } from '../lib/supabase'
-import { getUserMarket, getUserRole } from '../lib/roleUtils'
+import { getUserMarket, getUserRole, UserRole } from '../lib/roleUtils'
 import { OfficersPage } from './OfficersPage'
 import { StallsPage } from './StallsPage'
 import { SectorsPage } from './SectorsPage'
@@ -48,6 +48,7 @@ interface MarketStats {
 interface Props {
   userId: string
   impersonating?: boolean
+  impersonatedRole?: UserRole
   onStopImpersonation?: () => void
   onLogout?: () => void
 }
@@ -74,7 +75,7 @@ function formatMarketAddress(market: any) {
   return structured || clean(market.address) || '-'
 }
 
-export function MarketDashboard({ userId, impersonating = false, onStopImpersonation, onLogout }: Props) {
+export function MarketDashboard({ userId, impersonating = false, impersonatedRole, onStopImpersonation, onLogout }: Props) {
   const [stats, setStats] = useState<MarketStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState<PageType>('overview')
@@ -199,6 +200,14 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
 
   const loadUserRole = async () => {
     try {
+      if (impersonating && impersonatedRole) {
+        const normalized = impersonatedRole.role_name.toUpperCase()
+        setUserRoleName(normalized)
+        setProfileRole(normalized)
+        localStorage.setItem('siaga_profile_role', normalized)
+        return
+      }
+
       const role = await getUserRole(userId)
       const normalized = (role?.role_name || '').toUpperCase()
       setUserRoleName(normalized)
@@ -455,8 +464,19 @@ export function MarketDashboard({ userId, impersonating = false, onStopImpersona
 
   const loadMarketStats = async () => {
     try {
-      // Get user's market
-      const market = await getUserMarket(userId)
+      let market
+      if (impersonating && impersonatedRole?.market_id) {
+        const supabaseClient = getSupabaseClient()
+        const { data, error } = await supabaseClient
+          .from('markets')
+          .select('id, code, name, address, street, street_number, kecamatan, city, province, postal_code, status')
+          .eq('id', impersonatedRole.market_id)
+          .single()
+        if (error) throw error
+        market = data
+      } else {
+        market = await getUserMarket(userId)
+      }
       if (!market) {
         console.error('No market assigned')
         setLoading(false)

@@ -256,6 +256,7 @@ function App() {
         <MarketDashboard 
           userId={effectiveUserId} 
           impersonating={!!impersonate} 
+          impersonatedRole={impersonate?.targetRole}
           onStopImpersonation={handleStopImpersonate} 
           onLogout={handleLogout} 
         />
