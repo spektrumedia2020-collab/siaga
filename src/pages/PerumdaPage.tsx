@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useState } from 'react'
+import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import './PerumdaPage.css'
 
 interface MarketReport {
@@ -11,6 +12,9 @@ interface MarketReport {
   revenue: number
   deposited: number
   pendingDepositCount: number
+  revenueShare: number
+  averageTransaction: number
+  collectionRate: number
 }
 
 interface ReportResponse {
@@ -22,7 +26,10 @@ interface ReportResponse {
     revenue: number
     deposited: number
     pendingDepositCount: number
+    averageTransaction: number
+    collectionRate: number
   }
+  dailyTrend: Array<{ date: string; transactions: number; revenue: number }>
   markets: MarketReport[]
 }
 
@@ -32,6 +39,7 @@ const firstDay = `${today.slice(0, 8)}01`
 
 const formatRupiah = (value: number) => `Rp ${value.toLocaleString('id-ID')}`
 const formatDate = (value: string) => new Date(`${value}T00:00:00`).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+const formatShortDate = (value: string) => new Date(`${value}T00:00:00`).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
 
 export function PerumdaPage() {
   const [pin, setPin] = useState('')
@@ -175,12 +183,44 @@ export function PerumdaPage() {
               <article className="accent"><span>Total retribusi</span><strong>{formatRupiah(report.summary.revenue)}</strong><small>{formatRupiah(report.summary.deposited)} sudah disetor</small></article>
             </section>
 
+            <section className="perumda-insight-grid">
+              <article><span>Rata-rata transaksi</span><strong>{formatRupiah(report.summary.averageTransaction)}</strong><small>nilai per transaksi lunas</small></article>
+              <article><span>Rasio setoran</span><strong>{report.summary.collectionRate.toFixed(1)}%</strong><small>retribusi yang sudah disetujui</small></article>
+            </section>
+
+            <section className="perumda-charts">
+              <article className="perumda-chart-card">
+                <div className="perumda-chart-heading"><div><p className="perumda-eyebrow">Tren waktu</p><h3>Pendapatan harian</h3></div><span>{report.dailyTrend.length} hari aktif</span></div>
+                <ResponsiveContainer width="100%" height={260}>
+                  <LineChart data={report.dailyTrend} margin={{ top: 10, right: 16, left: 8, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#d9e3d8" />
+                    <XAxis dataKey="date" tickFormatter={formatShortDate} tickLine={false} axisLine={false} />
+                    <YAxis tickFormatter={(value) => `${Math.round(Number(value) / 1000)}k`} tickLine={false} axisLine={false} />
+                    <Tooltip labelFormatter={(value) => formatDate(String(value))} formatter={(value: number | string | readonly (number | string)[] | undefined) => formatRupiah(Number(value || 0))} />
+                    <Line type="monotone" dataKey="revenue" name="Pendapatan" stroke="#1f614b" strokeWidth={3} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </article>
+              <article className="perumda-chart-card">
+                <div className="perumda-chart-heading"><div><p className="perumda-eyebrow">Kontribusi</p><h3>Pendapatan per pasar</h3></div><span>pangsa global</span></div>
+                <ResponsiveContainer width="100%" height={260}>
+                  <BarChart data={report.markets.slice(0, 8)} layout="vertical" margin={{ top: 10, right: 16, left: 8, bottom: 0 }}>
+                    <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="#d9e3d8" />
+                    <XAxis type="number" tickFormatter={(value) => `${Math.round(Number(value) / 1000000)}jt`} tickLine={false} axisLine={false} />
+                    <YAxis type="category" dataKey="name" width={110} tickLine={false} axisLine={false} />
+                    <Tooltip formatter={(value: number | string | readonly (number | string)[] | undefined) => formatRupiah(Number(value || 0))} />
+                    <Bar dataKey="revenue" name="Pendapatan" fill="#a26035" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </article>
+            </section>
+
             <section className="perumda-table-section">
               <div className="perumda-section-heading"><div><p className="perumda-eyebrow">Perbandingan</p><h2>Kinerja per pasar</h2></div><span>{report.summary.pendingDepositCount} setoran belum disetujui</span></div>
               <div className="perumda-table-wrap">
                 <table>
-                  <thead><tr><th>Pasar</th><th>Lapak aktif</th><th>Transaksi</th><th>Retribusi</th><th>Setoran disetujui</th></tr></thead>
-                  <tbody>{report.markets.map((market) => <tr key={market.id}><td><strong>{market.name}</strong><small>{market.status || 'Status tidak tersedia'}</small></td><td>{market.activeStallCount} / {market.stallCount}</td><td>{market.transactionCount}</td><td>{formatRupiah(market.revenue)}</td><td>{formatRupiah(market.deposited)}{market.pendingDepositCount > 0 && <small className="pending">{market.pendingDepositCount} menunggu</small>}</td></tr>)}</tbody>
+                  <thead><tr><th>Pasar</th><th>Lapak aktif</th><th>Transaksi</th><th>Retribusi</th><th>Pangsa</th><th>Rata-rata</th><th>Setoran disetujui</th></tr></thead>
+                  <tbody>{report.markets.map((market) => <tr key={market.id}><td><strong>{market.name}</strong><small>{market.status || 'Status tidak tersedia'}</small></td><td>{market.activeStallCount} / {market.stallCount}</td><td>{market.transactionCount}</td><td>{formatRupiah(market.revenue)}</td><td>{market.revenueShare.toFixed(1)}%</td><td>{formatRupiah(market.averageTransaction)}</td><td>{formatRupiah(market.deposited)}<small>{market.collectionRate.toFixed(1)}% tersetor</small>{market.pendingDepositCount > 0 && <small className="pending">{market.pendingDepositCount} menunggu</small>}</td></tr>)}</tbody>
                 </table>
               </div>
             </section>

@@ -9,6 +9,12 @@ type QueryBuilder = {
   range: (from: number, to: number) => Promise<{ data: any[] | null; error: any }>
 }
 
+type DailyTrend = {
+  date: string
+  transactions: number
+  revenue: number
+}
+
 function getSecret() {
   return process.env.PERUMDA_JWT_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 }
@@ -104,6 +110,19 @@ export default async function handler(req: any, res: any) {
     ])
 
     const paidTransactions = transactions.filter((transaction) => String(transaction.status).toLowerCase() === 'paid')
+    const dailyTrendMap = new Map<string, DailyTrend>()
+    paidTransactions.forEach((transaction) => {
+      const date = String(transaction.transaction_date || transaction.created_at || '').slice(0, 10)
+      if (!date) return
+      const current = dailyTrendMap.get(date) || { date, transactions: 0, revenue: 0 }
+      current.transactions += 1
+      current.revenue += numberValue(transaction.amount)
+      dailyTrendMap.set(date, current)
+    })
+    const totalRevenue = paidTransactions.reduce((sum, transaction) => sum + numberValue(transaction.amount), 0)
+    const approvedDeposits = deposits
+      .filter((deposit) => String(deposit.status).toLowerCase() === 'approved')
+      .reduce((sum, deposit) => sum + numberValue(deposit.total_amount), 0)
     const marketReports = markets.map((market) => {
       const marketStalls = stalls.filter((stall) => String(stall.market_id) === String(market.id))
       const marketTransactions = paidTransactions.filter((transaction) => String(transaction.market_id) === String(market.id))
@@ -121,7 +140,10 @@ export default async function handler(req: any, res: any) {
         activeStallCount: marketStalls.filter((stall) => String(stall.status).toLowerCase() === 'active').length,
         transactionCount: marketTransactions.length,
         revenue,
+        revenueShare: totalRevenue > 0 ? (revenue / totalRevenue) * 100 : 0,
+        averageTransaction: marketTransactions.length > 0 ? revenue / marketTransactions.length : 0,
         deposited,
+        collectionRate: revenue > 0 ? (deposited / revenue) * 100 : 0,
         pendingDepositCount: marketDeposits.filter((deposit) => String(deposit.status).toLowerCase() !== 'approved').length
       }
     })
@@ -132,12 +154,13 @@ export default async function handler(req: any, res: any) {
         marketCount: marketReports.length,
         stallCount: stalls.length,
         transactionCount: paidTransactions.length,
-        revenue: paidTransactions.reduce((sum, transaction) => sum + numberValue(transaction.amount), 0),
-        deposited: deposits
-          .filter((deposit) => String(deposit.status).toLowerCase() === 'approved')
-          .reduce((sum, deposit) => sum + numberValue(deposit.total_amount), 0),
+        revenue: totalRevenue,
+        averageTransaction: paidTransactions.length > 0 ? totalRevenue / paidTransactions.length : 0,
+        deposited: approvedDeposits,
+        collectionRate: totalRevenue > 0 ? (approvedDeposits / totalRevenue) * 100 : 0,
         pendingDepositCount: deposits.filter((deposit) => String(deposit.status).toLowerCase() !== 'approved').length
       },
+      dailyTrend: Array.from(dailyTrendMap.values()).sort((a, b) => a.date.localeCompare(b.date)),
       markets: marketReports.sort((a, b) => b.revenue - a.revenue)
     })
   } catch (error: any) {
