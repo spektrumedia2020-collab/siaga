@@ -237,7 +237,7 @@ export function SectorsPage({ marketId }: SectorsPageProps) {
             {saving ? 'Menyimpan...' : editingId ? 'Simpan Perubahan' : 'Tambah Sektor'}
           </button>
           {editingId ? (
-            <button type="button" className="btn-secondary" onClick={resetForm}>
+            <button type="button" className="btn-secondary" style={{ background: '#e2e8f0', color: '#1e293b', border: '1px solid #cbd5e1' }} onClick={resetForm}>
               Batal
             </button>
           ) : null}
@@ -265,13 +265,13 @@ export function SectorsPage({ marketId }: SectorsPageProps) {
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button type="button" className="btn-secondary" onClick={() => setViewTarget(sector)}>
+                  <button type="button" className="btn-secondary" style={{ background: '#2563eb', color: '#fff', border: '1px solid #1d4ed8' }} onClick={() => setViewTarget(sector)}>
                     Lihat
                   </button>
-                  <button type="button" className="btn-secondary" onClick={() => handleEdit(sector)}>
+                  <button type="button" className="btn-secondary" style={{ background: '#166534', color: '#fff', border: '1px solid #14532d' }} onClick={() => handleEdit(sector)}>
                     Edit
                   </button>
-                  <button type="button" className="btn-delete-user" onClick={() => setDeleteTarget({ id: sector.id, name: sector.name })}>
+                  <button type="button" className="btn-delete-user" style={{ background: '#dc2626', color: '#fff', border: '1px solid #b91c1c' }} onClick={() => setDeleteTarget({ id: sector.id, name: sector.name })}>
                     Hapus
                   </button>
                 </div>
@@ -310,7 +310,7 @@ export function SectorsPage({ marketId }: SectorsPageProps) {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
               <h3 id="sector-view-title" style={{ margin: 0 }}>Detail Sektor</h3>
-              <button type="button" className="btn-secondary" onClick={() => setViewTarget(null)}>Tutup</button>
+              <button type="button" className="btn-secondary" style={{ background: '#e2e8f0', color: '#1e293b', border: '1px solid #cbd5e1' }} onClick={() => setViewTarget(null)}>Tutup</button>
             </div>
             <div style={{ display: 'grid', gap: 10, marginTop: 18 }}>
               <div><small>Nama sektor</small><strong style={{ display: 'block' }}>{viewTarget.name}</strong></div>
