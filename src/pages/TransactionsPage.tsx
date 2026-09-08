@@ -41,7 +41,7 @@ export function TransactionsPage({ marketId }: TransactionsPageProps) {
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
-  const pageSize = 10
+  const [pageSize, setPageSize] = useState(30)
 
   const marketIdNum = Number(marketId) || 0
 
@@ -118,7 +118,7 @@ export function TransactionsPage({ marketId }: TransactionsPageProps) {
 
   useEffect(() => {
     setCurrentPage(1)
-  }, [stallFilter, statusFilter, dateFrom, dateTo, marketIdNum])
+  }, [stallFilter, statusFilter, dateFrom, dateTo, marketIdNum, pageSize])
 
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('id-ID', {
@@ -254,12 +254,25 @@ export function TransactionsPage({ marketId }: TransactionsPageProps) {
         )}
       </div>
 
-      {transactions.length > pageSize && (
-        <div style={{ marginTop: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+      {transactions.length > 0 && (
+        <div className="tx-pagination">
           <div style={{ fontSize: 14, color: '#475569' }}>
             Menampilkan {Math.min((safeCurrentPage - 1) * pageSize + 1, transactions.length)}-{Math.min(safeCurrentPage * pageSize, transactions.length)} dari {transactions.length} data
           </div>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <div className="tx-pagination-controls">
+            <label className="tx-page-size">
+              Per halaman
+              <select
+                value={pageSize}
+                onChange={(e) => setPageSize(Number(e.target.value))}
+                className="tx-filter-select"
+              >
+                <option value={30}>30</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+                <option value={250}>250</option>
+              </select>
+            </label>
             <button type="button" disabled={safeCurrentPage === 1} onClick={() => setCurrentPage((page) => Math.max(1, page - 1))} style={{
               padding: '8px 16px',
               background: '#2563eb',
