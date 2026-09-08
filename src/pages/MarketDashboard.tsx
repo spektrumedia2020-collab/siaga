@@ -45,6 +45,12 @@ interface MarketStats {
   totalRevenue: number
 }
 
+interface MarketAnalytics {
+  sectors: Array<{ name: string; revenue: number; transactions: number }>
+  stalls: Array<{ name: string; revenue: number; transactions: number }>
+  officers: Array<{ name: string; revenue: number; transactions: number }>
+}
+
 interface Props {
   userId: string
   impersonating?: boolean
@@ -77,6 +83,7 @@ function formatMarketAddress(market: any) {
 
 export function MarketDashboard({ userId, impersonating = false, impersonatedRole, onStopImpersonation, onLogout }: Props) {
   const [stats, setStats] = useState<MarketStats | null>(null)
+  const [analytics, setAnalytics] = useState<MarketAnalytics>({ sectors: [], stalls: [], officers: [] })
   const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState<PageType>('overview')
   const [chartData, setChartData] = useState<any[]>([])
@@ -141,6 +148,7 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
         .eq('status', 'AKTIF')
 
       const stallIds = stallsData?.map(s => s.id) || []
+      const stallById = new Map((stallsData || []).map((stall) => [stall.id, stall]))
       const today = new Date()
       const weekAgo = new Date(today)
       weekAgo.setDate(today.getDate() - 6)
@@ -499,7 +507,7 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
 
       const { data: stallsData } = await supabaseClient
         .from('stalls')
-        .select('id')
+        .select('id, code, number, sector_id')
         .eq('market_id', market.id)
         .eq('status', 'AKTIF')
 
@@ -507,19 +515,76 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
 
       let transactionCount = 0
       let totalRevenue = 0
+      const sectorRevenue = new Map<number, { revenue: number; transactions: number }>()
+      const stallRevenue = new Map<number, { revenue: number; transactions: number }>()
+      const officerRevenue = new Map<number, { revenue: number; transactions: number }>()
 
       if (stallIds.length > 0) {
-        const { count, data: transactionData } = await supabaseClient
-          .from('transactions')
-          .select('amount, created_at', { count: 'exact' })
-          .in('stall_id', stallIds)
+        const transactionBatchSize = 1000
+        let offset = 0
+        let totalCount: number | null = null
 
-        transactionCount = count || 0
-        totalRevenue = (transactionData || []).reduce(
-          (sum, t: any) => sum + (parseFloat(t.amount) || 0),
-          0
-        )
+        while (totalCount === null || offset < totalCount) {
+          const { count, data: transactionData, error: transactionError } = await supabaseClient
+            .from('transactions')
+            .select('amount, stall_id, officer_id', { count: 'exact' })
+            .in('stall_id', stallIds)
+            .range(offset, offset + transactionBatchSize - 1)
+
+          if (transactionError) throw transactionError
+          totalCount = count || 0
+          if (!transactionData?.length) break
+
+          transactionData.forEach((transaction: any) => {
+            const amount = parseFloat(transaction.amount) || 0
+            totalRevenue += amount
+
+            const stall = stallById.get(transaction.stall_id)
+            if (stall?.sector_id) {
+              const current = sectorRevenue.get(stall.sector_id) || { revenue: 0, transactions: 0 }
+              current.revenue += amount
+              current.transactions += 1
+              sectorRevenue.set(stall.sector_id, current)
+            }
+
+            const stallCurrent = stallRevenue.get(transaction.stall_id) || { revenue: 0, transactions: 0 }
+            stallCurrent.revenue += amount
+            stallCurrent.transactions += 1
+            stallRevenue.set(transaction.stall_id, stallCurrent)
+
+            if (transaction.officer_id) {
+              const current = officerRevenue.get(transaction.officer_id) || { revenue: 0, transactions: 0 }
+              current.revenue += amount
+              current.transactions += 1
+              officerRevenue.set(transaction.officer_id, current)
+            }
+          })
+
+          offset += transactionData.length
+        }
+
+        transactionCount = totalCount || 0
       }
+
+      const [{ data: sectorsData }, { data: officersData }] = await Promise.all([
+        supabaseClient.from('market_sectors').select('id, name').eq('market_id', market.id),
+        supabaseClient.from('users').select('id_user, nama').eq('market_id', market.id)
+      ])
+
+      setAnalytics({
+        sectors: (sectorsData || []).map((sector: any) => ({
+          name: sector.name,
+          ...(sectorRevenue.get(sector.id) || { revenue: 0, transactions: 0 })
+        })).sort((a, b) => b.revenue - a.revenue).slice(0, 5),
+        stalls: (stallsData || []).map((stall: any) => ({
+          name: stall.code || stall.number || `Lapak #${stall.id}`,
+          ...(stallRevenue.get(stall.id) || { revenue: 0, transactions: 0 })
+        })).sort((a, b) => b.revenue - a.revenue).slice(0, 5),
+        officers: (officersData || []).map((officer: any) => ({
+          name: officer.nama || `Petugas #${officer.id_user}`,
+          ...(officerRevenue.get(officer.id_user) || { revenue: 0, transactions: 0 })
+        })).sort((a, b) => b.revenue - a.revenue).slice(0, 5)
+      })
 
       setStats({
         market,
@@ -997,6 +1062,43 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
                 </div>
               </div>
             </div>
+
+            <section className="analytics-section" aria-labelledby="market-analytics-title">
+              <div className="analytics-section-header">
+                <div>
+                  <span className="analytics-kicker">Analitik operasional</span>
+                  <h3 id="market-analytics-title">Kontributor terbesar</h3>
+                </div>
+                <span className="analytics-period">Berdasarkan seluruh transaksi tercatat</span>
+              </div>
+              <div className="analytics-grid">
+                {[
+                  { title: 'Pendapatan per sektor', items: analytics.sectors, empty: 'Belum ada transaksi per sektor.' },
+                  { title: 'Lapak dengan pendapatan terbesar', items: analytics.stalls, empty: 'Belum ada transaksi per lapak.' },
+                  { title: 'Petugas dengan penarikan terbesar', items: analytics.officers, empty: 'Belum ada transaksi per petugas.' }
+                ].map((group) => (
+                  <div className="analytics-card" key={group.title}>
+                    <h4>{group.title}</h4>
+                    {group.items.length === 0 ? (
+                      <p className="analytics-empty">{group.empty}</p>
+                    ) : (
+                      <div className="analytics-list">
+                        {group.items.map((item, index) => (
+                          <div className="analytics-row" key={`${group.title}-${item.name}`}>
+                            <span className="analytics-rank">{index + 1}</span>
+                            <div className="analytics-name-wrap">
+                              <strong>{item.name}</strong>
+                              <span>{item.transactions.toLocaleString('id-ID')} transaksi</span>
+                            </div>
+                            <strong className="analytics-revenue">Rp {item.revenue.toLocaleString('id-ID')}</strong>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
           </>
         )
     }

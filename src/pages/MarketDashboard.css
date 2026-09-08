@@ -29,6 +29,138 @@
   letter-spacing: 0.01em;
 }
 
+.analytics-section {
+  margin-top: 1.25rem;
+  padding: 1.25rem;
+  border: 1px solid rgba(29, 61, 7, 0.08);
+  border-radius: 16px;
+  background: #fff;
+}
+
+.analytics-section-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.analytics-kicker {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: #5f6f2c;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.analytics-section-header h3 {
+  margin: 0;
+  color: #17380d;
+  font-size: 1.25rem;
+}
+
+.analytics-period {
+  color: #64748b;
+  font-size: 0.82rem;
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.analytics-card {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid rgba(29, 61, 7, 0.08);
+  border-radius: 12px;
+  background: #fbfdf8;
+}
+
+.analytics-card h4 {
+  margin: 0 0 0.8rem;
+  color: #254a18;
+  font-size: 0.95rem;
+}
+
+.analytics-list {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.analytics-row {
+  display: grid;
+  grid-template-columns: 1.6rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.55rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid rgba(29, 61, 7, 0.08);
+}
+
+.analytics-row:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.analytics-rank {
+  display: inline-flex;
+  width: 1.55rem;
+  height: 1.55rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #e5f0d9;
+  color: #254a18;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.analytics-name-wrap {
+  min-width: 0;
+}
+
+.analytics-name-wrap strong,
+.analytics-name-wrap span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.analytics-name-wrap strong {
+  color: #1f2937;
+  font-size: 0.86rem;
+}
+
+.analytics-name-wrap span {
+  margin-top: 0.15rem;
+  color: #64748b;
+  font-size: 0.74rem;
+}
+
+.analytics-revenue {
+  color: #1f4e12;
+  font-size: 0.82rem;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.analytics-empty {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.84rem;
+}
+
+@media (max-width: 1100px) {
+  .analytics-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .market-dashboard {
   padding: 1.5rem 1.5rem 2rem;
   min-height: 100vh;
