@@ -127,13 +127,13 @@ Name:                 Siaga Web App
 #### Authorized JavaScript Origins (tambahkan):
 ```
 http://localhost:5173
-https://siaga-pi.vercel.app
+https://siaga.app
 ```
 
 #### Authorized Redirect URIs (tambahkan):
 ```
 http://localhost:5173/
-https://siaga-pi.vercel.app/
+https://siaga.app/
 ```
 
 5. Klik **"CREATE"**
@@ -163,7 +163,7 @@ https://siaga-pi.vercel.app/
    - Tambahkan domain:
      ```
      localhost
-     siaga-pi.vercel.app
+   siaga.app
      ```
    - Di "API restrictions", pilih "Google Sheets API" dan "Google Drive API"
    - Klik **"SAVE"**
@@ -315,12 +315,12 @@ Pastikan URLs production sudah ditambahkan ke Google Cloud Console:
 
 **JavaScript Origins:**
 ```
-https://siaga-pi.vercel.app
+https://siaga.app
 ```
 
 **Redirect URIs:**
 ```
-https://siaga-pi.vercel.app/
+https://siaga.app/
 ```
 
 ### Monitoring

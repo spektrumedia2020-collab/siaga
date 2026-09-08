@@ -5,7 +5,7 @@
 The Pasar Niaga Daya landing page has been completely redesigned from a basic dashboard-style page to a modern, professional public-facing marketing website.
 
 **Commit:** `618e131` - Pushed to `origin/main`  
-**Status:** Live at https://siaga-pi.vercel.app/@niaga  
+**Status:** Live at https://siaga.app/@niaga
 **Build:** ✓ 677 modules transformed, compiled in 1.59s
 
 ---
@@ -280,7 +280,7 @@ d557b93 - add landing page redesign specification and guidelines
 ## 🚀 Deployment Status
 
 - **Status:** ✅ Live in Production
-- **URL:** https://siaga-pi.vercel.app/@niaga
+- **URL:** https://siaga.app/@niaga
 - **Vercel:** Auto-deployed on push to main
 - **Repository:** github.com/spektrumedia2020-collab/siaga
 - **Branch:** main (updated with commit 618e131)
@@ -371,4 +371,4 @@ The SIAGA market landing page has been successfully redesigned and deployed. The
 
 **Last Updated:** 2026-08-29  
 **Repository:** https://github.com/spektrumedia2020-collab/siaga  
-**Production URL:** https://siaga-pi.vercel.app/@niaga
+**Production URL:** https://siaga.app/@niaga
