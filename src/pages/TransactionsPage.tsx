@@ -100,7 +100,6 @@ export function TransactionsPage({ marketId }: TransactionsPageProps) {
 
       const { data, error: err } = await query
         .order('created_at', { ascending: false })
-        .limit(100)
 
       if (err) throw err
       setTransactions(data || [])
