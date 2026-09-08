@@ -106,29 +106,40 @@ export function PerumdaPage() {
   if (!token) {
     return (
       <main className="perumda-page perumda-login-page">
-        <section className="perumda-login-panel">
-          <div className="perumda-mark">S</div>
-          <p className="perumda-eyebrow">SIAGA • PERUMDA</p>
-          <h1>Laporan Global</h1>
-          <p className="perumda-muted">Pantau ringkasan operasional seluruh pasar dalam satu tampilan.</p>
-          <form onSubmit={handleLogin} className="perumda-pin-form">
-            <label htmlFor="perumda-pin">PIN akses</label>
-            <input
-              id="perumda-pin"
-              type="password"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              maxLength={6}
-              value={pin}
-              onChange={(event) => setPin(event.target.value.replace(/\D/g, ''))}
-              placeholder="••••••"
-              autoFocus
-            />
-            <button type="submit" disabled={loading || pin.length !== 6}>{loading ? 'Memverifikasi...' : 'Buka laporan'}</button>
-          </form>
-          {error && <p className="perumda-error">{error}</p>}
-          <p className="perumda-login-footnote">Akses ini hanya menampilkan data agregat.</p>
-        </section>
+        <div className="perumda-login-shell">
+          <aside className="perumda-login-visual">
+            <img src="/pasar.jpeg" alt="Aktivitas pasar" />
+            <div className="perumda-login-visual-overlay" />
+            <div className="perumda-login-visual-copy">
+              <div className="perumda-mark">S</div>
+              <p className="perumda-eyebrow">SIAGA • PERUMDA</p>
+              <h1>Melihat seluruh pasar dengan lebih jernih.</h1>
+              <p>Ringkasan operasional untuk memantau denyut pasar dari satu tempat.</p>
+            </div>
+          </aside>
+          <section className="perumda-login-panel">
+            <p className="perumda-eyebrow">Akses laporan global</p>
+            <h2>Laporan Perumda</h2>
+            <p className="perumda-muted">Masukkan PIN untuk membuka ringkasan seluruh pasar.</p>
+            <form onSubmit={handleLogin} className="perumda-pin-form">
+              <label htmlFor="perumda-pin">PIN akses</label>
+              <input
+                id="perumda-pin"
+                type="password"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={6}
+                value={pin}
+                onChange={(event) => setPin(event.target.value.replace(/\D/g, ''))}
+                placeholder="••••••"
+                autoFocus
+              />
+              <button type="submit" disabled={loading || pin.length !== 6}>{loading ? 'Memverifikasi...' : 'Buka laporan'}</button>
+            </form>
+            {error && <p className="perumda-error">{error}</p>}
+            <p className="perumda-login-footnote">Akses ini hanya menampilkan data agregat.</p>
+          </section>
+        </div>
       </main>
     )
   }

@@ -50,14 +50,28 @@ export function Auth({ onLoginSuccess }: AuthProps) {
 
   return (
     <div className="auth-container">
-      <div className="auth-card">
-        <div className="auth-header">
-          <img src="/logo.jpeg" alt="SiAga Logo" className="auth-logo" />
-          <h1 className="auth-title">SiAga</h1>
-          <p className="auth-subtitle">Sistem Informasi Manajemen Pasar</p>
-        </div>
-        
-        <h2 className="auth-form-title">{isLogin ? 'Login' : 'Daftar'}</h2>
+      <div className="auth-shell">
+        <aside className="auth-visual">
+          <img src="/pasar.jpeg" alt="Aktivitas pasar" className="auth-visual-image" />
+          <div className="auth-visual-overlay" />
+          <div className="auth-visual-copy">
+            <div className="auth-visual-brand"><img src="/logo.jpeg" alt="" /> <span>SiAga</span></div>
+            <p className="auth-visual-kicker">Sistem Informasi Manajemen Pasar</p>
+            <h1>Pasar yang tertata, keputusan yang lebih tajam.</h1>
+            <p>Kelola operasional, retribusi, dan laporan pasar dari satu ruang kerja.</p>
+          </div>
+        </aside>
+
+        <section className="auth-card">
+          <div className="auth-header">
+            <img src="/logo.jpeg" alt="SiAga Logo" className="auth-logo" />
+            <div><h1 className="auth-title">SiAga</h1><p className="auth-subtitle">Ruang kerja pengelola pasar</p></div>
+          </div>
+
+          <div className="auth-form-intro">
+            <p className="auth-eyebrow">Selamat datang kembali</p>
+            <h2 className="auth-form-title">{isLogin ? 'Masuk ke akun Anda' : 'Buat akun baru'}</h2>
+          </div>
         
         {error && <div className="error-message">{error}</div>}
 
@@ -147,6 +161,7 @@ export function Auth({ onLoginSuccess }: AuthProps) {
             {isLogin ? 'Daftar' : 'Login'}
           </button>
         </p>
+        </section>
       </div>
     </div>
   )
