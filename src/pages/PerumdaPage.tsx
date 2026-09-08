@@ -65,6 +65,19 @@ const monthOptions = Array.from({ length: 12 }, (_, index) => {
   }
 })
 
+const getShortcutMonths = () => {
+  const now = new Date()
+
+  return Array.from({ length: 3 }, (_, index) => {
+    const date = new Date(now.getFullYear(), now.getMonth() - index, 1)
+
+    return {
+      value: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`,
+      label: date.toLocaleDateString('id-ID', { month: 'long' })
+    }
+  })
+}
+
 type PeriodPreset = 'day' | 'week' | 'month' | 'custom'
 
 const formatDateInput = (date: Date) => {
@@ -214,6 +227,15 @@ export function PerumdaPage() {
     setTo(nextRange.to)
   }
 
+  const handleMonthShortcut = (nextMonth: string) => {
+    setMonth(nextMonth)
+    setPeriodPreset('month')
+
+    const nextRange = getMonthRange(nextMonth)
+    setFrom(nextRange.from)
+    setTo(nextRange.to)
+  }
+
   const handleFilter = (event: FormEvent) => {
     event.preventDefault()
     if (token) loadReport(token, from, to)
@@ -291,6 +313,21 @@ export function PerumdaPage() {
                 ))}
               </select>
             </label>
+            <div className="perumda-month-shortcuts-wrap">
+              <span className="perumda-month-shortcuts-label">Shortcut</span>
+              <div className="perumda-month-shortcuts">
+                {getShortcutMonths().map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    className={`perumda-month-shortcut${month === option.value ? ' active' : ''}`}
+                    onClick={() => handleMonthShortcut(option.value)}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
             <label>Mulai<input type="date" value={from} onChange={(event) => { setFrom(event.target.value); setPeriodPreset('custom') }} /></label>
             <label>Sampai<input type="date" value={to} onChange={(event) => { setTo(event.target.value); setPeriodPreset('custom') }} /></label>
             <button type="submit" disabled={loading}>{loading ? 'Memuat...' : 'Terapkan'}</button>
