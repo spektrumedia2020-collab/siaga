@@ -174,8 +174,7 @@ export function UserManagement() {
 
   return (
     <div className="siage-card">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <h3 style={{ margin: 0 }}>👥 Manajemen User</h3>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.5rem' }}>
         <button className="siage-btn siage-btn-primary" onClick={() => { setEditingUser(null); setFormData({ email: '', password: '', fullName: '', phone: '', roleId: '', marketId: '' }); setShowForm(!showForm) }}>
           {showForm ? 'Tutup' : '+ Tambah User'}
         </button>
@@ -195,8 +194,8 @@ export function UserManagement() {
         </form>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '1rem', alignItems: 'end' }}>
-        <div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem', alignItems: 'flex-end' }}>
+        <div style={{ flex: '1 1 220px', minWidth: '220px' }}>
           <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Cari Nama / Email</label>
           <input
             type="text"
@@ -206,7 +205,7 @@ export function UserManagement() {
             placeholder="Cari user..."
           />
         </div>
-        <div>
+        <div style={{ flex: '1 1 220px', minWidth: '220px' }}>
           <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Filter Role</label>
           <select
             className="siage-input"
@@ -221,7 +220,7 @@ export function UserManagement() {
             ))}
           </select>
         </div>
-        <div>
+        <div style={{ flex: '1 1 220px', minWidth: '220px' }}>
           <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Filter Pasar</label>
           <select
             className="siage-input"
@@ -234,10 +233,11 @@ export function UserManagement() {
             ))}
           </select>
         </div>
-        <div>
+        <div style={{ flex: '0 0 auto' }}>
           <button
             type="button"
             className="siage-btn siage-btn-outline"
+            style={{ whiteSpace: 'nowrap' }}
             onClick={() => {
               setSearchTerm('')
               setFilterRole('')
