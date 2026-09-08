@@ -10,6 +10,7 @@ Wajib tersedia di deployment:
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `PERUMDA_JWT_SECRET`
 - `PERUMDA_PIN_HASH` (disarankan untuk produksi)
+- `PERUMDA_PIN` (opsi sederhana untuk development atau pemulihan akses)
 
 PIN yang diketik pada halaman `/perumda` adalah PIN asli 6 digit, bukan hash.
 Contoh: jika PIN yang dipilih adalah `123456`, masukkan `123456` pada halaman login.
@@ -29,7 +30,9 @@ Untuk development lokal, konfigurasi paling sederhana adalah:
 PERUMDA_PIN=123456
 ```
 
-Jika `PERUMDA_PIN_HASH` dan `PERUMDA_PIN` sama-sama diisi, aplikasi memakai `PERUMDA_PIN_HASH`.
+Jika `PERUMDA_PIN_HASH` dan `PERUMDA_PIN` sama-sama diisi, aplikasi memakai `PERUMDA_PIN`.
+Ini memudahkan pemulihan ketika hash lama masih tersimpan di Vercel. Setelah berhasil login,
+hapus `PERUMDA_PIN` dan gunakan hanya `PERUMDA_PIN_HASH` untuk produksi.
 
 ## Isi Laporan
 

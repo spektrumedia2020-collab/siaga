@@ -68,9 +68,11 @@ export default async function handler(req: any, res: any) {
     const submittedPin = String(req.body?.pin || '')
     const configuredPin = cleanEnvironmentValue(process.env.PERUMDA_PIN)
     const configuredPinHash = cleanEnvironmentValue(process.env.PERUMDA_PIN_HASH)
-    const validPin = configuredPinHash
-      ? await bcrypt.compare(submittedPin, configuredPinHash)
-      : Boolean(configuredPin && submittedPin === configuredPin)
+    const validPin = configuredPin
+      ? submittedPin === configuredPin
+      : configuredPinHash
+        ? await bcrypt.compare(submittedPin, configuredPinHash)
+        : false
     if ((!configuredPin && !configuredPinHash) || !/^\d{6}$/.test(submittedPin) || !validPin) {
       return res.status(401).json({ error: 'PIN tidak valid' })
     }
