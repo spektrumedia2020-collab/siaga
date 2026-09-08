@@ -87,6 +87,11 @@
   font-size: 0.95rem;
 }
 
+.analytics-chart {
+  height: 220px;
+  margin: 0 -0.35rem 0.8rem;
+}
+
 .analytics-list {
   display: grid;
   gap: 0.65rem;

@@ -15,6 +15,8 @@ import { MarketDetailPage } from './MarketDetailPage'
 import {
   LineChart,
   Line,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -1128,18 +1130,42 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
                     {group.items.length === 0 ? (
                       <p className="analytics-empty">{group.empty}</p>
                     ) : (
-                      <div className="analytics-list">
-                        {group.items.map((item, index) => (
-                          <div className="analytics-row" key={`${group.title}-${item.name}`}>
-                            <span className="analytics-rank">{index + 1}</span>
-                            <div className="analytics-name-wrap">
-                              <strong>{item.name}</strong>
-                              <span>{item.transactions.toLocaleString('id-ID')} transaksi</span>
+                      <>
+                        <div className="analytics-chart">
+                          <ResponsiveContainer width="100%" height={220}>
+                            <BarChart
+                              data={group.items}
+                              layout="vertical"
+                              margin={{ top: 0, right: 12, left: 4, bottom: 0 }}
+                            >
+                              <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="rgba(29, 61, 7, 0.1)" />
+                              <XAxis type="number" hide />
+                              <YAxis
+                                type="category"
+                                dataKey="name"
+                                width={72}
+                                tickLine={false}
+                                axisLine={false}
+                                tick={{ fill: '#475569', fontSize: 11 }}
+                              />
+                              <Tooltip formatter={(value: number | string | readonly (number | string)[] | undefined) => `Rp ${Number(value || 0).toLocaleString('id-ID')}`} />
+                              <Bar dataKey="revenue" fill="#2f6b1f" radius={[0, 5, 5, 0]} />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+                        <div className="analytics-list">
+                          {group.items.map((item, index) => (
+                            <div className="analytics-row" key={`${group.title}-${item.name}`}>
+                              <span className="analytics-rank">{index + 1}</span>
+                              <div className="analytics-name-wrap">
+                                <strong>{item.name}</strong>
+                                <span>{item.transactions.toLocaleString('id-ID')} transaksi</span>
+                              </div>
+                              <strong className="analytics-revenue">Rp {item.revenue.toLocaleString('id-ID')}</strong>
                             </div>
-                            <strong className="analytics-revenue">Rp {item.revenue.toLocaleString('id-ID')}</strong>
-                          </div>
-                        ))}
-                      </div>
+                          ))}
+                        </div>
+                      </>
                     )}
                   </div>
                 ))}
