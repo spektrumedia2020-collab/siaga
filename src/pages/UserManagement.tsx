@@ -38,6 +38,9 @@ export function UserManagement() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filterRole, setFilterRole] = useState('')
+  const [filterMarket, setFilterMarket] = useState('')
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -58,7 +61,6 @@ export function UserManagement() {
       const { data: rolesData } = await api.supabase.from('roles').select('id, name')
       const roleMap = new Map((rolesData || []).map((r: any) => [r.id, r.name]))
 
-      const marketIds = [...new Set((usersData || []).map((u: any) => u.market_id).filter(Boolean))]
       const { data: marketData } = await api.supabase.from('markets').select('id, name')
       const marketMap = new Map((marketData || []).map((m: any) => [m.id, m.name]))
 
@@ -154,6 +156,18 @@ export function UserManagement() {
 
   const getUserDisplayName = (user: User) => user.full_name || user.email || 'Tanpa Nama'
 
+  const filteredUsers = users.filter((user) => {
+    const term = searchTerm.trim().toLowerCase()
+    const matchesSearch = !term ||
+      (user.full_name || '').toLowerCase().includes(term) ||
+      user.email.toLowerCase().includes(term)
+
+    const matchesRole = filterRole ? user.role_name === filterRole : true
+    const matchesMarket = filterMarket ? user.market_name === filterMarket : true
+
+    return matchesSearch && matchesRole && matchesMarket
+  })
+
   if (loading) {
     return <div className="siage-loading">Memuat data users...</div>
   }
@@ -181,6 +195,60 @@ export function UserManagement() {
         </form>
       )}
 
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '1rem', alignItems: 'end' }}>
+        <div>
+          <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Cari Nama / Email</label>
+          <input
+            type="text"
+            className="siage-input"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Cari user..."
+          />
+        </div>
+        <div>
+          <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Filter Role</label>
+          <select
+            className="siage-input"
+            value={filterRole}
+            onChange={(e) => setFilterRole(e.target.value)}
+          >
+            <option value="">Semua Role</option>
+            {roles.map((r) => (
+              <option key={r.id} value={roleNames[r.name] || r.name}>
+                {roleNames[r.name] || r.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Filter Pasar</label>
+          <select
+            className="siage-input"
+            value={filterMarket}
+            onChange={(e) => setFilterMarket(e.target.value)}
+          >
+            <option value="">Semua Pasar</option>
+            {markets.map((m) => (
+              <option key={m.id} value={m.name}>{m.name}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <button
+            type="button"
+            className="siage-btn siage-btn-outline"
+            onClick={() => {
+              setSearchTerm('')
+              setFilterRole('')
+              setFilterMarket('')
+            }}
+          >
+            Reset Filter
+          </button>
+        </div>
+      </div>
+
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr style={{ background: '#f9fafb' }}>
@@ -193,10 +261,10 @@ export function UserManagement() {
           </tr>
         </thead>
         <tbody>
-          {users.length === 0 ? (
-            <tr><td colSpan={6} style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>Belum ada user.</td></tr>
+          {filteredUsers.length === 0 ? (
+            <tr><td colSpan={6} style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>Tidak ada user yang sesuai filter.</td></tr>
           ) : (
-            users.map((user) => (
+            filteredUsers.map((user) => (
               <tr key={user.id}>
                 <td style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb' }}>{getUserDisplayName(user)}</td>
                 <td style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb' }}>{user.email}</td>
