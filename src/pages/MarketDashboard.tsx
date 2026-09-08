@@ -85,12 +85,21 @@ function formatMarketAddress(market: any) {
   return structured || clean(market.address) || '-'
 }
 
+function toLocalDateKey(date: Date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 export function MarketDashboard({ userId, impersonating = false, impersonatedRole, onStopImpersonation, onLogout }: Props) {
   const [stats, setStats] = useState<MarketStats | null>(null)
   const [analytics, setAnalytics] = useState<MarketAnalytics>({ sectors: [], stalls: [], officers: [] })
   const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState<PageType>('overview')
   const [chartData, setChartData] = useState<any[]>([])
+  const [chartMode, setChartMode] = useState<'daily' | 'weekly' | 'monthly'>('weekly')
+  const [chartDate, setChartDate] = useState(() => toLocalDateKey(new Date()))
   const [analyticsPeriod, setAnalyticsPeriod] = useState<AnalyticsPeriod>('all')
   const [editingMarket, setEditingMarket] = useState(false)
   const [marketForm, setMarketForm] = useState<any>({ name: '', code: '', address: '', street: '', street_number: '', kecamatan: '', city: '', province: '', postal_code: '', description: '', status: '' })
@@ -143,7 +152,7 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
         status: stats.market.status || ''
       })
     }
-  }, [stats])
+  }, [stats, chartMode, chartDate])
 
   useEffect(() => {
     const computeChartData = async () => {
@@ -156,41 +165,43 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
         .eq('status', 'AKTIF')
 
       const stallIds = stallsData?.map(s => s.id) || []
-      const today = new Date()
-      const weekAgo = new Date(today)
-      weekAgo.setDate(today.getDate() - 6)
-      const weekStart = new Date(weekAgo.getFullYear(), weekAgo.getMonth(), weekAgo.getDate()).toISOString()
-      const weekEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).toISOString()
-      const toDateKey = (date: Date) => {
-        const year = date.getFullYear()
-        const month = String(date.getMonth() + 1).padStart(2, '0')
-        const day = String(date.getDate()).padStart(2, '0')
-        return `${year}-${month}-${day}`
-      }
+      const selectedDate = new Date(`${chartDate}T00:00:00`)
+      const rangeStart = new Date(selectedDate)
+      const rangeEnd = new Date(selectedDate)
+      let pointCount = 1
 
-      let weeklyTransactions: any[] = []
+      if (chartMode === 'weekly') {
+        rangeStart.setDate(selectedDate.getDate() - 6)
+        pointCount = 7
+      } else if (chartMode === 'monthly') {
+        rangeStart.setDate(1)
+        rangeEnd.setMonth(selectedDate.getMonth() + 1, 1)
+        pointCount = rangeEnd.getDate() === 1 ? new Date(rangeEnd.getFullYear(), rangeEnd.getMonth(), 0).getDate() : 31
+      }
+      if (chartMode !== 'monthly') rangeEnd.setDate(selectedDate.getDate() + 1)
+
+      let periodTransactions: any[] = []
       if (stallIds.length > 0) {
         const { data } = await supabaseClient
           .from('transactions')
-          .select('amount, created_at')
+          .select('amount, transaction_date')
           .in('stall_id', stallIds)
-          .gte('created_at', weekStart)
-          .lt('created_at', weekEnd)
-        weeklyTransactions = data || []
+          .gte('transaction_date', toLocalDateKey(rangeStart))
+          .lt('transaction_date', toLocalDateKey(rangeEnd))
+        periodTransactions = data || []
       }
 
-      const dailyMap = new Map<string, { revenue: number; transactions: number }>()
-      for (let i = 0; i < 7; i++) {
-        const d = new Date(today)
-        d.setDate(today.getDate() - (6 - i))
-        const key = toDateKey(d)
-        dailyMap.set(key, { revenue: 0, transactions: 0 })
+      const periodMap = new Map<string, { revenue: number; transactions: number }>()
+      for (let i = 0; i < pointCount; i++) {
+        const date = new Date(rangeStart)
+        date.setDate(rangeStart.getDate() + i)
+        periodMap.set(toLocalDateKey(date), { revenue: 0, transactions: 0 })
       }
 
-      weeklyTransactions.forEach((tx: any) => {
-        const dayKey = toDateKey(new Date(tx.created_at))
-        if (dailyMap.has(dayKey)) {
-          const existing = dailyMap.get(dayKey)!
+      periodTransactions.forEach((tx: any) => {
+        const dayKey = String(tx.transaction_date).slice(0, 10)
+        if (periodMap.has(dayKey)) {
+          const existing = periodMap.get(dayKey)!
           existing.revenue += parseFloat(tx.amount || 0)
           existing.transactions += 1
         }
@@ -198,12 +209,12 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
 
       const dayLabels = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
 
-      const nextChartData = Array.from({ length: 7 }, (_, i) => {
-        const targetDate = new Date(today)
-        targetDate.setDate(today.getDate() - (6 - i))
-        const targetKey = toDateKey(targetDate)
-        const dayName = dayLabels[targetDate.getDay()]
-        const dataPoint = dailyMap.get(targetKey) || { revenue: 0, transactions: 0 }
+      const nextChartData = Array.from({ length: pointCount }, (_, i) => {
+        const targetDate = new Date(rangeStart)
+        targetDate.setDate(rangeStart.getDate() + i)
+        const targetKey = toLocalDateKey(targetDate)
+        const dayName = chartMode === 'monthly' ? String(targetDate.getDate()) : chartMode === 'daily' ? `${dayLabels[targetDate.getDay()]} ${targetDate.getDate()}` : dayLabels[targetDate.getDay()]
+        const dataPoint = periodMap.get(targetKey) || { revenue: 0, transactions: 0 }
         return {
           name: dayName,
           revenue: dataPoint.revenue,
@@ -963,7 +974,29 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
                 <div className="chart-card-header">
                   <div>
                     <h4>Ringkasan Pasar</h4>
-                    <p>Grafik kinerja dan aktivitas pasar hari ini.</p>
+                    <p>Grafik pendapatan dan transaksi berdasarkan periode pilihan.</p>
+                  </div>
+                  <div className="chart-filters" aria-label="Filter grafik">
+                    <div className="chart-mode-group" role="group" aria-label="Mode grafik">
+                      {[
+                        { value: 'daily', label: 'Harian' },
+                        { value: 'weekly', label: 'Mingguan' },
+                        { value: 'monthly', label: 'Bulanan' }
+                      ].map((mode) => (
+                        <button
+                          key={mode.value}
+                          type="button"
+                          className={chartMode === mode.value ? 'chart-mode active' : 'chart-mode'}
+                          onClick={() => setChartMode(mode.value as 'daily' | 'weekly' | 'monthly')}
+                        >
+                          {mode.label}
+                        </button>
+                      ))}
+                    </div>
+                    <label className="chart-date-picker">
+                      <span>Tanggal</span>
+                      <input type="date" value={chartDate} onChange={(event) => setChartDate(event.target.value)} />
+                    </label>
                   </div>
                 </div>
                 <div className="chart-display">
