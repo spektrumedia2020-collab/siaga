@@ -52,8 +52,19 @@ interface ReportResponse {
 }
 
 const TOKEN_KEY = 'siaga-perumda-token'
+const REPORT_KEY = 'siaga-perumda-report'
 const today = new Date().toISOString().slice(0, 10)
 const firstDay = `${today.slice(0, 8)}01`
+
+const getStoredReport = (): ReportResponse | null => {
+  try {
+    const rawReport = sessionStorage.getItem(REPORT_KEY)
+    if (!rawReport) return null
+    return JSON.parse(rawReport) as ReportResponse
+  } catch {
+    return null
+  }
+}
 
 const formatRupiah = (value: number) => `Rp ${value.toLocaleString('id-ID')}`
 const formatDate = (value: string) => new Date(`${value}T00:00:00`).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -64,7 +75,7 @@ export function PerumdaPage() {
   const [token, setToken] = useState(() => sessionStorage.getItem(TOKEN_KEY) || '')
   const [from, setFrom] = useState(firstDay)
   const [to, setTo] = useState(today)
-  const [report, setReport] = useState<ReportResponse | null>(null)
+  const [report, setReport] = useState<ReportResponse | null>(() => getStoredReport())
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -84,6 +95,7 @@ export function PerumdaPage() {
         throw new Error(result.error || 'Gagal memuat laporan')
       }
       setReport(result)
+      sessionStorage.setItem(REPORT_KEY, JSON.stringify(result))
     } catch (err: any) {
       setError(err.message || 'Gagal memuat laporan Perumda')
     } finally {
@@ -119,6 +131,7 @@ export function PerumdaPage() {
 
   const handleLogout = () => {
     sessionStorage.removeItem(TOKEN_KEY)
+    sessionStorage.removeItem(REPORT_KEY)
     setToken('')
     setReport(null)
     setError('')
