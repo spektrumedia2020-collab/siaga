@@ -194,7 +194,7 @@ export function UserManagement() {
         </form>
       )}
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem', alignItems: 'flex-end' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem', alignItems: 'flex-end', padding: '0 0.25rem' }}>
         <div style={{ flex: '1 1 220px', minWidth: '220px' }}>
           <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Cari Nama / Email</label>
           <input
