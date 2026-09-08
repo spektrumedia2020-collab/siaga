@@ -504,11 +504,38 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
         .eq('market_id', market.id)
         .eq('status', 'AKTIF')
 
-      const { data: stallsData } = await supabaseClient
+      const { count: activeStallCount, data: firstStallBatch, error: stallsError } = await supabaseClient
         .from('stalls')
-        .select('id, code, number, sector_id')
+        .select('id, code, number, sector_id', { count: 'exact' })
         .eq('market_id', market.id)
         .eq('status', 'AKTIF')
+        .range(0, 999)
+
+      if (stallsError) throw stallsError
+      const stallBatchSize = 1000
+      const stallBatches: any[][] = [firstStallBatch || []]
+      const remainingStallOffsets = Array.from(
+        { length: Math.max(0, Math.ceil((activeStallCount || 0) / stallBatchSize) - 1) },
+        (_, index) => (index + 1) * stallBatchSize
+      )
+
+      for (let index = 0; index < remainingStallOffsets.length; index += 10) {
+        const offsets = remainingStallOffsets.slice(index, index + 10)
+        const batches = await Promise.all(offsets.map(async (offset) => {
+          const { data, error } = await supabaseClient
+            .from('stalls')
+            .select('id, code, number, sector_id')
+            .eq('market_id', market.id)
+            .eq('status', 'AKTIF')
+            .range(offset, offset + stallBatchSize - 1)
+
+          if (error) throw error
+          return data || []
+        }))
+        stallBatches.push(...batches)
+      }
+
+      const stallsData = stallBatches.flat()
 
       const stallIds = stallsData?.map(s => s.id) || []
       const stallById = new Map((stallsData || []).map((stall) => [stall.id, stall]))
