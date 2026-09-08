@@ -207,7 +207,7 @@ export function PerumdaPage() {
                   <BarChart data={report.markets.slice(0, 8)} layout="vertical" margin={{ top: 10, right: 16, left: 8, bottom: 0 }}>
                     <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="#d9e3d8" />
                     <XAxis type="number" tickFormatter={(value) => `${Math.round(Number(value) / 1000000)}jt`} tickLine={false} axisLine={false} />
-                    <YAxis type="category" dataKey="name" width={110} tickLine={false} axisLine={false} />
+                    <YAxis type="category" dataKey="name" width={140} tickLine={false} axisLine={false} tick={{ fill: '#53645a', fontSize: 12 }} />
                     <Tooltip formatter={(value: number | string | readonly (number | string)[] | undefined) => formatRupiah(Number(value || 0))} />
                     <Bar dataKey="revenue" name="Pendapatan" fill="#a26035" radius={[0, 4, 4, 0]} />
                   </BarChart>
