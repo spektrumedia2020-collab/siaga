@@ -11,11 +11,11 @@ interface AccountRow {
 }
 
 const GITHUB_REPO_URL = 'https://github.com/spektrumedia2020-collab/siaga'
-const WEB_APP_URL = 'https://siaga-pi.vercel.app'
+const WEB_APP_URL = 'https://siaga.app'
 const DRIVE_URL = 'https://drive.google.com/drive/folders/1RMOtTkinfgmxTGujOMI0jNNDwW7Yp6jX'
 const MOBILE_APP_URL = 'https://drive.google.com/drive/folders/1RMOtTkinfgmxTGujOMI0jNNDwW7Yp6jX'
-const PUBLIC_LANDING_PAGE = 'https://siaga-pi.vercel.app/@niaga'
-const PUBLIC_STALL_DEMO = 'https://siaga-pi.vercel.app/lapak/30/NGD-0207'
+const PUBLIC_LANDING_PAGE = 'https://siaga.app/@niaga'
+const PUBLIC_STALL_DEMO = 'https://siaga.app/lapak/30/NGD-0207'
 const DEVELOPMENT_DOCS_URL = `${GITHUB_REPO_URL}/blob/main/DEVELOPMENT.md`
 const ARCHITECTURE_DOC_URL = `${GITHUB_REPO_URL}/blob/main/ARCHITECTURE_REVIEW_COMPLETE.md`
 const AUDIT_REPORT_URL = `${GITHUB_REPO_URL}/blob/main/AUDIT_REPORT.md`
