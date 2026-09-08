@@ -191,7 +191,32 @@ export function PerumdaPage() {
         </div>
 
         {error && <p className="perumda-error">{error}</p>}
-        {report && (
+        {loading && !report ? (
+          <div className="perumda-loading-shell" aria-live="polite">
+            <div className="perumda-loading-grid">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <div key={`metric-skeleton-${index}`} className="perumda-skeleton-card perumda-skeleton-metric">
+                  <div className="perumda-skeleton-line short" />
+                  <div className="perumda-skeleton-line tall" />
+                  <div className="perumda-skeleton-line medium" />
+                </div>
+              ))}
+            </div>
+            <div className="perumda-loading-insight-grid">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={`insight-skeleton-${index}`} className="perumda-skeleton-card perumda-skeleton-insight">
+                  <div className="perumda-skeleton-line short" />
+                  <div className="perumda-skeleton-line medium" />
+                  <div className="perumda-skeleton-line small" />
+                </div>
+              ))}
+            </div>
+            <div className="perumda-loading-charts">
+              <div className="perumda-skeleton-card perumda-skeleton-chart large" />
+              <div className="perumda-skeleton-card perumda-skeleton-chart" />
+            </div>
+          </div>
+        ) : report && (
           <>
             <p className="perumda-period">Periode {formatDate(report.period.from)} sampai {formatDate(report.period.to)}</p>
             <section className="perumda-metrics">
