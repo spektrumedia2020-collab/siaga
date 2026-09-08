@@ -158,13 +158,33 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
     const computeChartData = async () => {
       if (!stats?.market) return
       const supabaseClient = getSupabaseClient()
-      const { data: stallsData } = await supabaseClient
+      const { count: stallCount, data: firstStallBatch, error: stallError } = await supabaseClient
         .from('stalls')
-        .select('id')
+        .select('id', { count: 'exact' })
         .eq('market_id', stats.market.id)
         .eq('status', 'AKTIF')
+        .range(0, 999)
+      if (stallError) throw stallError
+      const stallBatches: any[][] = [firstStallBatch || []]
+      const stallOffsets = Array.from(
+        { length: Math.max(0, Math.ceil((stallCount || 0) / 1000) - 1) },
+        (_, index) => (index + 1) * 1000
+      )
+      for (let index = 0; index < stallOffsets.length; index += 10) {
+        const batches = await Promise.all(stallOffsets.slice(index, index + 10).map(async (offset) => {
+          const { data, error } = await supabaseClient
+            .from('stalls')
+            .select('id')
+            .eq('market_id', stats.market.id)
+            .eq('status', 'AKTIF')
+            .range(offset, offset + 999)
+          if (error) throw error
+          return data || []
+        }))
+        stallBatches.push(...batches)
+      }
 
-      const stallIds = stallsData?.map(s => s.id) || []
+      const stallIds = stallBatches.flat().map(s => s.id)
       const selectedDate = new Date(`${chartDate}T00:00:00`)
       const rangeStart = new Date(selectedDate)
       const rangeEnd = new Date(selectedDate)
@@ -182,13 +202,34 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
 
       let periodTransactions: any[] = []
       if (stallIds.length > 0) {
-        const { data } = await supabaseClient
+        let transactionQuery = supabaseClient
           .from('transactions')
-          .select('amount, transaction_date')
+          .select('amount, transaction_date', { count: 'exact' })
           .in('stall_id', stallIds)
           .gte('transaction_date', toLocalDateKey(rangeStart))
           .lt('transaction_date', toLocalDateKey(rangeEnd))
-        periodTransactions = data || []
+        const { count: transactionCount, data: firstTransactionBatch, error: transactionError } = await transactionQuery.range(0, 999)
+        if (transactionError) throw transactionError
+        const transactionBatches: any[][] = [firstTransactionBatch || []]
+        const transactionOffsets = Array.from(
+          { length: Math.max(0, Math.ceil((transactionCount || 0) / 1000) - 1) },
+          (_, index) => (index + 1) * 1000
+        )
+        for (let index = 0; index < transactionOffsets.length; index += 10) {
+          const batches = await Promise.all(transactionOffsets.slice(index, index + 10).map(async (offset) => {
+            const { data, error } = await supabaseClient
+              .from('transactions')
+              .select('amount, transaction_date')
+              .in('stall_id', stallIds)
+              .gte('transaction_date', toLocalDateKey(rangeStart))
+              .lt('transaction_date', toLocalDateKey(rangeEnd))
+              .range(offset, offset + 999)
+            if (error) throw error
+            return data || []
+          }))
+          transactionBatches.push(...batches)
+        }
+        periodTransactions = transactionBatches.flat()
       }
 
       const periodMap = new Map<string, { revenue: number; transactions: number }>()
