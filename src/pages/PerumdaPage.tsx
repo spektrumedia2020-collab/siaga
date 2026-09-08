@@ -271,8 +271,7 @@ export function PerumdaPage() {
       </header>
 
       <section className="perumda-content">
-        <div className="perumda-intro">
-          <div><p className="perumda-eyebrow">Ringkasan kinerja</p><h2>Semua pasar, satu pandangan.</h2></div>
+        <div className="perumda-toolbar">
           <form className="perumda-filter" onSubmit={handleFilter}>
             <label>
               Rentang
@@ -295,6 +294,10 @@ export function PerumdaPage() {
             <label>Sampai<input type="date" value={to} onChange={(event) => { setTo(event.target.value); setPeriodPreset('custom') }} /></label>
             <button type="submit" disabled={loading}>{loading ? 'Memuat...' : 'Terapkan'}</button>
           </form>
+        </div>
+
+        <div className="perumda-intro">
+          <div><p className="perumda-eyebrow">Ringkasan kinerja</p><h2>Semua pasar, satu pandangan.</h2></div>
         </div>
 
         {error && <p className="perumda-error">{error}</p>}
