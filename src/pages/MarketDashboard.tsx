@@ -148,7 +148,6 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
         .eq('status', 'AKTIF')
 
       const stallIds = stallsData?.map(s => s.id) || []
-      const stallById = new Map((stallsData || []).map((stall) => [stall.id, stall]))
       const today = new Date()
       const weekAgo = new Date(today)
       weekAgo.setDate(today.getDate() - 6)
@@ -512,6 +511,7 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
         .eq('status', 'AKTIF')
 
       const stallIds = stallsData?.map(s => s.id) || []
+      const stallById = new Map((stallsData || []).map((stall) => [stall.id, stall]))
 
       let transactionCount = 0
       let totalRevenue = 0
