@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from 'react'
+import { ChangeEvent, FormEvent, useEffect, useState } from 'react'
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import './PerumdaPage.css'
 
@@ -55,6 +55,15 @@ const TOKEN_KEY = 'siaga-perumda-token'
 const REPORT_KEY = 'siaga-perumda-report'
 const today = new Date().toISOString().slice(0, 10)
 const firstDay = `${today.slice(0, 8)}01`
+const currentMonthValue = `${today.slice(0, 7)}`
+
+const monthOptions = Array.from({ length: 12 }, (_, index) => {
+  const date = new Date(new Date().getFullYear(), index, 1)
+  return {
+    value: `${date.getFullYear()}-${String(index + 1).padStart(2, '0')}`,
+    label: date.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })
+  }
+})
 
 type PeriodPreset = 'day' | 'week' | 'month' | 'custom'
 
@@ -82,6 +91,19 @@ const getPresetRange = (preset: Exclude<PeriodPreset, 'custom'>) => {
   return { from: formatDateInput(startOfMonth), to: formatDateInput(currentDate) }
 }
 
+const getMonthRange = (monthValue: string) => {
+  const [yearPart, monthPart] = monthValue.split('-').map(Number)
+  const year = Number(yearPart)
+  const month = Number(monthPart)
+  const from = new Date(year, month - 1, 1)
+  const to = new Date(year, month, 0)
+
+  return {
+    from: formatDateInput(from),
+    to: formatDateInput(to)
+  }
+}
+
 const getStoredReport = (): ReportResponse | null => {
   try {
     const rawReport = sessionStorage.getItem(REPORT_KEY)
@@ -101,6 +123,7 @@ export function PerumdaPage() {
   const [token, setToken] = useState(() => sessionStorage.getItem(TOKEN_KEY) || '')
   const [from, setFrom] = useState(firstDay)
   const [to, setTo] = useState(today)
+  const [month, setMonth] = useState(currentMonthValue)
   const [periodPreset, setPeriodPreset] = useState<PeriodPreset>('month')
   const [report, setReport] = useState<ReportResponse | null>(() => getStoredReport())
   const [loading, setLoading] = useState(false)
@@ -164,7 +187,7 @@ export function PerumdaPage() {
     setError('')
   }
 
-  const handlePresetChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  const handlePresetChange = (event: ChangeEvent<HTMLSelectElement>) => {
     const nextPreset = event.target.value as PeriodPreset
     setPeriodPreset(nextPreset)
 
@@ -173,6 +196,20 @@ export function PerumdaPage() {
     }
 
     const nextRange = getPresetRange(nextPreset)
+    setFrom(nextRange.from)
+    setTo(nextRange.to)
+
+    if (nextPreset === 'month') {
+      setMonth(currentMonthValue)
+    }
+  }
+
+  const handleMonthChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    const nextMonth = event.target.value
+    setMonth(nextMonth)
+    setPeriodPreset('month')
+
+    const nextRange = getMonthRange(nextMonth)
     setFrom(nextRange.from)
     setTo(nextRange.to)
   }
@@ -244,6 +281,14 @@ export function PerumdaPage() {
                 <option value="week">Minggu ini</option>
                 <option value="month">Bulan ini</option>
                 <option value="custom">Tanggal khusus</option>
+              </select>
+            </label>
+            <label>
+              Bulan
+              <select value={month} onChange={handleMonthChange}>
+                {monthOptions.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
               </select>
             </label>
             <label>Mulai<input type="date" value={from} onChange={(event) => { setFrom(event.target.value); setPeriodPreset('custom') }} /></label>
