@@ -5,15 +5,15 @@ import { Auth } from './components/Auth'
 import { Dashboard } from './components/Dashboard'
 import { SuperAdminDashboardImproved as SuperAdminDashboard } from './pages/SuperAdminDashboardImproved'
 import { MarketDashboard } from './pages/MarketDashboard'
-import { MarketsManagement } from './pages/MarketsManagement'
 import { MarketEditPage } from './pages/MarketEditPage'
 import { MarketLandingPage } from './pages/MarketLandingPage'
 import { JuriDocumentationPage } from './pages/JuriDocumentationPage'
 import { PublicStallPage } from './pages/PublicStallPage'
+import { PerumdaPage } from './pages/PerumdaPage'
 import './App.css'
 import './styles/layout.css'
 
-type Route = 'login' | 'superadmin' | 'market' | 'market-edit' | 'market-landing' | 'public-stall' | 'juri-docs'
+type Route = 'login' | 'superadmin' | 'market' | 'market-edit' | 'market-landing' | 'public-stall' | 'juri-docs' | 'perumda'
 
 function App() {
   const [user, setUser] = useState<any>(null)
@@ -174,6 +174,10 @@ function App() {
     if (window.location.pathname === '/juri' || window.location.pathname === '/docs') {
       return 'juri-docs'
     }
+
+    if (window.location.pathname === '/perumda' || window.location.pathname === '/perumda/') {
+      return 'perumda'
+    }
     
     if (!user) return 'login'
     const hash = window.location.hash.slice(1)
@@ -200,6 +204,10 @@ function App() {
   if (currentRoute === 'public-stall') {
     const pathParts = window.location.pathname.split('/').filter(Boolean)
     return <PublicStallPage marketId={pathParts[1]} stallCode={decodeURIComponent(pathParts[2])} />
+  }
+
+  if (currentRoute === 'perumda') {
+    return <PerumdaPage />
   }
 
   // Determine which user ID to use (impersonated or actual)
