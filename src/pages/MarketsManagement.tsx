@@ -245,8 +245,15 @@ export function MarketsManagement({ onImpersonate }: Props) {
         ) : (
           markets.map((market) => (
             <div key={market.id} className="market-card">
-              {market.photo_url && (<img src={market.photo_url} alt={market.name} style={{ width: '100%', height: '140px', objectFit: 'cover', borderBottom: '1px solid #e5e7eb' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />)}
-              {!market.photo_url && (<img src="/pasar.jpeg" alt="Default market" style={{ width: '100%', height: '140px', objectFit: 'cover', borderBottom: '1px solid #e5e7eb' }} />)}
+              <img
+                src={market.photo_url?.trim() || '/pasar.jpeg'}
+                alt={market.name}
+                style={{ width: '100%', height: '140px', objectFit: 'cover', borderBottom: '1px solid #e5e7eb' }}
+                onError={(event) => {
+                  const image = event.currentTarget
+                  if (!image.src.endsWith('/pasar.jpeg')) image.src = '/pasar.jpeg'
+                }}
+              />
               <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', height: 'calc(100% - 140px)' }}>
                 <div style={{ flex: 1 }}>
                   <div className="market-header">

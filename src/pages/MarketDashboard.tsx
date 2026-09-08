@@ -418,7 +418,7 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
       const news = parseJsonArray<PublicNewsItem>(values.public_news)
 
       setPublicContent({
-        logoUrl: values.public_logo_url || '',
+        logoUrl: values.public_logo_url || stats?.market?.logo_url || stats?.market?.photo_url || stats?.market?.head_photo_url || '',
         heroSlides: heroSlides.length > 0 ? heroSlides : [],
         announcement: values.public_announcement || '',
         aboutMarket: values.public_about_market || '',
@@ -469,7 +469,7 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
         const supabaseClient = getSupabaseClient()
         const { data, error } = await supabaseClient
           .from('markets')
-          .select('id, code, name, address, street, street_number, kecamatan, city, province, postal_code, status')
+          .select('id, code, name, address, street, street_number, kecamatan, city, province, postal_code, photo_url, head_photo_url, logo_url, status')
           .eq('id', impersonatedRole.market_id)
           .single()
         if (error) throw error
@@ -746,7 +746,7 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
               <div className="content-editor-preview-card">
                 <div className="preview-hero" style={{ backgroundImage: `url(${(publicContent.heroSlides.find(Boolean) || stats?.market?.photo_url || '/pasar.jpeg')})` }}>
                   <div className="preview-overlay">
-                    <img src={publicContent.logoUrl || stats?.market?.photo_url || '/logo.jpeg'} alt="Logo preview" className="preview-logo" onError={(event) => { (event.currentTarget as HTMLImageElement).src = '/logo.jpeg' }} />
+                    <img src={publicContent.logoUrl || stats?.market?.logo_url || stats?.market?.photo_url || stats?.market?.head_photo_url || '/logo.jpeg'} alt="Logo preview" className="preview-logo" onError={(event) => { (event.currentTarget as HTMLImageElement).src = '/logo.jpeg' }} />
                     <div>
                       <strong>Pasar {stats?.market?.name || 'Nama pasar'}</strong>
                       <p>{publicContent.announcement || 'Pengumuman pasar akan tampil di sini.'}</p>

@@ -77,6 +77,27 @@ export function MarketEditPage({ marketId, onBack }: Props) {
         .single()
       
       if (data) {
+        let headUserId = data.id_head_market ? String(data.id_head_market) : ''
+
+        if (!headUserId) {
+          const { data: headRole } = await supabase
+            .from('roles')
+            .select('id')
+            .eq('name', 'MARKET_HEAD')
+            .maybeSingle()
+
+          if (headRole) {
+            const { data: assignedHead } = await supabase
+              .from('users')
+              .select('id_user')
+              .eq('market_id', marketId)
+              .eq('id_role', headRole.id)
+              .maybeSingle()
+
+            headUserId = assignedHead?.id_user ? String(assignedHead.id_user) : ''
+          }
+        }
+
         setMarket(data)
         setFormData({
           name: data.name || '',
@@ -90,7 +111,7 @@ export function MarketEditPage({ marketId, onBack }: Props) {
           postal_code: data.postal_code || '',
           photo_url: data.photo_url || '',
           head_photo_url: data.head_photo_url || '',
-          head_user_id: data.id_head_market ? String(data.id_head_market) : '',
+          head_user_id: headUserId,
           status: data.status || 'AKTIF'
         })
       }
