@@ -11,7 +11,6 @@ interface SectorsPageProps {
 interface Sector {
   id: number
   name: string
-  code?: string
   market_id?: number
   officer_id?: number | null
   created_at?: string
@@ -26,7 +25,6 @@ interface Officer {
 export function SectorsPage({ marketId }: SectorsPageProps) {
   const [sectors, setSectors] = useState<Sector[]>([])
   const [name, setName] = useState('')
-  const [code, setCode] = useState('')
   const [officerId, setOfficerId] = useState('')
   const [officers, setOfficers] = useState<Officer[]>([])
   const [editingId, setEditingId] = useState<number | null>(null)
@@ -120,7 +118,6 @@ export function SectorsPage({ marketId }: SectorsPageProps) {
 
   const resetForm = () => {
     setName('')
-    setCode('')
     setOfficerId('')
     setEditingId(null)
   }
@@ -138,7 +135,6 @@ export function SectorsPage({ marketId }: SectorsPageProps) {
       const supabase = getSupabaseClient()
       const payload: any = {
         name: name.trim(),
-        code: code.trim() || undefined,
         market_id: marketId ? Number(marketId) : null,
         officer_id: officerId ? Number(officerId) : null
       }
@@ -168,7 +164,6 @@ export function SectorsPage({ marketId }: SectorsPageProps) {
   const handleEdit = (sector: Sector) => {
     setEditingId(sector.id)
     setName(sector.name)
-    setCode(sector.code || '')
     setOfficerId(sector.officer_id?.toString() || '')
   }
 
@@ -179,8 +174,13 @@ export function SectorsPage({ marketId }: SectorsPageProps) {
     try {
       setDeleting(true)
       const supabase = getSupabaseClient()
-      const { error } = await supabase.from('market_sectors').delete().eq('id', id)
+      const { data, error } = await supabase
+        .from('market_sectors')
+        .delete()
+        .eq('id', id)
+        .select('id')
       if (error) throw error
+      if (!data?.length) throw new Error('Sektor tidak terhapus. Periksa izin akses atau policy RLS market_sectors.')
       await loadSectors()
     } catch (err: any) {
       setError(err.message || 'Gagal menghapus sektor')
@@ -210,15 +210,6 @@ export function SectorsPage({ marketId }: SectorsPageProps) {
             placeholder="Contoh: Blok A"
             style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #d1d5db' }}
             required
-          />
-        </div>
-        <div>
-          <label style={{ display: 'block', marginBottom: 6 }}>Kode Sektor (opsional)</label>
-          <input
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            placeholder="A1"
-            style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #d1d5db' }}
           />
         </div>
         <div>
@@ -268,7 +259,6 @@ export function SectorsPage({ marketId }: SectorsPageProps) {
               <div key={sector.id} style={{ padding: 12, border: '1px solid #e5e7eb', borderRadius: 8, background: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <strong>{sector.name}</strong>
-                  {sector.code ? <span style={{ marginLeft: 8, color: '#6b7280' }}>({sector.code})</span> : null}
                   <div style={{ marginTop: 4, color: '#6b7280', fontSize: 13 }}>
                     Petugas: {officers.find((officer) => officer.id_user === sector.officer_id)?.nama || 'Belum ditugaskan'}
                   </div>
