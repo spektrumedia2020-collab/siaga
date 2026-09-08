@@ -521,49 +521,61 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
 
       if (stallIds.length > 0) {
         const transactionBatchSize = 1000
-        let offset = 0
-        let totalCount: number | null = null
+        const { count, data: firstBatch, error: transactionError } = await supabaseClient
+          .from('transactions')
+          .select('amount, stall_id, officer_id', { count: 'exact' })
+          .in('stall_id', stallIds)
+          .range(0, transactionBatchSize - 1)
 
-        while (totalCount === null || offset < totalCount) {
-          const { count, data: transactionData, error: transactionError } = await supabaseClient
-            .from('transactions')
-            .select('amount, stall_id, officer_id', { count: 'exact' })
-            .in('stall_id', stallIds)
-            .range(offset, offset + transactionBatchSize - 1)
+        if (transactionError) throw transactionError
+        const totalCount = count || 0
+        const transactionBatches: any[][] = [firstBatch || []]
+        const remainingOffsets = Array.from(
+          { length: Math.max(0, Math.ceil(totalCount / transactionBatchSize) - 1) },
+          (_, index) => (index + 1) * transactionBatchSize
+        )
 
-          if (transactionError) throw transactionError
-          totalCount = count || 0
-          if (!transactionData?.length) break
+        for (let index = 0; index < remainingOffsets.length; index += 10) {
+          const offsets = remainingOffsets.slice(index, index + 10)
+          const batches = await Promise.all(offsets.map(async (offset) => {
+            const { data, error } = await supabaseClient
+              .from('transactions')
+              .select('amount, stall_id, officer_id')
+              .in('stall_id', stallIds)
+              .range(offset, offset + transactionBatchSize - 1)
 
-          transactionData.forEach((transaction: any) => {
-            const amount = parseFloat(transaction.amount) || 0
-            totalRevenue += amount
-
-            const stall = stallById.get(transaction.stall_id)
-            if (stall?.sector_id) {
-              const current = sectorRevenue.get(stall.sector_id) || { revenue: 0, transactions: 0 }
-              current.revenue += amount
-              current.transactions += 1
-              sectorRevenue.set(stall.sector_id, current)
-            }
-
-            const stallCurrent = stallRevenue.get(transaction.stall_id) || { revenue: 0, transactions: 0 }
-            stallCurrent.revenue += amount
-            stallCurrent.transactions += 1
-            stallRevenue.set(transaction.stall_id, stallCurrent)
-
-            if (transaction.officer_id) {
-              const current = officerRevenue.get(transaction.officer_id) || { revenue: 0, transactions: 0 }
-              current.revenue += amount
-              current.transactions += 1
-              officerRevenue.set(transaction.officer_id, current)
-            }
-          })
-
-          offset += transactionData.length
+            if (error) throw error
+            return data || []
+          }))
+          transactionBatches.push(...batches)
         }
 
-        transactionCount = totalCount || 0
+        transactionBatches.flat().forEach((transaction: any) => {
+          const amount = parseFloat(transaction.amount) || 0
+          totalRevenue += amount
+
+          const stall = stallById.get(transaction.stall_id)
+          if (stall?.sector_id) {
+            const current = sectorRevenue.get(stall.sector_id) || { revenue: 0, transactions: 0 }
+            current.revenue += amount
+            current.transactions += 1
+            sectorRevenue.set(stall.sector_id, current)
+          }
+
+          const stallCurrent = stallRevenue.get(transaction.stall_id) || { revenue: 0, transactions: 0 }
+          stallCurrent.revenue += amount
+          stallCurrent.transactions += 1
+          stallRevenue.set(transaction.stall_id, stallCurrent)
+
+          if (transaction.officer_id) {
+            const current = officerRevenue.get(transaction.officer_id) || { revenue: 0, transactions: 0 }
+            current.revenue += amount
+            current.transactions += 1
+            officerRevenue.set(transaction.officer_id, current)
+          }
+        })
+
+        transactionCount = totalCount
       }
 
       const [{ data: sectorsData }, { data: officersData }] = await Promise.all([
@@ -1257,7 +1269,15 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
               <button className="sidebar-profile" type="button" onClick={() => setProfileOpen((open) => !open)}>
               <div className="sidebar-profile-avatar">
                 {profilePhotoUrl ? (
-                  <img src={profilePhotoUrl} alt="avatar" className="sidebar-profile-photo" />
+                  <img
+                    src={profilePhotoUrl}
+                    alt="avatar"
+                    className="sidebar-profile-photo"
+                    onError={() => {
+                      setProfilePhotoUrl('')
+                      localStorage.removeItem('siaga_profile_photo_preview')
+                    }}
+                  />
                 ) : (
                   <span>{profileName.split(' ').map((word) => word[0]).slice(0, 2).join('').toUpperCase() || 'U'}</span>
                 )}
