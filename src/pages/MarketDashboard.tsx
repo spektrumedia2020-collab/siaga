@@ -152,7 +152,7 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
         status: stats.market.status || ''
       })
     }
-  }, [stats, chartMode, chartDate])
+  }, [stats])
 
   useEffect(() => {
     const computeChartData = async () => {
@@ -226,7 +226,7 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
     }
 
     computeChartData()
-  }, [stats])
+  }, [stats, chartMode, chartDate])
 
   const loadUserRole = async () => {
     try {
