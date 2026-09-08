@@ -42,6 +42,7 @@ export function TransactionsPage({ marketId }: TransactionsPageProps) {
   const [dateTo, setDateTo] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(30)
+  const [totalTransactions, setTotalTransactions] = useState(0)
 
   const marketIdNum = Number(marketId) || 0
 
@@ -62,7 +63,7 @@ export function TransactionsPage({ marketId }: TransactionsPageProps) {
       // Build query
       let query = supabase
         .from('transactions')
-        .select('*, stalls(code, number)')
+        .select('*, stalls(code, number)', { count: 'exact' })
 
       // Filter by stall_id if selected
       if (stallFilter) {
@@ -92,17 +93,22 @@ export function TransactionsPage({ marketId }: TransactionsPageProps) {
 
       if (stallIds.length === 0) {
         setTransactions([])
+        setTotalTransactions(0)
         setLoading(false)
         return
       }
 
-      query = query.in('stall_id', stallIds)
+      const rangeStart = (currentPage - 1) * pageSize
+      query = query
+        .in('stall_id', stallIds)
+        .range(rangeStart, rangeStart + pageSize - 1)
 
-      const { data, error: err } = await query
+      const { data, count, error: err } = await query
         .order('created_at', { ascending: false })
 
       if (err) throw err
       setTransactions(data || [])
+      setTotalTransactions(count || 0)
     } catch (err: any) {
       setError(err.message || 'Gagal memuat data transaksi')
     } finally {
@@ -114,7 +120,7 @@ export function TransactionsPage({ marketId }: TransactionsPageProps) {
     if (marketIdNum > 0) {
       loadData()
     }
-  }, [marketIdNum, stallFilter, statusFilter, dateFrom, dateTo])
+  }, [marketIdNum, stallFilter, statusFilter, dateFrom, dateTo, currentPage, pageSize])
 
   useEffect(() => {
     setCurrentPage(1)
@@ -130,10 +136,10 @@ export function TransactionsPage({ marketId }: TransactionsPageProps) {
     })
   }
 
-  const totalAmount = transactions.reduce((sum, t) => sum + Number(t.amount || 0), 0)
-  const totalPages = Math.max(1, Math.ceil(transactions.length / pageSize))
+  const pageAmount = transactions.reduce((sum, t) => sum + Number(t.amount || 0), 0)
+  const totalPages = Math.max(1, Math.ceil(totalTransactions / pageSize))
   const safeCurrentPage = Math.min(currentPage, totalPages)
-  const paginatedTransactions = transactions.slice((safeCurrentPage - 1) * pageSize, safeCurrentPage * pageSize)
+  const paginatedTransactions = transactions
 
   if (!marketId || marketIdNum === 0) {
     return (
@@ -150,7 +156,7 @@ export function TransactionsPage({ marketId }: TransactionsPageProps) {
       <p>Daftar transaksi yang tercatat di pasar ini.</p>
 
       <div className="tx-summary-box">
-        <strong>Total Transaksi:</strong> {transactions.length} | <strong>Total Pendapatan:</strong> Rp {totalAmount.toLocaleString('id-ID')}
+        <strong>Total Transaksi:</strong> {totalTransactions} | <strong>Pendapatan Halaman:</strong> Rp {pageAmount.toLocaleString('id-ID')}
       </div>
 
       {error && <div className="tx-error-box">{error}</div>}
@@ -254,10 +260,10 @@ export function TransactionsPage({ marketId }: TransactionsPageProps) {
         )}
       </div>
 
-      {transactions.length > 0 && (
+      {totalTransactions > 0 && (
         <div className="tx-pagination">
           <div style={{ fontSize: 14, color: '#475569' }}>
-            Menampilkan {Math.min((safeCurrentPage - 1) * pageSize + 1, transactions.length)}-{Math.min(safeCurrentPage * pageSize, transactions.length)} dari {transactions.length} data
+            Menampilkan {Math.min((safeCurrentPage - 1) * pageSize + 1, totalTransactions)}-{Math.min(safeCurrentPage * pageSize, totalTransactions)} dari {totalTransactions} data
           </div>
           <div className="tx-pagination-controls">
             <label className="tx-page-size">
