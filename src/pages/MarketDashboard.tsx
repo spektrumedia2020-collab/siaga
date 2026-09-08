@@ -605,10 +605,17 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
         transactionCount = totalCount
       }
 
-      const [{ data: sectorsData }, { data: officersData }] = await Promise.all([
+      const [{ data: sectorsData }, { data: officerRole }] = await Promise.all([
         supabaseClient.from('market_sectors').select('id, name').eq('market_id', market.id),
-        supabaseClient.from('users').select('id_user, nama').eq('market_id', market.id)
+        supabaseClient.from('roles').select('id').eq('name', 'OFFICER').maybeSingle()
       ])
+      const { data: officersData } = officerRole
+        ? await supabaseClient
+          .from('users')
+          .select('id_user, nama')
+          .eq('market_id', market.id)
+          .eq('id_role', officerRole.id)
+        : { data: [] }
 
       setAnalytics({
         sectors: (sectorsData || []).map((sector: any) => ({
