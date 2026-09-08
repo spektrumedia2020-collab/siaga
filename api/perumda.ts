@@ -58,6 +58,32 @@ function numberValue(value: unknown) {
   return Number(value || 0)
 }
 
+function normalizeDate(value: unknown) {
+  return String(value || '').slice(0, 10)
+}
+
+function isWithinDateRange(value: unknown, from: string, to: string) {
+  const date = normalizeDate(value)
+  if (!date) return false
+  return date >= from && date <= to
+}
+
+function addDays(dateString: string, days: number) {
+  const date = new Date(`${dateString}T00:00:00Z`)
+  date.setUTCDate(date.getUTCDate() + days)
+  return date.toISOString().slice(0, 10)
+}
+
+function getPreviousPeriodRange(from: string, to: string) {
+  const start = new Date(`${from}T00:00:00Z`)
+  const end = new Date(`${to}T00:00:00Z`)
+  const rangeLength = Math.max(1, Math.round((end.getTime() - start.getTime()) / 86400000) + 1)
+  const previousEnd = addDays(from, -1)
+  const previousStart = addDays(previousEnd, -(rangeLength - 1))
+
+  return { from: previousStart, to: previousEnd }
+}
+
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
@@ -101,64 +127,138 @@ export default async function handler(req: any, res: any) {
     const [markets, stalls, transactions, deposits] = await Promise.all([
       fetchAll(supabaseAdmin, 'markets', 'id, name, status'),
       fetchAll(supabaseAdmin, 'stalls', 'id, market_id, status'),
-      fetchAll(supabaseAdmin, 'transactions', 'id, market_id, amount, status, transaction_date, created_at', (query) =>
-        query.gte('transaction_date', from).lte('transaction_date', to)
-      ),
-      fetchAll(supabaseAdmin, 'setoran', 'id, market_id, total_amount, status, created_at', (query) =>
-        query.gte('created_at', `${from}T00:00:00.000Z`).lte('created_at', endDate)
-      )
+      fetchAll(supabaseAdmin, 'transactions', 'id, market_id, stall_id, amount, status, transaction_date, created_at'),
+      fetchAll(supabaseAdmin, 'setoran', 'id, market_id, total_amount, status, created_at')
     ])
 
-    const paidTransactions = transactions.filter((transaction) => String(transaction.status).toLowerCase() === 'paid')
+    const currentTransactions = transactions.filter((transaction) => isWithinDateRange(transaction.transaction_date || transaction.created_at, from, to))
+    const currentDeposits = deposits.filter((deposit) => isWithinDateRange(deposit.created_at, from, to))
+    const previousPeriod = getPreviousPeriodRange(from, to)
+    const previousTransactions = transactions.filter((transaction) => isWithinDateRange(transaction.transaction_date || transaction.created_at, previousPeriod.from, previousPeriod.to))
+    const previousDeposits = deposits.filter((deposit) => isWithinDateRange(deposit.created_at, previousPeriod.from, previousPeriod.to))
+
+    const paidTransactions = currentTransactions.filter((transaction) => String(transaction.status).toLowerCase() === 'paid')
+    const paidPreviousTransactions = previousTransactions.filter((transaction) => String(transaction.status).toLowerCase() === 'paid')
+
     const dailyTrendMap = new Map<string, DailyTrend>()
     paidTransactions.forEach((transaction) => {
-      const date = String(transaction.transaction_date || transaction.created_at || '').slice(0, 10)
+      const date = normalizeDate(transaction.transaction_date || transaction.created_at)
       if (!date) return
       const current = dailyTrendMap.get(date) || { date, transactions: 0, revenue: 0 }
       current.transactions += 1
       current.revenue += numberValue(transaction.amount)
       dailyTrendMap.set(date, current)
     })
+
     const totalRevenue = paidTransactions.reduce((sum, transaction) => sum + numberValue(transaction.amount), 0)
-    const approvedDeposits = deposits
+    const previousRevenue = paidPreviousTransactions.reduce((sum, transaction) => sum + numberValue(transaction.amount), 0)
+    const approvedDeposits = currentDeposits
       .filter((deposit) => String(deposit.status).toLowerCase() === 'approved')
       .reduce((sum, deposit) => sum + numberValue(deposit.total_amount), 0)
+    const previousApprovedDeposits = previousDeposits
+      .filter((deposit) => String(deposit.status).toLowerCase() === 'approved')
+      .reduce((sum, deposit) => sum + numberValue(deposit.total_amount), 0)
+
+    const activeStalls = stalls.filter((stall) => String(stall.status).toLowerCase() === 'active')
+    const activeStallCount = activeStalls.length
+    const touchedStallIds = new Set(
+      paidTransactions
+        .map((transaction) => transaction.stall_id)
+        .filter((stallId) => stallId !== null && stallId !== undefined && stallId !== '')
+        .map((stallId) => String(stallId))
+    )
+    const touchedStallCount = touchedStallIds.size
+    const collectionCoverage = activeStallCount > 0 ? (touchedStallCount / activeStallCount) * 100 : 0
+    const pendingDepositCount = currentDeposits.filter((deposit) => String(deposit.status).toLowerCase() !== 'approved').length
+    const unsettledBalance = totalRevenue - approvedDeposits
+    const revenueDelta = totalRevenue - previousRevenue
+    const revenueDeltaPercent = previousRevenue > 0 ? (revenueDelta / previousRevenue) * 100 : 0
+
     const marketReports = markets.map((market) => {
       const marketStalls = stalls.filter((stall) => String(stall.market_id) === String(market.id))
+      const marketActiveStalls = marketStalls.filter((stall) => String(stall.status).toLowerCase() === 'active')
       const marketTransactions = paidTransactions.filter((transaction) => String(transaction.market_id) === String(market.id))
-      const marketDeposits = deposits.filter((deposit) => String(deposit.market_id) === String(market.id))
+      const marketDeposits = currentDeposits.filter((deposit) => String(deposit.market_id) === String(market.id))
       const revenue = marketTransactions.reduce((sum, transaction) => sum + numberValue(transaction.amount), 0)
       const deposited = marketDeposits
         .filter((deposit) => String(deposit.status).toLowerCase() === 'approved')
         .reduce((sum, deposit) => sum + numberValue(deposit.total_amount), 0)
+      const touchedStallIdsForMarket = new Set(
+        marketTransactions
+          .map((transaction) => transaction.stall_id)
+          .filter((stallId) => stallId !== null && stallId !== undefined && stallId !== '')
+          .map((stallId) => String(stallId))
+      )
 
       return {
         id: market.id,
         name: market.name,
         status: market.status,
         stallCount: marketStalls.length,
-        activeStallCount: marketStalls.filter((stall) => String(stall.status).toLowerCase() === 'active').length,
+        activeStallCount: marketActiveStalls.length,
+        touchedStallCount: touchedStallIdsForMarket.size,
         transactionCount: marketTransactions.length,
         revenue,
         revenueShare: totalRevenue > 0 ? (revenue / totalRevenue) * 100 : 0,
         averageTransaction: marketTransactions.length > 0 ? revenue / marketTransactions.length : 0,
         deposited,
         collectionRate: revenue > 0 ? (deposited / revenue) * 100 : 0,
+        collectionCoverage: marketActiveStalls.length > 0 ? (touchedStallIdsForMarket.size / marketActiveStalls.length) * 100 : 0,
+        unsettledBalance: revenue - deposited,
         pendingDepositCount: marketDeposits.filter((deposit) => String(deposit.status).toLowerCase() !== 'approved').length
       }
     })
 
+    const alerts = [] as Array<{ level: string; title: string; message: string }>
+    if (pendingDepositCount > 0) {
+      alerts.push({
+        level: 'warning',
+        title: 'Setoran belum selesai',
+        message: `${pendingDepositCount} catatan setoran masih menunggu persetujuan.`
+      })
+    }
+    if (collectionCoverage < 80) {
+      alerts.push({
+        level: 'info',
+        title: 'Cakupan penarikan rendah',
+        message: `Hanya ${collectionCoverage.toFixed(1)}% lapak aktif yang tercatat menarik retribusi pada periode ini.`
+      })
+    }
+    if (revenueDeltaPercent < -10) {
+      alerts.push({
+        level: 'danger',
+        title: 'Pendapatan turun signifikan',
+        message: `Pendapatan turun ${Math.abs(revenueDeltaPercent).toFixed(1)}% dibanding periode sebelumnya.`
+      })
+    }
+    if (alerts.length === 0) {
+      alerts.push({
+        level: 'success',
+        title: 'Semua indikator sehat',
+        message: 'Tidak ada anomali operasional yang terdeteksi pada periode ini.'
+      })
+    }
+
     return res.json({
       period: { from, to },
+      previousPeriod,
       summary: {
         marketCount: marketReports.length,
         stallCount: stalls.length,
+        activeStallCount,
+        touchedStallCount,
         transactionCount: paidTransactions.length,
         revenue: totalRevenue,
         averageTransaction: paidTransactions.length > 0 ? totalRevenue / paidTransactions.length : 0,
         deposited: approvedDeposits,
         collectionRate: totalRevenue > 0 ? (approvedDeposits / totalRevenue) * 100 : 0,
-        pendingDepositCount: deposits.filter((deposit) => String(deposit.status).toLowerCase() !== 'approved').length
+        collectionCoverage,
+        unsettledBalance,
+        pendingDepositCount,
+        previousRevenue,
+        revenueDelta,
+        revenueDeltaPercent,
+        alerts
       },
       dailyTrend: Array.from(dailyTrendMap.values()).sort((a, b) => a.date.localeCompare(b.date)),
       markets: marketReports.sort((a, b) => b.revenue - a.revenue)

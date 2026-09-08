@@ -8,6 +8,7 @@ interface MarketReport {
   status: string | null
   stallCount: number
   activeStallCount: number
+  touchedStallCount: number
   transactionCount: number
   revenue: number
   deposited: number
@@ -15,19 +16,36 @@ interface MarketReport {
   revenueShare: number
   averageTransaction: number
   collectionRate: number
+  collectionCoverage: number
+  unsettledBalance: number
+}
+
+interface AlertItem {
+  level: string
+  title: string
+  message: string
 }
 
 interface ReportResponse {
   period: { from: string; to: string }
+  previousPeriod?: { from: string; to: string }
   summary: {
     marketCount: number
     stallCount: number
+    activeStallCount: number
+    touchedStallCount: number
     transactionCount: number
     revenue: number
     deposited: number
     pendingDepositCount: number
     averageTransaction: number
     collectionRate: number
+    collectionCoverage: number
+    unsettledBalance: number
+    previousRevenue: number
+    revenueDelta: number
+    revenueDeltaPercent: number
+    alerts: AlertItem[]
   }
   dailyTrend: Array<{ date: string; transactions: number; revenue: number }>
   markets: MarketReport[]
@@ -178,15 +196,36 @@ export function PerumdaPage() {
             <p className="perumda-period">Periode {formatDate(report.period.from)} sampai {formatDate(report.period.to)}</p>
             <section className="perumda-metrics">
               <article><span>Pasar</span><strong>{report.summary.marketCount}</strong><small>terdaftar</small></article>
-              <article><span>Lapak</span><strong>{report.summary.stallCount}</strong><small>di seluruh pasar</small></article>
-              <article><span>Transaksi lunas</span><strong>{report.summary.transactionCount}</strong><small>pada periode ini</small></article>
+              <article><span>Lapak aktif</span><strong>{report.summary.activeStallCount}</strong><small>{report.summary.stallCount} total lapak</small></article>
+              <article><span>Lapak tertarik</span><strong>{report.summary.touchedStallCount}</strong><small>lapak yang menarik retribusi</small></article>
+              <article><span>Cakupan penarikan</span><strong>{report.summary.collectionCoverage.toFixed(1)}%</strong><small>{report.summary.touchedStallCount} dari {report.summary.activeStallCount} lapak aktif</small></article>
+              <article><span>Belum setor</span><strong>{formatRupiah(report.summary.unsettledBalance)}</strong><small>{report.summary.pendingDepositCount} setoran menunggu</small></article>
               <article className="accent"><span>Total retribusi</span><strong>{formatRupiah(report.summary.revenue)}</strong><small>{formatRupiah(report.summary.deposited)} sudah disetor</small></article>
             </section>
 
             <section className="perumda-insight-grid">
+              <article><span>Transaksi lunas</span><strong>{report.summary.transactionCount}</strong><small>pada periode ini</small></article>
               <article><span>Rata-rata transaksi</span><strong>{formatRupiah(report.summary.averageTransaction)}</strong><small>nilai per transaksi lunas</small></article>
               <article><span>Rasio setoran</span><strong>{report.summary.collectionRate.toFixed(1)}%</strong><small>retribusi yang sudah disetujui</small></article>
+              <article>
+                <span>Perubahan vs periode sebelumnya</span>
+                <strong className={report.summary.revenueDelta >= 0 ? 'perumda-positive' : 'perumda-negative'}>
+                  {report.summary.revenueDelta >= 0 ? '+' : '-'}{formatRupiah(Math.abs(report.summary.revenueDelta))}
+                </strong>
+                <small>{report.summary.revenueDeltaPercent >= 0 ? '+' : '-'}{Math.abs(report.summary.revenueDeltaPercent).toFixed(1)}% dibanding periode sebelumnya</small>
+              </article>
             </section>
+
+            {report.summary.alerts.length > 0 && (
+              <section className="perumda-alerts" aria-label="Peringatan operasional">
+                {report.summary.alerts.map((alert) => (
+                  <div key={`${alert.title}-${alert.message}`} className={`perumda-alert perumda-alert-${alert.level}`}>
+                    <strong>{alert.title}</strong>
+                    <span>{alert.message}</span>
+                  </div>
+                ))}
+              </section>
+            )}
 
             <section className="perumda-charts">
               <article className="perumda-chart-card">
@@ -219,8 +258,8 @@ export function PerumdaPage() {
               <div className="perumda-section-heading"><div><p className="perumda-eyebrow">Perbandingan</p><h2>Kinerja per pasar</h2></div><span>{report.summary.pendingDepositCount} setoran belum disetujui</span></div>
               <div className="perumda-table-wrap">
                 <table>
-                  <thead><tr><th>Pasar</th><th>Lapak aktif</th><th>Transaksi</th><th>Retribusi</th><th>Pangsa</th><th>Rata-rata</th><th>Setoran disetujui</th></tr></thead>
-                  <tbody>{report.markets.map((market) => <tr key={market.id}><td><strong>{market.name}</strong><small>{market.status || 'Status tidak tersedia'}</small></td><td>{market.activeStallCount} / {market.stallCount}</td><td>{market.transactionCount}</td><td>{formatRupiah(market.revenue)}</td><td>{market.revenueShare.toFixed(1)}%</td><td>{formatRupiah(market.averageTransaction)}</td><td>{formatRupiah(market.deposited)}<small>{market.collectionRate.toFixed(1)}% tersetor</small>{market.pendingDepositCount > 0 && <small className="pending">{market.pendingDepositCount} menunggu</small>}</td></tr>)}</tbody>
+                  <thead><tr><th>Pasar</th><th>Lapak aktif</th><th>Lapak tertarik</th><th>Transaksi</th><th>Retribusi</th><th>Pangsa</th><th>Belum setor</th><th>Setoran disetujui</th></tr></thead>
+                  <tbody>{report.markets.map((market) => <tr key={market.id}><td><strong>{market.name}</strong><small>{market.status || 'Status tidak tersedia'}</small></td><td>{market.activeStallCount} / {market.stallCount}</td><td>{market.touchedStallCount}</td><td>{market.transactionCount}</td><td>{formatRupiah(market.revenue)}</td><td>{market.revenueShare.toFixed(1)}%</td><td>{formatRupiah(market.unsettledBalance)}<small>{market.collectionCoverage.toFixed(1)}% cakupan</small></td><td>{formatRupiah(market.deposited)}<small>{market.collectionRate.toFixed(1)}% tersetor</small>{market.pendingDepositCount > 0 && <small className="pending">{market.pendingDepositCount} menunggu</small>}</td></tr>)}</tbody>
                 </table>
               </div>
             </section>
