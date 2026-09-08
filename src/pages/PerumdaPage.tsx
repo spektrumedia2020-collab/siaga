@@ -56,6 +56,32 @@ const REPORT_KEY = 'siaga-perumda-report'
 const today = new Date().toISOString().slice(0, 10)
 const firstDay = `${today.slice(0, 8)}01`
 
+type PeriodPreset = 'day' | 'week' | 'month' | 'custom'
+
+const formatDateInput = (date: Date) => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+const getPresetRange = (preset: Exclude<PeriodPreset, 'custom'>) => {
+  const currentDate = new Date()
+
+  if (preset === 'day') {
+    return { from: formatDateInput(currentDate), to: formatDateInput(currentDate) }
+  }
+
+  if (preset === 'week') {
+    const startDate = new Date(currentDate)
+    startDate.setDate(startDate.getDate() - 6)
+    return { from: formatDateInput(startDate), to: formatDateInput(currentDate) }
+  }
+
+  const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
+  return { from: formatDateInput(startOfMonth), to: formatDateInput(currentDate) }
+}
+
 const getStoredReport = (): ReportResponse | null => {
   try {
     const rawReport = sessionStorage.getItem(REPORT_KEY)
@@ -75,6 +101,7 @@ export function PerumdaPage() {
   const [token, setToken] = useState(() => sessionStorage.getItem(TOKEN_KEY) || '')
   const [from, setFrom] = useState(firstDay)
   const [to, setTo] = useState(today)
+  const [periodPreset, setPeriodPreset] = useState<PeriodPreset>('month')
   const [report, setReport] = useState<ReportResponse | null>(() => getStoredReport())
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -137,6 +164,19 @@ export function PerumdaPage() {
     setError('')
   }
 
+  const handlePresetChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const nextPreset = event.target.value as PeriodPreset
+    setPeriodPreset(nextPreset)
+
+    if (nextPreset === 'custom') {
+      return
+    }
+
+    const nextRange = getPresetRange(nextPreset)
+    setFrom(nextRange.from)
+    setTo(nextRange.to)
+  }
+
   const handleFilter = (event: FormEvent) => {
     event.preventDefault()
     if (token) loadReport(token, from, to)
@@ -197,8 +237,17 @@ export function PerumdaPage() {
         <div className="perumda-intro">
           <div><p className="perumda-eyebrow">Ringkasan kinerja</p><h2>Semua pasar, satu pandangan.</h2></div>
           <form className="perumda-filter" onSubmit={handleFilter}>
-            <label>Mulai<input type="date" value={from} onChange={(event) => setFrom(event.target.value)} /></label>
-            <label>Sampai<input type="date" value={to} onChange={(event) => setTo(event.target.value)} /></label>
+            <label>
+              Rentang
+              <select value={periodPreset} onChange={handlePresetChange}>
+                <option value="day">Hari ini</option>
+                <option value="week">Minggu ini</option>
+                <option value="month">Bulan ini</option>
+                <option value="custom">Tanggal khusus</option>
+              </select>
+            </label>
+            <label>Mulai<input type="date" value={from} onChange={(event) => { setFrom(event.target.value); setPeriodPreset('custom') }} /></label>
+            <label>Sampai<input type="date" value={to} onChange={(event) => { setTo(event.target.value); setPeriodPreset('custom') }} /></label>
             <button type="submit" disabled={loading}>{loading ? 'Memuat...' : 'Terapkan'}</button>
           </form>
         </div>
@@ -232,13 +281,16 @@ export function PerumdaPage() {
         ) : report && (
           <>
             <p className="perumda-period">Periode {formatDate(report.period.from)} sampai {formatDate(report.period.to)}</p>
-            <section className="perumda-metrics">
+            <section className="perumda-metrics perumda-metrics-primary">
+              <article><span>Belum setor</span><strong>{formatRupiah(report.summary.unsettledBalance)}</strong><small>{report.summary.pendingDepositCount} setoran menunggu</small></article>
+              <article className="accent"><span>Total retribusi</span><strong>{formatRupiah(report.summary.revenue)}</strong><small>{formatRupiah(report.summary.deposited)} sudah disetor</small></article>
+            </section>
+
+            <section className="perumda-metrics perumda-metrics-secondary">
               <article><span>Pasar</span><strong>{report.summary.marketCount}</strong><small>terdaftar</small></article>
               <article><span>Lapak aktif</span><strong>{report.summary.activeStallCount}</strong><small>{report.summary.stallCount} total lapak</small></article>
               <article><span>Lapak tertarik</span><strong>{report.summary.touchedStallCount}</strong><small>lapak yang menarik retribusi</small></article>
               <article><span>Cakupan penarikan</span><strong>{report.summary.collectionCoverage.toFixed(1)}%</strong><small>{report.summary.touchedStallCount} dari {report.summary.activeStallCount} lapak aktif</small></article>
-              <article><span>Belum setor</span><strong>{formatRupiah(report.summary.unsettledBalance)}</strong><small>{report.summary.pendingDepositCount} setoran menunggu</small></article>
-              <article className="accent"><span>Total retribusi</span><strong>{formatRupiah(report.summary.revenue)}</strong><small>{formatRupiah(report.summary.deposited)} sudah disetor</small></article>
             </section>
 
             <section className="perumda-insight-grid">
