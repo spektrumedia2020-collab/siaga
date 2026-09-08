@@ -53,8 +53,6 @@ interface MarketAnalytics {
   officers: Array<{ name: string; revenue: number; transactions: number; share: number }>
 }
 
-type AnalyticsPeriod = 'all' | 'today' | '7days' | 'month'
-
 interface Props {
   userId: string
   impersonating?: boolean
@@ -100,7 +98,7 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
   const [chartData, setChartData] = useState<any[]>([])
   const [chartMode, setChartMode] = useState<'daily' | 'weekly' | 'monthly'>('weekly')
   const [chartDate, setChartDate] = useState(() => toLocalDateKey(new Date()))
-  const [analyticsPeriod, setAnalyticsPeriod] = useState<AnalyticsPeriod>('all')
+  const [overviewMonth, setOverviewMonth] = useState(() => toLocalDateKey(new Date()).slice(0, 7))
   const [editingMarket, setEditingMarket] = useState(false)
   const [marketForm, setMarketForm] = useState<any>({ name: '', code: '', address: '', street: '', street_number: '', kecamatan: '', city: '', province: '', postal_code: '', description: '', status: '' })
   const [profileOpen, setProfileOpen] = useState(false)
@@ -124,7 +122,7 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
 
   useEffect(() => {
     loadMarketStats()
-  }, [userId, analyticsPeriod])
+  }, [userId, overviewMonth])
 
   useEffect(() => {
     loadUserProfile()
@@ -603,16 +601,10 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
 
       const stallIds = stallsData?.map(s => s.id) || []
       const stallById = new Map((stallsData || []).map((stall) => [stall.id, stall]))
-      const periodStart = new Date()
-      let transactionDateFrom = ''
-      if (analyticsPeriod === 'today') {
-        transactionDateFrom = periodStart.toISOString().slice(0, 10)
-      } else if (analyticsPeriod === '7days') {
-        periodStart.setDate(periodStart.getDate() - 6)
-        transactionDateFrom = periodStart.toISOString().slice(0, 10)
-      } else if (analyticsPeriod === 'month') {
-        transactionDateFrom = new Date(periodStart.getFullYear(), periodStart.getMonth(), 1).toISOString().slice(0, 10)
-      }
+      const periodStart = new Date(`${overviewMonth}-01T00:00:00`)
+      const periodEnd = new Date(periodStart.getFullYear(), periodStart.getMonth() + 1, 1)
+      const transactionDateFrom = toLocalDateKey(periodStart)
+      const transactionDateTo = toLocalDateKey(periodEnd)
 
       let transactionCount = 0
       let totalRevenue = 0
@@ -627,7 +619,7 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
           .select('amount, stall_id, officer_id', { count: 'exact' })
           .in('stall_id', stallIds)
           .range(0, transactionBatchSize - 1)
-        if (transactionDateFrom) firstTransactionQuery = firstTransactionQuery.gte('transaction_date', transactionDateFrom)
+        firstTransactionQuery = firstTransactionQuery.gte('transaction_date', transactionDateFrom).lt('transaction_date', transactionDateTo)
         const { count, data: firstBatch, error: transactionError } = await firstTransactionQuery
 
         if (transactionError) throw transactionError
@@ -646,7 +638,7 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
               .select('amount, stall_id, officer_id')
               .in('stall_id', stallIds)
               .range(offset, offset + transactionBatchSize - 1)
-            if (transactionDateFrom) transactionQuery = transactionQuery.gte('transaction_date', transactionDateFrom)
+            transactionQuery = transactionQuery.gte('transaction_date', transactionDateFrom).lt('transaction_date', transactionDateTo)
             const { data, error } = await transactionQuery
 
             if (error) throw error
@@ -1000,6 +992,25 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
 
         return (
           <>
+            <div className="overview-toolbar">
+              <div>
+                <span className="overview-toolbar-kicker">Periode overview</span>
+                <strong>Semua statistik mengikuti bulan yang dipilih</strong>
+              </div>
+              <label className="overview-month-picker">
+                <span>Bulan</span>
+                <input
+                  type="month"
+                  value={overviewMonth}
+                  onChange={(event) => {
+                    const nextMonth = event.target.value
+                    setOverviewMonth(nextMonth)
+                    setChartDate(`${nextMonth}-01`)
+                    setChartMode('monthly')
+                  }}
+                />
+              </label>
+            </div>
             <div className="overview-top-row">
               {topCards.map((card) => (
                 <div key={card.label} className="mini-card" style={{ background: card.color }}>
@@ -1219,15 +1230,7 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
                   <span className="analytics-kicker">Analitik operasional</span>
                   <h3 id="market-analytics-title">Kontributor terbesar</h3>
                 </div>
-                <label className="analytics-period-filter">
-                  <span>Periode</span>
-                  <select value={analyticsPeriod} onChange={(event) => setAnalyticsPeriod(event.target.value as AnalyticsPeriod)}>
-                    <option value="all">Semua waktu</option>
-                    <option value="today">Hari ini</option>
-                    <option value="7days">7 hari terakhir</option>
-                    <option value="month">Bulan ini</option>
-                  </select>
-                </label>
+                <span className="analytics-period">Bulan {overviewMonth}</span>
               </div>
               <div className="analytics-grid">
                 {[

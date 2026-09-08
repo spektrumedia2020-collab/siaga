@@ -37,6 +37,50 @@
   background: #fff;
 }
 
+.overview-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(29, 61, 7, 0.1);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.overview-toolbar-kicker {
+  display: block;
+  margin-bottom: 0.2rem;
+  color: #5f6f2c;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.overview-toolbar strong {
+  color: #17380d;
+  font-size: 0.92rem;
+}
+
+.overview-month-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #475569;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.overview-month-picker input {
+  padding: 0.55rem 0.65rem;
+  border: 1px solid rgba(29, 61, 7, 0.16);
+  border-radius: 8px;
+  color: #1f2937;
+  background: #fff;
+}
+
 .analytics-section-header {
   display: flex;
   align-items: flex-end;
@@ -78,6 +122,11 @@
   background: #fff;
   color: #1f2937;
   font: inherit;
+}
+
+.analytics-period {
+  color: #64748b;
+  font-size: 0.82rem;
 }
 
 .analytics-grid {
@@ -230,6 +279,11 @@
 }
 
 @media (max-width: 760px) {
+  .overview-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .chart-card-header {
     align-items: flex-start;
     flex-direction: column;
