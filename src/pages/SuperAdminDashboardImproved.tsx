@@ -75,6 +75,20 @@ export function SuperAdminDashboardImproved({ onImpersonate }: Props) {
               .select('*', { count: 'exact' })
               .eq('market_id', market.id)
 
+            const resolvedStallCount = stallCount || 0
+            let resolvedStatus = market.status || 'NONAKTIF'
+            if (resolvedStallCount === 0) {
+              resolvedStatus = 'NONAKTIF'
+              if (market.status !== 'NONAKTIF') {
+                const { error: statusError } = await supabase
+                  .from('markets')
+                  .update({ status: 'NONAKTIF' })
+                  .eq('id', market.id)
+
+                if (statusError) console.warn(`Gagal menonaktifkan pasar ${market.name}:`, statusError)
+              }
+            }
+
             const { count: officerCount } = await supabase
               .from('users')
               .select('*', { count: 'exact' })
@@ -110,7 +124,8 @@ export function SuperAdminDashboardImproved({ onImpersonate }: Props) {
 
             return {
               ...market,
-              stallCount: stallCount || 0,
+              status: resolvedStatus,
+              stallCount: resolvedStallCount,
               officerCount: officerCount || 0,
               transactionCount,
               totalRevenue
@@ -312,7 +327,7 @@ export function SuperAdminDashboardImproved({ onImpersonate }: Props) {
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie data={statusData} cx="50%" cy="50%" innerRadius={50} outerRadius={100} fill="#8884d8" dataKey="value" label>
-                      {statusData.map((entry, index) => (
+                      {statusData.map((_entry, index) => (
                         <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                       ))}
                     </Pie>
