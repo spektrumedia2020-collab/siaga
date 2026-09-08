@@ -111,7 +111,7 @@ export function PerumdaPage() {
             <img src="/pdpasar.jpeg" alt="Aktivitas pasar" />
             <div className="perumda-login-visual-overlay" />
             <div className="perumda-login-visual-copy">
-              <div className="perumda-mark">S</div>
+              <div className="perumda-mark"><img src="/logo.jpeg" alt="Logo SiAga" /></div>
               <p className="perumda-eyebrow">SIAGA • PERUMDA</p>
               <h1>Melihat seluruh pasar dengan lebih jernih.</h1>
               <p>Ringkasan operasional untuk memantau denyut pasar dari satu tempat.</p>
