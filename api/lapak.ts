@@ -1,4 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
+import bcrypt from 'bcryptjs'
+
+function cleanEnvironmentValue(value?: string) {
+  return String(value || '').trim().replace(/^['"]|['"]$/g, '')
+}
 
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -12,8 +17,13 @@ export default async function handler(req: any, res: any) {
   const marketId = Number(req.body?.marketId)
   const stallCode = String(req.body?.code || '').trim()
   const pin = String(req.body?.pin || '')
-  const expectedPin = process.env.PUBLIC_STALL_PIN || '1234'
-  if (pin !== expectedPin) return res.status(401).json({ error: 'PIN tidak valid' })
+  const configuredPin = cleanEnvironmentValue(process.env.PUBLIC_STALL_PIN)
+  const configuredPinHash = cleanEnvironmentValue(process.env.PUBLIC_STALL_PIN_HASH)
+  const expectedPin = configuredPin || (!configuredPinHash ? '1234' : '')
+  const validPin = expectedPin
+    ? pin === expectedPin
+    : await bcrypt.compare(pin, configuredPinHash)
+  if (!/^\d{4}$/.test(pin) || !validPin) return res.status(401).json({ error: 'PIN tidak valid' })
   if (!Number.isInteger(marketId) || marketId <= 0 || !stallCode) {
     return res.status(400).json({ error: 'Market ID dan kode lapak wajib diisi' })
   }

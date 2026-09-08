@@ -59,35 +59,49 @@ export function PublicStallPage({ marketId, stallCode }: Props) {
 
   if (!unlocked) {
     return (
-      <main className="public-stall-page">
-        <div className="public-stall-panel public-stall-pin-panel">
-          <div className="public-stall-brand">
-            <img src="/logo.jpeg" alt="Logo SiAga" />
-            <div><p>Akses pemilik lapak</p><h1>Informasi Lapak</h1></div>
-          </div>
-          <form className="public-stall-pin-form" onSubmit={(event) => { event.preventDefault(); loadStall(pin) }}>
-            <label htmlFor="stall-pin">Masukkan PIN</label>
-            <input
-              id="stall-pin"
-              type="password"
-              inputMode="numeric"
-              maxLength={4}
-              value={pin}
-              onChange={(event) => setPin(event.target.value.replace(/\D/g, ''))}
-              placeholder="••••"
-              autoFocus
-              required
-            />
-            <button type="submit" disabled={loading || pin.length !== 4}>Buka informasi</button>
-          </form>
-          {error ? <p className="public-stall-pin-error">{error}</p> : null}
-          <div className="public-stall-demo-section">
-            <p className="public-stall-demo-label">atau akses demo</p>
-            <button type="button" className="public-stall-demo-button" onClick={() => loadStall('1234')} disabled={loading}>
-              Demo Pedagang
-            </button>
-          </div>
-          <footer>Masukkan PIN untuk melihat tarif dan riwayat transaksi.</footer>
+      <main className="public-stall-page public-stall-login-page">
+        <div className="public-stall-login-shell">
+          <aside className="public-stall-login-visual">
+            <img src="/pasar.jpeg" alt="Aktivitas pasar" />
+            <div className="public-stall-login-overlay" />
+            <div className="public-stall-login-copy">
+              <img src="/logo.jpeg" alt="Logo SiAga" />
+              <p>Akses pemilik lapak</p>
+              <h1>Informasi lapak, langsung di tangan.</h1>
+              <span>Tarif dan riwayat transaksi dalam satu tampilan.</span>
+            </div>
+          </aside>
+          <section className="public-stall-panel public-stall-pin-panel">
+            <div className="public-stall-pin-heading">
+              <p>SIAGA • LAPAK</p>
+              <h2>Buka informasi lapak</h2>
+              <span>Masukkan PIN 4 digit untuk melanjutkan.</span>
+            </div>
+            <form className="public-stall-pin-form" onSubmit={(event) => { event.preventDefault(); loadStall(pin) }}>
+              <label htmlFor="stall-pin">PIN akses</label>
+              <input
+                id="stall-pin"
+                type="password"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={4}
+                value={pin}
+                onChange={(event) => setPin(event.target.value.replace(/\D/g, ''))}
+                placeholder="••••"
+                autoFocus
+                required
+              />
+              <button type="submit" disabled={loading || pin.length !== 4}>{loading ? 'Memuat...' : 'Buka informasi'}</button>
+            </form>
+            {error ? <p className="public-stall-pin-error">{error}</p> : null}
+            <div className="public-stall-demo-section">
+              <p className="public-stall-demo-label">Perlu melihat contoh?</p>
+              <button type="button" className="public-stall-demo-button" onClick={() => loadStall('1234')} disabled={loading}>
+                Buka demo pedagang
+              </button>
+            </div>
+            <footer>Data lapak dilindungi dan hanya dapat diakses dengan PIN.</footer>
+          </section>
         </div>
       </main>
     )
