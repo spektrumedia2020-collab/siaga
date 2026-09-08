@@ -48,10 +48,12 @@ interface MarketStats {
 }
 
 interface MarketAnalytics {
-  sectors: Array<{ name: string; revenue: number; transactions: number }>
-  stalls: Array<{ name: string; revenue: number; transactions: number }>
-  officers: Array<{ name: string; revenue: number; transactions: number }>
+  sectors: Array<{ name: string; revenue: number; transactions: number; share: number }>
+  stalls: Array<{ name: string; revenue: number; transactions: number; share: number }>
+  officers: Array<{ name: string; revenue: number; transactions: number; share: number }>
 }
+
+type AnalyticsPeriod = 'all' | 'today' | '7days' | 'month'
 
 interface Props {
   userId: string
@@ -89,6 +91,7 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
   const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState<PageType>('overview')
   const [chartData, setChartData] = useState<any[]>([])
+  const [analyticsPeriod, setAnalyticsPeriod] = useState<AnalyticsPeriod>('all')
   const [editingMarket, setEditingMarket] = useState(false)
   const [marketForm, setMarketForm] = useState<any>({ name: '', code: '', address: '', street: '', street_number: '', kecamatan: '', city: '', province: '', postal_code: '', description: '', status: '' })
   const [profileOpen, setProfileOpen] = useState(false)
@@ -112,6 +115,9 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
 
   useEffect(() => {
     loadMarketStats()
+  }, [userId, analyticsPeriod])
+
+  useEffect(() => {
     loadUserProfile()
     loadUserRole()
   }, [userId])
@@ -541,6 +547,16 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
 
       const stallIds = stallsData?.map(s => s.id) || []
       const stallById = new Map((stallsData || []).map((stall) => [stall.id, stall]))
+      const periodStart = new Date()
+      let transactionDateFrom = ''
+      if (analyticsPeriod === 'today') {
+        transactionDateFrom = periodStart.toISOString().slice(0, 10)
+      } else if (analyticsPeriod === '7days') {
+        periodStart.setDate(periodStart.getDate() - 6)
+        transactionDateFrom = periodStart.toISOString().slice(0, 10)
+      } else if (analyticsPeriod === 'month') {
+        transactionDateFrom = new Date(periodStart.getFullYear(), periodStart.getMonth(), 1).toISOString().slice(0, 10)
+      }
 
       let transactionCount = 0
       let totalRevenue = 0
@@ -550,11 +566,13 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
 
       if (stallIds.length > 0) {
         const transactionBatchSize = 1000
-        const { count, data: firstBatch, error: transactionError } = await supabaseClient
+        let firstTransactionQuery = supabaseClient
           .from('transactions')
           .select('amount, stall_id, officer_id', { count: 'exact' })
           .in('stall_id', stallIds)
           .range(0, transactionBatchSize - 1)
+        if (transactionDateFrom) firstTransactionQuery = firstTransactionQuery.gte('transaction_date', transactionDateFrom)
+        const { count, data: firstBatch, error: transactionError } = await firstTransactionQuery
 
         if (transactionError) throw transactionError
         const totalCount = count || 0
@@ -567,11 +585,13 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
         for (let index = 0; index < remainingOffsets.length; index += 10) {
           const offsets = remainingOffsets.slice(index, index + 10)
           const batches = await Promise.all(offsets.map(async (offset) => {
-            const { data, error } = await supabaseClient
+            let transactionQuery = supabaseClient
               .from('transactions')
               .select('amount, stall_id, officer_id')
               .in('stall_id', stallIds)
               .range(offset, offset + transactionBatchSize - 1)
+            if (transactionDateFrom) transactionQuery = transactionQuery.gte('transaction_date', transactionDateFrom)
+            const { data, error } = await transactionQuery
 
             if (error) throw error
             return data || []
@@ -622,15 +642,18 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
       setAnalytics({
         sectors: (sectorsData || []).map((sector: any) => ({
           name: sector.name,
-          ...(sectorRevenue.get(sector.id) || { revenue: 0, transactions: 0 })
+          ...(sectorRevenue.get(sector.id) || { revenue: 0, transactions: 0 }),
+          share: totalRevenue > 0 ? ((sectorRevenue.get(sector.id)?.revenue || 0) / totalRevenue) * 100 : 0
         })).sort((a, b) => b.revenue - a.revenue).slice(0, 5),
         stalls: (stallsData || []).map((stall: any) => ({
           name: stall.code || stall.number || `Lapak #${stall.id}`,
-          ...(stallRevenue.get(stall.id) || { revenue: 0, transactions: 0 })
+          ...(stallRevenue.get(stall.id) || { revenue: 0, transactions: 0 }),
+          share: totalRevenue > 0 ? ((stallRevenue.get(stall.id)?.revenue || 0) / totalRevenue) * 100 : 0
         })).sort((a, b) => b.revenue - a.revenue).slice(0, 5),
         officers: (officersData || []).map((officer: any) => ({
           name: officer.nama || `Petugas #${officer.id_user}`,
-          ...(officerRevenue.get(officer.id_user) || { revenue: 0, transactions: 0 })
+          ...(officerRevenue.get(officer.id_user) || { revenue: 0, transactions: 0 }),
+          share: totalRevenue > 0 ? ((officerRevenue.get(officer.id_user)?.revenue || 0) / totalRevenue) * 100 : 0
         })).sort((a, b) => b.revenue - a.revenue).slice(0, 5)
       })
 
@@ -1117,7 +1140,15 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
                   <span className="analytics-kicker">Analitik operasional</span>
                   <h3 id="market-analytics-title">Kontributor terbesar</h3>
                 </div>
-                <span className="analytics-period">Berdasarkan seluruh transaksi tercatat</span>
+                <label className="analytics-period-filter">
+                  <span>Periode</span>
+                  <select value={analyticsPeriod} onChange={(event) => setAnalyticsPeriod(event.target.value as AnalyticsPeriod)}>
+                    <option value="all">Semua waktu</option>
+                    <option value="today">Hari ini</option>
+                    <option value="7days">7 hari terakhir</option>
+                    <option value="month">Bulan ini</option>
+                  </select>
+                </label>
               </div>
               <div className="analytics-grid">
                 {[
@@ -1139,7 +1170,13 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
                               margin={{ top: 0, right: 12, left: 4, bottom: 0 }}
                             >
                               <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="rgba(29, 61, 7, 0.1)" />
-                              <XAxis type="number" hide />
+                              <XAxis
+                                type="number"
+                                tickLine={false}
+                                axisLine={false}
+                                tick={{ fill: '#64748b', fontSize: 10 }}
+                                tickFormatter={(value) => `Rp ${Number(value || 0).toLocaleString('id-ID')}`}
+                              />
                               <YAxis
                                 type="category"
                                 dataKey="name"
@@ -1160,6 +1197,7 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
                               <div className="analytics-name-wrap">
                                 <strong>{item.name}</strong>
                                 <span>{item.transactions.toLocaleString('id-ID')} transaksi</span>
+                                <span>{item.share.toFixed(1)}% dari total pendapatan</span>
                               </div>
                               <strong className="analytics-revenue">Rp {item.revenue.toLocaleString('id-ID')}</strong>
                             </div>

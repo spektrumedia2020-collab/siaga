@@ -62,9 +62,22 @@
   font-size: 1.25rem;
 }
 
-.analytics-period {
+.analytics-period-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
   color: #64748b;
   font-size: 0.82rem;
+}
+
+.analytics-period-filter select {
+  min-width: 150px;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid rgba(29, 61, 7, 0.16);
+  border-radius: 8px;
+  background: #fff;
+  color: #1f2937;
+  font: inherit;
 }
 
 .analytics-grid {
