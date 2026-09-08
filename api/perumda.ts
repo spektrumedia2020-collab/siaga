@@ -13,6 +13,10 @@ function getSecret() {
   return process.env.PERUMDA_JWT_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 }
 
+function cleanEnvironmentValue(value?: string) {
+  return String(value || '').trim().replace(/^['"]|['"]$/g, '')
+}
+
 async function fetchAll(
   supabaseAdmin: any,
   table: string,
@@ -62,8 +66,8 @@ export default async function handler(req: any, res: any) {
 
   if (req.method === 'POST') {
     const submittedPin = String(req.body?.pin || '')
-    const configuredPin = String(process.env.PERUMDA_PIN || '')
-    const configuredPinHash = String(process.env.PERUMDA_PIN_HASH || '')
+    const configuredPin = cleanEnvironmentValue(process.env.PERUMDA_PIN)
+    const configuredPinHash = cleanEnvironmentValue(process.env.PERUMDA_PIN_HASH)
     const validPin = configuredPinHash
       ? await bcrypt.compare(submittedPin, configuredPinHash)
       : Boolean(configuredPin && submittedPin === configuredPin)

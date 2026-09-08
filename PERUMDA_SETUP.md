@@ -11,13 +11,25 @@ Wajib tersedia di deployment:
 - `PERUMDA_JWT_SECRET`
 - `PERUMDA_PIN_HASH` (disarankan untuk produksi)
 
+PIN yang diketik pada halaman `/perumda` adalah PIN asli 6 digit, bukan hash.
+Contoh: jika PIN yang dipilih adalah `123456`, masukkan `123456` pada halaman login.
+
 Untuk membuat hash PIN 6 digit:
 
 ```bash
 node -e "const bcrypt=require('bcryptjs'); console.log(bcrypt.hashSync('123456', 12))"
 ```
 
-Simpan hasilnya sebagai `PERUMDA_PIN_HASH`. `PERUMDA_PIN` tetap didukung sebagai fallback sederhana untuk development lokal, tetapi tidak disarankan untuk produksi.
+Salin hanya hasil yang diawali `$2b$12$...` ke Vercel sebagai nilai `PERUMDA_PIN_HASH`.
+Jangan salin tanda kutip, perintah terminal, atau teks `123456` ke variable hash.
+
+Untuk development lokal, konfigurasi paling sederhana adalah:
+
+```env
+PERUMDA_PIN=123456
+```
+
+Jika `PERUMDA_PIN_HASH` dan `PERUMDA_PIN` sama-sama diisi, aplikasi memakai `PERUMDA_PIN_HASH`.
 
 ## Isi Laporan
 
