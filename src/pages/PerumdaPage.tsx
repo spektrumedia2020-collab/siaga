@@ -108,7 +108,7 @@ export function PerumdaPage() {
       <main className="perumda-page perumda-login-page">
         <div className="perumda-login-shell">
           <aside className="perumda-login-visual">
-            <img src="/pasar.jpeg" alt="Aktivitas pasar" />
+            <img src="/pdpasar.jpeg" alt="Aktivitas pasar" />
             <div className="perumda-login-visual-overlay" />
             <div className="perumda-login-visual-copy">
               <div className="perumda-mark">S</div>
