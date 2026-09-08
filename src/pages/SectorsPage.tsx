@@ -168,6 +168,7 @@ export function SectorsPage({ marketId }: SectorsPageProps) {
   }
 
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null)
+  const [viewTarget, setViewTarget] = useState<Sector | null>(null)
   const [deleting, setDeleting] = useState(false)
 
   const handleDelete = async (id: number) => {
@@ -264,6 +265,9 @@ export function SectorsPage({ marketId }: SectorsPageProps) {
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
+                  <button type="button" className="btn-secondary" onClick={() => setViewTarget(sector)}>
+                    Lihat
+                  </button>
                   <button type="button" className="btn-secondary" onClick={() => handleEdit(sector)}>
                     Edit
                   </button>
@@ -276,6 +280,50 @@ export function SectorsPage({ marketId }: SectorsPageProps) {
           </div>
         )}
       </div>
+
+      {viewTarget ? (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="sector-view-title"
+          onClick={() => setViewTarget(null)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 16,
+            background: 'rgba(15, 23, 42, 0.45)'
+          }}
+        >
+          <div
+            onClick={(event) => event.stopPropagation()}
+            style={{
+              width: 'min(100%, 420px)',
+              padding: 20,
+              borderRadius: 12,
+              background: '#fff',
+              boxShadow: '0 20px 45px rgba(15, 23, 42, 0.2)'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
+              <h3 id="sector-view-title" style={{ margin: 0 }}>Detail Sektor</h3>
+              <button type="button" className="btn-secondary" onClick={() => setViewTarget(null)}>Tutup</button>
+            </div>
+            <div style={{ display: 'grid', gap: 10, marginTop: 18 }}>
+              <div><small>Nama sektor</small><strong style={{ display: 'block' }}>{viewTarget.name}</strong></div>
+              <div><small>Pasar</small><strong style={{ display: 'block' }}>{marketName || marketId || '-'}</strong></div>
+              <div><small>Petugas penarik</small><strong style={{ display: 'block' }}>{officers.find((officer) => officer.id_user === viewTarget.officer_id)?.nama || 'Belum ditugaskan'}</strong></div>
+              <div><small>ID sektor</small><strong style={{ display: 'block' }}>{viewTarget.id}</strong></div>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 20 }}>
+              <button type="button" className="btn-primary" onClick={() => { setViewTarget(null); handleEdit(viewTarget) }}>Edit sektor</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <ConfirmDialog
         open={!!deleteTarget}
