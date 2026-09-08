@@ -161,6 +161,12 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
       weekAgo.setDate(today.getDate() - 6)
       const weekStart = new Date(weekAgo.getFullYear(), weekAgo.getMonth(), weekAgo.getDate()).toISOString()
       const weekEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).toISOString()
+      const toDateKey = (date: Date) => {
+        const year = date.getFullYear()
+        const month = String(date.getMonth() + 1).padStart(2, '0')
+        const day = String(date.getDate()).padStart(2, '0')
+        return `${year}-${month}-${day}`
+      }
 
       let weeklyTransactions: any[] = []
       if (stallIds.length > 0) {
@@ -177,12 +183,12 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
       for (let i = 0; i < 7; i++) {
         const d = new Date(today)
         d.setDate(today.getDate() - (6 - i))
-        const key = d.toISOString().split('T')[0]
+        const key = toDateKey(d)
         dailyMap.set(key, { revenue: 0, transactions: 0 })
       }
 
       weeklyTransactions.forEach((tx: any) => {
-        const dayKey = (tx.created_at || '').split('T')[0]
+        const dayKey = toDateKey(new Date(tx.created_at))
         if (dailyMap.has(dayKey)) {
           const existing = dailyMap.get(dayKey)!
           existing.revenue += parseFloat(tx.amount || 0)
@@ -191,13 +197,11 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
       })
 
       const dayLabels = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
-      const currentDayIndex = today.getDay()
 
       const nextChartData = Array.from({ length: 7 }, (_, i) => {
-        const dayOffset = i - currentDayIndex + 1
         const targetDate = new Date(today)
-        targetDate.setDate(today.getDate() + dayOffset)
-        const targetKey = targetDate.toISOString().split('T')[0]
+        targetDate.setDate(today.getDate() - (6 - i))
+        const targetKey = toDateKey(targetDate)
         const dayName = dayLabels[targetDate.getDay()]
         const dataPoint = dailyMap.get(targetKey) || { revenue: 0, transactions: 0 }
         return {
@@ -969,10 +973,11 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
                   </div>
                   <div className="chart-wrapper">
                     <ResponsiveContainer width="100%" height={260}>
-                      <LineChart data={displayChartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+                      <LineChart data={displayChartData} margin={{ top: 10, right: 20, left: 20, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(29, 61, 7, 0.12)" />
                         <XAxis dataKey="name" stroke="#3d5224" tickLine={false} axisLine={false} />
-                        <YAxis stroke="#3d5224" tickLine={false} axisLine={false} />
+                        <YAxis yAxisId="revenue" stroke="#3d5224" tickLine={false} axisLine={false} tickFormatter={(value) => `${Math.round(Number(value) / 1000)}k`} />
+                        <YAxis yAxisId="transactions" orientation="right" stroke="#b58b00" tickLine={false} axisLine={false} allowDecimals={false} />
                         <Tooltip
                           formatter={(value: number | string | readonly (number | string)[] | undefined) => {
                             if (typeof value === 'number') {
@@ -987,8 +992,8 @@ export function MarketDashboard({ userId, impersonating = false, impersonatedRol
                           }}
                         />
                         <Legend verticalAlign="top" height={36} />
-                        <Line type="monotone" dataKey="revenue" stroke="#1f4e12" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                        <Line type="monotone" dataKey="transactions" stroke="#f4c300" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                        <Line yAxisId="revenue" type="monotone" dataKey="revenue" stroke="#1f4e12" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                        <Line yAxisId="transactions" type="monotone" dataKey="transactions" stroke="#f4c300" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
                       </LineChart>
                     </ResponsiveContainer>
                   </div>
