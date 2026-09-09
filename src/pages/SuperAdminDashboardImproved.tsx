@@ -26,6 +26,61 @@ interface MarketStats {
 
 const CHART_COLORS = ['#1f7a1f', '#f4c300', '#3d5224', '#ff6b6b', '#4ecdc4', '#45b7d1']
 
+const formatDateInput = (date: Date) => date.toISOString().slice(0, 10)
+
+const getDefaultRange = () => {
+  const to = new Date()
+  const from = new Date()
+  from.setDate(to.getDate() - 29)
+
+  return {
+    from: formatDateInput(from),
+    to: formatDateInput(to)
+  }
+}
+
+const parseDateInput = (value: string) => {
+  const [year, month, day] = value.split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
+
+const normalizeRange = (range: { from: string; to: string }) => {
+  const start = parseDateInput(range.from)
+  const end = parseDateInput(range.to)
+
+  if (start > end) {
+    return {
+      from: range.to,
+      to: range.from
+    }
+  }
+
+  return range
+}
+
+const isWithinRange = (transaction: any, range: { from: string; to: string }) => {
+  const rawDate = transaction.transaction_date || transaction.created_at
+  if (!rawDate) return false
+
+  const date = new Date(rawDate)
+  if (Number.isNaN(date.getTime())) return false
+
+  const target = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+  const from = new Date(parseDateInput(range.from))
+  const to = new Date(parseDateInput(range.to))
+
+  from.setHours(0, 0, 0, 0)
+  to.setHours(23, 59, 59, 999)
+
+  return target >= from && target <= to
+}
+
+const addDays = (value: string, days: number) => {
+  const date = parseDateInput(value)
+  date.setDate(date.getDate() + days)
+  return formatDateInput(date)
+}
+
 interface Props {
   onImpersonate?: (userId: string, role: UserRole) => void
 }
@@ -36,6 +91,8 @@ export function SuperAdminDashboardImproved({ onImpersonate }: Props) {
   const [loading, setLoading] = useState(true)
   const [userEmail, setUserEmail] = useState<string>('')
   const [showProfile, setShowProfile] = useState(false)
+  const [filters, setFilters] = useState(getDefaultRange)
+  const [appliedFilters, setAppliedFilters] = useState(getDefaultRange)
   const [totalStats, setTotalStats] = useState({
     marketCount: 0,
     stallCount: 0,
@@ -49,13 +106,24 @@ export function SuperAdminDashboardImproved({ onImpersonate }: Props) {
     statusData: [] as Array<{ name: string; value: number }>,
     topMarkets: [] as Array<{ name: string; revenue: number; transactions: number }>,
     topStalls: [] as Array<{ name: string; revenue: number; transactions: number }>,
-    topOfficers: [] as Array<{ name: string; revenue: number; transactions: number }>
+    topOfficers: [] as Array<{ name: string; revenue: number; transactions: number }>,
+    summary: {
+      currentRevenue: 0,
+      previousRevenue: 0,
+      currentTransactions: 0,
+      previousTransactions: 0,
+      revenueDelta: 0,
+      revenueDeltaPercent: 0
+    }
   })
 
   useEffect(() => {
-    loadStats()
     loadUser()
   }, [])
+
+  useEffect(() => {
+    loadStats(appliedFilters)
+  }, [appliedFilters])
 
   const loadUser = async () => {
     try {
@@ -67,9 +135,10 @@ export function SuperAdminDashboardImproved({ onImpersonate }: Props) {
     }
   }
 
-  const loadStats = async () => {
+  const loadStats = async (range = getDefaultRange()) => {
     try {
       const supabase = getSupabaseClient()
+      const normalizedRange = normalizeRange(range)
 
       const [marketsResult, stallsResult, usersResult, transactionsResult] = await Promise.all([
         supabase
@@ -149,34 +218,49 @@ export function SuperAdminDashboardImproved({ onImpersonate }: Props) {
         totalRevenue
       })
 
-      const now = new Date()
-      const startDate = new Date(now)
-      startDate.setDate(now.getDate() - 6)
-      startDate.setHours(0, 0, 0, 0)
+      const currentTransactions = transactionsData.filter((transaction: any) => isWithinRange(transaction, normalizedRange))
+      const currentRevenue = currentTransactions.reduce((sum: number, transaction: any) => sum + (Number(transaction.amount) || 0), 0)
+      const currentTransactionsCount = currentTransactions.length
 
-      const last7Days = Array.from({ length: 7 }, (_, index) => {
-        const date = new Date(startDate)
-        date.setDate(startDate.getDate() + index)
-        return {
-          key: date.toISOString().split('T')[0],
-          shortLabel: date.toLocaleDateString('id-ID', { weekday: 'short' }),
-          fullLabel: date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' })
-        }
-      })
+      const dateDiff = Math.max(1, Math.round((parseDateInput(normalizedRange.to).getTime() - parseDateInput(normalizedRange.from).getTime()) / 86400000) + 1)
+      const previousFrom = addDays(normalizedRange.from, -dateDiff)
+      const previousTo = addDays(normalizedRange.from, -1)
+
+      const previousTransactions = transactionsData.filter((transaction: any) => isWithinRange(transaction, {
+        from: previousFrom,
+        to: previousTo
+      }))
+
+      const previousRevenue = previousTransactions.reduce((sum: number, transaction: any) => sum + (Number(transaction.amount) || 0), 0)
+      const previousTransactionsCount = previousTransactions.length
+
+      const revenueDelta = currentRevenue - previousRevenue
+      const revenueDeltaPercent = previousRevenue > 0 ? (revenueDelta / previousRevenue) * 100 : 0
+
+      const chartRangeStart = parseDateInput(normalizedRange.from)
+      const chartRangeEnd = parseDateInput(normalizedRange.to)
+      const chartDays = [] as Array<{ key: string; shortLabel: string }>
+
+      for (let cursor = new Date(chartRangeStart); cursor <= chartRangeEnd; cursor = new Date(cursor.getTime() + 86400000)) {
+        chartDays.push({
+          key: formatDateInput(cursor),
+          shortLabel: cursor.toLocaleDateString('id-ID', { weekday: 'short' })
+        })
+      }
 
       const revenueByDay = new Map<string, { revenue: number; transactions: number }>()
-      last7Days.forEach((day) => {
+      chartDays.forEach((day) => {
         revenueByDay.set(day.key, { revenue: 0, transactions: 0 })
       })
 
-      transactionsData.forEach((transaction: any) => {
+      currentTransactions.forEach((transaction: any) => {
         const rawDate = transaction.transaction_date || transaction.created_at
         if (!rawDate) return
 
         const txDate = new Date(rawDate)
         if (Number.isNaN(txDate.getTime())) return
 
-        const key = txDate.toISOString().split('T')[0]
+        const key = formatDateInput(txDate)
         if (!revenueByDay.has(key)) return
 
         const current = revenueByDay.get(key) || { revenue: 0, transactions: 0 }
@@ -185,7 +269,7 @@ export function SuperAdminDashboardImproved({ onImpersonate }: Props) {
         revenueByDay.set(key, current)
       })
 
-      const dailyRevenueData = last7Days.map((day) => {
+      const dailyRevenueData = chartDays.map((day) => {
         const current = revenueByDay.get(day.key) || { revenue: 0, transactions: 0 }
 
         return {
@@ -215,7 +299,7 @@ export function SuperAdminDashboardImproved({ onImpersonate }: Props) {
         })
       })
 
-      transactionsData.forEach((transaction: any) => {
+      currentTransactions.forEach((transaction: any) => {
         const stallId = Number(transaction.stall_id)
         if (!stallId || !stallRevenueMap.has(stallId)) return
 
@@ -231,7 +315,7 @@ export function SuperAdminDashboardImproved({ onImpersonate }: Props) {
         .slice(0, 5)
 
       const officerRevenueMap = new Map<string, { name: string; revenue: number; transactions: number }>()
-      transactionsData.forEach((transaction: any) => {
+      currentTransactions.forEach((transaction: any) => {
         const officerId = transaction.officer_id
         if (!officerId) return
 
@@ -252,12 +336,28 @@ export function SuperAdminDashboardImproved({ onImpersonate }: Props) {
         .sort((a, b) => b.revenue - a.revenue)
         .slice(0, 5)
 
-      const topMarkets = marketStats
-        .map((market) => ({
+      const marketRevenueMap = new Map<number, { name: string; revenue: number; transactions: number }>()
+      marketsData.forEach((market: any) => {
+        marketRevenueMap.set(market.id, {
           name: market.name,
-          revenue: market.totalRevenue,
-          transactions: market.transactionCount
-        }))
+          revenue: 0,
+          transactions: 0
+        })
+      })
+
+      currentTransactions.forEach((transaction: any) => {
+        const stallId = Number(transaction.stall_id)
+        const stall = stallLookup.get(stallId)
+        if (!stall || !stall.market_id) return
+
+        const current = marketRevenueMap.get(stall.market_id) || { name: 'Pasar', revenue: 0, transactions: 0 }
+        current.revenue += Number(transaction.amount) || 0
+        current.transactions += 1
+        marketRevenueMap.set(stall.market_id, current)
+      })
+
+      const topMarkets = Array.from(marketRevenueMap.values())
+        .filter((item) => item.revenue > 0)
         .sort((a, b) => b.revenue - a.revenue)
         .slice(0, 5)
 
@@ -267,7 +367,15 @@ export function SuperAdminDashboardImproved({ onImpersonate }: Props) {
         statusData,
         topMarkets,
         topStalls,
-        topOfficers
+        topOfficers,
+        summary: {
+          currentRevenue,
+          previousRevenue,
+          currentTransactions: currentTransactionsCount,
+          previousTransactions: previousTransactionsCount,
+          revenueDelta,
+          revenueDeltaPercent
+        }
       })
     } catch (err) {
       console.error('Error loading stats:', err)
@@ -403,6 +511,66 @@ export function SuperAdminDashboardImproved({ onImpersonate }: Props) {
             <div className="section-header">
               <h2>📈 Analytics Dashboard</h2>
             </div>
+
+            <div className="charts-container" style={{ paddingBottom: 0 }}>
+              <div className="chart-card" style={{ display: 'grid', gap: 16 }}>
+                <h3 className="chart-title">📅 Filter Periode</h3>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'end' }}>
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: 6, fontWeight: 600, color: '#334155' }}>
+                    Dari
+                    <input
+                      type="date"
+                      value={filters.from}
+                      onChange={(event) => setFilters((current) => ({ ...current, from: event.target.value }))}
+                      className="siaga-input"
+                    />
+                  </label>
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: 6, fontWeight: 600, color: '#334155' }}>
+                    Sampai
+                    <input
+                      type="date"
+                      value={filters.to}
+                      onChange={(event) => setFilters((current) => ({ ...current, to: event.target.value }))}
+                      className="siaga-input"
+                    />
+                  </label>
+                  <button
+                    className="siaga-btn siaga-btn-primary"
+                    onClick={() => setAppliedFilters(normalizeRange(filters))}
+                    style={{ height: 42 }}
+                  >
+                    Terapkan
+                  </button>
+                </div>
+              </div>
+
+              <div className="chart-card" style={{ display: 'grid', gap: 12 }}>
+                <h3 className="chart-title">🔍 Perbandingan Periode</h3>
+                <div style={{ display: 'grid', gap: 8 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                    <span style={{ color: '#64748b' }}>Revenue periode ini</span>
+                    <strong>Rp {analytics.summary.currentRevenue.toLocaleString('id-ID')}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                    <span style={{ color: '#64748b' }}>Revenue periode sebelumnya</span>
+                    <strong>Rp {analytics.summary.previousRevenue.toLocaleString('id-ID')}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                    <span style={{ color: '#64748b' }}>Delta</span>
+                    <strong style={{ color: analytics.summary.revenueDelta >= 0 ? '#166534' : '#b91c1c' }}>
+                      {analytics.summary.revenueDelta >= 0 ? '+' : '-'}Rp {Math.abs(analytics.summary.revenueDelta).toLocaleString('id-ID')}
+                    </strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                    <span style={{ color: '#64748b' }}>Persentase perubahan</span>
+                    <strong style={{ color: analytics.summary.revenueDeltaPercent >= 0 ? '#166534' : '#b91c1c' }}>
+                      {analytics.summary.revenueDeltaPercent >= 0 ? '+' : ''}{analytics.summary.revenueDeltaPercent.toFixed(1)}%
+                    </strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className="charts-container">
               <div className="chart-card">
                 <h3 className="chart-title">📈 Trend Pendapatan Harian</h3>

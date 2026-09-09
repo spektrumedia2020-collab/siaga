@@ -3,16 +3,41 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 
 const TOKEN_TTL = '1h'
-const PAGE_SIZE = 1000
-
-type QueryBuilder = {
-  range: (from: number, to: number) => Promise<{ data: any[] | null; error: any }>
-}
 
 type DailyTrend = {
   date: string
   transactions: number
   revenue: number
+}
+
+type MarketRow = {
+  id: string | number
+  name?: string
+  status?: string | null
+}
+
+type StallRow = {
+  id: string | number
+  market_id?: string | number | null
+  status?: string | null
+}
+
+type TransactionRow = {
+  id?: string | number
+  market_id?: string | number | null
+  stall_id?: string | number | null
+  amount?: number | string | null
+  status?: string | null
+  transaction_date?: string | null
+  created_at?: string | null
+}
+
+type DepositRow = {
+  id?: string | number
+  market_id?: string | number | null
+  total_amount?: number | string | null
+  status?: string | null
+  created_at?: string | null
 }
 
 function getSecret() {
@@ -21,26 +46,6 @@ function getSecret() {
 
 function cleanEnvironmentValue(value?: string) {
   return String(value || '').trim().replace(/^['"]|['"]$/g, '')
-}
-
-async function fetchAll(
-  supabaseAdmin: any,
-  table: string,
-  select: string,
-  configure?: (query: any) => QueryBuilder
-) {
-  const rows: any[] = []
-  let page = 0
-
-  while (true) {
-    const baseQuery = supabaseAdmin.from(table).select(select)
-    const query = configure ? configure(baseQuery) : baseQuery
-    const { data, error } = await query.range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1)
-    if (error) throw error
-    rows.push(...(data || []))
-    if (!data || data.length < PAGE_SIZE) return rows
-    page += 1
-  }
 }
 
 function getToken(req: any) {
@@ -62,10 +67,18 @@ function normalizeDate(value: unknown) {
   return String(value || '').slice(0, 10)
 }
 
-function isWithinDateRange(value: unknown, from: string, to: string) {
-  const date = normalizeDate(value)
-  if (!date) return false
-  return date >= from && date <= to
+async function fetchRangeRows<T>(
+  supabaseAdmin: any,
+  table: string,
+  select: string,
+  dateField: string,
+  from: string,
+  to: string
+): Promise<T[]> {
+  const query = supabaseAdmin.from(table).select(select)
+  const { data, error } = await query.gte(dateField, from).lte(dateField, to)
+  if (error) throw error
+  return (data || []) as T[]
 }
 
 function addDays(dateString: string, days: number) {
@@ -123,19 +136,21 @@ export default async function handler(req: any, res: any) {
     if (from > to) return res.status(400).json({ error: 'Tanggal mulai melebihi tanggal akhir' })
 
     const supabaseAdmin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
-    const endDate = `${to}T23:59:59.999Z`
-    const [markets, stalls, transactions, deposits] = await Promise.all([
-      fetchAll(supabaseAdmin, 'markets', 'id, name, status'),
-      fetchAll(supabaseAdmin, 'stalls', 'id, market_id, status'),
-      fetchAll(supabaseAdmin, 'transactions', 'id, market_id, stall_id, amount, status, transaction_date, created_at'),
-      fetchAll(supabaseAdmin, 'setoran', 'id, market_id, total_amount, status, created_at')
+    const previousPeriod = getPreviousPeriodRange(from, to)
+
+    const [marketsResult, stallsResult, currentTransactions, previousTransactions, currentDeposits] = await Promise.all([
+      supabaseAdmin.from('markets').select('id, name, status'),
+      supabaseAdmin.from('stalls').select('id, market_id, status'),
+      fetchRangeRows<TransactionRow>(supabaseAdmin, 'transactions', 'id, market_id, stall_id, amount, status, transaction_date, created_at', 'transaction_date', from, to),
+      fetchRangeRows<TransactionRow>(supabaseAdmin, 'transactions', 'id, market_id, stall_id, amount, status, transaction_date, created_at', 'transaction_date', previousPeriod.from, previousPeriod.to),
+      fetchRangeRows<DepositRow>(supabaseAdmin, 'setoran', 'id, market_id, total_amount, status, created_at', 'created_at', `${from}T00:00:00.000Z`, `${to}T23:59:59.999Z`)
     ])
 
-    const currentTransactions = transactions.filter((transaction) => isWithinDateRange(transaction.transaction_date || transaction.created_at, from, to))
-    const currentDeposits = deposits.filter((deposit) => isWithinDateRange(deposit.created_at, from, to))
-    const previousPeriod = getPreviousPeriodRange(from, to)
-    const previousTransactions = transactions.filter((transaction) => isWithinDateRange(transaction.transaction_date || transaction.created_at, previousPeriod.from, previousPeriod.to))
-    const previousDeposits = deposits.filter((deposit) => isWithinDateRange(deposit.created_at, previousPeriod.from, previousPeriod.to))
+    const markets: MarketRow[] = (marketsResult.data || []) as MarketRow[]
+    const stalls: StallRow[] = (stallsResult.data || []) as StallRow[]
+
+    if (marketsResult.error) throw marketsResult.error
+    if (stallsResult.error) throw stallsResult.error
 
     const paidTransactions = currentTransactions.filter((transaction) => String(transaction.status).toLowerCase() === 'paid')
     const paidPreviousTransactions = previousTransactions.filter((transaction) => String(transaction.status).toLowerCase() === 'paid')
@@ -153,9 +168,6 @@ export default async function handler(req: any, res: any) {
     const totalRevenue = paidTransactions.reduce((sum, transaction) => sum + numberValue(transaction.amount), 0)
     const previousRevenue = paidPreviousTransactions.reduce((sum, transaction) => sum + numberValue(transaction.amount), 0)
     const approvedDeposits = currentDeposits
-      .filter((deposit) => String(deposit.status).toLowerCase() === 'approved')
-      .reduce((sum, deposit) => sum + numberValue(deposit.total_amount), 0)
-    const previousApprovedDeposits = previousDeposits
       .filter((deposit) => String(deposit.status).toLowerCase() === 'approved')
       .reduce((sum, deposit) => sum + numberValue(deposit.total_amount), 0)
 

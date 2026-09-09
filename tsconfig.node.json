@@ -13,7 +13,9 @@
     "noEmit": false,
     "outDir": "dist-server",
     "strict": true,
-    "types": ["node"]
+    "types": ["node"],
+    "composite": true,
+    "rootDir": "./src"
   },
   "include": ["src/server.ts", "src/routes/*.ts", "src/middleware/*.ts"],
   "ts-node": {
