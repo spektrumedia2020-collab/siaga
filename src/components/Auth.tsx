@@ -83,23 +83,23 @@ export function Auth({ onLoginSuccess }: AuthProps) {
                 type="button"
                 className="test-account-button"
                 onClick={() => {
-                  setEmail('kepala@siaga.id')
-                  setPassword('DemiSiaga2026!')
-                  setError('')
-                }}
-              >
-                Kepala
-              </button>
-              <button
-                type="button"
-                className="test-account-button"
-                onClick={() => {
                   setEmail('admin@siaga.id')
                   setPassword('DemiSiaga2026!')
                   setError('')
                 }}
               >
-                Admin
+                Super Admin
+              </button>
+              <button
+                type="button"
+                className="test-account-button"
+                onClick={() => {
+                  setEmail('kepala@siaga.id')
+                  setPassword('DemiSiaga2026!')
+                  setError('')
+                }}
+              >
+                Kepala Pasar Niaga
               </button>
               <button
                 type="button"
@@ -110,7 +110,7 @@ export function Auth({ onLoginSuccess }: AuthProps) {
                   setError('')
                 }}
               >
-                Bendahara
+                Bendahara Pasar Niaga
               </button>
             </div>
           </div>
