@@ -23,6 +23,9 @@ npm run dev
 
 VITE_SUPABASE_URL=https://hlvsbmxpkqvniemunygh.supabase.co
 VITE_SUPABASE_ANON_KEY=
+
+# Tampilkan tombol akun test pada halaman login production (opsional)
+VITE_SHOW_TEST_ACCOUNTS=true
 ```
 
 ### Getting Supabase Credentials
