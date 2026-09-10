@@ -5,6 +5,7 @@ import '../pages/SuperAdminDashboardImproved.css'
 import '../styles/layout.css'
 import { MarketsManagement } from './MarketsManagement'
 import { UserManagement } from './UserManagement'
+import { OwnersPage } from './OwnersPage'
 import { RetribusiPage } from './RetribusiPage'
 import { ThemeManagement } from './ThemeManagement'
 import {
@@ -86,8 +87,7 @@ interface Props {
 }
 
 export function SuperAdminDashboardImproved({ onImpersonate }: Props) {
-  const [activeTab, setActiveTab] = useState<'overview' | 'markets' | 'analytics' | 'users' | 'retribusi' | 'themes' | 'settings' | 'backup'>('overview')
-  const [markets, setMarkets] = useState<MarketStats[]>([])
+  const [activeTab, setActiveTab] = useState<'overview' | 'markets' | 'analytics' | 'users' | 'pedagang' | 'retribusi' | 'themes' | 'settings' | 'backup'>('overview')
   const [loading, setLoading] = useState(true)
   const [userEmail, setUserEmail] = useState<string>('')
   const [showProfile, setShowProfile] = useState(false)
@@ -206,8 +206,6 @@ export function SuperAdminDashboardImproved({ onImpersonate }: Props) {
           totalRevenue
         }
       })
-
-      setMarkets(marketStats)
 
       const totalRevenue = marketStats.reduce((sum, market) => sum + market.totalRevenue, 0)
       setTotalStats({
@@ -423,6 +421,9 @@ export function SuperAdminDashboardImproved({ onImpersonate }: Props) {
             </button>
             <button className={`sidebar-item ${activeTab === 'users' ? 'active' : ''}`} onClick={() => setActiveTab('users')}>
               👥 Manajemen User
+            </button>
+            <button className={`sidebar-item ${activeTab === 'pedagang' ? 'active' : ''}`} onClick={() => setActiveTab('pedagang')}>
+              🧑‍💼 Manjement Pedagang
             </button>
           </div>
 
@@ -689,6 +690,15 @@ export function SuperAdminDashboardImproved({ onImpersonate }: Props) {
               <h2>👥 Manajemen User</h2>
             </div>
             <UserManagement />
+          </section>
+        )}
+
+        {activeTab === 'pedagang' && (
+          <section className="pedagang-section">
+            <div className="section-header">
+              <h2>🧑‍💼 Manjement Pedagang</h2>
+            </div>
+            <OwnersPage mode="superadmin" />
           </section>
         )}
 
