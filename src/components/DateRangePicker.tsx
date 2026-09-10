@@ -114,7 +114,8 @@ export function DateRangePicker({ dateFrom, dateTo, onDateFromChange, onDateToCh
             display: 'flex',
             alignItems: 'center',
             gap: 8,
-            minWidth: 140
+            minWidth: 140,
+            color: '#1f2937'
           }}
         >
           <span>{activePreset?.label || 'Custom'}</span>

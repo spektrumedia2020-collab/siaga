@@ -60,7 +60,7 @@ class _ScanPageState extends ConsumerState<ScanPage> {
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                  child: const Text('Buka Lapak'),
+                  child: const Text('Temukan Lapak'),
                 ),
               ],
             ),

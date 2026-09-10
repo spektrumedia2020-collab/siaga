@@ -7,6 +7,7 @@ interface AuthProps {
 }
 
 export function Auth({ onLoginSuccess }: AuthProps) {
+  const showTestAccounts = import.meta.env.DEV
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -75,7 +76,7 @@ export function Auth({ onLoginSuccess }: AuthProps) {
         
         {error && <div className="error-message">{error}</div>}
 
-        {isLogin && (
+        {isLogin && showTestAccounts && (
           <div className="test-accounts" aria-label="Akun test">
             <p className="test-accounts-title">Akun test</p>
             <div className="test-account-actions">

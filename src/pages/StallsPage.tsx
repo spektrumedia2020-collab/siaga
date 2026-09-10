@@ -140,6 +140,7 @@ export function StallsPage({ marketId }: Props) {
         .select('*')
         .eq('market_id', marketId)
         .order('number')
+      const loadedStalls = stallsData || []
 
       if (stallsErr) {
         const msg = stallsErr.message || ''
@@ -150,7 +151,7 @@ export function StallsPage({ marketId }: Props) {
           throw stallsErr
         }
       } else {
-        setStalls(stallsData || [])
+        setStalls(loadedStalls)
       }
 
       // Load sectors: prefer market_sectors
@@ -178,17 +179,26 @@ export function StallsPage({ marketId }: Props) {
         setCategories([])
       }
 
-      // Load owners
-      const { data: ownersData, error: ownersErr } = await supabase
-        .from('stall_owners')
-        .select('*')
-        .order('name')
+      // Load only owners referenced by the current market's stalls.
+      // Fetching the whole owner table is capped at 1,000 rows and can make
+      // valid owners appear as '-' when they sort after that boundary.
+      const ownerIds = [...new Set(
+        loadedStalls
+          .map((stall: Stall) => stall.owner_id)
+          .filter((ownerId): ownerId is number => ownerId != null)
+      )]
+      const ownersData: StallOwner[] = []
+      for (let index = 0; index < ownerIds.length; index += 500) {
+        const { data: ownerBatch, error: ownersErr } = await supabase
+          .from('stall_owners')
+          .select('*')
+          .in('id', ownerIds.slice(index, index + 500))
+          .order('name')
 
-      if (!ownersErr && Array.isArray(ownersData) && ownersData.length > 0) {
-        setOwners(ownersData || [])
-      } else {
-        setOwners([])
+        if (ownersErr) throw ownersErr
+        ownersData.push(...((ownerBatch || []) as StallOwner[]))
       }
+      setOwners(ownersData)
     } catch (err: any) {
       setError(err.message || 'Error loading data')
     } finally {

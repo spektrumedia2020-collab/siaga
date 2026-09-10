@@ -4,6 +4,8 @@ import { DateRangePicker } from '../components/DateRangePicker'
 import { Loading } from '../components/Loading'
 import { EmptyState } from '../components/EmptyState'
 import { ExportButtons } from '../components/ExportButtons'
+import { ConfirmDialog } from '../components/ConfirmDialog'
+import { IconEdit, IconTrash } from '../components/Icons'
 import './TransactionsPage.css'
 
 interface TransactionsPageProps {
@@ -14,6 +16,7 @@ interface Transaction {
   id: number
   stall_id: number
   amount: number
+  rate_id?: number | null
   payment_method: string
   status: string
   payer_name?: string
@@ -23,6 +26,12 @@ interface Transaction {
     code: string
     number: string
   }
+  retribution_rates?: {
+    types_id: number
+    retribution_types?: {
+      name: string
+    }
+  }
 }
 
 interface Stall {
@@ -31,6 +40,8 @@ interface Stall {
   number: string
 }
 
+const getTodayDate = () => new Date().toISOString().split('T')[0]
+
 export function TransactionsPage({ marketId }: TransactionsPageProps) {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [stalls, setStalls] = useState<Stall[]>([])
@@ -38,11 +49,15 @@ export function TransactionsPage({ marketId }: TransactionsPageProps) {
   const [error, setError] = useState('')
   const [stallFilter, setStallFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
-  const [dateFrom, setDateFrom] = useState('')
-  const [dateTo, setDateTo] = useState('')
+  const [dateFrom, setDateFrom] = useState(getTodayDate)
+  const [dateTo, setDateTo] = useState(getTodayDate)
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(30)
   const [totalTransactions, setTotalTransactions] = useState(0)
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<Transaction | null>(null)
+  const [actionLoading, setActionLoading] = useState(false)
+  const [editForm, setEditForm] = useState({ payer_name: '', amount: '', payment_method: 'Tunai', status: 'paid', note: '' })
 
   const marketIdNum = Number(marketId) || 0
 
@@ -107,7 +122,41 @@ export function TransactionsPage({ marketId }: TransactionsPageProps) {
         .order('created_at', { ascending: false })
 
       if (err) throw err
-      setTransactions(data || [])
+      const loadedTransactions = (data || []) as Transaction[]
+      const rateIds = [...new Set(loadedTransactions.map((transaction) => transaction.rate_id).filter((rateId): rateId is number => rateId != null))]
+      const ratesById = new Map<number, { types_id: number }>()
+      const typesById = new Map<number, { name: string }>()
+
+      if (rateIds.length > 0) {
+        const { data: rateRows, error: ratesError } = await supabase
+          .from('retribution_rates')
+          .select('id, types_id')
+          .in('id', rateIds)
+        if (ratesError) throw ratesError
+        for (const rate of rateRows || []) ratesById.set(rate.id, rate)
+
+        const typeIds = [...new Set((rateRows || []).map((rate) => rate.types_id).filter((typeId): typeId is number => typeId != null))]
+        if (typeIds.length > 0) {
+          const { data: typeRows, error: typesError } = await supabase
+            .from('retribution_types')
+            .select('id, name')
+            .in('id', typeIds)
+          if (typesError) throw typesError
+          for (const type of typeRows || []) typesById.set(type.id, type)
+        }
+      }
+
+      setTransactions(loadedTransactions.map((transaction) => {
+        const rate = transaction.rate_id == null ? undefined : ratesById.get(transaction.rate_id)
+        const type = rate == null ? undefined : typesById.get(rate.types_id)
+        return {
+          ...transaction,
+          retribution_rates: rate == null ? undefined : {
+            types_id: rate.types_id,
+            retribution_types: type
+          }
+        }
+      }))
       setTotalTransactions(count || 0)
     } catch (err: any) {
       setError(err.message || 'Gagal memuat data transaksi')
@@ -134,6 +183,68 @@ export function TransactionsPage({ marketId }: TransactionsPageProps) {
       hour: '2-digit',
       minute: '2-digit'
     })
+  }
+
+  const openEdit = (transaction: Transaction) => {
+    setEditingTransaction(transaction)
+    setEditForm({
+      payer_name: transaction.payer_name || '',
+      amount: String(transaction.amount ?? ''),
+      payment_method: transaction.payment_method || 'Tunai',
+      status: transaction.status || 'paid',
+      note: transaction.note || ''
+    })
+  }
+
+  const saveEdit = async () => {
+    if (!editingTransaction) return
+    const amount = Number(editForm.amount)
+    if (!editForm.payer_name.trim() || !Number.isFinite(amount) || amount <= 0) {
+      setError('Nama pembayar dan jumlah transaksi wajib diisi dengan benar.')
+      return
+    }
+
+    try {
+      setActionLoading(true)
+      setError('')
+      const { error: updateError } = await getSupabaseClient()
+        .from('transactions')
+        .update({
+          payer_name: editForm.payer_name.trim(),
+          amount,
+          payment_method: editForm.payment_method,
+          status: editForm.status,
+          note: editForm.note.trim()
+        })
+        .eq('id', editingTransaction.id)
+      if (updateError) throw updateError
+      setEditingTransaction(null)
+      await loadData()
+    } catch (err: any) {
+      setError(err.message || 'Gagal mengubah transaksi')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const deleteTransaction = async () => {
+    if (!deleteTarget) return
+    try {
+      setActionLoading(true)
+      setError('')
+      const { error: deleteError } = await getSupabaseClient()
+        .from('transactions')
+        .delete()
+        .eq('id', deleteTarget.id)
+      if (deleteError) throw deleteError
+      setDeleteTarget(null)
+      if (transactions.length === 1 && currentPage > 1) setCurrentPage((page) => page - 1)
+      await loadData()
+    } catch (err: any) {
+      setError(err.message || 'Gagal menghapus transaksi')
+    } finally {
+      setActionLoading(false)
+    }
   }
 
   const pageAmount = transactions.reduce((sum, t) => sum + Number(t.amount || 0), 0)
@@ -198,7 +309,7 @@ export function TransactionsPage({ marketId }: TransactionsPageProps) {
           onDateToChange={setDateTo}
         />
 
-        <button onClick={() => { setStallFilter(''); setStatusFilter(''); setDateFrom(''); setDateTo('') }} className="btn-secondary tx-reset-btn">
+        <button onClick={() => { setStallFilter(''); setStatusFilter(''); setDateFrom(getTodayDate()); setDateTo(getTodayDate()) }} className="btn-secondary tx-reset-btn">
           Reset Filter
         </button>
 
@@ -206,6 +317,7 @@ export function TransactionsPage({ marketId }: TransactionsPageProps) {
           data={paginatedTransactions.map(t => ({
             'Lapak': t.stalls?.code || t.stalls?.number || `ID #${t.stall_id}`,
             'Pembayar': t.payer_name || '-',
+                        'Jenis Retribusi': t.retribution_rates?.retribution_types?.name || '-',
             'Jumlah': t.amount,
             'Metode': t.payment_method,
             'Status': t.status,
@@ -232,12 +344,14 @@ export function TransactionsPage({ marketId }: TransactionsPageProps) {
             <thead>
               <tr>
                 <th>Lapak</th>
+                <th>Jenis Retribusi</th>
                 <th>Pembayar</th>
                 <th className="tx-amount">Jumlah</th>
                 <th>Metode</th>
                 <th>Status</th>
                 <th className="tx-note">Catatan</th>
                 <th className="tx-date">Tanggal</th>
+                <th>Aksi</th>
               </tr>
             </thead>
             <tbody>
@@ -246,12 +360,21 @@ export function TransactionsPage({ marketId }: TransactionsPageProps) {
                 return (
                   <tr key={t.id}>
                     <td>{t.stalls?.code || t.stalls?.number || `ID #${t.stall_id}`}</td>
+                    <td>{t.retribution_rates?.retribution_types?.name || '-'}</td>
                     <td>{t.payer_name || '-'}</td>
                     <td className="tx-amount">Rp {Number(t.amount || 0).toLocaleString('id-ID')}</td>
                     <td>{t.payment_method || '-'}</td>
                     <td><span className={`tx-status-badge ${statusCls}`}>{t.status || '-'}</span></td>
                     <td className="tx-note">{t.note || '-'}</td>
                     <td className="tx-date">{formatDate(t.created_at)}</td>
+                    <td className="tx-actions">
+                      <button type="button" className="tx-icon-btn tx-icon-edit" title="Edit transaksi" aria-label="Edit transaksi" onClick={() => openEdit(t)}>
+                        <IconEdit size={16} />
+                      </button>
+                      <button type="button" className="tx-icon-btn tx-icon-delete" title="Hapus transaksi" aria-label="Hapus transaksi" onClick={() => setDeleteTarget(t)}>
+                        <IconTrash size={16} />
+                      </button>
+                    </td>
                   </tr>
                 )
               })}
@@ -313,6 +436,48 @@ export function TransactionsPage({ marketId }: TransactionsPageProps) {
           </div>
         </div>
       )}
+
+      {editingTransaction && (
+        <div className="tx-modal-backdrop" role="presentation" onClick={() => !actionLoading && setEditingTransaction(null)}>
+          <div className="tx-modal" role="dialog" aria-modal="true" aria-labelledby="edit-transaction-title" onClick={(event) => event.stopPropagation()}>
+            <h3 id="edit-transaction-title">Edit Transaksi</h3>
+            <p className="tx-modal-type">Jenis retribusi: {editingTransaction.retribution_rates?.retribution_types?.name || '-'}</p>
+            <label>Pembayar</label>
+            <input value={editForm.payer_name} onChange={(event) => setEditForm({ ...editForm, payer_name: event.target.value })} />
+            <label>Jumlah</label>
+            <input type="number" min="1" value={editForm.amount} onChange={(event) => setEditForm({ ...editForm, amount: event.target.value })} />
+            <label>Metode Pembayaran</label>
+            <select value={editForm.payment_method} onChange={(event) => setEditForm({ ...editForm, payment_method: event.target.value })}>
+              <option value="Tunai">Tunai</option>
+              <option value="QRIS">QRIS</option>
+            </select>
+            <label>Status</label>
+            <select value={editForm.status} onChange={(event) => setEditForm({ ...editForm, status: event.target.value })}>
+              <option value="paid">paid</option>
+              <option value="LUNAS">LUNAS</option>
+              <option value="PENDING">PENDING</option>
+              <option value="BATAL">BATAL</option>
+            </select>
+            <label>Catatan</label>
+            <textarea rows={3} value={editForm.note} onChange={(event) => setEditForm({ ...editForm, note: event.target.value })} />
+            <div className="tx-modal-actions">
+              <button type="button" className="tx-modal-cancel" disabled={actionLoading} onClick={() => setEditingTransaction(null)}>Batal</button>
+              <button type="button" className="tx-modal-save" disabled={actionLoading} onClick={saveEdit}>{actionLoading ? 'Menyimpan...' : 'Simpan'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        title="Hapus Transaksi"
+        message={`Hapus transaksi ${deleteTarget?.id ?? ''}? Data yang dihapus tidak dapat dikembalikan.`}
+        confirmLabel="Hapus"
+        danger
+        loading={actionLoading}
+        onConfirm={deleteTransaction}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   )
 }

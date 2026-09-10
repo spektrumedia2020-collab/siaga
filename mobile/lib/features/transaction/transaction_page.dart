@@ -21,7 +21,10 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
   String? _message;
   bool _messageIsError = false;
   int? _stallId;
+  int? _marketId;
+  int? _rateId;
   String? _retributionTypeName;
+  bool _isDailyRetribution = false;
   List<Map<String, dynamic>> _retributionTypes = [];
   bool _loadingTypes = true;
   bool _loadingPaymentData = true;
@@ -88,14 +91,14 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
       Map<String, dynamic>? row;
 
       // Try lookup by code or id
-      final stallByCode = await supabase.from('stalls').select('id, owner_id, code, number').eq('code', lapakId).maybeSingle();
+      final stallByCode = await supabase.from('stalls').select('id, owner_id, code, number, market_id').eq('code', lapakId).maybeSingle();
       if (stallByCode != null) {
         row = Map<String, dynamic>.from(stallByCode as Map);
         debugPrint('DEBUG TransactionPage: Found stall by code=$lapakId, id=${row['id']}');
       } else {
         final idNumeric = int.tryParse(lapakId);
         if (idNumeric != null) {
-          final stallById = await supabase.from('stalls').select('id, owner_id, code, number').eq('id', idNumeric).maybeSingle();
+          final stallById = await supabase.from('stalls').select('id, owner_id, code, number, market_id').eq('id', idNumeric).maybeSingle();
           if (stallById != null) {
             row = Map<String, dynamic>.from(stallById as Map);
             debugPrint('DEBUG TransactionPage: Found stall by id=$idNumeric, code=${row['code']}');
@@ -123,6 +126,7 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
 
       if (row != null) {
         _stallId = (row['id'] ?? int.tryParse(row['id_lapak']?.toString() ?? ''));
+        _marketId = row['market_id'] as int?;
         debugPrint('DEBUG TransactionPage: stallId resolved to $_stallId');
         final ownerId = row['owner_id'] ?? row['id_pemilik'];
         if (ownerId != null) {
@@ -143,9 +147,11 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
       final typeIdNumeric = int.tryParse(widget.typeId);
       if (typeIdNumeric != null) {
         try {
-          final typeResult = await supabase.from('retribution_types').select('id, name').eq('id', typeIdNumeric).maybeSingle();
+          final typeResult = await supabase.from('retribution_types').select('id, name, code, unit').eq('id', typeIdNumeric).maybeSingle();
           if (typeResult != null) {
             _retributionTypeName = typeResult['name']?.toString();
+            final typeText = '${typeResult['code'] ?? ''} ${typeResult['name'] ?? ''} ${typeResult['unit'] ?? ''}'.toUpperCase();
+            _isDailyRetribution = typeText.contains('HARIAN') || typeText.contains('HARI');
             _typeLoaded = true;
             debugPrint('DEBUG TransactionPage: Found type name: $_retributionTypeName');
             // Ambil amount dari retribution_rates sesuai stall_id atau market_id
@@ -155,34 +161,18 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
                 // Cari rate khusus untuk stall ini dulu
                 final rateForStall = await supabase
                     .from('retribution_rates')
-                    .select('amount')
+                    .select('id, amount, market_id')
                     .eq('types_id', typeIdNumeric)
                     .eq('stall_id', stallIdLocal)
+                    .eq('market_id', _marketId ?? 0)
                     .maybeSingle();
                 if (rateForStall != null && rateForStall['amount'] != null) {
+                  _rateId = rateForStall['id'] as int?;
                   _amountController.text = rateForStall['amount'].toString();
                   debugPrint('DEBUG TransactionPage: Found amount for stall: ${rateForStall['amount']}');
                 } else {
                   // Jika tidak ada, cari rate yang berlaku untuk semua stall di market ini
-                  final ratesForType = await supabase
-                      .from('retribution_rates')
-                      .select('amount, market_id, stall_id')
-                      .eq('types_id', typeIdNumeric);
-                  final List<dynamic> ratesList = ratesForType as List;
-                  // Cari yang stall_id null (berlaku untuk market)
-                  final rateForMarket = ratesList.cast<Map<String, dynamic>>().firstWhere(
-                    (r) => r['stall_id'] == null,
-                    orElse: () => <String, dynamic>{},
-                  );
-                  if (rateForMarket.isNotEmpty && rateForMarket['amount'] != null) {
-                    _amountController.text = rateForMarket['amount'].toString();
-                    debugPrint('DEBUG TransactionPage: Found amount for market: ${rateForMarket['amount']}');
-                  } else if (ratesList.isNotEmpty && ratesList.first['amount'] != null) {
-                    _amountController.text = ratesList.first['amount'].toString();
-                    debugPrint('DEBUG TransactionPage: Found amount (any): ${ratesList.first['amount']}');
-                  } else {
-                    debugPrint('DEBUG TransactionPage: No rate found for types_id=$typeIdNumeric');
-                  }
+                  debugPrint('DEBUG TransactionPage: No rate found for stall=$_stallId, market=$_marketId, type=$typeIdNumeric');
                 }
               } catch (e) {
                 debugPrint('DEBUG TransactionPage: Rate lookup error: $e');
@@ -260,10 +250,42 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
         return;
       }
 
+      if (_stallId != null && _isDailyRetribution) {
+        final now = DateTime.now().toUtc();
+        final startOfDay = DateTime.utc(now.year, now.month, now.day);
+        final startOfNextDay = startOfDay.add(const Duration(days: 1));
+        final existingTransactions = await supabase
+            .from('transactions')
+            .select('id, rate_id, amount')
+            .eq('stall_id', _stallId!)
+            .eq('status', 'paid')
+            .gte('created_at', startOfDay.toIso8601String())
+            .lt('created_at', startOfNextDay.toIso8601String());
+
+        final dailyTransactionExists = (existingTransactions as List).any((transaction) =>
+          (_rateId != null && transaction['rate_id'] == _rateId) ||
+          (transaction['rate_id'] == null && double.tryParse(_amountController.text) == transaction['amount'])
+        );
+        if (dailyTransactionExists) {
+          setState(() {
+            _message = 'Retribusi harian lapak ini sudah ditarik hari ini. Penagihan ganda ditolak.';
+            _messageIsError = true;
+            _saving = false;
+          });
+          return;
+        }
+      }
+
       // Simpan ke database — pakai kolom `amount` tunggal (finalisasi skema 2.4)
       final insertBody = <String, dynamic>{};
       if (_stallId != null) {
         insertBody['stall_id'] = _stallId;
+      }
+      if (_marketId != null) {
+        insertBody['market_id'] = _marketId;
+      }
+      if (_rateId != null) {
+        insertBody['rate_id'] = _rateId;
       }
       insertBody['amount'] = amount;
       insertBody['payer_name'] = payerName;

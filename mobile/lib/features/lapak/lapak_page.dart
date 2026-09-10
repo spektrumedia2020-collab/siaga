@@ -19,6 +19,8 @@ class _LapakPageState extends ConsumerState<LapakPage> {
   List<Map<String, dynamic>> retributionTypes = [];
   List<Map<String, dynamic>> transactionHistory = [];
   int _selectedTabIndex = 0;
+  String? _accessDeniedMessage;
+  bool _alreadyCollectedDailyToday = false;
 
   @override
   void initState() {
@@ -63,6 +65,36 @@ class _LapakPageState extends ConsumerState<LapakPage> {
       if (row != null) {
         final ownerId = row['owner_id'];
         final sectorId = row['sector_id'];
+
+        final user = supabase.auth.currentUser;
+        if (user == null) {
+          _accessDeniedMessage = 'Sesi petugas tidak ditemukan. Silakan login kembali.';
+        } else {
+          final officer = await supabase
+              .from('users')
+              .select('id_user, market_id')
+              .eq('auth_uid', user.id)
+              .maybeSingle();
+          final officerMarketId = officer?['market_id'] as int?;
+          final officerUserId = officer?['id_user'] as int?;
+
+          if (officerMarketId == null || officerUserId == null) {
+            _accessDeniedMessage = 'Profil petugas atau penugasan pasar belum tersedia.';
+          } else if (officerMarketId != row['market_id']) {
+            _accessDeniedMessage = 'Lapak ini bukan wilayah tugas Anda.';
+          } else {
+            final assignedSector = await supabase
+                .from('market_sectors')
+                .select('id')
+                .eq('id', sectorId ?? -1)
+                .eq('market_id', officerMarketId)
+                .eq('officer_id', officerUserId)
+                .maybeSingle();
+            if (assignedSector == null) {
+              _accessDeniedMessage = 'Lapak ini berada di sektor yang bukan tugas Anda.';
+            }
+          }
+        }
         
         // Get owner details
         if (ownerId != null) {
@@ -109,6 +141,57 @@ class _LapakPageState extends ConsumerState<LapakPage> {
         stallData = row;
       }
 
+      if (_accessDeniedMessage != null) {
+        if (mounted) {
+          setState(() {
+            loadingOwner = false;
+            retributionTypes = [];
+          });
+        }
+        return;
+      }
+
+      final now = DateTime.now().toUtc();
+      final startOfDay = DateTime.utc(now.year, now.month, now.day);
+      final startOfNextDay = startOfDay.add(const Duration(days: 1));
+        final dailyRates = await supabase
+          .from('retribution_rates')
+          .select('id, amount, types_id')
+          .eq('stall_id', row!['id'])
+          .eq('market_id', row['market_id']);
+        final dailyRateRows = (dailyRates as List).cast<Map<String, dynamic>>();
+        final typeIds = dailyRateRows.map((rate) => rate['types_id']).whereType<int>().toList();
+        final dailyTypes = typeIds.isEmpty
+          ? <Map<String, dynamic>>[]
+          : ((await supabase.from('retribution_types').select('id, code, name, unit').inFilter('id', typeIds)) as List)
+            .cast<Map<String, dynamic>>();
+        final dailyTypeIds = dailyTypes.where((type) {
+        final text = '${type['code'] ?? ''} ${type['name'] ?? ''} ${type['unit'] ?? ''}'.toUpperCase();
+        return text.contains('HARIAN') || text.contains('HARI');
+        }).map((type) => type['id']).whereType<int>().toSet();
+        final dailyRateIds = dailyRateRows
+          .where((rate) => dailyTypeIds.contains(rate['types_id']))
+          .map((rate) => rate['id'])
+          .whereType<int>()
+          .toSet();
+        final dailyAmounts = dailyRateRows
+          .where((rate) => dailyTypeIds.contains(rate['types_id']))
+          .map((rate) => (rate['amount'] as num?)?.toDouble())
+          .whereType<double>()
+          .toSet();
+        final todayTransactions = await supabase
+          .from('transactions')
+          .select('id, rate_id, amount')
+          .eq('stall_id', row['id'])
+          .eq('status', 'paid')
+          .gte('created_at', startOfDay.toIso8601String())
+          .lt('created_at', startOfNextDay.toIso8601String());
+        _alreadyCollectedDailyToday = (todayTransactions as List).any((transaction) {
+        final rateId = transaction['rate_id'];
+        final amount = (transaction['amount'] as num?)?.toDouble();
+        return dailyRateIds.contains(rateId) || (rateId == null && amount != null && dailyAmounts.contains(amount));
+        });
+
       // Load retribution types with rates
       try {
         final typesResult = await supabase
@@ -124,11 +207,13 @@ class _LapakPageState extends ConsumerState<LapakPage> {
         // Load rates for this stall
         if (row != null && row['market_id'] != null) {
           final marketId = row['market_id'] as int;
-          final stallId = row['id'] as int?;
+          final stallId = row['id'] as int;
           
-          final ratesResult = await supabase
+            final ratesResult = await supabase
               .from('retribution_rates')
-              .select('types_id, amount, stall_id, market_id');
+              .select('types_id, amount, stall_id, market_id')
+              .eq('stall_id', stallId)
+              .eq('market_id', marketId);
           
           final List<dynamic> ratesList = ratesResult as List;
           
@@ -140,12 +225,8 @@ class _LapakPageState extends ConsumerState<LapakPage> {
             final rateMarketId = rate['market_id'];
             final rateAmount = (rate['amount'] as num).toDouble();
             
-            // For this stall or market-wide
-            final applies = rateStallId == stallId || (rateStallId == null && rateMarketId == marketId);
-            if (applies) {
-              if (!rateMap.containsKey(rateTypeId) || rateStallId == stallId) {
-                rateMap[rateTypeId] = rateAmount;
-              }
+            if (rateStallId == stallId && rateMarketId == marketId) {
+              rateMap[rateTypeId] = rateAmount;
             }
           }
           
@@ -356,6 +437,58 @@ class _LapakPageState extends ConsumerState<LapakPage> {
   }
 
   Widget _buildRetributionTab() {
+    if (_accessDeniedMessage != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.location_off_outlined, size: 64, color: Colors.red[400]),
+              const SizedBox(height: 16),
+              Text(
+                _accessDeniedMessage!,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.red[700], fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Penagihan untuk lapak ini tidak diizinkan.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey[600]),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_alreadyCollectedDailyToday) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.task_alt, size: 64, color: Colors.green[600]),
+              const SizedBox(height: 16),
+              Text(
+                'Retribusi harian lapak ini sudah ditarik hari ini.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.green[700], fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Penagihan ganda tidak diizinkan.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey[600]),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     if (retributionTypes.isEmpty) {
       return Center(
         child: Column(
