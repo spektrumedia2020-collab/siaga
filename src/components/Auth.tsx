@@ -7,7 +7,7 @@ interface AuthProps {
 }
 
 export function Auth({ onLoginSuccess }: AuthProps) {
-  const showTestAccounts = import.meta.env.DEV || import.meta.env.VITE_SHOW_TEST_ACCOUNTS === 'true'
+  const showTestAccounts = import.meta.env.VITE_SHOW_TEST_ACCOUNTS !== 'false'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
