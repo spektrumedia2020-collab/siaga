@@ -12,19 +12,6 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, Legend
 } from 'recharts'
 
-interface MarketStats {
-  id: number
-  name: string
-  code: string
-  city: string
-  address?: string
-  stallCount: number
-  officerCount: number
-  transactionCount: number
-  totalRevenue: number
-  status: string
-}
-
 const CHART_COLORS = ['#1f7a1f', '#f4c300', '#3d5224', '#ff6b6b', '#4ecdc4', '#45b7d1']
 
 const formatDateInput = (date: Date) => date.toISOString().slice(0, 10)
