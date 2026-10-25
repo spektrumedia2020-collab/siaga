@@ -33,7 +33,7 @@ lihat [architecture/LLD.md](./architecture/LLD.md#role-resolution).
 
 ### Web (`src/`)
 - React 19, TypeScript 5.6, Vite 8, zustand, recharts, react-qr-code, xlsx, papaparse
-- Routing: hash-based manual di `src/App.tsx` + path publik (`/@slug`, `/lapak/:id/:kode`, `/juri`, `/docs`)
+- Routing: hash-based manual di `src/App.tsx` + path publik (`/@slug`, `/lapak/:id/:kode`)
 - Data akses: `@supabase/supabase-js` dengan anon key + RLS (`src/lib/supabase.ts`, `src/lib/api.ts`)
 
 ### Backend Express (`src/server.ts`, `src/routes/*`)

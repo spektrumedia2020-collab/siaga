@@ -10,7 +10,7 @@
 - Dua lapisan backend hidup bersamaan: Express (`src/server.ts`, 5 router) dan Vercel functions (`api/*.ts`).
   `vercel.json` **hanya** membangun `api/*`; Express tidak ikut deploy Vercel. *(VERIFIED)*
 - Web memakai hash router manual di `src/App.tsx`; route publik berbasis pathname:
-  `/@slug`, `/lapak/:marketId/:kode`, `/juri`, `/docs`. *(VERIFIED)*
+  `/@slug`, `/lapak/:marketId/:kode`. *(VERIFIED)*
 
 ## Auth & peran
 

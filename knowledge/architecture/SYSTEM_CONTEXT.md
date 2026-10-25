@@ -11,7 +11,6 @@ Status: **VERIFIED** (kode) · 2026-10-25
 | Bendahara (`TREASURER`) | Web | Approval setoran tahap 1, rekonsiliasi |
 | Petugas (`OFFICER`) | Mobile (utama), Web | Catat transaksi retribusi, absensi, setoran |
 | Pedagang / publik | Web publik | Lihat info lapak via `/lapak/:marketId/:kode` (PIN) dan landing pasar `/@slug` |
-| Juri / reviewer | Web publik | `/juri`, `/docs` (dokumentasi demo, tanpa auth) |
 
 ## Sistem eksternal
 

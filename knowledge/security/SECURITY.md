@@ -24,7 +24,7 @@ Status konfigurasi DB produksi: **UNKNOWN** (tidak ada akses DB pada sesi ini).
 | S-15 | MEDIUM | Read over-broad: `attendance`, `officers`, `retribution_types` | **FIXED & TERVERIFIKASI di DB** |
 | S-16 | MEDIUM | `setoran` cek peran hanya `users.id_role`, tanpa scope market | **FIXED & TERVERIFIKASI di DB** |
 | S-17 | HIGH | `stall_owners` SELECT publik mengekspos `nik`/`phone`/`address` ke anon | **FIXED & TERVERIFIKASI di DB** |
-| S-18 | CRITICAL | Kredensial 4 akun demo (termasuk ADMIN) terpampang di halaman publik `/juri`, `/docs` | **FIXED (kode)** — rotasi password ditolak user (2026-10-26) |
+| S-18 | CRITICAL | Kredensial 4 akun demo (termasuk ADMIN) terpampang di halaman publik `/juri`, `/docs` | **REMOVED** — halaman `/juri` dihapus 2026-10-26 |
 
 ---
 
@@ -330,21 +330,13 @@ anon_nik=false; anon_phone=false; anon_address=false; auth_table_select=true
 ```
 **Uji runtime (rollback)**: `anon_id_name_rows=2000`, `anon_nik_blocked=true`.
 
-### S-18 · CRITICAL — Kredensial admin di halaman publik — **FIXED (kode), ROTASI PENDING**
+### S-18 · CRITICAL — Kredensial admin di halaman publik — **REMOVED (2026-10-26)**
 
-**Resolusi (2026-10-25)**
-- `JuriDocumentationPage`: field `password` dihapus dari data & UI; baris Password kini
-  menampilkan “Hubungi admin”.
-- `Auth.tsx`: blok tombol akun test (yang menanam `admin@siaga.id` + password di bundle) dihapus;
-  env `VITE_SHOW_TEST_ACCOUNTS` tidak dipakai lagi.
-- `npm run build` PASS; scan `dist/` → **tidak ada** string password demo.
-
-**Wajib dilakukan user (tidak bisa diwakilkan tanpa menulis secret)**
-- Rotasi password: `admin@siaga.id`, `kepala@siaga.id`, `petugas@siaga.id`
-  (Supabase Dashboard → Authentication → Users → Update password).
-  **Catatan 2026-10-26:** user menyatakan sudah memiliki password dan memilih **tidak merotasi**.
-  Risiko diterima: password lama pernah publik + ada di Git history. Disarankan tetap dirotasi
-  sebelum go-live.
+**Resolusi akhir**
+- Kredensial dihapus dari `JuriDocumentationPage` dan tombol akun test `Auth.tsx` (bundle bersih).
+- **Halaman `/juri` & `/docs` dihapus seluruhnya** (`JuriDocumentationPage.tsx` + CSS, route di App);
+  sumber paparan tidak ada lagi.
+- Rotasi password tetap disarankan (pernah publik + Git history), tetapi user memilih tidak merotasi.
 
 **Evidence awal**: `src/pages/JuriDocumentationPage.tsx:74-79` — email + password 4 akun demo,
 halaman `/juri` & `/docs` publik.

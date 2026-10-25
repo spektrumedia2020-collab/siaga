@@ -56,7 +56,6 @@ Tanpa token → 401; peran tidak memenuhi → 403; origin di luar allowlist → 
 |---|---|---|
 | `/@<slug>` | `MarketLandingPage` | publik (data pasar via anon + RLS) |
 | `/lapak/<marketId>/<kode>` | `PublicStallPage` | PIN via `/api/lapak` |
-| `/juri`, `/docs` | `JuriDocumentationPage` | publik |
 | lainnya | login/dashboard | Supabase Auth |
 
 ## 4. Supabase (akses langsung klien)

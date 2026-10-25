@@ -1,5 +1,12 @@
 # DONE — Arsip Task Selesai
 
+## 2026-10-26 · Hapus halaman juri
+
+- Dihapus: `src/pages/JuriDocumentationPage.tsx` + CSS, route `/juri` & `/docs` di `App.tsx`
+  (tipe `juri-docs` dihapus).
+- S-18 kini **REMOVED**: tidak ada lagi halaman publik yang menampilkan kredensial.
+- Verifikasi: `grep JuriDocumentationPage|juri-docs` = kosong; `tsc --noEmit` 0 error; build PASS.
+
 ## 2026-10-26 · Hapus fitur Perumda
 
 - Alasan: peran ADMIN sudah mewakili Perumda.

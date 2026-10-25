@@ -12,7 +12,6 @@ Route ditentukan di `src/App.tsx:163-200`:
 |---|---|---|---|
 | pathname `/@<slug>` | `market-landing` | `MarketLandingPage` | publik |
 | pathname `/lapak/<marketId>/<kode>` | `public-stall` | `PublicStallPage` | PIN (API) |
-| pathname `/juri` atau `/docs` | `juri-docs` | `JuriDocumentationPage` | publik |
 | belum login | `login` | `Auth` | — |
 | role pasar (HEAD/ADMIN_PASAR/TREASURER/OFFICER) | `market` | `MarketDashboard` | role DB |
 | hash `superadmin/market-edit/<id>` | `market-edit` | `MarketEditPage` | `ADMIN` |

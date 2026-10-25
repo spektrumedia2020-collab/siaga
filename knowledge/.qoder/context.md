@@ -28,7 +28,7 @@ Wiped 2026-10-26: semua tabel operasional 0; tersisa 1 admin, 4 roles, 7 retribu
 
 1. Set `PUBLIC_STALL_PIN_HASH` di Vercel (Production).
 2. Push 10 commit → Vercel rebuild → verifikasi: `pin=1234` 401, login admin, halaman lapak normal,
-   `/juri` tanpa kredensial, `/api/perumda` 404.
+   `/juri` & `/api/perumda` → 404/login (fitur dihapus).
 3. Cek CI web (`gh run list`) — seharusnya hijau.
 4. Opsional: siapkan data awal; P1-04 test otomatis.
 

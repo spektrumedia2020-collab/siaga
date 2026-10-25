@@ -7,12 +7,11 @@ import { SuperAdminDashboardImproved as SuperAdminDashboard } from './pages/Supe
 import { MarketDashboard } from './pages/MarketDashboard'
 import { MarketEditPage } from './pages/MarketEditPage'
 import { MarketLandingPage } from './pages/MarketLandingPage'
-import { JuriDocumentationPage } from './pages/JuriDocumentationPage'
 import { PublicStallPage } from './pages/PublicStallPage'
 import './App.css'
 import './styles/layout.css'
 
-type Route = 'login' | 'superadmin' | 'market' | 'market-edit' | 'market-landing' | 'public-stall' | 'juri-docs'
+type Route = 'login' | 'superadmin' | 'market' | 'market-edit' | 'market-landing' | 'public-stall'
 
 function App() {
   const [user, setUser] = useState<any>(null)
@@ -147,11 +146,6 @@ function App() {
       return 'public-stall'
     }
 
-    // Public documentation route for judges (no auth required)
-    if (window.location.pathname === '/juri' || window.location.pathname === '/docs') {
-      return 'juri-docs'
-    }
-
     if (!user) return 'login'
     const hash = window.location.hash.slice(1)
     const marketRoles = ['MARKET_HEAD', 'MARKET_ADMIN', 'ADMIN_PASAR', 'PASAR_ADMIN', 'OFFICER']
@@ -227,11 +221,6 @@ function App() {
         />
       </Dashboard>
     )
-  }
-
-  // Public judge documentation page (no auth required)
-  if (currentRoute === 'juri-docs') {
-    return <JuriDocumentationPage />
   }
 
   // Public market landing page (no auth required)
