@@ -4,9 +4,9 @@
 
 ## Task aktif
 
-**Batch UI/UX P0–P2 selesai di kode**: tema (migration 017), placeholder dihapus, read-only 9 halaman,
-tab Superadmin deep-link, `/login` + 404, typo/QR/dialog/pagination. Typecheck 0, build PASS.
-Menunggu deploy; path-based URL penuh dan Fase 2 mobile masih tertunda.
+**Batch UI/UX P0–P2 sudah ter-deploy** (`c0eaf81`, bundle `index.BGZ91ZmD.js`): tema, read-only,
+deep-link tab admin, `/login`, 404, typo/QR/pagination aktif di produksi.
+CI web & SQL hijau; mobile analyze masih merah. DB masih kosong.
 
 ## Status keamanan ringkas
 
