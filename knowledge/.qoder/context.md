@@ -4,8 +4,8 @@
 
 ## Task aktif
 
-**P0-09 selesai** (migration 011 applied): `stall_categories` kini ber-RLS, anon ditolak.
-Berikutnya: **P0-10** (read over-broad + scope `setoran`).
+**P0-10 selesai** (migration 012 applied): read absensi/petugas/tipe retribusi dipersempit,
+`setoran` kini market-scoped. Berikutnya: **P0-11** (PII `stall_owners`).
 
 ## Temuan yang memicu task berikutnya
 
@@ -35,10 +35,9 @@ Detail + evidence: [../security/SECURITY.md](../security/SECURITY.md).
 
 ## Next action (spesifik)
 
-1. P0-10: persempit read `attendance`/`officers`/`retribution_types`; scope `setoran` per market.
-2. P0-11: view publik `stall_owners` (id, name); landing page pindah ke view; batasi tabel.
-3. P0-03/P0-04: set `PUBLIC_STALL_PIN_HASH` dan `PERUMDA_JWT_SECRET` di env Vercel.
-4. CI merah: `tsc --noEmit` 40+ error lama — perbaiki bertahap (BACKLOG P1-05).
+1. P0-11: view publik `stall_owners` (id, name); landing page pindah ke view; batasi tabel.
+2. P0-03/P0-04: set `PUBLIC_STALL_PIN_HASH` dan `PERUMDA_JWT_SECRET` di env Vercel.
+3. CI merah: `tsc --noEmit` 40+ error lama — perbaiki bertahap (BACKLOG P1-05).
 
 ## Catatan akses DB
 

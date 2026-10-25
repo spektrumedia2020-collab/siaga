@@ -3,7 +3,7 @@
   "project": "SIAGA",
   "project_root": "D:/_siaga",
   "branch": "main",
-  "commit": "0a3d818",
+  "commit": "d3d89aa",
   "status": "WIP",
   "autonomy": "L1",
   "runtime": {
@@ -32,18 +32,18 @@
   "memory_version": 1,
   "context_version": 1,
   "skill_registry_version": 1,
-  "current_task": "P0-10: persempit read attendance/officers/retribution_types + scope setoran",
-  "last_task": "P0-09 — aktifkan RLS stall_categories (migration 011, applied)",
+  "current_task": "P0-11: view publik stall_owners + batasi PII",
+  "last_task": "P0-10 — read scope + setoran (migration 012, applied)",
   "last_session_id": "SESSION-2026-10-25-1",
   "last_scan": "2026-10-25T20:05:00+07:00",
   "last_index": "",
-  "last_updated": "2026-10-25T22:40:00+07:00",
-  "last_validation": "2026-10-25T22:40:00+07:00",
+  "last_updated": "2026-10-25T23:00:00+07:00",
+  "last_validation": "2026-10-25T23:00:00+07:00",
   "last_test_status": "partial",
   "last_command": "SECURITY",
   "last_command_status": "COMPLETED",
   "open_wave": null,
   "dirty": true,
   "drift_detected": true,
-  "next_step": "P0-10 read scope + setoran; P0-11 stall_owners PII view; P0-03/P0-04 env secrets."
+  "next_step": "P0-11 stall_owners PII view; P0-03/P0-04 env secrets; P1-05 typecheck/CI."
 }

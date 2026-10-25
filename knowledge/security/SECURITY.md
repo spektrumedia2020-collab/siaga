@@ -21,8 +21,8 @@ Status konfigurasi DB produksi: **UNKNOWN** (tidak ada akses DB pada sesi ini).
 | S-12 | HIGH | RLS `transactions` `true` untuk INSERT/SELECT/UPDATE | **FIXED & TERVERIFIKASI di DB** |
 | S-13 | HIGH | RLS `stalls` & `stall_owners` `ALL true` | **FIXED & TERVERIFIKASI di DB** |
 | S-14 | MEDIUM | `stall_categories` RLS **nonaktif**, 0 policy | **FIXED & TERVERIFIKASI di DB** |
-| S-15 | MEDIUM | Read over-broad: `attendance`, `officers`, `retribution_types` | OPEN (audit 2026-10-25) |
-| S-16 | MEDIUM | `setoran` cek peran hanya `users.id_role`, tanpa scope market | OPEN (audit 2026-10-25) |
+| S-15 | MEDIUM | Read over-broad: `attendance`, `officers`, `retribution_types` | **FIXED & TERVERIFIKASI di DB** |
+| S-16 | MEDIUM | `setoran` cek peran hanya `users.id_role`, tanpa scope market | **FIXED & TERVERIFIKASI di DB** |
 | S-17 | HIGH | `stall_owners` SELECT publik mengekspos `nik`/`phone`/`address` ke anon | OPEN |
 
 ---
@@ -278,18 +278,32 @@ anon_select=0; anon_insert_blocked=true; auth_select=5; staff_insert=true
 ```
 **Pasca-uji**: `tmp_fn_left=0`, jumlah baris tetap 5, policy 4.
 
-### S-15 · MEDIUM — Read over-broad
-- `attendance_select` `true` → semua user login membaca absensi (termasuk lokasi).
-- `officers_select_auth` `true` → semua petugas terbaca.
-- `retribution_types_insert` `true` → user login bisa menambah tipe retribusi.
-**Perbaikan**: own/admin untuk absensi & petugas (scoped market); insert types untuk admin/head.
+### S-15 · MEDIUM — Read over-broad — **FIXED & APPLIED (2026-10-25)**
 
-### S-16 · MEDIUM — `setoran` cek peran tidak konsisten
-**Evidence**: policy select/update memakai `users.id_role` (bukan `user_roles`) dan tidak membatasi
-`market_id`.
-**Dampak**: admin yang hanya terdaftar di `user_roles` bisa tertolak; bendahara bisa menyetujui
-setoran pasar lain.
-**Perbaikan**: pakai `is_current_user_admin_full()` + scope market.
+**Resolusi**: migration 012 —
+- `attendance`: policy `attendance_select` (`true`) dihapus; SELECT = own (tetap) + admin/kepala pasar.
+- `officers`: `officers_select_auth` (`true`) dihapus; SELECT = own + admin + staf pasar yang sama.
+- `retribution_types`: INSERT `true` → admin/staf.
+- SELECT `retribution_types` tetap untuk authenticated (dipakai form).
+- Catatan: `retribution_types` UPDATE/DELETE memang **tidak punya policy** (pre-existing) —
+  edit/hapus dari UI akan ditolak; dicatat sebagai gap fungsional, bukan regresi.
+
+**Uji runtime (rollback)**:
+```
+att_own=0 att_other=0(exists=t) off_same=3 off_other=0(exists=t)
+rt_staff=t rt_anon_blocked=t
+```
+
+### S-16 · MEDIUM — `setoran` scope — **FIXED & APPLIED (2026-10-25)**
+
+**Resolusi**: migration 012 — helper `current_user_has_market_role(bigint, text[])`
+(SECURITY DEFINER, cek `user_roles` + `users.id_role` + `markets.id_head_market`).
+- SELECT: own | admin | approver pasar terkait (TREASURER/MARKET_HEAD/…).
+- INSERT: `officer_id = auth.uid()` + market membership.
+- UPDATE: admin | approver pasar terkait.
+
+**Uji runtime**: `set_other=0` (officer tidak bisa lihat setoran pasar lain),
+`set_treas_upd=1` (bendahara bisa update setoran pasar-nya).
 
 ### S-17 · HIGH — PII pemilik lapak terbaca anon
 **Evidence**: setelah migration 010, `stall_owners_select_public` = `true` untuk `anon, authenticated`

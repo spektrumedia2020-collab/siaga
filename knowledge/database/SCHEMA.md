@@ -61,15 +61,15 @@ Sumber: query langsung `pg_class` + `pg_policies` di Supabase SQL Editor
 | Tabel | RLS | Policy | Verdict |
 |---|---|---|---|
 | `announcements` | ON | 2 | OK — read authenticated; tulis market-scoped (ADMIN/HEAD/TREASURER) |
-| `attendance` | ON | 4 | **PARTIAL** — own insert/update, tetapi `attendance_select` `true` → semua user login bisa baca absensi semua |
+| `attendance` | ON | 4 | OK — 012: own + admin/kepala pasar; select-wide dihapus |
 | `market_config` | ON | 3 | OK — read authenticated; tulis market-scoped |
 | `market_sectors` | ON | 5 | OK — read everyone; tulis admin/head |
 | `markets` | ON | 4 | OK — read everyone (landing publik); tulis admin/head |
-| `officers` | ON | 4 | **PARTIAL** — `officers_select_auth` `true` → semua user login baca semua petugas |
+| `officers` | ON | 4 | OK — 012: own/admin/staf pasar yang sama |
 | `retribution_rates` | ON | 4 | OK — migration 008 |
-| `retribution_types` | ON | 2 | **PARTIAL** — INSERT `true` → user login bisa menambah tipe retribusi |
+| `retribution_types` | ON | 2 | OK — 012: SELECT authenticated; INSERT staf/admin; UPDATE/DELETE tanpa policy (pre-existing) |
 | `roles` | ON | 1 | OK — read everyone |
-| `setoran` | ON | 3 | **PARTIAL** — cek peran hanya `users.id_role` (bukan `user_roles`) dan tidak dibatasi market |
+| `setoran` | ON | 3 | OK — 012: own/approver pasar (TREASURER/MARKET_HEAD) + market scope |
 | `stall_categories` | ON | 4 | OK — 011: read authenticated; tulis staf/admin |
 | `stall_owners` | ON | 4 | OK — 010: SELECT publik (PII terbuka, S-17); INSERT staf pasar; UPDATE/DELETE via relasi lapak |
 | `stalls` | ON | 4 | OK — 010: SELECT publik; INSERT/UPDATE/DELETE market-scoped |
@@ -88,5 +88,5 @@ Implikasi: fallback mobile ke tabel legacy akan gagal; halaman Theme Management 
 
 | Status | Tabel |
 |---|---|
-| Memadai | `markets`, `market_sectors`, `market_config`, `announcements`, `roles`, `user_roles` (007), `retribution_rates` (008), `users` (009), `transactions`/`stalls`/`stall_owners` (010), `stall_categories` (011) |
-| Perlu dipersempit | `attendance`, `officers`, `retribution_types`, `setoran` |
+| Memadai | `markets`, `market_sectors`, `market_config`, `announcements`, `roles`, `user_roles` (007), `retribution_rates` (008), `users` (009), `transactions`/`stalls`/`stall_owners` (010), `stall_categories` (011), `attendance`/`officers`/`retribution_types`/`setoran` (012) |
+| Sisa | PII `stall_owners` untuk anon (S-17 / P0-11) |

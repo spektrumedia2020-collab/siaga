@@ -1,5 +1,16 @@
 # DONE — Arsip Task Selesai
 
+## 2026-10-25 · P0-10 — Read scope & `setoran` (migration `012`)
+
+- `attendance`: select-wide dihapus → own + admin/kepala pasar.
+- `officers`: select-wide dihapus → own + admin + staf pasar yang sama.
+- `retribution_types`: INSERT admin/staf; SELECT tetap authenticated.
+- `setoran`: SELECT/INSERT/UPDATE memakai market scope + peran
+  (helper `current_user_has_market_role`).
+- Uji runtime (rollback): `att_other=0` (data ada), `off_same=3`, `off_other=0` (data ada),
+  `set_other=0`, `set_treas_upd=1`, `rt_staff=true`, `rt_anon_blocked=true`.
+- Catatan: `retribution_types` UPDATE/DELETE memang tanpa policy (pre-existing).
+
 ## 2026-10-25 · P0-09 — Aktifkan RLS `stall_categories` (migration `011`)
 
 - RLS diaktifkan; 4 policy `TO authenticated`: SELECT read; INSERT/UPDATE/DELETE staf/admin.

@@ -12,12 +12,7 @@ Setiap item wajib punya evidence sebelum dieksekusi dan hasil verifikasi setelah
 > **P0-07 selesai 2026-10-25** (migration `009`) — lihat [DONE.md](./DONE.md).
 > **P0-08 selesai 2026-10-25** (migration `010`) — lihat [DONE.md](./DONE.md).
 > **P0-09 selesai 2026-10-25** (migration `011`) — lihat [DONE.md](./DONE.md).
-
-### P0-10 · Read over-broad + scope `setoran`
-- **Evidence:** `attendance_select` `true`; `officers_select_auth` `true`; `retribution_types_insert` `true`;
-  policy `setoran` memakai `users.id_role` tanpa scope market.
-- **DoD:** absensi/petugas own atau admin/head market; insert types admin/head; `setoran` memakai
-  `is_current_user_admin_full()` + `market_id`.
+> **P0-10 selesai 2026-10-25** (migration `012`) — lihat [DONE.md](./DONE.md).
 
 ### P0-11 · PII `stall_owners` terbaca anon
 - **Evidence:** `stall_owners_select_public` = true untuk `anon` (dibutuhkan landing page).
