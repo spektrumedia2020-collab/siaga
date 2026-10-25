@@ -1,20 +1,132 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
-export default async function handler(req: any, res: any) {
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*')
+const LOCAL_ORIGINS = ['http://localhost:5173', 'http://localhost:3000']
+
+let adminClient: SupabaseClient | null = null
+
+function getAdminClient() {
+  if (!adminClient) {
+    adminClient = createClient(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+  }
+  return adminClient
+}
+
+function isOriginAllowed(req: any, origin: string) {
+  if (LOCAL_ORIGINS.includes(origin) || origin === process.env.FRONTEND_URL) return true
+  try {
+    return new URL(origin).host === String(req.headers?.host || '')
+  } catch {
+    return false
+  }
+}
+
+function applyCors(req: any, res: any) {
+  res.setHeader('Content-Type', 'application/json')
+
+  const origin = req.headers?.origin as string | undefined
+  if (origin) {
+    if (!isOriginAllowed(req, origin)) {
+      res.status(403).json({ error: 'Origin not allowed' })
+      return false
+    }
+    res.setHeader('Access-Control-Allow-Origin', origin)
+    res.setHeader('Vary', 'Origin')
+  }
+
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-  res.setHeader('Content-Type', 'application/json')
+  return true
+}
+
+const relatedRoleName = (related: any) =>
+  Array.isArray(related) ? related[0]?.name : related?.name
+
+async function requireAdmin(req: any, res: any) {
+  const header = String(req.headers?.authorization || '')
+  const token = header.startsWith('Bearer ') ? header.slice(7).trim() : ''
+
+  if (!token) {
+    res.status(401).json({ error: 'Access token required' })
+    return false
+  }
+
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.error('SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY belum dikonfigurasi')
+    res.status(500).json({ error: 'Server configuration error' })
+    return false
+  }
+
+  try {
+    const supabaseAdmin = getAdminClient()
+    const { data: { user }, error } = await supabaseAdmin.auth.getUser(token)
+
+    if (error || !user) {
+      res.status(401).json({ error: 'Invalid or expired token' })
+      return false
+    }
+
+    const { data: roleRows, error: roleError } = await supabaseAdmin
+      .from('user_roles')
+      .select('roles(name)')
+      .eq('user_id', user.id)
+
+    if (roleError) {
+      console.error('Role lookup failed:', roleError.message)
+      res.status(500).json({ error: 'Authorization error' })
+      return false
+    }
+
+    const hasAdminRole = (roleRows || []).some(
+      (row: any) => String(relatedRoleName(row.roles) || '').toUpperCase() === 'ADMIN'
+    )
+    if (hasAdminRole) return true
+
+    // Fallback skema lama: peran disimpan di users.id_role
+    const { data: profile } = await supabaseAdmin
+      .from('users')
+      .select('id_role')
+      .eq('auth_uid', user.id)
+      .maybeSingle()
+
+    const legacyRoleId = (profile as any)?.id_role
+    if (legacyRoleId == null) {
+      res.status(403).json({ error: 'Insufficient permissions' })
+      return false
+    }
+
+    const { data: roleRow } = await supabaseAdmin
+      .from('roles')
+      .select('name')
+      .eq('id', legacyRoleId)
+      .maybeSingle()
+
+    if (String((roleRow as any)?.name || '').toUpperCase() !== 'ADMIN') {
+      res.status(403).json({ error: 'Insufficient permissions' })
+      return false
+    }
+
+    return true
+  } catch (err) {
+    console.error('Auth middleware error:', err)
+    res.status(500).json({ error: 'Authentication error' })
+    return false
+  }
+}
+
+export default async function handler(req: any, res: any) {
+  if (!applyCors(req, res)) return
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end()
   }
 
-  const supabaseAdmin = createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
+  // Semua operasi manajemen user memakai service role: wajib ADMIN terverifikasi.
+  if (!(await requireAdmin(req, res))) return
+
+  const supabaseAdmin = getAdminClient()
 
   // Create user (POST)
   if (req.method === 'POST') {

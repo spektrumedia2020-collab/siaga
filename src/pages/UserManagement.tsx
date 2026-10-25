@@ -125,9 +125,13 @@ export function UserManagement() {
           market_id: formData.marketId ? parseInt(formData.marketId) : null
         }).eq('id_user', editingUser.id)
       } else {
+        const { data: { session } } = await api.supabase.auth.getSession()
         const res = await fetch('/api/users', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {})
+          },
           body: JSON.stringify({
             email: formData.email,
             password: formData.password,
