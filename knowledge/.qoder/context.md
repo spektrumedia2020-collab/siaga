@@ -4,8 +4,8 @@
 
 ## Task aktif
 
-**P0-01 selesai di kode** (commit `5f69b82`): `api/users.ts` kini wajib JWT + peran `ADMIN`.
-Berikutnya: deploy + uji produksi, lalu **P0-02** (RLS `user_roles`).
+**P0-01 selesai & ter-deploy** (`4a0e766`, `https://siaga-pi.vercel.app`): tanpa token → 401,
+origin asing → 403. Berikutnya: **P0-02** (RLS `user_roles`).
 
 ## Temuan yang memicu task berikutnya
 
@@ -35,9 +35,8 @@ Detail + evidence: [../security/SECURITY.md](../security/SECURITY.md).
 
 ## Next action (spesifik)
 
-1. Deploy commit `5f69b82`; uji `POST /api/users`: tanpa token → 401, non-admin → 403, ADMIN → 201.
-2. `UserManagement` harus tetap bisa membuat user setelah deploy (token terkirim dari sesi admin).
-3. Lanjut P0-02: batasi INSERT/UPDATE/DELETE `user_roles` ke admin; verifikasi via `pg_policies`.
-4. Lanjut P0-05: audit policy tabel inti yang belum diketahui.
-5. P0-03/P0-04: set `PUBLIC_STALL_PIN_HASH` dan `PERUMDA_JWT_SECRET` eksplisit.
-6. `npm run build` belum dijalankan — jalankan saat verifikasi deploy.
+1. P0-02: batasi INSERT/UPDATE/DELETE `user_roles` ke admin; verifikasi via `pg_policies`.
+2. P0-05: audit policy `markets`, `stalls`, `transactions`, `users`, `stall_owners`.
+3. P0-03/P0-04: set `PUBLIC_STALL_PIN_HASH` dan `PERUMDA_JWT_SECRET` di env Vercel.
+4. Uji produksi dengan akun non-admin (harus 403) dan ADMIN (201) bila kredensial tersedia.
+5. CI merah: `tsc --noEmit` 40+ error lama — perbaiki bertahap (BACKLOG P1-05).

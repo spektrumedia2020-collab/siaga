@@ -7,7 +7,7 @@ Status konfigurasi DB produksi: **UNKNOWN** (tidak ada akses DB pada sesi ini).
 
 | ID | Severity | Temuan | Status |
 |---|---|---|---|
-| S-01 | CRITICAL | `api/users.ts` tanpa autentikasi | **FIXED (code)** — menunggu deploy |
+| S-01 | CRITICAL | `api/users.ts` tanpa autentikasi | **FIXED & TERVERIFIKASI di produksi** |
 | S-02 | HIGH | RLS `user_roles` `USING (true)` | OPEN (file SQL) |
 | S-03 | MEDIUM | PIN lapak default `1234` | OPEN bila env kosong |
 | S-04 | MEDIUM | Secret JWT Perumda fallback ke service-role key | OPEN bila env kosong |
@@ -20,7 +20,7 @@ Status konfigurasi DB produksi: **UNKNOWN** (tidak ada akses DB pada sesi ini).
 
 ---
 
-## S-01 · CRITICAL — `/api/users` tanpa autentikasi — **FIXED (code, 2026-10-25)**
+## S-01 · CRITICAL — `/api/users` tanpa autentikasi — **FIXED & DEPLOYED (2026-10-25)**
 
 **Resolusi**
 - `api/users.ts` kini memverifikasi `Authorization: Bearer <supabase access token>` via
@@ -30,7 +30,15 @@ Status konfigurasi DB produksi: **UNKNOWN** (tidak ada akses DB pada sesi ini).
 - Guard konfigurasi: env Supabase kosong → 500 `Server configuration error` (fail-closed).
 - `src/pages/UserManagement.tsx` mengirim access token pada POST.
 - Smoke test lokal: POST/GET tanpa token → 401; origin asing → 403; OPTIONS sah → 200; semua PASS.
-- **Belum diverifikasi di produksi** — butuh deploy Vercel + uji manual dengan akun non-admin.
+
+**Verifikasi produksi (`https://siaga-pi.vercel.app`, commit `4a0e766`)**
+```
+GET  /api/users  tanpa token        -> 401 {"error":"Access token required"}
+POST /api/users  tanpa token        -> 401
+GET  /api/users  Origin: evil.example -> 403
+OPTIONS /api/users Origin: siaga-pi   -> 200
+```
+Uji dengan akun non-admin (403) dan ADMIN (201) belum dilakukan — butuh kredensial.
 
 **Evidence awal (sebelum perbaikan)**
 - `api/users.ts:3-6` — header CORS `Access-Control-Allow-Origin: *`.

@@ -15,6 +15,14 @@
       "status": "PASS",
       "evidence": "Smoke test lokal (mock req/res): POST/GET tanpa token -> 401; origin asing -> 403; OPTIONS lokal -> 200; token tanpa env -> 500 config (fail-closed)."
     },
+    "deploy_production": {
+      "status": "PASS",
+      "evidence": "Push 73c7267..4a0e766 ke origin/main via deploy key; Vercel siaga-pi.vercel.app melayani kode baru."
+    },
+    "prod_api_users_auth": {
+      "status": "PASS",
+      "evidence": "GET & POST tanpa token -> 401; Origin evil.example -> 403; OPTIONS origin siaga-pi -> 200 (2026-10-25)."
+    },
     "tests": {
       "status": "NOT_FOUND",
       "evidence": "Tidak ada *.test.* / *.spec.* di src/ dan api/ (tree source)."

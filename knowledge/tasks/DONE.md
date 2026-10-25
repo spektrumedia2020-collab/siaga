@@ -1,5 +1,14 @@
 # DONE — Arsip Task Selesai
 
+## 2026-10-25 · Deploy produksi P0-01 (`4a0e766`)
+
+- Remote diganti ke SSH deploy key (`git@github.com:spektrumedia2020-collab/siaga.git`).
+- Push `73c7267..4a0e766` → `main` sukses; Vercel `https://siaga-pi.vercel.app` menjalankan kode baru.
+- Verifikasi produksi: GET/POST tanpa token → 401; `Origin: https://evil.example` → 403;
+  preflight same-origin → 200.
+- Belum: uji 403 (non-admin) & 201 (admin) dengan kredensial; CI GitHub masih akan merah
+  karena error typecheck lama.
+
 ## 2026-10-25 · P0-01 — Amankan `/api/users` (commit `5f69b82`)
 
 **Perubahan**

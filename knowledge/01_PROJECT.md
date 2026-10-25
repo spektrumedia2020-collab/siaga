@@ -12,6 +12,7 @@ Tanggal: 2026-10-25 · Commit: `73c7267e837735ef082dc50ce653bcb51833f6f0`
 | Bahasa UI | Indonesia |
 | Repo | monorepo: web + serverless + Flutter |
 | Deploy web | Vercel (`vercel.json`: static build `dist` + 3 serverless function) |
+| URL produksi | `https://siaga-pi.vercel.app` (homepage repo GitHub) |
 | Backend data | Supabase (Postgres + Auth + Storage) |
 | Branch aktif | `main` |
 
