@@ -6,6 +6,7 @@ import { EmptyState } from '../components/EmptyState'
 
 interface SectorsPageProps {
   marketId?: string
+  readOnly?: boolean
 }
 
 interface Sector {
@@ -22,7 +23,7 @@ interface Officer {
   email?: string
 }
 
-export function SectorsPage({ marketId }: SectorsPageProps) {
+export function SectorsPage({ marketId, readOnly = false }: SectorsPageProps) {
   const [sectors, setSectors] = useState<Sector[]>([])
   const [name, setName] = useState('')
   const [officerId, setOfficerId] = useState('')
@@ -202,7 +203,8 @@ export function SectorsPage({ marketId }: SectorsPageProps) {
 
       {error && <div style={{ marginTop: 12, color: '#b91c1c' }}>{error}</div>}
 
-      <form onSubmit={handleSubmit} style={{ marginTop: 16, display: 'grid', gap: 12 }}>
+      {!readOnly && (
+        <form onSubmit={handleSubmit} style={{ marginTop: 16, display: 'grid', gap: 12 }}>
         <div>
           <label style={{ display: 'block', marginBottom: 6 }}>Nama Sektor</label>
           <input
@@ -243,6 +245,7 @@ export function SectorsPage({ marketId }: SectorsPageProps) {
           ) : null}
         </div>
       </form>
+      )}
 
       <div style={{ marginTop: 24 }}>
         <h3>Daftar Sektor</h3>
@@ -268,12 +271,16 @@ export function SectorsPage({ marketId }: SectorsPageProps) {
                   <button type="button" className="btn-secondary" style={{ background: '#2563eb', color: '#fff', border: '1px solid #1d4ed8' }} onClick={() => setViewTarget(sector)}>
                     Lihat
                   </button>
-                  <button type="button" className="btn-secondary" style={{ background: '#166534', color: '#fff', border: '1px solid #14532d' }} onClick={() => handleEdit(sector)}>
-                    Edit
-                  </button>
-                  <button type="button" className="btn-delete-user" style={{ background: '#dc2626', color: '#fff', border: '1px solid #b91c1c' }} onClick={() => setDeleteTarget({ id: sector.id, name: sector.name })}>
-                    Hapus
-                  </button>
+                  {!readOnly && (
+                    <>
+                      <button type="button" className="btn-secondary" style={{ background: '#166534', color: '#fff', border: '1px solid #14532d' }} onClick={() => handleEdit(sector)}>
+                        Edit
+                      </button>
+                      <button type="button" className="btn-delete-user" style={{ background: '#dc2626', color: '#fff', border: '1px solid #b91c1c' }} onClick={() => setDeleteTarget({ id: sector.id, name: sector.name })}>
+                        Hapus
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             ))}
@@ -319,7 +326,9 @@ export function SectorsPage({ marketId }: SectorsPageProps) {
               <div><small>ID sektor</small><strong style={{ display: 'block' }}>{viewTarget.id}</strong></div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 20 }}>
-              <button type="button" className="btn-primary" onClick={() => { setViewTarget(null); handleEdit(viewTarget) }}>Edit sektor</button>
+              {!readOnly && (
+                <button type="button" className="btn-primary" onClick={() => { setViewTarget(null); handleEdit(viewTarget) }}>Edit sektor</button>
+              )}
             </div>
           </div>
         </div>

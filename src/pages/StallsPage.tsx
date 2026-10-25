@@ -64,9 +64,10 @@ interface DbRetributionType {
 
 interface Props {
   marketId: number
+  readOnly?: boolean
 }
 
-export function StallsPage({ marketId }: Props) {
+export function StallsPage({ marketId, readOnly = false }: Props) {
   const [stalls, setStalls] = useState<Stall[]>([])
   const [sectors, setSectors] = useState<Sector[]>([])
   const [categories, setCategories] = useState<Category[]>([])
@@ -467,7 +468,7 @@ export function StallsPage({ marketId }: Props) {
     <div className="stalls-page">
       <div className="page-header">
         <h2>🏪 Manajemen Lapak</h2>
-        {!showForm && (
+        {!showForm && !readOnly && (
           <button onClick={() => setShowForm(true)} className="btn-primary">
             + Tambah Lapak
           </button>
@@ -476,7 +477,7 @@ export function StallsPage({ marketId }: Props) {
 
       {error && <div className="error-message">{error}</div>}
 
-      {showForm && (
+      {showForm && !readOnly && (
         <div className="form-section">
           <h3>{editingId ? 'Edit' : 'Tambah'} Lapak</h3>
           <form onSubmit={handleSubmit}>
@@ -658,38 +659,42 @@ export function StallsPage({ marketId }: Props) {
                           label={`QR Pemilik — Lapak ${stall.code || stall.number}`}
                           icon="🔗"
                         />
-                        <button
-                          onClick={() => handleRegenerateToken(stall)}
-                          className="btn-edit"
-                          title="Regenerate token publik"
-                          aria-label={`Regenerate token publik lapak ${stall.code || stall.number}`}
-                        >
-                          ♻️
-                        </button>
-                        <button
-                          onClick={() => handleOpenRateDialog(stall)}
-                          className="btn-rate"
-                          title="Atur Retribusi"
-                          aria-label={`Atur retribusi lapak ${stall.code || stall.number}`}
-                        >
-                          <IconMoney />
-                        </button>
-                        <button
-                          onClick={() => handleEdit(stall)}
-                          className="btn-edit"
-                          title="Edit"
-                          aria-label={`Edit lapak ${stall.code || stall.number}`}
-                        >
-                          <IconEdit />
-                        </button>
-                        <button
-                          onClick={() => setDeleteTarget(stall)}
-                          className="btn-delete"
-                          title="Hapus"
-                          aria-label={`Hapus lapak ${stall.code || stall.number}`}
-                        >
-                          <IconTrash />
-                        </button>
+                        {!readOnly && (
+                          <>
+                            <button
+                              onClick={() => handleRegenerateToken(stall)}
+                              className="btn-edit"
+                              title="Regenerate token publik"
+                              aria-label={`Regenerate token publik lapak ${stall.code || stall.number}`}
+                            >
+                              ♻️
+                            </button>
+                            <button
+                              onClick={() => handleOpenRateDialog(stall)}
+                              className="btn-rate"
+                              title="Atur Retribusi"
+                              aria-label={`Atur retribusi lapak ${stall.code || stall.number}`}
+                            >
+                              <IconMoney />
+                            </button>
+                            <button
+                              onClick={() => handleEdit(stall)}
+                              className="btn-edit"
+                              title="Edit"
+                              aria-label={`Edit lapak ${stall.code || stall.number}`}
+                            >
+                              <IconEdit />
+                            </button>
+                            <button
+                              onClick={() => setDeleteTarget(stall)}
+                              className="btn-delete"
+                              title="Hapus"
+                              aria-label={`Hapus lapak ${stall.code || stall.number}`}
+                            >
+                              <IconTrash />
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -710,7 +715,7 @@ export function StallsPage({ marketId }: Props) {
             </div>
 
             <div style={{ padding: '16px 0' }}>
-              {!rateFormOpen ? (
+              {!readOnly && (!rateFormOpen ? (
                 <button className="btn-primary" onClick={() => setRateFormOpen(true)}>
                   + Tambah Rate
                 </button>
@@ -750,7 +755,7 @@ export function StallsPage({ marketId }: Props) {
                     <button type="button" className="btn-secondary" onClick={resetRateForm}>Batal</button>
                   </div>
                 </form>
-              )}
+              ))}
             </div>
 
             <div>
@@ -775,8 +780,12 @@ export function StallsPage({ marketId }: Props) {
                         </div>
                       </div>
                       <div style={{ display: 'flex', gap: 8 }}>
-                        <button className="btn-secondary" onClick={() => handleRateEdit(rate)} style={{ padding: '4px 12px', fontSize: 13 }}>Edit</button>
-                        <button className="btn-delete-user" onClick={() => setRateDeleteTarget(rate)} style={{ padding: '4px 12px', fontSize: 13 }}>Hapus</button>
+                        {!readOnly && (
+                          <>
+                            <button className="btn-secondary" onClick={() => handleRateEdit(rate)} style={{ padding: '4px 12px', fontSize: 13 }}>Edit</button>
+                            <button className="btn-delete-user" onClick={() => setRateDeleteTarget(rate)} style={{ padding: '4px 12px', fontSize: 13 }}>Hapus</button>
+                          </>
+                        )}
                       </div>
                     </div>
                   ))}

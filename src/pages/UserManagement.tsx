@@ -5,6 +5,7 @@ import '../styles/layout.css'
 
 interface User {
   id: number
+  auth_uid?: string | null
   email: string
   full_name?: string
   phone?: string
@@ -57,7 +58,7 @@ export function UserManagement() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const { data: usersData } = await api.supabase.from('users').select('id_user, email, nama, no_hp, market_id, id_role')
+      const { data: usersData } = await api.supabase.from('users').select('id_user, auth_uid, email, nama, no_hp, market_id, id_role')
       const { data: rolesData } = await api.supabase.from('roles').select('id, name')
       const roleMap = new Map((rolesData || []).map((r: any) => [r.id, r.name]))
 
@@ -66,6 +67,7 @@ export function UserManagement() {
 
       const formattedUsers = (usersData || []).map((u: any) => ({
         id: u.id_user,
+        auth_uid: u.auth_uid,
         email: u.email,
         full_name: u.nama || u.email,
         phone: u.no_hp,
@@ -100,14 +102,24 @@ export function UserManagement() {
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null)
   const [deleting, setDeleting] = useState(false)
 
-  const handleDelete = async (userId: number) => {
+  const handleDelete = async (target: User) => {
+    if (!target.auth_uid) {
+      alert('User ini tidak memiliki auth_uid; hapus manual lewat Supabase Auth.')
+      return
+    }
     try {
       setDeleting(true)
-      await api.supabase.from('user_roles').delete().eq('id', userId)
-      await api.supabase.from('users').delete().eq('id_user', userId)
+      const { data: { session } } = await api.supabase.auth.getSession()
+      const response = await fetch(`/api/users?id=${encodeURIComponent(target.auth_uid)}`, {
+        method: 'DELETE',
+        headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}
+      })
+      const result = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(result?.error || `Gagal menghapus user (HTTP ${response.status})`)
       loadData()
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error deleting user:', err)
+      alert(err?.message || 'Gagal menghapus user')
     } finally {
       setDeleting(false)
       setDeleteTarget(null)
@@ -294,7 +306,7 @@ export function UserManagement() {
         confirmLabel="Hapus"
         danger
         loading={deleting}
-        onConfirm={() => deleteTarget && handleDelete(deleteTarget.id)}
+        onConfirm={() => deleteTarget && handleDelete(deleteTarget)}
         onCancel={() => setDeleteTarget(null)}
       />
     </div>

@@ -28,9 +28,10 @@ interface Officer {
 
 interface Props {
   marketId: number
+  readOnly?: boolean
 }
 
-export function OfficersPage({ marketId }: Props) {
+export function OfficersPage({ marketId, readOnly = false }: Props) {
   const [officers, setOfficers] = useState<Officer[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -178,7 +179,7 @@ export function OfficersPage({ marketId }: Props) {
     <div className="officers-page">
       <div className="page-header">
         <h2>👮 Manajemen Petugas</h2>
-        {!showForm && (
+        {!showForm && !readOnly && (
           <button onClick={() => setShowForm(true)} className="btn-primary">
             + Tambah Petugas
           </button>
@@ -187,7 +188,7 @@ export function OfficersPage({ marketId }: Props) {
 
       {error && <div className="error-message">{error}</div>}
 
-      {showForm && (
+      {showForm && !readOnly && (
         <div className="form-section">
           <h3>{editingId ? 'Edit' : 'Tambah'} Petugas</h3>
           <form onSubmit={handleSubmit}>
@@ -266,7 +267,7 @@ export function OfficersPage({ marketId }: Props) {
                   <th>Role</th>
                   <th>Status</th>
                   <th>Dibuat</th>
-                  <th>Aksi</th>
+                  {!readOnly && <th>Aksi</th>}
                 </tr>
               </thead>
               <tbody>
@@ -282,24 +283,26 @@ export function OfficersPage({ marketId }: Props) {
                       </span>
                     </td>
                     <td>{new Date(officer.created_at).toLocaleDateString('id-ID')}</td>
-                    <td>
-                      <div className="action-buttons">
-                        <button
-                          onClick={() => handleEdit(officer)}
-                          className="btn-edit"
-                          title="Edit"
-                        >
-                          ✏️
-                        </button>
-                        <button
-                          onClick={() => setDeleteTarget(officer)}
-                          className="btn-delete"
-                          title="Hapus"
-                        >
-                          🗑️
-                        </button>
-                      </div>
-                    </td>
+                    {!readOnly && (
+                      <td>
+                        <div className="action-buttons">
+                          <button
+                            onClick={() => handleEdit(officer)}
+                            className="btn-edit"
+                            title="Edit"
+                          >
+                            ✏️
+                          </button>
+                          <button
+                            onClick={() => setDeleteTarget(officer)}
+                            className="btn-delete"
+                            title="Hapus"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

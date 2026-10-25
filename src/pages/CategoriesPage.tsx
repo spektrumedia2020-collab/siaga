@@ -6,6 +6,7 @@ import { EmptyState } from '../components/EmptyState'
 
 interface CategoriesPageProps {
   marketId?: string
+  readOnly?: boolean
 }
 
 interface Category {
@@ -15,7 +16,7 @@ interface Category {
   created_at?: string
 }
 
-export function CategoriesPage({ marketId }: CategoriesPageProps) {
+export function CategoriesPage({ marketId, readOnly = false }: CategoriesPageProps) {
   const [categories, setCategories] = useState<Category[]>([])
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
@@ -155,7 +156,8 @@ export function CategoriesPage({ marketId }: CategoriesPageProps) {
 
       {error && <div style={{ marginTop: 12, color: '#b91c1c' }}>{error}</div>}
 
-      <form onSubmit={handleSubmit} style={{ marginTop: 16, display: 'grid', gap: 12 }}>
+      {!readOnly && (
+        <form onSubmit={handleSubmit} style={{ marginTop: 16, display: 'grid', gap: 12 }}>
         <div>
           <label style={{ display: 'block', marginBottom: 6 }}>Nama Kategori</label>
           <input
@@ -186,6 +188,7 @@ export function CategoriesPage({ marketId }: CategoriesPageProps) {
           ) : null}
         </div>
       </form>
+      )}
 
       <div style={{ marginTop: 24 }}>
         <h3>Daftar Kategori ({categories.length})</h3>
@@ -206,12 +209,16 @@ export function CategoriesPage({ marketId }: CategoriesPageProps) {
                   {category.description ? <div style={{ color: '#6b7280', fontSize: 13 }}>{category.description}</div> : null}
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button type="button" className="btn-secondary" onClick={() => handleEdit(category)}>
-                    Edit
-                  </button>
-                  <button type="button" className="btn-delete-user" onClick={() => setDeleteTarget(category)}>
-                    Hapus
-                  </button>
+                  {!readOnly && (
+                    <>
+                      <button type="button" className="btn-secondary" onClick={() => handleEdit(category)}>
+                        Edit
+                      </button>
+                      <button type="button" className="btn-delete-user" onClick={() => setDeleteTarget(category)}>
+                        Hapus
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             ))}

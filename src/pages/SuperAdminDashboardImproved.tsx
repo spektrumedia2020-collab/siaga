@@ -70,7 +70,7 @@ const addDays = (value: string, days: number) => {
 }
 
 export function SuperAdminDashboardImproved() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'markets' | 'setoran' | 'analytics' | 'users' | 'pedagang' | 'retribusi' | 'themes' | 'settings' | 'backup'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'markets' | 'setoran' | 'analytics' | 'users' | 'pedagang' | 'retribusi' | 'themes'>('overview')
   const [marketsList, setMarketsList] = useState<Array<{ id: number; name: string }>>([])
   const [setoranMarketId, setSetoranMarketId] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
@@ -431,12 +431,6 @@ export function SuperAdminDashboardImproved() {
             <button className={`sidebar-item ${activeTab === 'themes' ? 'active' : ''}`} onClick={() => setActiveTab('themes')}>
               🎨 Tema Pasar
             </button>
-            <button className={`sidebar-item ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>
-              ⚙️ Pengaturan
-            </button>
-            <button className={`sidebar-item ${activeTab === 'backup' ? 'active' : ''}`} onClick={() => setActiveTab('backup')}>
-              📥 Backup Data
-            </button>
           </div>
         </nav>
         
@@ -739,55 +733,6 @@ export function SuperAdminDashboardImproved() {
               <p>Buat dan kelola tema untuk setiap pasar</p>
             </div>
             <ThemeManagement />
-          </section>
-        )}
-
-        {activeTab === 'settings' && (
-          <section className="settings-section">
-            <div className="section-header">
-              <h2>⚙️ Pengaturan Sistem</h2>
-            </div>
-            <div className="siaga-card" style={{ padding: 24, marginTop: 24 }}>
-              <p style={{ color: '#64748b', marginBottom: 24 }}>Pengaturan umum sistem SIAGA</p>
-              <div style={{ display: 'grid', gap: 16 }}>
-                <div>
-                  <label style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>Nama Sistem</label>
-                  <input type="text" className="siaga-input" defaultValue="SIAGA - Sistem Informasi Administrasi Pasar" />
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>Email Notifikasi</label>
-                  <input type="email" className="siaga-input" defaultValue="admin@siaga.id" />
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>Masa Retribusi (hari)</label>
-                  <input type="number" className="siaga-input" defaultValue="30" />
-                </div>
-                <button className="siaga-btn siaga-btn-primary">Simpan Pengaturan</button>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {activeTab === 'backup' && (
-          <section className="backup-section">
-            <div className="section-header">
-              <h2>📥 Backup & Restore Data</h2>
-            </div>
-            <div className="siaga-card" style={{ padding: 24, marginTop: 24 }}>
-              <p style={{ color: '#64748b', marginBottom: 24 }}>Backup data sistem untuk keamanan</p>
-              <div style={{ display: 'grid', gap: 16 }}>
-                <button className="siaga-btn siaga-btn-primary" style={{ width: 'fit-content' }}>
-                  📥 Backup Semua Data (JSON)
-                </button>
-                <button className="siaga-btn siaga-btn-primary" style={{ width: 'fit-content' }}>
-                  📊 Backup Laporan Excel
-                </button>
-                <div style={{ marginTop: 16 }}>
-                  <label style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>Upload File Backup</label>
-                  <input type="file" accept=".json,.xlsx,.csv" className="siaga-input" />
-                </div>
-              </div>
-            </div>
           </section>
         )}
       </main>

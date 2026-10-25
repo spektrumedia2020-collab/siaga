@@ -755,6 +755,7 @@ export function MarketDashboard({ userId, onLogout }: Props) {
   }
 
   const { market, stallCount, officerCount, transactionCount, totalRevenue } = stats
+  const isReadOnly = ['MARKET_HEAD', 'MARKET_ADMIN', 'ADMIN_PASAR', 'PASAR_ADMIN'].includes((profileRole || '').toUpperCase())
   const publicMarketSlug = encodeURIComponent((market.code || market.name || 'pasar').trim()).replace(/%20/g, '-').replace(/%/g, '')
   const publicMarketUrl = `/@${publicMarketSlug}`
 
@@ -771,25 +772,25 @@ export function MarketDashboard({ userId, onLogout }: Props) {
   const renderCurrentPage = () => {
     switch (currentPage) {
       case 'stalls':
-        return <StallsPage marketId={stats.market.id} />
+        return <StallsPage marketId={stats.market.id} readOnly={isReadOnly} />
       case 'officers':
-        return <OfficersPage marketId={stats.market.id} />
+        return <OfficersPage marketId={stats.market.id} readOnly={isReadOnly} />
       case 'sectors':
-        return <SectorsPage marketId={stats.market.id} />
+        return <SectorsPage marketId={stats.market.id} readOnly={isReadOnly} />
       case 'owners':
-        return <OwnersPage marketId={stats.market.id} />
+        return <OwnersPage marketId={stats.market.id} readOnly={isReadOnly} />
       case 'marketDetail':
-        return <MarketDetailPage marketId={stats.market.id} onBack={() => updatePageRoute('overview')} onSaved={() => loadMarketStats()} />
+        return <MarketDetailPage marketId={stats.market.id} readOnly={isReadOnly} onBack={() => updatePageRoute('overview')} onSaved={() => loadMarketStats()} />
       case 'categories':
-        return <CategoriesPage marketId={stats.market.id} />
+        return <CategoriesPage marketId={stats.market.id} readOnly={isReadOnly} />
       case 'retribusi':
-        return <RetribusiPage />
+        return <RetribusiPage readOnly={isReadOnly} />
       case 'transactions':
-        return <TransactionsPage marketId={stats.market.id} />
+        return <TransactionsPage marketId={stats.market.id} readOnly={isReadOnly} />
       case 'reconciliations':
         return <ReconciliationsPage marketId={stats.market.id} />
       case 'setoran':
-        return <SetoranPage marketId={stats.market.id} />
+        return <SetoranPage marketId={stats.market.id} readOnly={isReadOnly} />
       case 'publicContent':
         return (
           <div className="content-editor-panel">
@@ -915,9 +916,11 @@ export function MarketDashboard({ userId, onLogout }: Props) {
             </div>
 
             {publicContentError && <div className="content-editor-error">{publicContentError}</div>}
-            <div className="content-editor-actions">
-              <button className="btn-primary" type="button" onClick={savePublicCms} disabled={publicContentSaving}>{publicContentSaving ? 'Menyimpan...' : 'Simpan perubahan'}</button>
-            </div>
+            {!isReadOnly && (
+              <div className="content-editor-actions">
+                <button className="btn-primary" type="button" onClick={savePublicCms} disabled={publicContentSaving}>{publicContentSaving ? 'Menyimpan...' : 'Simpan perubahan'}</button>
+              </div>
+            )}
           </div>
         )
       default:
@@ -1078,14 +1081,16 @@ export function MarketDashboard({ userId, onLogout }: Props) {
                             </svg>
                           </span>
                         </button>
-                        <button className="icon-action" title="Edit pasar" aria-label="Edit pasar" onClick={() => setEditingMarket(true)}>
-                          <span className="sidebar-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M3 21l4-1 11-11a2.1 2.1 0 10-3-3L4 17l-1 4z" />
-                              <path d="M14.5 6.5l3 3" />
-                            </svg>
-                          </span>
-                        </button>
+                        {!isReadOnly && (
+                          <button className="icon-action" title="Edit pasar" aria-label="Edit pasar" onClick={() => setEditingMarket(true)}>
+                            <span className="sidebar-icon" aria-hidden="true">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M3 21l4-1 11-11a2.1 2.1 0 10-3-3L4 17l-1 4z" />
+                                <path d="M14.5 6.5l3 3" />
+                              </svg>
+                            </span>
+                          </button>
+                        )}
                       </div>
                     </div>
                     <div className="side-kpi">

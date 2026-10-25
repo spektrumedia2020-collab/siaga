@@ -7,6 +7,7 @@ import { EmptyState } from '../components/EmptyState'
 interface OwnersPageProps {
   marketId?: string
   mode?: 'market' | 'superadmin'
+  readOnly?: boolean
 }
 
 interface Owner {
@@ -24,7 +25,7 @@ interface Owner {
   }>
 }
 
-export function OwnersPage({ marketId, mode = 'market' }: OwnersPageProps) {
+export function OwnersPage({ marketId, mode = 'market', readOnly = false }: OwnersPageProps) {
   const [owners, setOwners] = useState<Owner[]>([])
   const [name, setName] = useState('')
   const [nik, setNik] = useState('')
@@ -431,16 +432,18 @@ export function OwnersPage({ marketId, mode = 'market' }: OwnersPageProps) {
       <div style={{ marginTop: 24 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, marginBottom: 12, flexWrap: 'wrap' }}>
           <h3 style={{ margin: 0 }}>{mode === 'superadmin' ? 'Daftar Pedagang' : 'Daftar Pemilik'} ({owners.length})</h3>
-          <button
-            type="button"
-            className="btn-primary"
-            onClick={() => {
-              resetForm()
-              setIsModalOpen(true)
-            }}
-          >
-            {mode === 'superadmin' ? 'Tambah Pedagang' : 'Tambah Pemilik'}
-          </button>
+          {!readOnly && (
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={() => {
+                resetForm()
+                setIsModalOpen(true)
+              }}
+            >
+              {mode === 'superadmin' ? 'Tambah Pedagang' : 'Tambah Pemilik'}
+            </button>
+          )}
         </div>
         {loading ? (
           <Loading label="Memuat pemilik lapak..." fullHeight={false} />
@@ -460,7 +463,9 @@ export function OwnersPage({ marketId, mode = 'market' }: OwnersPageProps) {
                   <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>Alamat</th>
                   <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>Telepon</th>
                   <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #e5e7eb', minWidth: 180 }}>Lapak</th>
-                  <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '1px solid #e5e7eb', width: 220 }}>Aksi</th>
+                  {!readOnly && (
+                    <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '1px solid #e5e7eb', width: 220 }}>Aksi</th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -489,36 +494,40 @@ export function OwnersPage({ marketId, mode = 'market' }: OwnersPageProps) {
                               <span style={{ fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', color: '#0f172a' }}>
                                 {stall.code || '-'} / {stall.number || '-'}
                               </span>
-                              <button
-                                type="button"
-                                title="Edit lapak"
-                                onClick={() => handleOpenStallModal(owner, stall)}
-                                style={{
-                                  border: 'none',
-                                  background: 'transparent',
-                                  cursor: 'pointer',
-                                  padding: 0,
-                                  fontSize: 12,
-                                  lineHeight: 1
-                                }}
-                              >
-                                ✏️
-                              </button>
-                              <button
-                                type="button"
-                                title="Hapus lapak"
-                                onClick={() => handleDeleteStall(stall.id)}
-                                style={{
-                                  border: 'none',
-                                  background: 'transparent',
-                                  cursor: 'pointer',
-                                  padding: 0,
-                                  fontSize: 12,
-                                  lineHeight: 1
-                                }}
-                              >
-                                🗑
-                              </button>
+                              {!readOnly && (
+                                <>
+                                  <button
+                                    type="button"
+                                    title="Edit lapak"
+                                    onClick={() => handleOpenStallModal(owner, stall)}
+                                    style={{
+                                      border: 'none',
+                                      background: 'transparent',
+                                      cursor: 'pointer',
+                                      padding: 0,
+                                      fontSize: 12,
+                                      lineHeight: 1
+                                    }}
+                                  >
+                                    ✏️
+                                  </button>
+                                  <button
+                                    type="button"
+                                    title="Hapus lapak"
+                                    onClick={() => handleDeleteStall(stall.id)}
+                                    style={{
+                                      border: 'none',
+                                      background: 'transparent',
+                                      cursor: 'pointer',
+                                      padding: 0,
+                                      fontSize: 12,
+                                      lineHeight: 1
+                                    }}
+                                  >
+                                    🗑
+                                  </button>
+                                </>
+                              )}
                             </div>
                           ))}
                         </div>
@@ -526,6 +535,7 @@ export function OwnersPage({ marketId, mode = 'market' }: OwnersPageProps) {
                         '-'
                       )}
                     </td>
+                    {!readOnly && (
                     <td style={{ padding: '0.75rem', verticalAlign: 'top', textAlign: 'center' }}>
                       <div style={{ display: 'flex', gap: 6, justifyContent: 'center', flexWrap: 'nowrap', whiteSpace: 'nowrap' }}>
                         <button
@@ -602,6 +612,7 @@ export function OwnersPage({ marketId, mode = 'market' }: OwnersPageProps) {
                         </button>
                       </div>
                     </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -610,7 +621,7 @@ export function OwnersPage({ marketId, mode = 'market' }: OwnersPageProps) {
         )}
       </div>
 
-      {isStallModalOpen && stallOwner && (
+      {!readOnly && isStallModalOpen && stallOwner && (
         <div
           style={{
             position: 'fixed',
@@ -763,7 +774,7 @@ export function OwnersPage({ marketId, mode = 'market' }: OwnersPageProps) {
         </div>
       )}
 
-      {isModalOpen && (
+      {!readOnly && isModalOpen && (
         <div
           style={{
             position: 'fixed',

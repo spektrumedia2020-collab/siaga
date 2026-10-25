@@ -6,6 +6,7 @@ import { EmptyState } from '../components/EmptyState'
 
 interface RetribusiPageProps {
   marketId?: string
+  readOnly?: boolean
 }
 
 interface RetribusiItem {
@@ -16,7 +17,7 @@ interface RetribusiItem {
   created_at?: string
 }
 
-export function RetribusiPage({ marketId }: RetribusiPageProps) {
+export function RetribusiPage({ marketId, readOnly = false }: RetribusiPageProps) {
   const [items, setItems] = useState<RetribusiItem[]>([])
   const [name, setName] = useState('')
   const [amount, setAmount] = useState('')
@@ -157,7 +158,8 @@ export function RetribusiPage({ marketId }: RetribusiPageProps) {
 
       {error && <div style={{ marginTop: 12, color: '#b91c1c' }}>{error}</div>}
 
-      <form onSubmit={handleSubmit} style={{ marginTop: 16, display: 'grid', gap: 12 }}>
+      {!readOnly && (
+        <form onSubmit={handleSubmit} style={{ marginTop: 16, display: 'grid', gap: 12 }}>
         <div>
           <label style={{ display: 'block', marginBottom: 6 }}>Jenis Retribusi</label>
           <input
@@ -199,6 +201,7 @@ export function RetribusiPage({ marketId }: RetribusiPageProps) {
           ) : null}
         </div>
       </form>
+      )}
 
       <div style={{ marginTop: 24 }}>
         <h3>Daftar Retribusi ({items.length})</h3>
@@ -222,12 +225,16 @@ export function RetribusiPage({ marketId }: RetribusiPageProps) {
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button type="button" className="btn-secondary" onClick={() => handleEdit(item)}>
-                    Edit
-                  </button>
-                  <button type="button" className="btn-delete-user" onClick={() => setDeleteTarget({ id: item.id, name: (item as any).nama_retribusi || (item as any).name || `#${item.id}` })}>
-                    Hapus
-                  </button>
+                  {!readOnly && (
+                    <>
+                      <button type="button" className="btn-secondary" onClick={() => handleEdit(item)}>
+                        Edit
+                      </button>
+                      <button type="button" className="btn-delete-user" onClick={() => setDeleteTarget({ id: item.id, name: (item as any).nama_retribusi || (item as any).name || `#${item.id}` })}>
+                        Hapus
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             ))}

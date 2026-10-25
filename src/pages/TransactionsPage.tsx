@@ -10,6 +10,7 @@ import './TransactionsPage.css'
 
 interface TransactionsPageProps {
   marketId?: number | string
+  readOnly?: boolean
 }
 
 interface Transaction {
@@ -42,7 +43,7 @@ interface Stall {
 
 const getTodayDate = () => new Date().toISOString().split('T')[0]
 
-export function TransactionsPage({ marketId }: TransactionsPageProps) {
+export function TransactionsPage({ marketId, readOnly = false }: TransactionsPageProps) {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [stalls, setStalls] = useState<Stall[]>([])
   const [loading, setLoading] = useState(true)
@@ -351,7 +352,7 @@ export function TransactionsPage({ marketId }: TransactionsPageProps) {
                 <th>Status</th>
                 <th className="tx-note">Catatan</th>
                 <th className="tx-date">Tanggal</th>
-                <th>Aksi</th>
+                {!readOnly && <th>Aksi</th>}
               </tr>
             </thead>
             <tbody>
@@ -367,14 +368,16 @@ export function TransactionsPage({ marketId }: TransactionsPageProps) {
                     <td><span className={`tx-status-badge ${statusCls}`}>{t.status || '-'}</span></td>
                     <td className="tx-note">{t.note || '-'}</td>
                     <td className="tx-date">{formatDate(t.created_at)}</td>
-                    <td className="tx-actions">
-                      <button type="button" className="tx-icon-btn tx-icon-edit" title="Edit transaksi" aria-label="Edit transaksi" onClick={() => openEdit(t)}>
-                        <IconEdit size={16} />
-                      </button>
-                      <button type="button" className="tx-icon-btn tx-icon-delete" title="Hapus transaksi" aria-label="Hapus transaksi" onClick={() => setDeleteTarget(t)}>
-                        <IconTrash size={16} />
-                      </button>
-                    </td>
+                    {!readOnly && (
+                      <td className="tx-actions">
+                        <button type="button" className="tx-icon-btn tx-icon-edit" title="Edit transaksi" aria-label="Edit transaksi" onClick={() => openEdit(t)}>
+                          <IconEdit size={16} />
+                        </button>
+                        <button type="button" className="tx-icon-btn tx-icon-delete" title="Hapus transaksi" aria-label="Hapus transaksi" onClick={() => setDeleteTarget(t)}>
+                          <IconTrash size={16} />
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 )
               })}
@@ -437,7 +440,7 @@ export function TransactionsPage({ marketId }: TransactionsPageProps) {
         </div>
       )}
 
-      {editingTransaction && (
+      {!readOnly && editingTransaction && (
         <div className="tx-modal-backdrop" role="presentation" onClick={() => !actionLoading && setEditingTransaction(null)}>
           <div className="tx-modal" role="dialog" aria-modal="true" aria-labelledby="edit-transaction-title" onClick={(event) => event.stopPropagation()}>
             <h3 id="edit-transaction-title">Edit Transaksi</h3>

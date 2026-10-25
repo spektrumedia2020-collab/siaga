@@ -5,6 +5,9 @@ import { ExportButtons } from '../components/ExportButtons'
 
 interface SetoranPageProps {
   marketId?: number | string
+  // Accepted for API symmetry with the other read-only pages: this page currently
+  // exposes no approve/reject/update actions in the UI, so nothing needs hiding.
+  readOnly?: boolean
 }
 
 interface Setoran {
