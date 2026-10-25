@@ -26,9 +26,9 @@ Setiap item wajib punya evidence sebelum dieksekusi dan hasil verifikasi setelah
 
 ### P0-12 · Kredensial akun demo (termasuk ADMIN) di halaman publik
 - **Status:** kode dibersihkan (`JuriDocumentationPage` + tombol akun test `Auth.tsx`); bundle bersih.
-- **Sisa:** rotasi password `admin@siaga.id`, `kepala@siaga.id`, `petugas@siaga.id` (Supabase Auth).
-  Password lama pernah publik & ada di Git history → wajib rotasi.
-- **DoD:** ketiga akun memakai password baru; login lama gagal; tidak ada kredensial di bundle.
+- **Rotasi:** user menyatakan sudah punya password baru dan memilih **tidak merotasi** (2026-10-26).
+  Risiko diterima; disarankan rotasi sebelum go-live.
+- **DoD tersisa:** tidak ada kredensial di bundle (selesai) + rotasi (ditolak user).
 
 ### P1 — Arsitektur & kualitas
 

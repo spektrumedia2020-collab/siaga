@@ -4,9 +4,8 @@
 
 ## Task aktif
 
-**Wipe selesai** (DB + storage): semua data operasional 0; tersisa `admin@siaga.id`, 4 roles,
-7 retribution_types, 5 stall_categories. **Berikutnya:** rotasi password admin, set 2 env Vercel,
-push 6 commit & deploy.
+Deploy tertunda: set `PUBLIC_STALL_PIN_HASH` + `PERUMDA_JWT_SECRET` di Vercel, lalu push 7 commit.
+Rotasi password admin **tidak dilakukan** atas keputusan user (risiko tercatat di S-18).
 
 ## Temuan yang memicu task berikutnya
 

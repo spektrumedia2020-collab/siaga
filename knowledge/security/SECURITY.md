@@ -24,7 +24,7 @@ Status konfigurasi DB produksi: **UNKNOWN** (tidak ada akses DB pada sesi ini).
 | S-15 | MEDIUM | Read over-broad: `attendance`, `officers`, `retribution_types` | **FIXED & TERVERIFIKASI di DB** |
 | S-16 | MEDIUM | `setoran` cek peran hanya `users.id_role`, tanpa scope market | **FIXED & TERVERIFIKASI di DB** |
 | S-17 | HIGH | `stall_owners` SELECT publik mengekspos `nik`/`phone`/`address` ke anon | **FIXED & TERVERIFIKASI di DB** |
-| S-18 | CRITICAL | Kredensial 4 akun demo (termasuk ADMIN) terpampang di halaman publik `/juri`, `/docs` | **FIXED (kode)** — rotasi password pending |
+| S-18 | CRITICAL | Kredensial 4 akun demo (termasuk ADMIN) terpampang di halaman publik `/juri`, `/docs` | **FIXED (kode)** — rotasi password ditolak user (2026-10-26) |
 
 ---
 
@@ -354,8 +354,9 @@ anon_nik=false; anon_phone=false; anon_address=false; auth_table_select=true
 **Wajib dilakukan user (tidak bisa diwakilkan tanpa menulis secret)**
 - Rotasi password: `admin@siaga.id`, `kepala@siaga.id`, `petugas@siaga.id`
   (Supabase Dashboard → Authentication → Users → Update password).
-- Password lama pernah publik + ada di riwayat Git → harus dianggap bocor permanen.
-- Pertimbangkan menonaktifkan akun demo setelah presentasi.
+  **Catatan 2026-10-26:** user menyatakan sudah memiliki password dan memilih **tidak merotasi**.
+  Risiko diterima: password lama pernah publik + ada di Git history. Disarankan tetap dirotasi
+  sebelum go-live.
 
 **Evidence awal**: `src/pages/JuriDocumentationPage.tsx:74-79` — email + password 4 akun demo,
 halaman `/juri` & `/docs` publik.
