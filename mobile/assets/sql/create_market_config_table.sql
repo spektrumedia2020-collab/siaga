@@ -7,7 +7,7 @@
 create table if not exists market_config (
   id bigint primary key generated always as identity,
   market_id bigint not null references markets(id) on delete cascade,
-  key   varchar(50) not null,          -- misal: 'daily_target_stalls', 'announcement_id', ...
+  key   varchar(50) not null,          -- misal: 'daily_target_stalls', 'announcement_id', dst
   value text,                          -- nilai bebas (bisa angka, string, json)
   created_at timestamp with time zone default now(),
   updated_at timestamp with time zone default now(),
