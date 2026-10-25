@@ -1,5 +1,16 @@
 # DONE — Arsip Task Selesai
 
+## 2026-10-26 · P1-05 — Typecheck hijau (0 error)
+
+- `tsconfig.json`: `references` (dist-server) dihapus; `tsconfig.node.json` jadi `noEmit`.
+- Script baru: `npm run typecheck` (`tsc --noEmit`).
+- Tambah deklarasi lokal `src/types/papaparse.d.ts` (tanpa dependency baru).
+- Hapus dead files: `MarketLandingPage.old.tsx`, `MarketLandingPage.css.old` (P2-01).
+- Bersihkan unused imports/vars/params di Dashboard, api, store, Juri, MarketDashboard,
+  MarketEditPage, MarketsManagement, routes, server; guard `id_token` Google.
+- **Hasil:** `npx tsc --noEmit` → 0 error; `npm run build` PASS.
+- CI web job akan hijau setelah commit ini di-push (masih tertahan env deploy).
+
 ## 2026-10-26 · Full data wipe (database + storage)
 
 **Dikonfirmasi user:** "HAPUS SEMUA"; backup = tidak; simpan 1 admin; simpan master sistem.

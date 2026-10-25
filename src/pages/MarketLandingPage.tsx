@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { getSupabaseClient } from '../lib/supabase'
 import './MarketLandingPage.css'
 

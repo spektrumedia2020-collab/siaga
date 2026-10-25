@@ -76,7 +76,7 @@ router.post('/create', async (req, res) => {
 })
 
 // Get all users
-router.get('/', async (req, res) => {
+router.get('/', async (_req, res) => {
   try {
     const { data: authUsers, error } = await supabaseAdmin.auth.admin.listUsers()
 
@@ -116,7 +116,7 @@ router.get('/', async (req, res) => {
 })
 
 // Get all users with MARKET_HEAD role
-router.get('/market-heads', async (req, res) => {
+router.get('/market-heads', async (_req, res) => {
   try {
     // Get all roles
     const { data: roles, error: rolesError } = await supabaseAdmin

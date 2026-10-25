@@ -10,11 +10,9 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": false,
-    "outDir": "dist-server",
+    "noEmit": true,
     "strict": true,
     "types": ["node"],
-    "composite": true,
     "rootDir": "./src"
   },
   "include": ["src/server.ts", "src/routes/*.ts", "src/middleware/*.ts"],

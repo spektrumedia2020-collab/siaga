@@ -67,9 +67,11 @@ export const googleLogin = async (): Promise<string | null> => {
         });
 
       const user = await auth.signIn();
-      token = user.getAuthResponse().id_token;
+      const idToken = user.getAuthResponse().id_token;
+      if (!idToken) throw new Error('Google tidak mengembalikan id_token');
+      token = idToken;
 
-      localStorage.setItem('google_access_token', token);
+      localStorage.setItem('google_access_token', idToken);
       localStorage.setItem('google_user', JSON.stringify(user.getBasicProfile()));
     } catch (authError: any) {
       if (authError.error === 'idpiframe_initialization_failed' || authError.error === 'popup_closed_by_user') {

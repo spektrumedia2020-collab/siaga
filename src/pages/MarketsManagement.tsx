@@ -29,8 +29,6 @@ export function MarketsManagement() {
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const [headPhotoPreview, setHeadPhotoPreview] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const headPhotoInputRef = useRef<HTMLInputElement>(null)
   const [deleteTarget, setDeleteTarget] = useState<Market | null>(null)
@@ -134,7 +132,7 @@ export function MarketsManagement() {
       const supabase = getSupabaseClient()
       const bucket = STORAGE_BUCKET
       const fileName = `${type}_${Date.now()}_${file.name}`
-      const { data, error } = await supabase.storage.from(bucket).upload(fileName, file)
+      const { error } = await supabase.storage.from(bucket).upload(fileName, file)
       if (error) throw error
       const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(fileName)
       return publicUrl
@@ -149,13 +147,10 @@ export function MarketsManagement() {
     const file = e.target.files?.[0]
     if (!file) return
     if (file.size > 5 * 1024 * 1024) { alert('Ukuran file maksimal 5MB'); return }
-    const url = URL.createObjectURL(file)
     if (type === 'market') {
-      setPreviewUrl(url)
       const uploadedUrl = await uploadPhoto(file, 'market')
       if (uploadedUrl) setFormData({ ...formData, photo_url: uploadedUrl })
     } else {
-      setHeadPhotoPreview(url)
       const uploadedUrl = await uploadPhoto(file, 'head')
       if (uploadedUrl) setFormData({ ...formData, head_photo_url: uploadedUrl })
     }
@@ -169,7 +164,7 @@ export function MarketsManagement() {
       const { error } = await supabase.from('markets').insert([marketData])
       if (error) throw error
       setFormData({ name: '', code: '', city: '', address: '', photo_url: '', head_photo_url: '', head_user_id: '', status: 'AKTIF' })
-      setPreviewUrl(null); setHeadPhotoPreview(null); setShowForm(false); loadAllData()
+      setShowForm(false); loadAllData()
     } catch (err) { console.error('Error saving market:', err) }
   }
 
@@ -209,7 +204,7 @@ export function MarketsManagement() {
               </div>
               <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem' }}>
                 <button type="submit" className="siaga-btn siaga-btn-primary">Simpan Pasar</button>
-                <button type="button" className="siaga-btn siaga-btn-outline" onClick={() => { setPreviewUrl(null); setHeadPhotoPreview(null); setFormData({ name: '', code: '', city: '', address: '', photo_url: '', head_photo_url: '', head_user_id: '', status: 'AKTIF' }) }}>Batal</button>
+                <button type="button" className="siaga-btn siaga-btn-outline" onClick={() => { setFormData({ name: '', code: '', city: '', address: '', photo_url: '', head_photo_url: '', head_user_id: '', status: 'AKTIF' }) }}>Batal</button>
               </div>
             </div>
           </form>

@@ -79,7 +79,7 @@ export const useAuthStore = create<AuthState>()(
 // Market Store
 export const useMarketStore = create<MarketState>()(
   devtools(
-    (set, get) => ({
+    (set, _get) => ({
       markets: [],
       selectedMarket: null,
       loading: false,

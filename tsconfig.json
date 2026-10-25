@@ -23,6 +23,5 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src", "api/**/*.ts"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "include": ["src", "api/**/*.ts"]
 }

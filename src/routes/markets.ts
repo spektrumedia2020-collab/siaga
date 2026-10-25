@@ -13,7 +13,7 @@ const supabaseAdmin = createClient(
 )
 
 // Get all markets
-router.get('/', async (req, res) => {
+router.get('/', async (_req, res) => {
   try {
     const { data: marketsData, error } = await supabaseAdmin
       .from('markets')
@@ -26,7 +26,6 @@ router.get('/', async (req, res) => {
 
     // Get roles to find MARKET_HEAD role ID
     const { data: rolesData } = await supabaseAdmin.from('roles').select('id, name')
-    const roleMap = new Map<number, string>((rolesData || []).map((r: any) => [r.id, r.name]))
     
     // Get all users from auth
     const { data: authUsers } = await supabaseAdmin.auth.admin.listUsers()
@@ -96,7 +95,6 @@ router.get('/:id', async (req, res) => {
 
     // Get roles to find MARKET_HEAD role ID
     const { data: rolesData } = await supabaseAdmin.from('roles').select('id, name')
-    const roleMap = new Map<number, string>((rolesData || []).map((r: any) => [r.id, r.name]))
     
     // Find MARKET_HEAD role ID
     const marketHeadRoleId = (rolesData || []).find((r: any) => 
@@ -297,7 +295,6 @@ router.delete('/:id', async (req, res) => {
     
     // First clear user_roles market_id for head
     const { data: rolesData } = await supabaseAdmin.from('roles').select('id, name')
-    const roleMap = new Map<number, string>((rolesData || []).map((r: any) => [r.id, r.name]))
     
     const marketHeadRoleId = (rolesData || []).find((r: any) => 
       r.name.toUpperCase() === 'MARKET_HEAD'

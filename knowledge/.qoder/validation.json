@@ -4,8 +4,8 @@
   "commit": "73c7267e837735ef082dc50ce653bcb51833f6f0",
   "checks": {
     "typecheck": {
-      "status": "NOT_CLEAN",
-      "evidence": "tsc --noEmit (references dimatikan) menghasilkan 40+ error PRE-EXISTING di src/*; tidak ada error di api/users.ts dan src/pages/UserManagement.tsx. Typecheck penuh juga terblokir TS6305 (dist-server project reference)."
+      "status": "PASS",
+      "evidence": "npm run typecheck (tsc --noEmit) pada 2026-10-26: 0 error. Project reference dist-server dihapus dari tsconfig.json; tsconfig.node.json jadi noEmit."
     },
     "build_web": {
       "status": "PASS",

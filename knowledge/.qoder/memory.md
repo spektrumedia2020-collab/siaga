@@ -50,7 +50,7 @@
 ## Konstrain
 
 - Tidak ada test otomatis di `src/` dan `api/`; `npm test` = `node --test` tanpa file test terverifikasi. *(VERIFIED untuk src/api; mobile = UNKNOWN)*
-- Tidak ada ESLint/Prettier. `npm run build` PASS (2026-10-25); `tsc --noEmit` masih 40+ error lama.
+- Tidak ada ESLint/Prettier. `npm run build` PASS; `npm run typecheck` **0 error** (2026-10-26).
 - SQL migrasi tersebar di 4 lokasi (root, `migrations/`, `mobile/migrations/`, `mobile/assets/sql/`) → drift risk.
 
 ## Integrasi eksternal

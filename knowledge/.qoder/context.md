@@ -4,8 +4,8 @@
 
 ## Task aktif
 
-Deploy tertunda: set `PUBLIC_STALL_PIN_HASH` + `PERUMDA_JWT_SECRET` di Vercel, lalu push 7 commit.
-Rotasi password admin **tidak dilakukan** atas keputusan user (risiko tercatat di S-18).
+**P1-05 selesai**: `npx tsc --noEmit` 0 error, `npm run build` PASS; script `typecheck` ditambah.
+Deploy tetap tertunda: set `PUBLIC_STALL_PIN_HASH` + `PERUMDA_JWT_SECRET` di Vercel, lalu push.
 
 ## Temuan yang memicu task berikutnya
 

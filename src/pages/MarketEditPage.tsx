@@ -143,7 +143,7 @@ export function MarketEditPage({ marketId, onBack }: Props) {
       const bucket = STORAGE_BUCKET
       const fileName = `${type}_${Date.now()}_${file.name}`
       
-      const { data, error } = await supabase.storage
+      const { error } = await supabase.storage
         .from(bucket)
         .upload(fileName, file)
 

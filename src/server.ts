@@ -2,7 +2,6 @@ import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
 import dotenv from 'dotenv'
-import { createClient } from '@supabase/supabase-js'
 import rateLimit from 'express-rate-limit'
 
 dotenv.config()
@@ -62,12 +61,6 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
-// Supabase admin client (service role)
-const supabaseAdmin = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
 // API routes
 import marketsRouter from './routes/markets'
 import officersRouter from './routes/officers'
@@ -86,13 +79,13 @@ app.use('/api/transactions', authenticateToken, transactionsRouter)
 app.use('/api/users', authenticateToken, requireAdmin, usersRouter)
 
 // Error handling middleware
-app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('Unhandled error:', err)
   res.status(500).json({ error: 'Internal server error' })
 })
 
 // 404 handler
-app.use((req, res) => {
+app.use((_req, res) => {
   res.status(404).json({ error: 'Not found' })
 })
 

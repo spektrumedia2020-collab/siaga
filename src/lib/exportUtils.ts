@@ -17,9 +17,7 @@ export const exportToCSV = (
 
   try {
     const csv = Papa.unparse(data, {
-      header: true,
-      dynamicTyping: false,
-      encoding: 'UTF-8'
+      header: true
     });
 
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });

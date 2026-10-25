@@ -1,13 +1,6 @@
 import { getSupabaseClient } from './supabase'
 import { SupabaseClient } from '@supabase/supabase-js'
 
-// API Response Types
-interface ApiResponse<T> {
-  data: T | null
-  error: string | null
-  loading: boolean
-}
-
 // Market Types
 export interface Market {
   id: number

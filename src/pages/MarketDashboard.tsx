@@ -101,7 +101,7 @@ export function MarketDashboard({ userId, onLogout }: Props) {
   const [profileName, setProfileName] = useState('')
   const [profilePhotoUrl, setProfilePhotoUrl] = useState('')
   const [profileRole, setProfileRole] = useState('Administrator')
-  const [userRoleName, setUserRoleName] = useState('')
+  const [, setUserRoleName] = useState('')
   const [profilePhotoFile, setProfilePhotoFile] = useState<File | null>(null)
   const [profileSaving, setProfileSaving] = useState(false)
   const [profileError, setProfileError] = useState('')

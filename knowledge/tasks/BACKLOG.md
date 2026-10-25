@@ -41,7 +41,8 @@ Setiap item wajib punya evidence sebelum dieksekusi dan hasil verifikasi setelah
   (trigger/backfill) agar tidak diverge.
 - **P1-04 Tidak ada test otomatis.** Mulai dari unit test helper murni (`roleUtils` mapping, `exportUtils`)
   dan integration test `api/users` auth.
-- **P1-05 Tidak ada lint/format/typecheck script.** Tambahkan `typecheck` (`tsc --noEmit`), ESLint, Prettier.
+- ~~P1-05 typecheck/lint~~ **selesai 2026-10-26**: `npm run typecheck` 0 error (script ditambahkan).
+  ESLint/Prettier belum dipasang.
 - **P1-06 UI read-only untuk MARKET_HEAD.** Saat ini tombol aksi masih tampil meski RLS menolak;
   sembunyikan/disable aksi tulis di halaman pasar (stalls, owners, officers, sectors, categories,
   retribusi, transactions, setoran) untuk kepala pasar.
