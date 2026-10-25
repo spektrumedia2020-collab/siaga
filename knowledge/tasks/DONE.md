@@ -1,5 +1,27 @@
 # DONE — Arsip Task Selesai
 
+## 2026-10-26 · Full data wipe (database + storage)
+
+**Dikonfirmasi user:** "HAPUS SEMUA"; backup = tidak; simpan 1 admin; simpan master sistem.
+
+**Database (satu transaksi, terverifikasi)**
+```
+markets=0 stalls=0 stall_owners=0 transactions=0 setoran=0 attendance=0
+officers=0 market_sectors=0 market_config=0 announcements=0 retribution_rates=0
+users=1 user_roles=1 auth_users=1 (admin@siaga.id, id_user 6)
+roles=4 retribution_types=7 stall_categories=5 (dipertahankan)
+```
+Catatan: percobaan pertama gagal karena FK `users.market_id → markets`; diperbaiki dengan
+melepaskan referensi (`users.market_id`, `markets.id_head_market`, `user_roles.market_id`) lalu hapus.
+
+**Storage**
+```
+avatars 6/6, "Data Siaga" 16/16, data-siaga 2/2 → storage.objects=0
+```
+
+**Konsekuensi:** aplikasi produksi kini kosong (belum ada pasar/lapak/transaksi). Admin wajib
+merotasi password karena password lama pernah bocor.
+
 ## 2026-10-25 · Role overhaul — MARKET_HEAD read-only, impersonation & TREASURER dihapus
 
 **Database (applied)**

@@ -62,6 +62,10 @@ Sumber: query langsung `pg_class` + `pg_policies` di Supabase SQL Editor
 > MARKET_HEAD **read-only**. Pengecualian: OFFICER insert transaksi/absensi/setoran miliknya;
 > TREASURER update setoran pasar; user update profil sendiri.
 
+> **Status data (2026-10-26):** seluruh data operasional **dikosongkan** (wipe terkonfirmasi).
+> Tersisa 1 akun `admin@siaga.id`, 4 roles, 7 retribution_types, 5 stall_categories.
+> Storage: 0 objek. Lihat [DONE.md](../tasks/DONE.md).
+
 | Tabel | RLS | Policy | Verdict |
 |---|---|---|---|
 | `announcements` | ON | 2 | OK — 014: read authenticated; tulis ADMIN |
