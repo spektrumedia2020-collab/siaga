@@ -8,7 +8,7 @@ Status konfigurasi DB produksi: **UNKNOWN** (tidak ada akses DB pada sesi ini).
 | ID | Severity | Temuan | Status |
 |---|---|---|---|
 | S-01 | CRITICAL | `api/users.ts` tanpa autentikasi | **FIXED & TERVERIFIKASI di produksi** |
-| S-02 | HIGH | RLS `user_roles` `USING (true)` | OPEN (file SQL) |
+| S-02 | HIGH | RLS `user_roles` `USING (true)` | **FIXED & TERVERIFIKASI di DB** |
 | S-03 | MEDIUM | PIN lapak default `1234` | OPEN bila env kosong |
 | S-04 | MEDIUM | Secret JWT Perumda fallback ke service-role key | OPEN bila env kosong |
 | S-05 | HIGH | RLS `retribution_rates` `USING (true)` untuk insert/update | OPEN (file SQL) |
@@ -63,9 +63,27 @@ melindungi Express saja tidak memperbaiki produksi karena Vercel hanya membangun
 
 ---
 
-## S-02 · HIGH — Policy RLS `user_roles`
+## S-02 · HIGH — Policy RLS `user_roles` — **FIXED & APPLIED (2026-10-25)**
 
-**Evidence**: `create_user_roles_table.sql:37-51`
+**Resolusi**
+- Migrasi `migrations/007_secure_user_roles_rls.sql` dijalankan di Supabase SQL Editor
+  (project `hlvsbmxpkqvniemunygh`, branch `main PRODUCTION`).
+- Fungsi baru `public.is_current_user_admin_full()` (SECURITY DEFINER) mengecek admin dari
+  `users.id_role` **atau** `user_roles`, sehingga policy tidak memicu rekursi RLS.
+- Policy lama (`user_roles_select/insert/update/delete`) dihapus.
+- Hasil verifikasi `pg_policies` — **4 rows**:
+  ```
+  SELECT | user_roles_select_own_or_admin | using: ((user_id = auth.uid()) OR is_current_user_admin_full())
+  INSERT | user_roles_insert_admin         | check: is_current_user_admin_full()
+  UPDATE | user_roles_update_admin         | using/check: is_current_user_admin_full()
+  DELETE | user_roles_delete_admin         | using: is_current_user_admin_full()
+  ```
+- Tidak ada lagi policy `USING (true)` pada `user_roles`.
+- Efek samping: user non-admin kini hanya melihat baris `user_roles` miliknya sendiri
+  (daftar penugasan di halaman `#pasar` hanya lengkap untuk admin).
+- `service_role` (api/users.ts, Express) bypass RLS → alur admin tetap berjalan.
+
+**Evidence awal (sebelum perbaikan)**
 ```sql
 CREATE POLICY "user_roles_select" ... TO authenticated USING (true);
 CREATE POLICY "user_roles_insert" ... TO authenticated WITH CHECK (true);

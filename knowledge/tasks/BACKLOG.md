@@ -5,13 +5,8 @@ Setiap item wajib punya evidence sebelum dieksekusi dan hasil verifikasi setelah
 
 ## P0 — Keamanan
 
-> **P0-01 selesai 2026-10-25** (commit `5f69b82`) — lihat [DONE.md](./DONE.md). Sisa: deploy + uji produksi.
-
-### P0-02 · Policy RLS `user_roles` permisif
-- **Evidence:** `create_user_roles_table.sql:37-51` — SELECT/INSERT/UPDATE/DELETE `TO authenticated USING (true)`.
-- **Dampak:** user login mana pun dapat menulis peran sendiri (eskalasi ke `ADMIN`), terutama karena
-  sign-up publik aktif di UI (`src/components/Auth.tsx`).
-- **DoD:** tulis hanya untuk `ADMIN`; SELECT hanya baris milik sendiri (kecuali ADMIN); verifikasi di DB.
+> **P0-01 selesai 2026-10-25** (commit `5f69b82`, deploy `4a0e766`) — lihat [DONE.md](./DONE.md).
+> **P0-02 selesai 2026-10-25** (migration `007`) — lihat [DONE.md](./DONE.md).
 
 ### P0-03 · PIN halaman lapak default `1234`
 - **Evidence:** `api/lapak.ts:21-24` — `expectedPin = configuredPin || (!configuredPinHash ? '1234' : '')`.

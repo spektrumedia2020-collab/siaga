@@ -21,7 +21,7 @@ dari query kode. Status terpasang di DB produksi: **UNKNOWN** (tidak ada akses D
 | Tabel | Kolom kunci | Catatan RLS |
 |---|---|---|
 | `roles` | `id`, `name` UNIQUE | — |
-| `user_roles` | `id`, `user_id`→auth.users, `role_id`→roles, `market_id`→markets | **PERMISSIF**: select/insert/update/delete `USING (true)` |
+| `user_roles` | `id`, `user_id`→auth.users, `role_id`→roles, `market_id`→markets | SELECT: sendiri/admin; INSERT/UPDATE/DELETE: admin (migration 007) |
 | `officers` | `id`, `user_id` UNIQUE, `market_id`, `name` | select own / auth; insert/update own |
 | `attendance` | `id`, `officer_id`, `market_id`, `check_in`, `check_out` (+ kolom lokasi via `add_attendance_location_columns.sql`) | select own/auth; insert/update own |
 | `stall_categories` | `id`, `name`, `description` | `UNKNOWN` |
@@ -58,5 +58,6 @@ dari query kode. Status terpasang di DB produksi: **UNKNOWN** (tidak ada akses D
 | Status | Tabel |
 |---|---|
 | Scoped memadai | `officers`, `attendance`, `setoran`, `market_config`, `announcements`, `market_sectors` |
-| **Terlalu terbuka** | `user_roles`, `retribution_rates` |
+| **Terlalu terbuka** | `retribution_rates` |
+| Baru diperketat | `user_roles` (migration 007: read sendiri/admin, tulis admin) |
 | Belum diketahui | `markets`, `stalls`, `transactions`, `users`, `stall_owners`, `retribution_types`, `market_themes`, `stall_categories` |

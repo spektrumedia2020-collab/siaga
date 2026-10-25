@@ -40,8 +40,8 @@
       "evidence": "api/users.ts kini memverifikasi Bearer token Supabase + peran ADMIN untuk GET/POST/DELETE (smoke test PASS). api/lapak & api/perumda sudah punya PIN/JWT."
     },
     "rls_user_roles": {
-      "status": "FAIL",
-      "evidence": "create_user_roles_table.sql: SELECT/INSERT/UPDATE/DELETE TO authenticated USING (true)."
+      "status": "PASS",
+      "evidence": "migration 007 diterapkan di Supabase SQL Editor. pg_policies user_roles = 4 rows: select_own_or_admin, insert_admin, update_admin, delete_admin; tidak ada USING (true)."
     },
     "rls_retribution_rates": {
       "status": "FAIL",

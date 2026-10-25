@@ -1,5 +1,16 @@
 # DONE — Arsip Task Selesai
 
+## 2026-10-25 · P0-02 — Tutup RLS `user_roles` (migration `007`)
+
+- `migrations/007_secure_user_roles_rls.sql` dibuat + dijalankan di Supabase SQL Editor
+  (project `hlvsbmxpkqvniemunygh`, branch `main PRODUCTION`).
+- Fungsi `is_current_user_admin_full()` (SECURITY DEFINER) cek admin dari `users.id_role` **atau**
+  `user_roles`; policy tidak rekursif.
+- Verifikasi `pg_policies`: 4 rows — select_own_or_admin, insert_admin, update_admin, delete_admin.
+  Tidak ada lagi `USING (true)`.
+- Catatan: user non-admin kini hanya melihat baris peran miliknya; daftar penugasan di `#pasar`
+  hanya lengkap untuk admin. `service_role` tidak terpengaruh.
+
 ## 2026-10-25 · Deploy produksi P0-01 (`4a0e766`)
 
 - Remote diganti ke SSH deploy key (`git@github.com:spektrumedia2020-collab/siaga.git`).
