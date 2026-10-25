@@ -10,12 +10,7 @@ Setiap item wajib punya evidence sebelum dieksekusi dan hasil verifikasi setelah
 > **P0-06 selesai 2026-10-25** (migration `008`) — lihat [DONE.md](./DONE.md).
 > **P0-05 selesai 2026-10-25** (audit RLS) — hasil: [database/SCHEMA.md](../database/SCHEMA.md#audit-rls-produksi--2026-10-25-p0-05).
 > **P0-07 selesai 2026-10-25** (migration `009`) — lihat [DONE.md](./DONE.md).
-
-### P0-08 · RLS `transactions`, `stalls`, `stall_owners` terbuka
-- **Evidence:** `transactions` INSERT/UPDATE/SELECT `true`; `stalls` & `stall_owners` policy `ALL true`.
-- **Dampak:** data finansial & master lapak/pemilik bisa dibaca/diubah semua user login.
-- **DoD:** tulis dibatasi `is_current_user_market_member(market_id)`; transaksi UPDATE admin/treasurer;
-  read transaksi market-scoped; SELECT lapak publik dipertahankan.
+> **P0-08 selesai 2026-10-25** (migration `010`) — lihat [DONE.md](./DONE.md).
 
 ### P0-09 · `stall_categories` RLS nonaktif
 - **Evidence:** `relrowsecurity = false`, 0 policy.
@@ -26,6 +21,12 @@ Setiap item wajib punya evidence sebelum dieksekusi dan hasil verifikasi setelah
   policy `setoran` memakai `users.id_role` tanpa scope market.
 - **DoD:** absensi/petugas own atau admin/head market; insert types admin/head; `setoran` memakai
   `is_current_user_admin_full()` + `market_id`.
+
+### P0-11 · PII `stall_owners` terbaca anon
+- **Evidence:** `stall_owners_select_public` = true untuk `anon` (dibutuhkan landing page).
+  Kolom `nik`, `phone`, `address` ikut terbaca via PostgREST dengan anon key publik.
+- **DoD:** view `public_stall_owners` (id, name) untuk anon; landing page memakai view;
+  SELECT tabel dibatasi `authenticated` (staf pasar/admin).
 
 ### P0-03 · PIN halaman lapak default `1234`
 - **Evidence:** `api/lapak.ts:21-24` — `expectedPin = configuredPin || (!configuredPinHash ? '1234' : '')`.

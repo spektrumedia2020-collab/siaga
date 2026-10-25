@@ -1,5 +1,15 @@
 # DONE — Arsip Task Selesai
 
+## 2026-10-25 · P0-08 — Tutup RLS operasional (migration `010`)
+
+- `transactions`: SELECT/INSERT/UPDATE market-scoped; DELETE tetap tanpa policy (deny).
+- `stalls`: SELECT publik (`anon, authenticated`); INSERT/UPDATE/DELETE market-scoped.
+- `stall_owners`: SELECT publik; INSERT staf pasar; UPDATE/DELETE admin atau staf pasar pemilik
+  lapak terkait.
+- Uji runtime (rollback): `tx_own=1 tx_other=0`, `stall_own=1 stall_other=0`,
+  `owner_own=1 owner_other=0`, `anon_stalls=4216`; objek uji tidak tertinggal.
+- Catatan: SELECT publik `stall_owners` masih mengekspos `nik`/`phone`/`address` → **P0-11**.
+
 ## 2026-10-25 · P0-07 — Tutup RLS `users` (migration `009`)
 
 - Migration dijalankan di Supabase SQL Editor (PRODUCTION).

@@ -4,8 +4,8 @@
 
 ## Task aktif
 
-**P0-07 selesai** (migration 009 applied): jalur eskalasi ADMIN lewat `users.id_role` tertutup;
-kepala pasar tetap bisa mengelola staff pasar-nya. Berikutnya: **P0-08** (transactions/stalls/stall_owners).
+**P0-08 selesai** (migration 010 applied): transaksi, lapak, dan pemilik lapak kini market-scoped;
+baca publik tetap jalan. Berikutnya: **P0-09** (`stall_categories`).
 
 ## Temuan yang memicu task berikutnya
 
@@ -35,10 +35,9 @@ Detail + evidence: [../security/SECURITY.md](../security/SECURITY.md).
 
 ## Next action (spesifik)
 
-1. P0-08: migration 010 — `transactions`, `stalls`, `stall_owners` dibatasi ke pasar terkait;
-   SELECT lapak publik dipertahankan; transaksi UPDATE admin/treasurer.
-2. P0-09: aktifkan RLS `stall_categories` (read authenticated, tulis admin/head).
-3. P0-10: persempit read `attendance`/`officers`/`retribution_types`; scope `setoran`.
+1. P0-09: aktifkan RLS `stall_categories` + policy SELECT publik & tulis admin/head dalam satu transaksi.
+2. P0-10: persempit read `attendance`/`officers`/`retribution_types`; scope `setoran` per market.
+3. P0-11: view publik `stall_owners` (id, name); landing page pindah ke view; batasi tabel.
 4. P0-03/P0-04: set `PUBLIC_STALL_PIN_HASH` dan `PERUMDA_JWT_SECRET` di env Vercel.
 5. CI merah: `tsc --noEmit` 40+ error lama — perbaiki bertahap (BACKLOG P1-05).
 

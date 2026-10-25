@@ -71,9 +71,9 @@ Sumber: query langsung `pg_class` + `pg_policies` di Supabase SQL Editor
 | `roles` | ON | 1 | OK — read everyone |
 | `setoran` | ON | 3 | **PARTIAL** — cek peran hanya `users.id_role` (bukan `user_roles`) dan tidak dibatasi market |
 | `stall_categories` | **OFF** | 0 | **OPEN** — RLS tidak aktif, 0 policy |
-| `stall_owners` | ON | 1 | **OPEN** — `ALL` `true`/`true` → semua user login kelola semua pemilik |
-| `stalls` | ON | 2 | **OPEN** — `ALL` `true`/`true` (+ SELECT publik) → semua user login kelola semua lapak |
-| `transactions` | ON | 3 | **OPEN** — INSERT/UPDATE `true`, SELECT `true` → semua transaksi bisa dibaca & diubah |
+| `stall_owners` | ON | 4 | OK — 010: SELECT publik (PII terbuka, S-17); INSERT staf pasar; UPDATE/DELETE via relasi lapak |
+| `stalls` | ON | 4 | OK — 010: SELECT publik; INSERT/UPDATE/DELETE market-scoped |
+| `transactions` | ON | 3 | OK — 010: SELECT/INSERT/UPDATE market-scoped; DELETE tanpa policy |
 | `user_roles` | ON | 4 | OK — migration 007 |
 | `users` | ON | 3 + trigger | OK — migration 009: own/admin/staf pasar; trigger jaga `id_role`/`auth_uid`/`akses_global` |
 
@@ -88,6 +88,6 @@ Implikasi: fallback mobile ke tabel legacy akan gagal; halaman Theme Management 
 
 | Status | Tabel |
 |---|---|
-| Memadai | `markets`, `market_sectors`, `market_config`, `announcements`, `roles`, `user_roles` (007), `retribution_rates` (008), `users` (009) |
-| Perlu ditutup | `transactions`, `stalls`, `stall_owners`, `stall_categories` (RLS off) |
+| Memadai | `markets`, `market_sectors`, `market_config`, `announcements`, `roles`, `user_roles` (007), `retribution_rates` (008), `users` (009), `transactions`/`stalls`/`stall_owners` (010) |
+| Perlu ditutup | `stall_categories` (RLS off) |
 | Perlu dipersempit | `attendance`, `officers`, `retribution_types`, `setoran` |

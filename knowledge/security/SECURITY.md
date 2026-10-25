@@ -18,11 +18,12 @@ Status konfigurasi DB produksi: **UNKNOWN** (tidak ada akses DB pada sesi ini).
 | S-09 | INFO | Role gating web bersifat client-side; impersonation bukan kontrol | BY DESIGN |
 | S-10 | INFO | Tidak ada test otomatis / lint | OPEN |
 | S-11 | CRITICAL | RLS `users` `USING (true)` untuk SELECT/INSERT/UPDATE | **FIXED & TERVERIFIKASI di DB** |
-| S-12 | HIGH | RLS `transactions` `true` untuk INSERT/SELECT/UPDATE | OPEN (audit 2026-10-25) |
-| S-13 | HIGH | RLS `stalls` & `stall_owners` `ALL true` | OPEN (audit 2026-10-25) |
+| S-12 | HIGH | RLS `transactions` `true` untuk INSERT/SELECT/UPDATE | **FIXED & TERVERIFIKASI di DB** |
+| S-13 | HIGH | RLS `stalls` & `stall_owners` `ALL true` | **FIXED & TERVERIFIKASI di DB** |
 | S-14 | MEDIUM | `stall_categories` RLS **nonaktif**, 0 policy | OPEN (audit 2026-10-25) |
 | S-15 | MEDIUM | Read over-broad: `attendance`, `officers`, `retribution_types` | OPEN (audit 2026-10-25) |
 | S-16 | MEDIUM | `setoran` cek peran hanya `users.id_role`, tanpa scope market | OPEN (audit 2026-10-25) |
+| S-17 | HIGH | `stall_owners` SELECT publik mengekspos `nik`/`phone`/`address` ke anon | OPEN |
 
 ---
 
@@ -241,18 +242,29 @@ termasuk menaikkan `id_role` dirinya ke `ADMIN`. Karena `is_current_user_admin()
   `market_id`, `akses_global`; perubahan peran hanya oleh admin/service role.
 - Hapus policy duplikat.
 
-### S-12 · HIGH — `transactions` terbuka
-**Evidence**: `authenticated_can_insert_transactions` INSERT `true`; `transactions_select_own` SELECT
+### S-12 · HIGH — `transactions` terbuka — **FIXED & APPLIED (2026-10-25)**
+**Evidence awal**: `authenticated_can_insert_transactions` INSERT `true`; `transactions_select_own` SELECT
 `true`; `transactions_update_own` UPDATE `true`/`true`.
-**Dampak**: semua transaksi bisa dibaca dan diubah user login mana pun.
-**Perbaikan**: SELECT/INSERT/UPDATE dibatasi pasar petugas (`is_current_user_market_member`),
-UPDATE hanya admin/treasurer.
 
-### S-13 · HIGH — `stalls` & `stall_owners` `ALL true`
-**Evidence**: `Authenticated users can manage stalls` (ALL, `true`/`true`);
+**Resolusi**: migration 010 — SELECT/INSERT/UPDATE dibatasi
+`is_current_user_admin_full() OR (market_id IS NOT NULL AND is_current_user_market_member(market_id))`.
+DELETE tetap tanpa policy (deny).
+
+**Verifikasi runtime (role authenticated, rollback)**: `tx_own=1`, `tx_other=0`.
+
+### S-13 · HIGH — `stalls` & `stall_owners` `ALL true` — **FIXED & APPLIED (2026-10-25)**
+**Evidence awal**: `Authenticated users can manage stalls` (ALL, `true`/`true`);
 `Authenticated users can manage stall owners` (ALL, `true`/`true`).
-**Dampak**: user login mana pun bisa menambah/mengubah/menghapus lapak dan data pemilik.
-**Perbaikan**: tulis dibatasi `is_current_user_market_member(market_id)`; SELECT lapak publik tetap.
+
+**Resolusi**: migration 010 —
+- `stalls`: SELECT publik (`anon, authenticated`); INSERT/UPDATE/DELETE market-scoped.
+- `stall_owners`: SELECT publik; INSERT hanya staf pasar; UPDATE/DELETE hanya admin atau staf pasar
+  yang memiliki lapak dengan owner tersebut.
+
+**Verifikasi runtime**: `stall_own=1`, `stall_other=0`, `owner_own=1`, `owner_other=0`,
+`anon_stalls=4216` (baca publik tetap jalan).
+
+**Sisa (S-17)**: kolom `nik`/`phone`/`address` pada `stall_owners` masih terbaca anon.
 
 ### S-14 · MEDIUM — `stall_categories` RLS nonaktif
 **Evidence**: `relrowsecurity = false`, 0 policy.
@@ -271,6 +283,14 @@ UPDATE hanya admin/treasurer.
 **Dampak**: admin yang hanya terdaftar di `user_roles` bisa tertolak; bendahara bisa menyetujui
 setoran pasar lain.
 **Perbaikan**: pakai `is_current_user_admin_full()` + scope market.
+
+### S-17 · HIGH — PII pemilik lapak terbaca anon
+**Evidence**: setelah migration 010, `stall_owners_select_public` = `true` untuk `anon, authenticated`
+(dipertahankan karena `MarketLandingPage` membaca tabel ini tanpa login, kolom `id, name`).
+Namun RLS tidak membatasi kolom, sehingga `nik`, `phone`, `address` juga terbaca lewat PostgREST
+dengan anon key publik.
+**Perbaikan**: buat view publik `public_stall_owners` (hanya `id, name`) dengan owner definer, ubah
+`MarketLandingPage` memakai view, lalu batasi SELECT tabel ke `authenticated` (staf pasar/admin).
 
 ---
 
