@@ -1,11 +1,12 @@
 # Context Aktif (L0) — 2026-10-26
 
-**Sesi:** SESSION-2026-10-25-1 · **Commit terakhir:** `6177e11` · **Branch:** `main` · **Autonomy:** L1
+**Sesi:** SESSION-2026-10-25-1 · **Commit terakhir:** `d6e9f7a` · **Branch:** `main` · **Autonomy:** L1
 
 ## Task aktif
 
-Semua perbaikan kode selesai: typecheck 0 error, build PASS, RLS 007–015 live, fitur Perumda dihapus,
-akses lapak publik kini berbasis **token QR** (PIN dihapus). **Deploy siap** — tidak ada env blocker.
+**Deploy produksi selesai** (`d6e9f7a`): token QR aktif, PIN/Perumda/juri dihapus, `/api/*` tak dikenal
+404. CI web & SQL hijau; **mobile analyze masih merah** (warning/info lama).
+Berikutnya: Fase 2 mobile (QR URL/token + WA) dan perbaikan CI mobile.
 
 ## Status keamanan ringkas
 
@@ -26,10 +27,10 @@ dan `stall_categories` juga 0. Tersisa 1 admin + 4 `roles`; storage 0 objek.
 
 ## Next action (spesifik)
 
-1. Push 13 commit → Vercel rebuild.
-2. Verifikasi: `/lapak/<token>` menampilkan lapak, `/api/lapak` tanpa PIN, `/perumda` & `/juri` 404.
-3. Cek CI web (`gh run list`) — seharusnya hijau.
-4. Fase 2 (opsional): mobile membaca QR URL/token; tombol WA `wa.me`.
+1. Buat pasar + lapak (DB kosong) agar `/lapak/<token>` bisa diuji.
+2. Fase 2: mobile membaca QR URL/token; tombol WA `wa.me`.
+3. Perbaiki mobile CI (`flutter analyze` gagal karena warning/info lama).
+4. Opsional: test otomatis (P1-04).
 
 ## Catatan akses DB
 

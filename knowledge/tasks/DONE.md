@@ -1,5 +1,12 @@
 # DONE — Arsip Task Selesai
 
+## 2026-10-26 · Deploy produksi penuh (16 commit)
+
+- Push `01df2cc..d6e9f7a` ke `main`; Vercel build aktif.
+- Verifikasi: `/api/lapak` tanpa param 400, PIN diabaikan; `/api/users` 401; `/api/perumda` 404.
+- Route `/api/(.*)` tak dikenal → 404 (tidak lagi jatuh ke SPA).
+- CI: web success, SQL sanity success; mobile analyze masih gagal karena warning/info lama.
+
 ## 2026-10-26 · Hapus fallback master retribusi hardcoded
 
 - Dihapus `src/lib/retributionMasterData.ts` (`DEFAULT_RETRIBUTION_TYPES`, 15 item) — sumber daftar
