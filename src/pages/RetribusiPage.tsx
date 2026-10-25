@@ -3,7 +3,6 @@ import { getSupabaseClient } from '../lib/supabase'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { Loading } from '../components/Loading'
 import { EmptyState } from '../components/EmptyState'
-import { DEFAULT_RETRIBUTION_TYPES } from '../lib/retributionMasterData'
 
 interface RetribusiPageProps {
   marketId?: string
@@ -21,7 +20,6 @@ export function RetribusiPage({ marketId }: RetribusiPageProps) {
   const [items, setItems] = useState<RetribusiItem[]>([])
   const [name, setName] = useState('')
   const [amount, setAmount] = useState('')
-  const [selectedType, setSelectedType] = useState('')
   const [description, setDescription] = useState('')
   const [editingId, setEditingId] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
@@ -84,7 +82,6 @@ export function RetribusiPage({ marketId }: RetribusiPageProps) {
 
   const resetForm = () => {
     setName('')
-    setSelectedType('')
     setAmount('')
     setDescription('')
     setEditingId(null)
@@ -101,9 +98,8 @@ export function RetribusiPage({ marketId }: RetribusiPageProps) {
       setSaving(true)
       setError('')
       const supabase = getSupabaseClient()
-      const resolvedName = (selectedType && DEFAULT_RETRIBUTION_TYPES.find((item) => item.id === selectedType)?.name) || name.trim()
       const payload = {
-        name: resolvedName,
+        name: name.trim(),
         amount: Number(amount) || 0,
         description: description.trim() || null
       }
@@ -127,8 +123,6 @@ export function RetribusiPage({ marketId }: RetribusiPageProps) {
 
   const handleEdit = (item: RetribusiItem) => {
     setEditingId(item.id)
-    const matchedType = DEFAULT_RETRIBUTION_TYPES.find((option) => option.name === item.name)
-    setSelectedType(matchedType?.id || '')
     setName(item.name)
     setAmount(String(item.amount))
     setDescription(item.description || '')
@@ -166,22 +160,13 @@ export function RetribusiPage({ marketId }: RetribusiPageProps) {
       <form onSubmit={handleSubmit} style={{ marginTop: 16, display: 'grid', gap: 12 }}>
         <div>
           <label style={{ display: 'block', marginBottom: 6 }}>Jenis Retribusi</label>
-          <select
-            value={selectedType}
-            onChange={(e: ChangeEvent<HTMLSelectElement>) => {
-              const nextType = e.target.value
-              setSelectedType(nextType)
-              const matched = DEFAULT_RETRIBUTION_TYPES.find((item) => item.id === nextType)
-              setName(matched?.name || '')
-            }}
+          <input
+            value={name}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
+            placeholder="Contoh: Retribusi Harian"
             style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #d1d5db' }}
             required
-          >
-            <option value="">-- Pilih jenis retribusi --</option>
-            {DEFAULT_RETRIBUTION_TYPES.map((option) => (
-              <option key={option.id} value={option.id}>{option.name}</option>
-            ))}
-          </select>
+          />
         </div>
         <div>
           <label style={{ display: 'block', marginBottom: 6 }}>Tarif (Rp)</label>
@@ -214,36 +199,6 @@ export function RetribusiPage({ marketId }: RetribusiPageProps) {
           ) : null}
         </div>
       </form>
-
-      <div style={{ marginTop: 24 }}>
-        <h3>Master Data Jenis Retribusi</h3>
-        <div style={{ overflowX: 'auto', marginTop: 8 }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff', border: '1px solid #e5e7eb' }}>
-            <thead>
-              <tr style={{ background: '#f9fafb' }}>
-                <th style={{ padding: 10, border: '1px solid #e5e7eb', textAlign: 'left' }}>Kode</th>
-                <th style={{ padding: 10, border: '1px solid #e5e7eb', textAlign: 'left' }}>Nama</th>
-                <th style={{ padding: 10, border: '1px solid #e5e7eb', textAlign: 'left' }}>Kategori</th>
-                <th style={{ padding: 10, border: '1px solid #e5e7eb', textAlign: 'left' }}>Satuan</th>
-                <th style={{ padding: 10, border: '1px solid #e5e7eb', textAlign: 'left' }}>Dasar Tarif</th>
-                <th style={{ padding: 10, border: '1px solid #e5e7eb', textAlign: 'left' }}>Deskripsi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {DEFAULT_RETRIBUTION_TYPES.map((option) => (
-                <tr key={option.id}>
-                  <td style={{ padding: 10, border: '1px solid #e5e7eb' }}>{option.code}</td>
-                  <td style={{ padding: 10, border: '1px solid #e5e7eb' }}>{option.name}</td>
-                  <td style={{ padding: 10, border: '1px solid #e5e7eb' }}>{option.category}</td>
-                  <td style={{ padding: 10, border: '1px solid #e5e7eb' }}>{option.unit}</td>
-                  <td style={{ padding: 10, border: '1px solid #e5e7eb' }}>{option.base_tariff_note || '-'}</td>
-                  <td style={{ padding: 10, border: '1px solid #e5e7eb' }}>{option.description || '-'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
 
       <div style={{ marginTop: 24 }}>
         <h3>Daftar Retribusi ({items.length})</h3>

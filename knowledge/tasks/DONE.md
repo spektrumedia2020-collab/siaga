@@ -1,5 +1,15 @@
 # DONE — Arsip Task Selesai
 
+## 2026-10-26 · Hapus fallback master retribusi hardcoded
+
+- Dihapus `src/lib/retributionMasterData.ts` (`DEFAULT_RETRIBUTION_TYPES`, 15 item) — sumber daftar
+  yang tetap muncul di UI meski tabel DB kosong.
+- `RetribusiPage`: dropdown “Jenis Retribusi” diganti input teks bebas; tabel statis “Master Data”
+  dihapus; daftar & edit/hapus kini murni dari `retribution_types`.
+- Verifikasi: tidak ada referensi `DEFAULT_RETRIBUTION_TYPES`; `tsc --noEmit` 0 error; build PASS.
+- Efek: halaman Retribusi kosong sampai admin menambah jenis sendiri.
+  (Daftar kode 2-005-77…94 dari user dapat dijadikan seed DB bila diinginkan.)
+
 ## 2026-10-26 · Fase 1 akses lapak publik — token QR (PIN dihapus)
 
 - Migration `016`: `stalls.public_token` (text, NOT NULL, unique index, default 32 hex).
