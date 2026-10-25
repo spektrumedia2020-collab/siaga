@@ -32,7 +32,9 @@ UI untuk superadmin, admin pasar, bendahara, petugas (web), plus halaman publik
 
 ## Known issues
 
+- Impersonation sudah **dihapus** (2026-10-25); `MARKET_HEAD` kini read-only dengan banner.
 - `MarketLandingPage.old.tsx` dan `MarketLandingPage.css.old` masih ada (dead code).
 - Banyak inline style & `alert()/confirm()` (lihat BACKLOG P2).
+- Tombol aksi masih tampil untuk kepala pasar meski RLS menolak (butuh fase UI read-only).
 - Tombol akun test tampil default (S-08).
 - Tidak ada test; tidak ada lint/typecheck script.

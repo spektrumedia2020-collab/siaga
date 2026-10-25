@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { getSupabaseClient } from '../lib/supabase'
-import { UserRole } from '../lib/roleUtils'
 import '../pages/SuperAdminDashboardImproved.css'
 import '../styles/layout.css'
 import { MarketsManagement } from './MarketsManagement'
@@ -69,11 +68,7 @@ const addDays = (value: string, days: number) => {
   return formatDateInput(date)
 }
 
-interface Props {
-  onImpersonate?: (userId: string, role: UserRole) => void
-}
-
-export function SuperAdminDashboardImproved({ onImpersonate }: Props) {
+export function SuperAdminDashboardImproved() {
   const [activeTab, setActiveTab] = useState<'overview' | 'markets' | 'analytics' | 'users' | 'pedagang' | 'retribusi' | 'themes' | 'settings' | 'backup'>('overview')
   const [loading, setLoading] = useState(true)
   const [userEmail, setUserEmail] = useState<string>('')
@@ -667,7 +662,7 @@ export function SuperAdminDashboardImproved({ onImpersonate }: Props) {
             <div className="section-header">
               <h2>🏪 Manajemen Pasar</h2>
             </div>
-            <MarketsManagement onImpersonate={onImpersonate} />
+            <MarketsManagement />
           </section>
         )}
 

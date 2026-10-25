@@ -12,24 +12,13 @@ interface DashboardProps {
   onLogout: () => void
   isDashboardHeader?: boolean
   children?: ReactNode
-  impersonation?: {
-    originalUserId: string
-    targetUserId: string
-    targetRole: any
-  } | null
-  onStopImpersonation?: () => void
   activeRoleName?: string | null
 }
 
 type PageType = 'dashboard' | 'pasar' | 'users' | 'transaksi' | 'rekonsiliasi' | 'laporan'
 
-export function Dashboard({ user, onLogout, isDashboardHeader, children, impersonation = null, onStopImpersonation, activeRoleName }: DashboardProps) {
+export function Dashboard({ user, onLogout, isDashboardHeader, children, activeRoleName }: DashboardProps) {
 
-  const handleStop = () => {
-    if (!onStopImpersonation) return
-    const ok = window.confirm('Stop impersonation and return to your account?')
-    if (ok) onStopImpersonation()
-  }
   const [currentPage, setCurrentPage] = useState<PageType>('dashboard')
   const [rawUserRoles, setRawUserRoles] = useState<any[]>([])
 
@@ -156,12 +145,9 @@ export function Dashboard({ user, onLogout, isDashboardHeader, children, imperso
   if (isDashboardHeader && children) {
     return (
       <div className="dashboard">
-        {impersonation && (
-          <div className="impersonation-banner" style={{background:'#ffeeba',padding:'8px 12px',textAlign:'center'}}>
-            <strong>🔀 Impersonating as {impersonation.targetRole?.role_name || impersonation.targetUserId}</strong>
-            {onStopImpersonation && (
-              <button style={{marginLeft:12}} onClick={handleStop}>Stop impersonation</button>
-            )}
+        {isMarketAdmin && (
+          <div style={{background:'#fff3cd',padding:'8px 12px',textAlign:'center'}}>
+            <strong>Mode baca-saja</strong> — pengelolaan pasar kini hanya dapat dilakukan oleh Admin.
           </div>
         )}
         <header className="dashboard-header">
@@ -201,12 +187,9 @@ export function Dashboard({ user, onLogout, isDashboardHeader, children, imperso
   // Default dashboard with sidebar
   return (
     <div className="dashboard">
-      {impersonation && (
-        <div className="impersonation-banner" style={{background:'#ffeeba',padding:'8px 12px',textAlign:'center'}}>
-          <strong>🔀 Impersonating as {impersonation.targetRole?.role_name || impersonation.targetUserId}</strong>
-          {onStopImpersonation && (
-            <button style={{marginLeft:12}} onClick={handleStop}>Stop impersonation</button>
-          )}
+      {isMarketAdmin && (
+        <div style={{background:'#fff3cd',padding:'8px 12px',textAlign:'center'}}>
+          <strong>Mode baca-saja</strong> — pengelolaan pasar kini hanya dapat dilakukan oleh Admin.
         </div>
       )}
       <header className="dashboard-header">

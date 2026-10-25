@@ -3,7 +3,7 @@
   "project": "SIAGA",
   "project_root": "D:/_siaga",
   "branch": "main",
-  "commit": "6c8ea42",
+  "commit": "01df2cc",
   "status": "WIP",
   "autonomy": "L1",
   "runtime": {
@@ -32,18 +32,18 @@
   "memory_version": 1,
   "context_version": 1,
   "skill_registry_version": 1,
-  "current_task": "P0-03 deploy: set PUBLIC_STALL_PIN_HASH di Vercel lalu push",
-  "last_task": "P0-03 — kode PIN fail-closed (commit 6c8ea42)",
+  "current_task": "Deploy role change (blocked PIN env) + P0-12 credential exposure",
+  "last_task": "Role model: MARKET_HEAD read-only + impersonation removed (migration 014)",
   "last_session_id": "SESSION-2026-10-25-1",
   "last_scan": "2026-10-25T20:05:00+07:00",
   "last_index": "",
-  "last_updated": "2026-10-25T23:40:00+07:00",
-  "last_validation": "2026-10-25T23:40:00+07:00",
+  "last_updated": "2026-10-25T23:59:00+07:00",
+  "last_validation": "2026-10-25T23:59:00+07:00",
   "last_test_status": "partial",
   "last_command": "IMPLEMENT",
   "last_command_status": "PARTIAL",
   "open_wave": null,
   "dirty": true,
   "drift_detected": true,
-  "next_step": "Set PUBLIC_STALL_PIN_HASH di Vercel -> push 6c8ea42 -> uji produksi 1234=401. Lalu P0-04 PERUMDA_JWT_SECRET."
+  "next_step": "P0-12 rotate/hide demo credentials; set PUBLIC_STALL_PIN_HASH; push+deploy; verify head read-only."
 }

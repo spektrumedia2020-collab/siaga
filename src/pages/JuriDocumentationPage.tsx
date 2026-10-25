@@ -72,7 +72,7 @@ const workFlow = [
 ]
 
 const DEMO_ACCOUNTS: AccountRow[] = [
-  { role: 'ADMIN', roleBadge: 'Superadmin', nama: 'Super Admin', email: 'admin@siaga.id', password: 'DemiSiaga2026!', platform: 'Web', akses: 'Kelola semua pasar, petugas, lapak, retribusi, pengguna, dan impersonate' },
+  { role: 'ADMIN', roleBadge: 'Superadmin', nama: 'Super Admin', email: 'admin@siaga.id', password: 'DemiSiaga2026!', platform: 'Web', akses: 'Kelola semua pasar, petugas, lapak, retribusi, dan pengguna' },
   { role: 'MARKET_HEAD', roleBadge: 'Kepala Pasar', nama: 'Kepala Pasar', email: 'kepala@siaga.id', password: 'DemiSiaga2026!', platform: 'Web', akses: 'Dashboard pasar miliknya untuk memantau lapak, petugas, retribusi, dan transaksi' },
   { role: 'OFFICER', roleBadge: 'Petugas', nama: 'Petugas Lapangan', email: 'petugas@siaga.id', password: 'DemiSiaga2026!', platform: 'Mobile', akses: 'Scan QR lapak, catat transaksi, absensi, dan setoran harian' },
   { role: 'TREASURER', roleBadge: 'Bendahara', nama: 'Bendahara', email: 'bendahara@siaga.id', password: 'DemiSiaga2026!', platform: 'Web', akses: 'Verifikasi dan approve setoran petugas serta rekonsiliasi' },

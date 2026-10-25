@@ -24,6 +24,7 @@ Status konfigurasi DB produksi: **UNKNOWN** (tidak ada akses DB pada sesi ini).
 | S-15 | MEDIUM | Read over-broad: `attendance`, `officers`, `retribution_types` | **FIXED & TERVERIFIKASI di DB** |
 | S-16 | MEDIUM | `setoran` cek peran hanya `users.id_role`, tanpa scope market | **FIXED & TERVERIFIKASI di DB** |
 | S-17 | HIGH | `stall_owners` SELECT publik mengekspos `nik`/`phone`/`address` ke anon | **FIXED & TERVERIFIKASI di DB** |
+| S-18 | CRITICAL | Kredensial 4 akun demo (termasuk ADMIN) terpampang di halaman publik `/juri`, `/docs` | OPEN |
 
 ---
 
@@ -334,6 +335,26 @@ anon_table_select=false; anon_id=true; anon_name=true;
 anon_nik=false; anon_phone=false; anon_address=false; auth_table_select=true
 ```
 **Uji runtime (rollback)**: `anon_id_name_rows=2000`, `anon_nik_blocked=true`.
+
+### S-18 · CRITICAL — Kredensial admin di halaman publik
+**Evidence**: `src/pages/JuriDocumentationPage.tsx:74-79` — `DEMO_ACCOUNTS` memuat email + password
+untuk ADMIN, MARKET_HEAD, OFFICER, TREASURER (password sama), dan halaman ini bisa diakses tanpa
+login di `/juri` dan `/docs`.
+**Dampak**: siapa pun yang membuka URL mendapat kredensial admin. Ini membatalkan seluruh hardening
+RLS karena penyerang bisa login sebagai admin sah.
+**Perbaikan wajib**:
+1. **Rotasi password** keempat akun demo (atau nonaktifkan).
+2. Hapus kolom password dari halaman publik; ganti "hubungi admin".
+3. Bila tetap perlu demo, gunakan akun khusus demo ber-role terbatas + password yang dirotasi rutin,
+   dan lindungi halaman dengan akses terbatas.
+
+### Perubahan kebijakan akses — 2026-10-25 (migration 014)
+- `MARKET_HEAD` menjadi **read-only**; semua penulisan master/operasional hanya ADMIN.
+- Pengecualian: OFFICER (insert transaksi/absensi/setoran miliknya), TREASURER (update setoran pasar),
+  user (update profil sendiri).
+- Impersonation dihapus dari aplikasi.
+- Verifikasi runtime: head update markets/stalls = 0 baris; admin = 1; treasurer setoran = 1;
+  officer insert transaksi = 1; head tetap bisa membaca setoran pasar (286 baris).
 
 ---
 

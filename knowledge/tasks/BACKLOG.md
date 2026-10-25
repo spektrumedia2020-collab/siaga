@@ -24,6 +24,12 @@ Setiap item wajib punya evidence sebelum dieksekusi dan hasil verifikasi setelah
 - **Evidence:** `api/perumda.ts:43-45` (`PERUMDA_JWT_SECRET || SUPABASE_SERVICE_ROLE_KEY`).
 - **DoD:** `PERUMDA_JWT_SECRET` wajib dan berbeda dari service key; startup gagal bila kosong.
 
+### P0-12 · Kredensial akun demo (termasuk ADMIN) di halaman publik
+- **Evidence:** `src/pages/JuriDocumentationPage.tsx:74-79` — email + password 4 akun, halaman publik
+  `/juri` & `/docs`.
+- **DoD:** rotasi password akun tersebut; hapus kolom password dari halaman publik; verifikasi tidak
+  ada kredensial di bundle (`grep` hasil build).
+
 ### P1 — Arsitektur & kualitas
 
 - **P1-01 Duplikasi backend**: `src/routes/*` (Express) vs `api/*` (Vercel) mengeksekusi logika user mirip.
@@ -36,6 +42,9 @@ Setiap item wajib punya evidence sebelum dieksekusi dan hasil verifikasi setelah
 - **P1-04 Tidak ada test otomatis.** Mulai dari unit test helper murni (`roleUtils` mapping, `exportUtils`)
   dan integration test `api/users` auth.
 - **P1-05 Tidak ada lint/format/typecheck script.** Tambahkan `typecheck` (`tsc --noEmit`), ESLint, Prettier.
+- **P1-06 UI read-only untuk MARKET_HEAD.** Saat ini tombol aksi masih tampil meski RLS menolak;
+  sembunyikan/disable aksi tulis di halaman pasar (stalls, owners, officers, sectors, categories,
+  retribusi, transactions, setoran) untuk kepala pasar.
 
 ## P2 — Kebersihan
 

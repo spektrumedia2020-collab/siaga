@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase, supabaseConfigError } from './lib/supabase'
-import { getUserRole, getImpersonateSession, clearImpersonateSession, UserRole } from './lib/roleUtils'
+import { getUserRole } from './lib/roleUtils'
 import { Auth } from './components/Auth'
 import { Dashboard } from './components/Dashboard'
 import { SuperAdminDashboardImproved as SuperAdminDashboard } from './pages/SuperAdminDashboardImproved'
@@ -19,7 +19,6 @@ function App() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [activeRoleName, setActiveRoleName] = useState<string | null>(null)
-  const [impersonate, setImpersonate] = useState<{ originalUserId: string; targetUserId: string; targetRole: UserRole } | null>(null)
   const [editingMarketId, setEditingMarketId] = useState<number | null>(null)
 
   useEffect(() => {
@@ -39,12 +38,10 @@ function App() {
     handleHashChange()
     window.addEventListener('hashchange', handleHashChange)
 
-    // Check for impersonate session
-    const impSession = getImpersonateSession()
-    if (impSession) {
-      setImpersonate(impSession)
-      setActiveRoleName(impSession.targetRole.role_name)
-    }
+    // Bersihkan sesi impersonation lama (fitur sudah dihapus).
+    localStorage.removeItem('impersonate_original_user_id')
+    localStorage.removeItem('impersonate_target_user_id')
+    localStorage.removeItem('impersonate_target_role')
 
     // Get current user
     if (supabase) {
@@ -119,27 +116,8 @@ function App() {
 
   const handleLogout = async () => {
     await supabase?.auth.signOut()
-    clearImpersonateSession()
     window.location.hash = ''
-    setImpersonate(null)
     setActiveRoleName(null)
-  }
-
-  const handleStopImpersonate = () => {
-    clearImpersonateSession()
-    setImpersonate(null)
-    setActiveRoleName(null)
-    window.location.hash = 'superadmin/dashboard'
-  }
-
-  const handleImpersonate = (targetUserId: string, targetRole: UserRole) => {
-    setImpersonate({
-      originalUserId: user?.id || '',
-      targetUserId,
-      targetRole
-    })
-    setActiveRoleName(targetRole.role_name)
-    window.location.hash = 'market/dashboard'
   }
 
   if (supabaseConfigError) {
@@ -210,17 +188,12 @@ function App() {
     return <PerumdaPage />
   }
 
-  // Determine which user ID to use (impersonated or actual)
-  const effectiveUserId = impersonate?.targetUserId || user?.id
-
   // Market Edit Page
   if (currentRoute === 'market-edit' && user && editingMarketId) {
     return (
       <Dashboard 
         user={user} 
         onLogout={handleLogout} 
-        impersonation={impersonate}
-        onStopImpersonation={handleStopImpersonate}
         activeRoleName={activeRoleName}
         isDashboardHeader
       >
@@ -241,12 +214,10 @@ function App() {
       <Dashboard 
         user={user} 
         onLogout={handleLogout} 
-        impersonation={impersonate}
-        onStopImpersonation={handleStopImpersonate}
         activeRoleName={activeRoleName}
         isDashboardHeader
       >
-        <SuperAdminDashboard onImpersonate={handleImpersonate} />
+        <SuperAdminDashboard />
       </Dashboard>
     )
   }
@@ -256,16 +227,11 @@ function App() {
       <Dashboard 
         user={user} 
         onLogout={handleLogout} 
-        impersonation={impersonate}
-        onStopImpersonation={handleStopImpersonate}
         activeRoleName={activeRoleName}
         isDashboardHeader
       >
         <MarketDashboard 
-          userId={effectiveUserId} 
-          impersonating={!!impersonate} 
-          impersonatedRole={impersonate?.targetRole}
-          onStopImpersonation={handleStopImpersonate} 
+          userId={user.id} 
           onLogout={handleLogout} 
         />
       </Dashboard>

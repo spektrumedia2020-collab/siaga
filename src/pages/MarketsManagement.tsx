@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
 import { getSupabaseClient, STORAGE_BUCKET } from '../lib/supabase'
-import { setImpersonateSession, UserRole } from '../lib/roleUtils'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import '../styles/layout.css'
 import './SuperAdminDashboardImproved.css'
@@ -25,11 +24,7 @@ interface User {
   full_name?: string
 }
 
-interface Props {
-  onImpersonate?: (userId: string, role: UserRole) => void
-}
-
-export function MarketsManagement({ onImpersonate }: Props) {
+export function MarketsManagement() {
   const [markets, setMarkets] = useState<Market[]>([])
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
@@ -38,7 +33,6 @@ export function MarketsManagement({ onImpersonate }: Props) {
   const [headPhotoPreview, setHeadPhotoPreview] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const headPhotoInputRef = useRef<HTMLInputElement>(null)
-  const [impersonatingMarketId, setImpersonatingMarketId] = useState<number | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Market | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [formData, setFormData] = useState({
@@ -194,23 +188,6 @@ export function MarketsManagement({ onImpersonate }: Props) {
     }
   }
 
-  const handleImpersonate = async (market: Market) => {
-    try {
-      setImpersonatingMarketId(market.id)
-      const supabase = getSupabaseClient()
-      const { data: roleData } = await supabase.from('roles').select('id, name').eq('name', 'MARKET_HEAD').maybeSingle()
-      if (!roleData) { alert('Role MARKET_HEAD tidak ditemukan'); setImpersonatingMarketId(null); return }
-      const currentUser = await supabase.auth.getUser()
-      const originalUserId = currentUser.data.user?.id
-      if (!originalUserId) { alert('Sesi super admin tidak ditemukan'); return }
-
-      const targetUserId = market.head_user_id || originalUserId
-      const targetRole: UserRole = { id: 0, user_id: targetUserId, role_id: roleData.id, role_name: 'MARKET_HEAD', market_id: market.id }
-      setImpersonateSession(originalUserId, targetUserId, targetRole)
-      if (onImpersonate) { onImpersonate(targetUserId, targetRole) } else { window.location.hash = 'market/dashboard' }
-    } catch (err) { console.error('Error during impersonation:', err); alert('Gagal login sebagai kepala pasar') } finally { setImpersonatingMarketId(null) }
-  }
-
   if (loading) {
     return <div className="siaga-loading">Memuat data pasar...</div>
   }
@@ -277,9 +254,6 @@ export function MarketsManagement({ onImpersonate }: Props) {
                     <button className="siaga-btn siaga-btn-outline" onClick={() => handleEdit(market.id)} style={{ flex: 1 }}>✏️ Edit</button>
                     <button className="siaga-btn siaga-btn-accent" onClick={() => setDeleteTarget(market)} style={{ flex: 1 }}>🗑️ Hapus</button>
                   </div>
-                  <button className="btn-impersonate" onClick={() => handleImpersonate(market)} disabled={impersonatingMarketId === market.id} style={{ marginTop: '0.5rem' }}>
-                    {impersonatingMarketId === market.id ? '⏳ Memproses...' : market.head_user_id ? '🔑 Login sebagai Kepala Pasar' : '🔑 Buka sebagai Admin Pasar'}
-                  </button>
                 </div>
               </div>
             </div>

@@ -46,11 +46,19 @@ Konsekuensi: dua sumber kebenaran peran. Bila `user_roles` dan `users.id_role` b
 UI mengikuti `user_roles`; beberapa query lain memakai `users.id_role`. Perubahan peran
 wajib memperbarui keduanya.
 
-## Impersonation
+## Role model & mode baca-saja (2026-10-25)
 
-- Disimpan di `localStorage` (`impersonate_*`), hanya mengubah `effectiveUserId` untuk fetch data
-  dan label role di UI. **Tidak** mengubah sesi Supabase — RLS tetap memakai user asli.
-- Karena itu impersonation adalah fitur tampilan; tidak boleh dianggap kontrol keamanan.
+- **Impersonation dihapus total**: state, props `Dashboard`/`MarketDashboard`, helper `roleUtils`,
+  dan key `impersonate_*` di localStorage (dibersihkan saat app start).
+- **ADMIN** adalah satu-satunya pengelola pasar (master & operasional).
+- **MARKET_HEAD read-only**: tetap bisa login & membaca data pasar, tetapi semua penulisan
+  (market, sector, config, announcement, tarif, lapak, owner, transaksi, user) ditolak RLS.
+  UI menampilkan banner "Mode baca-saja".
+- **Pengecualian yang dipertahankan**:
+  - `OFFICER`: INSERT transaksi & absensi miliknya, INSERT setoran miliknya.
+  - `TREASURER`: UPDATE setoran (approval tahap 1) pada pasar terkait.
+  - Semua user: UPDATE profil sendiri (kolom aman; trigger `guard_users_privileged_columns`).
+- Approval setoran tahap 2 (sebelumnya kepala pasar) kini menjadi kewenangan ADMIN.
 
 ## Express (`src/server.ts`)
 

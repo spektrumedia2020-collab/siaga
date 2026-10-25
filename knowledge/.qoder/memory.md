@@ -1,6 +1,6 @@
 # Memory Permanen (L1) — SIAGA
 
-> Hanya pengetahuan **terverifikasi** dari source aktual per 2026-10-25 (commit `73c7267`).
+> Hanya pengetahuan **terverifikasi** dari source aktual per 2026-10-25 (commit `01df2cc`).
 > Detail panjang ada di dokumen arsitektur; berkas ini ringkas dan stabil.
 
 ## Arsitektur
@@ -18,7 +18,10 @@
 - Otorisasi web berbasis peran diambil dari DB (`roleUtils.getUserRole`) → halaman dirender per role. *(VERIFIED)*
 - Sumber peran ganda: `user_roles` (utama) → fallback `users.id_role`. Perubahan harus menjaga keduanya konsisten. *(VERIFIED)*
 - Express: `authenticateToken` (verifikasi Supabase JWT) + `requireAdmin` untuk `/api/users`. *(VERIFIED)*
-- Vercel `api/users.ts`: **tidak ada** pemeriksaan auth sama sekali. *(VERIFIED — CRITICAL)*
+- Vercel `api/users.ts`: wajib JWT + peran `ADMIN`; CORS allowlist (commit `5f69b82`, deploy `4a0e766`). *(VERIFIED)*
+- **Role model (2026-10-25)**: ADMIN satu-satunya penulis master/operasional; MARKET_HEAD **read-only**;
+  OFFICER insert transaksi/absensi/setoran miliknya; TREASURER update setoran pasar.
+  **Impersonation dihapus total** dari UI/state/localStorage. *(VERIFIED — migration 014 + kode)*
 
 ## Business rules (dari struktur DB & UI)
 
@@ -36,14 +39,14 @@
   own/admin/staf pasar + trigger), `transactions`/`stalls`/`stall_owners` (010 — market-scoped;
   baca publik lapak/owner dipertahankan), `stall_categories` (011 — RLS aktif),
   `attendance`/`officers`/`retribution_types`/`setoran` (012 — scoped), `stall_owners` anon
-  hanya `id,name` (013).
+  hanya `id,name` (013), tulis master/operasional ADMIN-only (014).
   **Sisa:** `retribution_types` UPDATE/DELETE tanpa policy (gap fungsional).
   *(VERIFIED di SQL + pg_policies)*
 
 ## Konstrain
 
 - Tidak ada test otomatis di `src/` dan `api/`; `npm test` = `node --test` tanpa file test terverifikasi. *(VERIFIED untuk src/api; mobile = UNKNOWN)*
-- Tidak ada ESLint/Prettier. Build/typecheck belum diverifikasi pada sesi ini.
+- Tidak ada ESLint/Prettier. `npm run build` PASS (2026-10-25); `tsc --noEmit` masih 40+ error lama.
 - SQL migrasi tersebar di 4 lokasi (root, `migrations/`, `mobile/migrations/`, `mobile/assets/sql/`) → drift risk.
 
 ## Integrasi eksternal

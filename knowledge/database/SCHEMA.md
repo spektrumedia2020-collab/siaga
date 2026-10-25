@@ -56,26 +56,30 @@ dari query kode. Status terpasang di DB produksi: **UNKNOWN** (tidak ada akses D
 ## Audit RLS produksi — 2026-10-25 (P0-05)
 
 Sumber: query langsung `pg_class` + `pg_policies` di Supabase SQL Editor
-(project `hlvsbmxpkqvniemunygh`). **VERIFIED**. Total: 16 tabel `public`, 46 policy.
+(project `hlvsbmxqvniemunygh`). **VERIFIED**. Total: 16 tabel `public`, 46 policy.
+
+> **Model akses (migration 014, 2026-10-25):** ADMIN satu-satunya penulis master/operasional.
+> MARKET_HEAD **read-only**. Pengecualian: OFFICER insert transaksi/absensi/setoran miliknya;
+> TREASURER update setoran pasar; user update profil sendiri.
 
 | Tabel | RLS | Policy | Verdict |
 |---|---|---|---|
-| `announcements` | ON | 2 | OK — read authenticated; tulis market-scoped (ADMIN/HEAD/TREASURER) |
+| `announcements` | ON | 2 | OK — 014: read authenticated; tulis ADMIN |
 | `attendance` | ON | 4 | OK — 012: own + admin/kepala pasar; select-wide dihapus |
-| `market_config` | ON | 3 | OK — read authenticated; tulis market-scoped |
-| `market_sectors` | ON | 5 | OK — read everyone; tulis admin/head |
-| `markets` | ON | 4 | OK — read everyone (landing publik); tulis admin/head |
+| `market_config` | ON | 3 | OK — 014: read authenticated; tulis ADMIN |
+| `market_sectors` | ON | 5 | OK — 014: read everyone; tulis ADMIN |
+| `markets` | ON | 4 | OK — 014: read everyone (landing publik); tulis ADMIN |
 | `officers` | ON | 4 | OK — 012: own/admin/staf pasar yang sama |
-| `retribution_rates` | ON | 4 | OK — migration 008 |
-| `retribution_types` | ON | 2 | OK — 012: SELECT authenticated; INSERT staf/admin; UPDATE/DELETE tanpa policy (pre-existing) |
+| `retribution_rates` | ON | 4 | OK — 008 + 014: SELECT authenticated; tulis ADMIN |
+| `retribution_types` | ON | 2 | OK — 014: SELECT authenticated; INSERT ADMIN; UPDATE/DELETE tanpa policy |
 | `roles` | ON | 1 | OK — read everyone |
-| `setoran` | ON | 3 | OK — 012: own/approver pasar (TREASURER/MARKET_HEAD) + market scope |
-| `stall_categories` | ON | 4 | OK — 011: read authenticated; tulis staf/admin |
-| `stall_owners` | ON | 4 | OK — 010 + 013: anon hanya `id,name`; staff akses penuh; tulis via relasi lapak |
-| `stalls` | ON | 4 | OK — 010: SELECT publik; INSERT/UPDATE/DELETE market-scoped |
-| `transactions` | ON | 3 | OK — 010: SELECT/INSERT/UPDATE market-scoped; DELETE tanpa policy |
+| `setoran` | ON | 3 | OK — 012 + 014: insert own; update ADMIN/TREASURER pasar; head read-only |
+| `stall_categories` | ON | 4 | OK — 014: read authenticated; tulis ADMIN |
+| `stall_owners` | ON | 4 | OK — 010/013/014: anon hanya `id,name`; baca staff penuh; tulis ADMIN |
+| `stalls` | ON | 4 | OK — 010 + 014: SELECT publik; tulis ADMIN |
+| `transactions` | ON | 3 | OK — 010 + 014: INSERT market member (petugas); SELECT market-scoped; UPDATE ADMIN |
 | `user_roles` | ON | 4 | OK — migration 007 |
-| `users` | ON | 3 + trigger | OK — migration 009: own/admin/staf pasar; trigger jaga `id_role`/`auth_uid`/`akses_global` |
+| `users` | ON | 3 + trigger | OK — 009 + 014: INSERT ADMIN; UPDATE own/ADMIN; trigger admin-only |
 
 ### Yang tidak ada di DB (padahal dirujuk kode)
 
