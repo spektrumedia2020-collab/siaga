@@ -2,14 +2,13 @@
   "version": 1,
   "session_id": "SESSION-2026-10-25-1",
   "updated_at": "2026-10-26T02:20:00+07:00",
-  "current_task": "Deploy menunggu PUBLIC_STALL_PIN_HASH di Vercel",
+  "current_task": "Deploy 13 commit (tidak ada env blocker)",
   "active_files": [
-    "api/users.ts",
     "api/lapak.ts",
-    "src/lib/roleUtils.ts",
-    "src/pages/SuperAdminDashboardImproved.tsx",
-    "migrations/014_admin_only_market_management.sql",
-    "migrations/015_remove_treasurer_role.sql"
+    "src/pages/PublicStallPage.tsx",
+    "src/pages/StallsPage.tsx",
+    "src/components/QRCodeGenerator.tsx",
+    "migrations/016_stalls_public_token.sql"
   ],
   "active_modules": ["backend-api", "web-frontend", "database"],
   "active_decisions": [
@@ -26,5 +25,5 @@
     "smoke_api_users": "pass",
     "smoke_api_lapak_pin": "pass"
   },
-  "next_action": "Set PUBLIC_STALL_PIN_HASH, push 10 commit, verifikasi produksi."
+  "next_action": "Push 13 commit, verifikasi /lapak/<token>, /api/lapak tanpa PIN, /perumda & /juri 404."
 }

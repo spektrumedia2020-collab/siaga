@@ -67,9 +67,10 @@ Kolom lokasi ditambah via `mobile/assets/sql/add_attendance_location_columns.sql
 ## 7. Halaman lapak publik
 
 ```
-GET /lapak/<marketId>/<kode> → PublicStallPage → POST /api/lapak {marketId, code, pin}
-  → validasi PIN → service role: markets + stalls (+ transaksi terkait)
-  → tampilkan status & riwayat lapak
+Scan QR / buka /lapak/<token>  → PublicStallPage
+  → GET /api/lapak?token=<public_token>   (fallback lama: ?marketId&code)
+  → service role: stalls (by token) + markets + tarif + 50 transaksi terakhir
+  → tampilkan status & riwayat lapak (tanpa PIN)
 ```
 
 ## 8. Export laporan

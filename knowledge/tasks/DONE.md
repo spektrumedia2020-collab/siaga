@@ -1,5 +1,18 @@
 # DONE — Arsip Task Selesai
 
+## 2026-10-26 · Fase 1 akses lapak publik — token QR (PIN dihapus)
+
+- Migration `016`: `stalls.public_token` (text, NOT NULL, unique index, default 32 hex).
+- `api/lapak.ts`: GET `?token=` (fallback `marketId&code`), tanpa PIN, rate limit 60/menit/IP,
+  `Cache-Control: no-store`.
+- `PublicStallPage`: tanpa form PIN; fetch otomatis; route `/lapak/<token>` + legacy
+  `/lapak/<marketId>/<kode>`.
+- `StallsPage`: tombol **QR Pemilik** (link `origin/lapak/<token>`) + **Regenerate token**.
+- `QRCodeGenerator`: prop `icon`, tombol “Salin link”.
+- Verifikasi: `tsc --noEmit` 0 error; `npm run build` PASS; tidak ada referensi PIN tersisa di kode.
+- Deploy tidak lagi membutuhkan `PUBLIC_STALL_PIN_HASH`.
+- **Fase 2 belum**: aplikasi petugas masih memindai kode lapak; QR tunggal (URL/token) menunggu rilis mobile.
+
 ## 2026-10-26 · Hapus data retribusi & kategori lapak
 
 - `DELETE` semua baris `retribution_rates`, `retribution_types`, `stall_categories`.

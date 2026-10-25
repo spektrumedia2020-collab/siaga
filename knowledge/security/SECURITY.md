@@ -9,7 +9,7 @@ Status konfigurasi DB produksi: **UNKNOWN** (tidak ada akses DB pada sesi ini).
 |---|---|---|---|
 | S-01 | CRITICAL | `api/users.ts` tanpa autentikasi | **FIXED & TERVERIFIKASI di produksi** |
 | S-02 | HIGH | RLS `user_roles` `USING (true)` | **FIXED & TERVERIFIKASI di DB** |
-| S-03 | MEDIUM | PIN lapak default `1234` | **FIXED (kode)** — menunggu env + deploy |
+| S-03 | — | PIN lapak default `1234` | **REMOVED 2026-10-26** — PIN dihapus, diganti token QR |
 | S-04 | — | Secret JWT Perumda | **REMOVED 2026-10-26** — fitur `/perumda` dihapus (admin = Perumda) |
 | S-05 | HIGH | RLS `retribution_rates` `USING (true)` untuk insert/update | **FIXED & TERVERIFIKASI di DB** |
 | S-06 | LOW | CORS `*` pada Vercel functions | **PARTIAL** — `users` diperbaiki |
@@ -108,25 +108,17 @@ sehingga eskalasi tidak selalu butuh akun internal.
 
 ---
 
-## S-03 · MEDIUM — PIN lapak default `1234` — **FIXED (kode), BELUM DEPLOY**
+## S-03 · REMOVED (2026-10-26) — PIN lapak diganti token QR
 
-**Evidence awal**: `api/lapak.ts:21-24` (`expectedPin = configuredPin || (!configuredPinHash ? '1234' : '')`).
+**Keputusan:** PIN 4 digit dihapus dari `api/lapak.ts` dan `PublicStallPage`; tidak ada env PIN lagi.
+Akses publik lapak memakai **token acak 32 hex per lapak** (`stalls.public_token`, unique, default
+`gen_random_uuid` tanpa strip). QR publik berisi `${origin}/lapak/<token>`; link lama
+`/lapak/<marketId>/<kode>` tetap dilayani tanpa PIN.
 
-**Bukti produksi sebelum perbaikan (2026-10-25)**:
-```
-POST /api/lapak {marketId:1, code:"ZZZ-NOT-EXIST", pin:"1234"} -> 404 (PIN diterima)
-POST /api/lapak {marketId:1, code:"ZZZ-NOT-EXIST", pin:"9999"} -> 401
-```
-Artinya env PIN belum diset di Vercel dan default `1234` masih aktif.
-
-**Resolusi (kode, commit `6c8ea42`)**:
-- Tanpa `PUBLIC_STALL_PIN` / `PUBLIC_STALL_PIN_HASH` → **503 fail-closed**.
-- PIN wajib 4 digit; plaintext dibandingkan constant-time (`timingSafeEqual`); hash via bcrypt.
-
-**Uji lokal**: tanpa env 503; plaintext benar 400 (lolos PIN); salah 401; hash benar 400; hash salah 401.
-
-**Sisa**: env belum diset di Vercel → **jangan push** sampai `PUBLIC_STALL_PIN_HASH` dipasang,
-lalu deploy + uji produksi: `1234` harus 401.
+**Model risiko:** token = bearer secret. Siapa pun yang memegang QR/link bisa melihat tarif +
+50 transaksi terakhir. Mitigasi: token panjang & tak berurutan, tabel unique, `Cache-Control: no-store`,
+rate limit 60 req/menit/IP, dan tombol **Regenerate token** (QR lama mati).
+**Catatan fase 2:** aplikasi petugas masih memindai kode lapak; QR tunggal (URL/token) menunggu rilis mobile.
 
 ---
 

@@ -4,8 +4,8 @@
 
 ## Task aktif
 
-Semua perbaikan kode selesai: typecheck 0 error, build PASS, RLS 007–015 live, fitur Perumda dihapus.
-**Satu-satunya blocker deploy:** `PUBLIC_STALL_PIN_HASH` belum diset di Vercel (push 10 commit ditunda).
+Semua perbaikan kode selesai: typecheck 0 error, build PASS, RLS 007–015 live, fitur Perumda dihapus,
+akses lapak publik kini berbasis **token QR** (PIN dihapus). **Deploy siap** — tidak ada env blocker.
 
 ## Status keamanan ringkas
 
@@ -26,11 +26,10 @@ dan `stall_categories` juga 0. Tersisa 1 admin + 4 `roles`; storage 0 objek.
 
 ## Next action (spesifik)
 
-1. Set `PUBLIC_STALL_PIN_HASH` di Vercel (Production).
-2. Push 10 commit → Vercel rebuild → verifikasi: `pin=1234` 401, login admin, halaman lapak normal,
-   `/juri` & `/api/perumda` → 404/login (fitur dihapus).
+1. Push 13 commit → Vercel rebuild.
+2. Verifikasi: `/lapak/<token>` menampilkan lapak, `/api/lapak` tanpa PIN, `/perumda` & `/juri` 404.
 3. Cek CI web (`gh run list`) — seharusnya hijau.
-4. Opsional: siapkan data awal; P1-04 test otomatis.
+4. Fase 2 (opsional): mobile membaca QR URL/token; tombol WA `wa.me`.
 
 ## Catatan akses DB
 

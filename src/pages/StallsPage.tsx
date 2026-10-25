@@ -15,6 +15,7 @@ interface Stall {
   code: string
   number: string
   qr_code: string | null
+  public_token?: string | null
   status: string
   created_at: string
 }
@@ -443,6 +444,21 @@ export function StallsPage({ marketId }: Props) {
     setRateFormOpen(false)
   }
 
+  const handleRegenerateToken = async (stall: Stall) => {
+    if (!window.confirm(`Regenerate token publik lapak ${stall.code}? QR/link lama tidak berlaku.`)) return
+    try {
+      const bytes = new Uint8Array(16)
+      crypto.getRandomValues(bytes)
+      const newToken = Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('')
+      const supabase = getSupabaseClient()
+      const { error } = await supabase.from('stalls').update({ public_token: newToken }).eq('id', stall.id)
+      if (error) throw error
+      loadData()
+    } catch (err: any) {
+      alert(err.message || 'Gagal regenerate token')
+    }
+  }
+
   if (loading) {
     return <Loading label="Memuat data lapak..." />
   }
@@ -635,6 +651,21 @@ export function StallsPage({ marketId }: Props) {
                           value={String(stall.code || stall.id)}
                           label={`Lapak ${stall.code || stall.number}`}
                         />
+                        <QRCodeGenerator
+                          value={stall.public_token
+                            ? `${window.location.origin}/lapak/${stall.public_token}`
+                            : `${window.location.origin}/lapak/${stall.market_id}/${encodeURIComponent(stall.code)}`}
+                          label={`QR Pemilik — Lapak ${stall.code || stall.number}`}
+                          icon="🔗"
+                        />
+                        <button
+                          onClick={() => handleRegenerateToken(stall)}
+                          className="btn-edit"
+                          title="Regenerate token publik"
+                          aria-label={`Regenerate token publik lapak ${stall.code || stall.number}`}
+                        >
+                          ♻️
+                        </button>
                         <button
                           onClick={() => handleOpenRateDialog(stall)}
                           className="btn-rate"

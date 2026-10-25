@@ -5,9 +5,10 @@ interface Props {
   value: string
   label?: string
   size?: number
+  icon?: string
 }
 
-export function QRCodeGenerator({ value, label, size = 160 }: Props) {
+export function QRCodeGenerator({ value, label, size = 160, icon = '🔳' }: Props) {
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement | null>(null)
 
@@ -55,9 +56,8 @@ export function QRCodeGenerator({ value, label, size = 160 }: Props) {
         title="Tampilkan QR"
         style={{ padding: 6, borderRadius: 6 }}
       >
-        🔳
+        {icon}
       </button>
-
       {open && (
         <div
           className="qr-modal"
@@ -88,6 +88,9 @@ export function QRCodeGenerator({ value, label, size = 160 }: Props) {
               <QRCode value={value} size={size} />
             </div>
             <div style={{ marginTop: 12, display: 'flex', gap: 8, justifyContent: 'center' }}>
+              <button onClick={() => navigator.clipboard?.writeText(value)} className="btn-secondary">
+                Salin link
+              </button>
               <button onClick={downloadPNG} className="btn-secondary">
                 Unduh PNG
               </button>

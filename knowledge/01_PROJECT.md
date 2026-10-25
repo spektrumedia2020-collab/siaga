@@ -33,7 +33,7 @@ lihat [architecture/LLD.md](./architecture/LLD.md#role-resolution).
 
 ### Web (`src/`)
 - React 19, TypeScript 5.6, Vite 8, zustand, recharts, react-qr-code, xlsx, papaparse
-- Routing: hash-based manual di `src/App.tsx` + path publik (`/@slug`, `/lapak/:id/:kode`)
+- Routing: hash-based manual di `src/App.tsx` + path publik (`/@slug`, `/lapak/<token>`; legacy `/lapak/:marketId/:kode`)
 - Data akses: `@supabase/supabase-js` dengan anon key + RLS (`src/lib/supabase.ts`, `src/lib/api.ts`)
 
 ### Backend Express (`src/server.ts`, `src/routes/*`)
@@ -74,7 +74,6 @@ Tidak ada berkas env yang ter-track git (VERIFIED: `git ls-files` hanya `.env.te
 | `VITE_SUPABASE_STORAGE_BUCKET` | web | tidak (default `data-siaga`) |
 | `VITE_GOOGLE_CLIENT_ID`, `VITE_GOOGLE_API_KEY` | web | untuk export Google Sheets |
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | server/function | ya (rahasia) |
-| `PUBLIC_STALL_PIN` / `PUBLIC_STALL_PIN_HASH` | api/lapak | ya (fail-closed bila kosong) |
 | `FRONTEND_URL` | Express CORS | produksi |
 
 ## Konvensi

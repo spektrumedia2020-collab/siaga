@@ -30,7 +30,8 @@
 - Transaksi retribusi mencatat `market_id`, `stall_id`, `amount`, `status` (`paid` dianggap lunas). *(VERIFIED dari kode web/mobile)*
 - Setoran petugas punya alur approval: `pending_treasurer` → `pending_head` → `approved`/`rejected`. *(VERIFIED dari `mobile/migrations/001_init.sql`)*
 - Absensi petugas menyimpan check-in/out + data lokasi (geolocator). *(VERIFIED dari pubspec + tabel attendance)*
-- Halaman lapak publik diakses dengan PIN 4 digit (env `PUBLIC_STALL_PIN`/`_HASH`). *(VERIFIED)*
+- Halaman lapak publik menggunakan **token acak per lapak** (`stalls.public_token`), bukan PIN;
+  link lama `/lapak/:marketId/:kode` tetap dilayani. *(VERIFIED)*
 
 ## Aturan keamanan yang mengikat
 

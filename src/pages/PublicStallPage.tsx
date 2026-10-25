@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './PublicStallPage.css'
 
 interface Props {
-  marketId: string
-  stallCode: string
+  token?: string
+  marketId?: string
+  stallCode?: string
 }
 
 interface StallResponse {
@@ -25,86 +26,41 @@ interface StallResponse {
   }
 }
 
-export function PublicStallPage({ marketId, stallCode }: Props) {
+export function PublicStallPage({ token, marketId, stallCode }: Props) {
   const [data, setData] = useState<StallResponse | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [pin, setPin] = useState('')
-  const [unlocked, setUnlocked] = useState(false)
   const [activeTab, setActiveTab] = useState<'rates' | 'transactions'>('rates')
 
-  const loadStall = async (accessPin: string) => {
-    try {
-      setLoading(true)
-      setError('')
-      const response = await fetch('/api/lapak', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ marketId, code: stallCode, pin: accessPin })
-      })
-      const result = await response.json()
-      if (!response.ok) throw new Error(result.error || 'Lapak tidak ditemukan')
-      setData(result)
-      setUnlocked(true)
-    } catch (err: any) {
-      setError(err.message || 'Gagal memuat data lapak')
-    } finally {
-      setLoading(false)
+  useEffect(() => {
+    const controller = new AbortController()
+
+    const loadStall = async () => {
+      const query = token
+        ? `token=${encodeURIComponent(token)}`
+        : `marketId=${encodeURIComponent(String(marketId || ''))}&code=${encodeURIComponent(String(stallCode || ''))}`
+
+      try {
+        setLoading(true)
+        setError('')
+        const response = await fetch(`/api/lapak?${query}`, { signal: controller.signal })
+        const result = await response.json().catch(() => ({}))
+        if (!response.ok) throw new Error(result.error || 'Lapak tidak ditemukan')
+        setData(result)
+      } catch (err: any) {
+        if (err?.name === 'AbortError') return
+        setError(err?.message || 'Gagal memuat data lapak')
+      } finally {
+        if (!controller.signal.aborted) setLoading(false)
+      }
     }
-  }
+
+    loadStall()
+    return () => controller.abort()
+  }, [token, marketId, stallCode])
 
   if (loading) {
     return <main className="public-stall-page"><div className="public-stall-panel">Memuat data lapak...</div></main>
-  }
-
-  if (!unlocked) {
-    return (
-      <main className="public-stall-page public-stall-login-page">
-        <div className="public-stall-login-shell">
-          <aside className="public-stall-login-visual">
-            <img src="/pasar.jpeg" alt="Aktivitas pasar" />
-            <div className="public-stall-login-overlay" />
-            <div className="public-stall-login-copy">
-              <img src="/logo.jpeg" alt="Logo SiAga" />
-              <p>Akses pemilik lapak</p>
-              <h1>Informasi lapak, langsung di tangan.</h1>
-              <span>Tarif dan riwayat transaksi dalam satu tampilan.</span>
-            </div>
-          </aside>
-          <section className="public-stall-panel public-stall-pin-panel">
-            <div className="public-stall-pin-heading">
-              <p>SIAGA • LAPAK</p>
-              <h2>Buka informasi lapak</h2>
-              <span>Masukkan PIN 4 digit untuk melanjutkan.</span>
-            </div>
-            <form className="public-stall-pin-form" onSubmit={(event) => { event.preventDefault(); loadStall(pin) }}>
-              <label htmlFor="stall-pin">PIN akses</label>
-              <input
-                id="stall-pin"
-                type="password"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                maxLength={4}
-                value={pin}
-                onChange={(event) => setPin(event.target.value.replace(/\D/g, ''))}
-                placeholder="••••"
-                autoFocus
-                required
-              />
-              <button type="submit" disabled={loading || pin.length !== 4}>{loading ? 'Memuat...' : 'Buka informasi'}</button>
-            </form>
-            {error ? <p className="public-stall-pin-error">{error}</p> : null}
-            <div className="public-stall-demo-section">
-              <p className="public-stall-demo-label">Perlu melihat contoh?</p>
-              <button type="button" className="public-stall-demo-button" onClick={() => loadStall('1234')} disabled={loading}>
-                Buka demo pedagang
-              </button>
-            </div>
-            <footer>Data lapak dilindungi dan hanya dapat diakses dengan PIN.</footer>
-          </section>
-        </div>
-      </main>
-    )
   }
 
   if (error || !data) {

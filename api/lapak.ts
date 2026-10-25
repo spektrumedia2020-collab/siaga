@@ -1,50 +1,50 @@
 import { createClient } from '@supabase/supabase-js'
-import { timingSafeEqual } from 'node:crypto'
-import bcrypt from 'bcryptjs'
 
-function cleanEnvironmentValue(value?: string) {
-  return String(value || '').trim().replace(/^['"]|['"]$/g, '')
+const WINDOW_MS = 60_000
+const MAX_REQUESTS = 60
+const hits = new Map<string, { count: number; resetAt: number }>()
+
+function clientIp(req: any) {
+  const forwarded = String(req.headers?.['x-forwarded-for'] || '').split(',')[0].trim()
+  return forwarded || String(req.socket?.remoteAddress || 'unknown')
 }
 
-function safeEqual(a: string, b: string) {
-  const left = Buffer.from(a)
-  const right = Buffer.from(b)
-  if (left.length !== right.length) return false
-  return timingSafeEqual(left, right)
+function isRateLimited(ip: string) {
+  const now = Date.now()
+  if (hits.size > 5000) hits.clear()
+  const current = hits.get(ip)
+  if (!current || current.resetAt <= now) {
+    hits.set(ip, { count: 1, resetAt: now + WINDOW_MS })
+    return false
+  }
+  current.count += 1
+  return current.count > MAX_REQUESTS
 }
 
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
   res.setHeader('Content-Type', 'application/json')
+  res.setHeader('Cache-Control', 'no-store')
 
   if (req.method === 'OPTIONS') return res.status(200).end()
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
+  if (!['GET', 'POST'].includes(req.method)) return res.status(405).json({ error: 'Method not allowed' })
 
-  const marketId = Number(req.body?.marketId)
-  const stallCode = String(req.body?.code || '').trim()
-  const pin = String(req.body?.pin || '')
-  const configuredPin = cleanEnvironmentValue(process.env.PUBLIC_STALL_PIN)
-  const configuredPinHash = cleanEnvironmentValue(process.env.PUBLIC_STALL_PIN_HASH)
-
-  // Fail-closed: tanpa PIN yang dikonfigurasi, endpoint tidak melayani.
-  if (!configuredPin && !configuredPinHash) {
-    console.error('PUBLIC_STALL_PIN / PUBLIC_STALL_PIN_HASH belum dikonfigurasi')
-    return res.status(503).json({ error: 'PIN lapak belum dikonfigurasi' })
+  if (isRateLimited(clientIp(req))) {
+    return res.status(429).json({ error: 'Terlalu banyak permintaan, coba lagi nanti' })
   }
 
-  if (!/^\d{4}$/.test(pin)) {
-    return res.status(401).json({ error: 'PIN tidak valid' })
+  const token = String(req.query?.token || req.body?.token || '').trim()
+  const marketId = Number(req.query?.marketId ?? req.body?.marketId)
+  const stallCode = String(req.query?.code || req.body?.code || '').trim()
+
+  const usingToken = Boolean(token)
+  if (usingToken && !/^[a-f0-9]{32}$/i.test(token)) {
+    return res.status(400).json({ error: 'Token lapak tidak valid' })
   }
-
-  const validPin = configuredPin
-    ? safeEqual(pin, configuredPin)
-    : await bcrypt.compare(pin, configuredPinHash)
-
-  if (!validPin) return res.status(401).json({ error: 'PIN tidak valid' })
-  if (!Number.isInteger(marketId) || marketId <= 0 || !stallCode) {
-    return res.status(400).json({ error: 'Market ID dan kode lapak wajib diisi' })
+  if (!usingToken && (!Number.isInteger(marketId) || marketId <= 0 || !stallCode)) {
+    return res.status(400).json({ error: 'Token lapak atau pasangan pasar+kode wajib diisi' })
   }
 
   try {
@@ -53,24 +53,27 @@ export default async function handler(req: any, res: any) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
+    let stallQuery = supabaseAdmin
+      .from('stalls')
+      .select('id, market_id, code, number, qr_code, status, sector_id, owner_id')
+
+    stallQuery = usingToken
+      ? stallQuery.eq('public_token', token)
+      : stallQuery.eq('market_id', marketId).ilike('code', stallCode)
+
+    const { data: stall, error: stallError } = await stallQuery.maybeSingle()
+
+    if (stallError) throw stallError
+    if (!stall) return res.status(404).json({ error: 'Lapak tidak ditemukan' })
+
     const { data: market, error: marketError } = await supabaseAdmin
       .from('markets')
       .select('id, name, code, city, address, street, street_number, kecamatan, province, postal_code, photo_url, status')
-      .eq('id', marketId)
+      .eq('id', stall.market_id)
       .maybeSingle()
 
     if (marketError) throw marketError
     if (!market) return res.status(404).json({ error: 'Pasar tidak ditemukan' })
-
-    const { data: stall, error: stallError } = await supabaseAdmin
-      .from('stalls')
-      .select('id, market_id, code, number, qr_code, status, sector_id, owner_id')
-      .eq('market_id', marketId)
-      .ilike('code', stallCode)
-      .maybeSingle()
-
-    if (stallError) throw stallError
-    if (!stall) return res.status(404).json({ error: 'Lapak tidak ditemukan' })
 
     const [{ data: sector }, { data: owner }, { data: rates, error: ratesError }, { data: transactions, error: transactionsError }] = await Promise.all([
       stall.sector_id

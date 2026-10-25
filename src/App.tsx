@@ -142,7 +142,7 @@ function App() {
       return 'market-landing'
     }
 
-    if (/^\/lapak\/\d+\/[^/]+\/?$/.test(window.location.pathname)) {
+    if (/^\/lapak\/[^/]+(?:\/[^/]+)?\/?$/.test(window.location.pathname)) {
       return 'public-stall'
     }
 
@@ -170,7 +170,9 @@ function App() {
 
   if (currentRoute === 'public-stall') {
     const pathParts = window.location.pathname.split('/').filter(Boolean)
-    return <PublicStallPage marketId={pathParts[1]} stallCode={decodeURIComponent(pathParts[2])} />
+    const token = pathParts.length === 2 ? decodeURIComponent(pathParts[1]) : undefined
+    const stallCode = pathParts[2] ? decodeURIComponent(pathParts[2]) : undefined
+    return <PublicStallPage token={token} marketId={pathParts[1]} stallCode={stallCode} />
   }
 
   // Market Edit Page

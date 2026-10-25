@@ -46,16 +46,20 @@ Tanpa token → 401; peran tidak memenuhi → 403; origin di luar allowlist → 
 | DELETE | JWT + `ADMIN` | Hapus `user_roles`, `users`, lalu auth user |
 
 ### `/api/lapak` → `api/lapak.ts`
-| Method | Auth | Body | Efek |
-|---|---|---|---|
-| POST | PIN 4 digit | `{marketId, code, pin}` | Info pasar + lapak (+ data terkait) |
+Publik (tanpa auth). Rate limit in-memory 60 req/menit per IP.
+
+| Method | Query/Body | Efek |
+|---|---|---|
+| GET | `?token=<public_token>` | Info pasar + lapak + tarif + 50 transaksi terakhir |
+| GET | `?marketId=<id>&code=<kode>` | Fallback untuk link lama (tanpa PIN) |
 
 ## 3. Route publik web (SPA, bukan API)
 
 | Path | Komponen | Akses |
 |---|---|---|
 | `/@<slug>` | `MarketLandingPage` | publik (data pasar via anon + RLS) |
-| `/lapak/<marketId>/<kode>` | `PublicStallPage` | PIN via `/api/lapak` |
+| `/lapak/<token>` | `PublicStallPage` | publik (token acak) |
+| `/lapak/<marketId>/<kode>` | `PublicStallPage` | link lama, publik |
 | lainnya | login/dashboard | Supabase Auth |
 
 ## 4. Supabase (akses langsung klien)

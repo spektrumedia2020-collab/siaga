@@ -11,7 +11,7 @@ Route ditentukan di `src/App.tsx:163-200`:
 | Kondisi URL | Route | Komponen | Guard |
 |---|---|---|---|
 | pathname `/@<slug>` | `market-landing` | `MarketLandingPage` | publik |
-| pathname `/lapak/<marketId>/<kode>` | `public-stall` | `PublicStallPage` | PIN (API) |
+| pathname `/lapak/<token>` | `public-stall` | `PublicStallPage` | publik (token) |
 | belum login | `login` | `Auth` | — |
 | role pasar (HEAD/ADMIN_PASAR/TREASURER/OFFICER) | `market` | `MarketDashboard` | role DB |
 | hash `superadmin/market-edit/<id>` | `market-edit` | `MarketEditPage` | `ADMIN` |
@@ -80,7 +80,7 @@ Catatan: `cors` melempar `Error` untuk origin tak dikenal → jatuh ke error han
 | Fungsi | Method | Otorisasi | Client |
 |---|---|---|---|
 | `users.ts` | GET/POST/DELETE | JWT + peran ADMIN | service role |
-| `lapak.ts` | POST | PIN 4 digit (fail-closed bila env kosong) | service role |
+| `lapak.ts` | GET token publik (fallback market+kode) | tanpa PIN; rate limit 60/menit | service role |
 
 `users.ts` memakai CORS allowlist; `lapak.ts` masih `Access-Control-Allow-Origin: *`.
 
