@@ -1,5 +1,12 @@
 # DONE — Arsip Task Selesai
 
+## 2026-10-25 · P0-09 — Aktifkan RLS `stall_categories` (migration `011`)
+
+- RLS diaktifkan; 4 policy `TO authenticated`: SELECT read; INSERT/UPDATE/DELETE staf/admin.
+- Kategori tetap global; `CategoriesPage` di dashboard pasar tetap berfungsi.
+- Uji runtime (rollback): `anon_select=0`, `anon_insert_blocked=true`, `auth_select=5`,
+  `staff_insert=true`; objek uji tidak tertinggal (baris tetap 5, 4 policy).
+
 ## 2026-10-25 · P0-08 — Tutup RLS operasional (migration `010`)
 
 - `transactions`: SELECT/INSERT/UPDATE market-scoped; DELETE tetap tanpa policy (deny).

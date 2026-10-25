@@ -70,7 +70,7 @@ Sumber: query langsung `pg_class` + `pg_policies` di Supabase SQL Editor
 | `retribution_types` | ON | 2 | **PARTIAL** — INSERT `true` → user login bisa menambah tipe retribusi |
 | `roles` | ON | 1 | OK — read everyone |
 | `setoran` | ON | 3 | **PARTIAL** — cek peran hanya `users.id_role` (bukan `user_roles`) dan tidak dibatasi market |
-| `stall_categories` | **OFF** | 0 | **OPEN** — RLS tidak aktif, 0 policy |
+| `stall_categories` | ON | 4 | OK — 011: read authenticated; tulis staf/admin |
 | `stall_owners` | ON | 4 | OK — 010: SELECT publik (PII terbuka, S-17); INSERT staf pasar; UPDATE/DELETE via relasi lapak |
 | `stalls` | ON | 4 | OK — 010: SELECT publik; INSERT/UPDATE/DELETE market-scoped |
 | `transactions` | ON | 3 | OK — 010: SELECT/INSERT/UPDATE market-scoped; DELETE tanpa policy |
@@ -88,6 +88,5 @@ Implikasi: fallback mobile ke tabel legacy akan gagal; halaman Theme Management 
 
 | Status | Tabel |
 |---|---|
-| Memadai | `markets`, `market_sectors`, `market_config`, `announcements`, `roles`, `user_roles` (007), `retribution_rates` (008), `users` (009), `transactions`/`stalls`/`stall_owners` (010) |
-| Perlu ditutup | `stall_categories` (RLS off) |
+| Memadai | `markets`, `market_sectors`, `market_config`, `announcements`, `roles`, `user_roles` (007), `retribution_rates` (008), `users` (009), `transactions`/`stalls`/`stall_owners` (010), `stall_categories` (011) |
 | Perlu dipersempit | `attendance`, `officers`, `retribution_types`, `setoran` |

@@ -20,7 +20,7 @@ Status konfigurasi DB produksi: **UNKNOWN** (tidak ada akses DB pada sesi ini).
 | S-11 | CRITICAL | RLS `users` `USING (true)` untuk SELECT/INSERT/UPDATE | **FIXED & TERVERIFIKASI di DB** |
 | S-12 | HIGH | RLS `transactions` `true` untuk INSERT/SELECT/UPDATE | **FIXED & TERVERIFIKASI di DB** |
 | S-13 | HIGH | RLS `stalls` & `stall_owners` `ALL true` | **FIXED & TERVERIFIKASI di DB** |
-| S-14 | MEDIUM | `stall_categories` RLS **nonaktif**, 0 policy | OPEN (audit 2026-10-25) |
+| S-14 | MEDIUM | `stall_categories` RLS **nonaktif**, 0 policy | **FIXED & TERVERIFIKASI di DB** |
 | S-15 | MEDIUM | Read over-broad: `attendance`, `officers`, `retribution_types` | OPEN (audit 2026-10-25) |
 | S-16 | MEDIUM | `setoran` cek peran hanya `users.id_role`, tanpa scope market | OPEN (audit 2026-10-25) |
 | S-17 | HIGH | `stall_owners` SELECT publik mengekspos `nik`/`phone`/`address` ke anon | OPEN |
@@ -266,10 +266,17 @@ DELETE tetap tanpa policy (deny).
 
 **Sisa (S-17)**: kolom `nik`/`phone`/`address` pada `stall_owners` masih terbaca anon.
 
-### S-14 · MEDIUM — `stall_categories` RLS nonaktif
-**Evidence**: `relrowsecurity = false`, 0 policy.
-**Dampak**: tabel terbuka mengikuti grant default (anon/authenticated).
-**Perbaikan**: aktifkan RLS; SELECT authenticated; tulis admin/head.
+### S-14 · MEDIUM — `stall_categories` RLS nonaktif — **FIXED & APPLIED (2026-10-25)**
+
+**Resolusi**: migration 011 — RLS diaktifkan; 4 policy `TO authenticated`
+(SELECT read; INSERT/UPDATE/DELETE admin atau user yang punya role/staf).
+Kategori bersifat master global; `CategoriesPage` di dashboard pasar tetap berfungsi.
+
+**Uji runtime (rollback)**:
+```
+anon_select=0; anon_insert_blocked=true; auth_select=5; staff_insert=true
+```
+**Pasca-uji**: `tmp_fn_left=0`, jumlah baris tetap 5, policy 4.
 
 ### S-15 · MEDIUM — Read over-broad
 - `attendance_select` `true` → semua user login membaca absensi (termasuk lokasi).

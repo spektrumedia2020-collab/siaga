@@ -20,6 +20,7 @@
 | 8 | P0-05 — audit RLS produksi | **SELESAI** | 16 tabel / 46 policy; 6 temuan baru (S-11…S-16) |
 | 9 | P0-07 — tutup RLS `users` | **SELESAI** | Migration 009 + trigger; uji eskalasi PASS |
 | 10 | P0-08 — tutup RLS operasional | **SELESAI** | Migration 010; uji deny+allow PASS |
+| 11 | P0-09 — aktifkan RLS `stall_categories` | **SELESAI** | Migration 011; anon ditolak, staf diizinkan |
 
 ## Scope sesi ini (sudah dieksekusi)
 
@@ -37,10 +38,9 @@ Tidak ada gelombang paralel. `open_wave = null`.
 ## Next Session Handoff
 
 1. Baca urutan resume: `state.json` → `index/index-state.json` → `context.md` → `memory.md` → `00_INDEX.md` → berkas ini.
-2. **P0-09**: aktifkan RLS `stall_categories` (policy dibuat dalam transaksi yang sama).
-3. **P0-10**: persempit read `attendance`/`officers`/`retribution_types`; scope `setoran`.
-4. **P0-11**: buat view publik `stall_owners` (id, name) untuk anon; landing page pindah ke view;
+2. **P0-10**: persempit read `attendance`/`officers`/`retribution_types`; scope `setoran` per market.
+3. **P0-11**: buat view publik `stall_owners` (id, name) untuk anon; landing page pindah ke view;
    batasi SELECT tabel ke staf/admin.
-5. **P0-03/P0-04**: set `PUBLIC_STALL_PIN_HASH` dan `PERUMDA_JWT_SECRET` di env Vercel.
-6. CI merah karena `tsc --noEmit` (40+ error lama). Perbaiki bertahap; jangan tutup dengan CI merah
+4. **P0-03/P0-04**: set `PUBLIC_STALL_PIN_HASH` dan `PERUMDA_JWT_SECRET` di env Vercel.
+5. CI merah karena `tsc --noEmit` (40+ error lama). Perbaiki bertahap; jangan tutup dengan CI merah
    tanpa catatan.

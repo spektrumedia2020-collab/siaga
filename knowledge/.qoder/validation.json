@@ -43,6 +43,10 @@
       "status": "PASS",
       "evidence": "Audit pg_class + pg_policies 2026-10-25: 16 tabel public, 46 policy. Rincian di database/SCHEMA.md. Temuan kritis: users SELECT/INSERT/UPDATE true."
     },
+    "rls_stall_categories": {
+      "status": "PASS",
+      "evidence": "migration 011 diterapkan: RLS=true, 4 policy. Uji runtime (rollback): anon_select=0, anon_insert_blocked=true, auth_select=5, staff_insert=true; objek uji tidak tertinggal."
+    },
     "rls_operational": {
       "status": "PASS",
       "evidence": "migration 010 diterapkan. Uji runtime (role authenticated, rollback): tx_own=1 tx_other=0; stall_own=1 stall_other=0; owner_own=1 owner_other=0; anon_stalls=4216. Objek uji tidak tertinggal."

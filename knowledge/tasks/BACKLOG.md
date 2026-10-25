@@ -11,10 +11,7 @@ Setiap item wajib punya evidence sebelum dieksekusi dan hasil verifikasi setelah
 > **P0-05 selesai 2026-10-25** (audit RLS) — hasil: [database/SCHEMA.md](../database/SCHEMA.md#audit-rls-produksi--2026-10-25-p0-05).
 > **P0-07 selesai 2026-10-25** (migration `009`) — lihat [DONE.md](./DONE.md).
 > **P0-08 selesai 2026-10-25** (migration `010`) — lihat [DONE.md](./DONE.md).
-
-### P0-09 · `stall_categories` RLS nonaktif
-- **Evidence:** `relrowsecurity = false`, 0 policy.
-- **DoD:** aktifkan RLS; SELECT authenticated; tulis admin/head; verifikasi via `pg_policies`.
+> **P0-09 selesai 2026-10-25** (migration `011`) — lihat [DONE.md](./DONE.md).
 
 ### P0-10 · Read over-broad + scope `setoran`
 - **Evidence:** `attendance_select` `true`; `officers_select_auth` `true`; `retribution_types_insert` `true`;

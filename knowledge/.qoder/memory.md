@@ -34,9 +34,9 @@
 - Jangan andalkan `ProtectedRoute` (client-side) sebagai kontrol akses tunggal — kontrol sebenarnya adalah RLS. *(VERIFIED)*
 - RLS sudah diperketat (2026-10-25): `user_roles` (007), `retribution_rates` (008), `users` (009 —
   own/admin/staf pasar + trigger), `transactions`/`stalls`/`stall_owners` (010 — market-scoped;
-  baca publik lapak/owner dipertahankan). **Masih terbuka:** `stall_categories` (RLS nonaktif),
-  read over-broad `attendance`/`officers`/`retribution_types`, dan PII `stall_owners` untuk anon.
-  *(VERIFIED di SQL + pg_policies)*
+  baca publik lapak/owner dipertahankan), `stall_categories` (011 — RLS aktif).
+  **Masih terbuka:** read over-broad `attendance`/`officers`/`retribution_types`, scope `setoran`,
+  dan PII `stall_owners` untuk anon. *(VERIFIED di SQL + pg_policies)*
 
 ## Konstrain
 
