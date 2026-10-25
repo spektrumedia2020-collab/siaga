@@ -4,8 +4,8 @@
 
 ## Task aktif
 
-**P0-02 selesai** (migration 007 applied di DB produksi): `user_roles` kini read sendiri/admin,
-tulis admin. Berikutnya: **P0-06** (`retribution_rates`) dan **P0-05** (audit RLS tabel inti).
+**P0-06 selesai** (migration 008 applied): tulis `retribution_rates` kini admin atau staf pasar terkait.
+Berikutnya: **P0-05** — audit `pg_policies` tabel inti yang belum diketahui.
 
 ## Temuan yang memicu task berikutnya
 
@@ -35,11 +35,11 @@ Detail + evidence: [../security/SECURITY.md](../security/SECURITY.md).
 
 ## Next action (spesifik)
 
-1. P0-06: tulis migration untuk `retribution_rates` (insert/update admin atau MARKET_HEAD pasar terkait).
-2. P0-05: jalankan query `pg_policies` untuk tabel inti via SQL Editor; catat hasil di `database/SCHEMA.md`.
-3. P0-03/P0-04: set `PUBLIC_STALL_PIN_HASH` dan `PERUMDA_JWT_SECRET` di env Vercel.
-4. Uji produksi dengan akun non-admin (harus 403) dan ADMIN (201) bila kredensial tersedia.
-5. CI merah: `tsc --noEmit` 40+ error lama — perbaiki bertahap (BACKLOG P1-05).
+1. P0-05: jalankan `pg_policies` untuk tabel inti (`markets`, `stalls`, `transactions`, `users`,
+   `stall_owners`, `setoran`, `attendance`) via SQL Editor; catat di `database/SCHEMA.md`.
+2. P0-03/P0-04: set `PUBLIC_STALL_PIN_HASH` dan `PERUMDA_JWT_SECRET` di env Vercel.
+3. Uji produksi dengan akun non-admin (harus 403) dan ADMIN (201) bila kredensial tersedia.
+4. CI merah: `tsc --noEmit` 40+ error lama — perbaiki bertahap (BACKLOG P1-05).
 
 ## Catatan akses DB
 

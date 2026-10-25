@@ -11,7 +11,7 @@ Status konfigurasi DB produksi: **UNKNOWN** (tidak ada akses DB pada sesi ini).
 | S-02 | HIGH | RLS `user_roles` `USING (true)` | **FIXED & TERVERIFIKASI di DB** |
 | S-03 | MEDIUM | PIN lapak default `1234` | OPEN bila env kosong |
 | S-04 | MEDIUM | Secret JWT Perumda fallback ke service-role key | OPEN bila env kosong |
-| S-05 | HIGH | RLS `retribution_rates` `USING (true)` untuk insert/update | OPEN (file SQL) |
+| S-05 | HIGH | RLS `retribution_rates` `USING (true)` untuk insert/update | **FIXED & TERVERIFIKASI di DB** |
 | S-06 | LOW | CORS `*` pada Vercel functions | **PARTIAL** — `users` diperbaiki |
 | S-07 | LOW | Express: CORS error → 500; body limit 10 MB | OPEN |
 | S-08 | INFO | Tombol akun test tampil default di produksi | OPEN |
@@ -127,9 +127,25 @@ token laporan maupun mengakses Supabase sepenuhnya. Rotasi service key juga memu
 
 ---
 
-## S-05 · HIGH — Policy RLS `retribution_rates`
+## S-05 · HIGH — Policy RLS `retribution_rates` — **FIXED & APPLIED (2026-10-25)**
 
-**Evidence**: `mobile/assets/sql/retribution_rates_table.sql:29-48` — SELECT/INSERT/UPDATE
+**Resolusi**
+- Migrasi `migrations/008_secure_retribution_rates_rls.sql` dijalankan di Supabase SQL Editor.
+- Fungsi baru `public.is_current_user_market_member(bigint)` (SECURITY DEFINER): cek `user_roles.market_id`,
+  `users.market_id`, atau `markets.id_head_market`.
+- Policy lama (select/insert/update/delete) dihapus dan dibuat ulang.
+- Verifikasi `pg_policies` — **4 rows**:
+  ```
+  SELECT | retribution_rates_select | using: true                      (data referensi, tetap terbaca)
+  INSERT | retribution_rates_insert | check: admin OR market_member(market_id)
+  UPDATE | retribution_rates_update | using & check: admin OR market_member(market_id)
+  DELETE | retribution_rates_delete | using: admin OR market_member(market_id)
+  ```
+- Efek: user login yang tidak terhubung ke pasar tersebut tidak bisa lagi mengubah tarifnya.
+  Staf pasar terkait (termasuk petugas) tetap bisa lewat `MarketDashboard → StallsPage`.
+- Opsi lebih ketat (hanya ADMIN/MARKET_HEAD) tersedia bila kebijakan bisnis menghendaki.
+
+**Evidence awal (sebelum perbaikan)** — SELECT/INSERT/UPDATE
 `TO authenticated USING (true) WITH CHECK (true)`.
 
 **Dampak**: setiap user login dapat mengubah tarif retribusi (integritas finansial).

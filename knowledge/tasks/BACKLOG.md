@@ -7,6 +7,7 @@ Setiap item wajib punya evidence sebelum dieksekusi dan hasil verifikasi setelah
 
 > **P0-01 selesai 2026-10-25** (commit `5f69b82`, deploy `4a0e766`) — lihat [DONE.md](./DONE.md).
 > **P0-02 selesai 2026-10-25** (migration `007`) — lihat [DONE.md](./DONE.md).
+> **P0-06 selesai 2026-10-25** (migration `008`) — lihat [DONE.md](./DONE.md).
 
 ### P0-03 · PIN halaman lapak default `1234`
 - **Evidence:** `api/lapak.ts:21-24` — `expectedPin = configuredPin || (!configuredPinHash ? '1234' : '')`.
@@ -15,13 +16,6 @@ Setiap item wajib punya evidence sebelum dieksekusi dan hasil verifikasi setelah
 ### P0-04 · Secret JWT Perumda memakai fallback service-role key
 - **Evidence:** `api/perumda.ts:43-45` (`PERUMDA_JWT_SECRET || SUPABASE_SERVICE_ROLE_KEY`).
 - **DoD:** `PERUMDA_JWT_SECRET` wajib dan berbeda dari service key; startup gagal bila kosong.
-
-### P0-06 · Policy RLS `retribution_rates` permisif
-- **Evidence:** `mobile/assets/sql/retribution_rates_table.sql:29-48` — SELECT/INSERT/UPDATE
-  `TO authenticated USING (true) WITH CHECK (true)`; `add_delete_policy_retribution_rates.sql` menambah DELETE.
-- **Dampak:** siapa pun yang login dapat mengubah tarif retribusi (integritas finansial).
-- **DoD:** tulis hanya `ADMIN` / `MARKET_HEAD` pasar terkait (pola `migrations/004`); SELECT tetap
-  boleh luas bila tarif memang publik internal; verifikasi di DB.
 
 ### P0-05 · Verifikasi status RLS tabel inti di produksi
 - **Konteks:** file SQL RLS tersebar (root, `mobile/migrations/003_rls_policies.sql`, `mobile/assets/sql/*`),

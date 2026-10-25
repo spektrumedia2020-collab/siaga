@@ -16,6 +16,7 @@
 | 4 | Sprint 0 — hapus fallback PIN `1234` & set `PERUMDA_JWT_SECRET` | **BELUM** | Env wajib diset; fallback dihapus; deploy diverifikasi |
 | 5 | Verifikasi build/typecheck web | **SEBAGIAN** | `npm run build` PASS; `tsc --noEmit` masih 40+ error lama |
 | 6 | Deploy + uji P0-01 di produksi | **SELESAI** | Tanpa token 401, origin asing 403; uji role belum |
+| 7 | P0-06 — tutup RLS `retribution_rates` | **SELESAI** | Migration 008 applied; 4 policy terverifikasi |
 
 ## Scope sesi ini (sudah dieksekusi)
 
@@ -33,11 +34,9 @@ Tidak ada gelombang paralel. `open_wave = null`.
 ## Next Session Handoff
 
 1. Baca urutan resume: `state.json` → `index/index-state.json` → `context.md` → `memory.md` → `00_INDEX.md` → berkas ini.
-2. **P0-06**: tutup RLS `retribution_rates` (masih `USING (true)` untuk insert/update) — pola sama
-   dengan migration 007; tulis hanya ADMIN / MARKET_HEAD pasar terkait.
-3. **P0-05**: audit `pg_policies` tabel inti (`markets`, `stalls`, `transactions`, `users`,
-   `stall_owners`, `setoran`, `attendance`).
-4. **P0-03/P0-04**: set `PUBLIC_STALL_PIN_HASH` dan `PERUMDA_JWT_SECRET` di env Vercel.
-5. Opsional: uji produksi dengan akun non-admin (403) dan admin (201).
-6. CI merah karena `tsc --noEmit` (40+ error lama). Perbaiki bertahap; jangan tutup dengan CI merah
+2. **P0-05**: audit `pg_policies` tabel inti (`markets`, `stalls`, `transactions`, `users`,
+   `stall_owners`, `setoran`, `attendance`) — hasil dicatat di `database/SCHEMA.md`.
+3. **P0-03/P0-04**: set `PUBLIC_STALL_PIN_HASH` dan `PERUMDA_JWT_SECRET` di env Vercel.
+4. Opsional: uji produksi dengan akun non-admin (403) dan admin (201).
+5. CI merah karena `tsc --noEmit` (40+ error lama). Perbaiki bertahap; jangan tutup dengan CI merah
    tanpa catatan.

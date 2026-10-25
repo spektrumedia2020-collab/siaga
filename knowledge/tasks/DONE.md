@@ -1,5 +1,15 @@
 # DONE — Arsip Task Selesai
 
+## 2026-10-25 · P0-06 — Tutup RLS `retribution_rates` (migration `008`)
+
+- `migrations/008_secure_retribution_rates_rls.sql` dijalankan di Supabase SQL Editor (PRODUCTION).
+- Fungsi `is_current_user_market_member(bigint)` (SECURITY DEFINER): `user_roles.market_id`,
+  `users.market_id`, atau `markets.id_head_market`.
+- Verifikasi `pg_policies`: 4 rows — SELECT `true` (referensi), INSERT/UPDATE/DELETE
+  `is_current_user_admin_full() OR is_current_user_market_member(market_id)`.
+- Alur `MarketDashboard → StallsPage` untuk staf pasar tetap berjalan; user lintas-pasar tidak bisa
+  lagi mengubah tarif.
+
 ## 2026-10-25 · P0-02 — Tutup RLS `user_roles` (migration `007`)
 
 - `migrations/007_secure_user_roles_rls.sql` dibuat + dijalankan di Supabase SQL Editor

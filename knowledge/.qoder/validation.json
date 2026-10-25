@@ -44,8 +44,8 @@
       "evidence": "migration 007 diterapkan di Supabase SQL Editor. pg_policies user_roles = 4 rows: select_own_or_admin, insert_admin, update_admin, delete_admin; tidak ada USING (true)."
     },
     "rls_retribution_rates": {
-      "status": "FAIL",
-      "evidence": "retribution_rates_table.sql: SELECT/INSERT/UPDATE TO authenticated USING (true) WITH CHECK (true)."
+      "status": "PASS",
+      "evidence": "migration 008 diterapkan. pg_policies retribution_rates = 4 rows; insert/update/delete memakai is_current_user_admin_full() OR is_current_user_market_member(market_id); select tetap true."
     }
   }
 }
