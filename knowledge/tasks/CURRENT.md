@@ -18,7 +18,7 @@
 | 6 | Deploy + uji P0-01 di produksi | **SELESAI** | Tanpa token 401, origin asing 403; uji role belum |
 | 7 | P0-06 — tutup RLS `retribution_rates` | **SELESAI** | Migration 008 applied; 4 policy terverifikasi |
 | 8 | P0-05 — audit RLS produksi | **SELESAI** | 16 tabel / 46 policy; 6 temuan baru (S-11…S-16) |
-| 9 | P0-07 — tutup RLS `users` | **SELESAI** | Migration 009 + trigger; 3 policy terverifikasi |
+| 9 | P0-07 — tutup RLS `users` | **SELESAI** | Migration 009 + trigger; uji eskalasi PASS |
 
 ## Scope sesi ini (sudah dieksekusi)
 

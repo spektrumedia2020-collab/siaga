@@ -45,7 +45,7 @@
     },
     "rls_users": {
       "status": "PASS",
-      "evidence": "migration 009 diterapkan. pg_policies users = 3 policy (select_own_admin_or_market, insert_admin_or_head, update_own_admin_or_head); pg_trigger memuat guard_users_privileged_columns."
+      "evidence": "migration 009 diterapkan. pg_policies users = 3; trigger guard_users_privileged_columns ada. Uji runtime (role authenticated, transaksi rollback): escalation_blocked=true, self_profile_update=true, table_update_priv=true; objek uji sementara tidak tertinggal."
     },
     "rls_user_roles": {
       "status": "PASS",

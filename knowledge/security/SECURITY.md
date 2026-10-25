@@ -216,6 +216,13 @@ Detail tabel & jumlah policy: [database/SCHEMA.md](../database/SCHEMA.md#audit-r
   membuat/mengubah staff pasar-nya (alur `OfficersPage`).
 - Catatan: user non-admin tanpa `market_id` (mis. role global) kini hanya melihat profilnya sendiri.
 
+**Uji runtime (2026-10-25, role `authenticated`, transaksi di-rollback)**
+```
+escalation_blocked=true; self_profile_update=true; table_update_priv=true
+```
+`table_update_priv=true` membuktikan penolakan berasal dari policy/trigger, bukan kurang grant.
+Objek uji sementara sudah hilang (`tmp_fn_left=0`); `users_policies=3`, `guard_trigger=1`.
+
 **Evidence awal (sebelum perbaikan)**
 - `Allow authenticated users to view own profile` — SELECT `true`
 - `Users can view own profile` — SELECT `true`

@@ -9,7 +9,9 @@
   (blok perubahan `auth_uid`, `akses_global`, `id_role`→ADMIN, dan pindah market oleh non-admin).
 - Verifikasi DB: `pg_policies` 3 policy baru; `pg_trigger` memuat trigger penjaga.
 - Alur `OfficersPage` (kepala pasar mengelola staff) tetap didukung.
-- Belum diuji: percobaan eskalasi dari sesi non-admin nyata (butuh kredensial user).
+- **Uji runtime PASS**: sebagai role `authenticated`, update `id_role`→ADMIN ditolak
+  (`escalation_blocked=true`), update profil sendiri diterima (`self_profile_update=true`);
+  transaksi di-rollback, objek uji tidak tertinggal.
 
 ## 2026-10-25 · P0-05 — Audit RLS produksi
 
