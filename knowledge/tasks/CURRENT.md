@@ -22,6 +22,7 @@
 | 10 | P0-08 — tutup RLS operasional | **SELESAI** | Migration 010; uji deny+allow PASS |
 | 11 | P0-09 — aktifkan RLS `stall_categories` | **SELESAI** | Migration 011; anon ditolak, staf diizinkan |
 | 12 | P0-10 — read scope + `setoran` | **SELESAI** | Migration 012; deny/allow PASS |
+| 13 | P0-11 — PII `stall_owners` | **SELESAI** | Migration 013; anon hanya `id,name` |
 
 ## Scope sesi ini (sudah dieksekusi)
 
@@ -39,8 +40,8 @@ Tidak ada gelombang paralel. `open_wave = null`.
 ## Next Session Handoff
 
 1. Baca urutan resume: `state.json` → `index/index-state.json` → `context.md` → `memory.md` → `00_INDEX.md` → berkas ini.
-2. **P0-11**: buat view publik `stall_owners` (id, name) untuk anon; landing page pindah ke view;
-   batasi SELECT tabel ke staf/admin.
-3. **P0-03/P0-04**: set `PUBLIC_STALL_PIN_HASH` dan `PERUMDA_JWT_SECRET` di env Vercel.
-4. CI merah karena `tsc --noEmit` (40+ error lama). Perbaiki bertahap; jangan tutup dengan CI merah
+2. **P0-03/P0-04**: set `PUBLIC_STALL_PIN_HASH` dan `PERUMDA_JWT_SECRET` di env Vercel
+   (env dulu, baru deploy kode fail-closed).
+3. CI merah karena `tsc --noEmit` (40+ error lama). Perbaiki bertahap; jangan tutup dengan CI merah
    tanpa catatan.
+4. P1 berikutnya: P1-05 (typecheck/lint), P1-04 (test), P1-01 (konsolidasi backend).

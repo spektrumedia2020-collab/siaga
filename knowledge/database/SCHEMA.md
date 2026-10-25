@@ -71,7 +71,7 @@ Sumber: query langsung `pg_class` + `pg_policies` di Supabase SQL Editor
 | `roles` | ON | 1 | OK — read everyone |
 | `setoran` | ON | 3 | OK — 012: own/approver pasar (TREASURER/MARKET_HEAD) + market scope |
 | `stall_categories` | ON | 4 | OK — 011: read authenticated; tulis staf/admin |
-| `stall_owners` | ON | 4 | OK — 010: SELECT publik (PII terbuka, S-17); INSERT staf pasar; UPDATE/DELETE via relasi lapak |
+| `stall_owners` | ON | 4 | OK — 010 + 013: anon hanya `id,name`; staff akses penuh; tulis via relasi lapak |
 | `stalls` | ON | 4 | OK — 010: SELECT publik; INSERT/UPDATE/DELETE market-scoped |
 | `transactions` | ON | 3 | OK — 010: SELECT/INSERT/UPDATE market-scoped; DELETE tanpa policy |
 | `user_roles` | ON | 4 | OK — migration 007 |
@@ -88,5 +88,4 @@ Implikasi: fallback mobile ke tabel legacy akan gagal; halaman Theme Management 
 
 | Status | Tabel |
 |---|---|
-| Memadai | `markets`, `market_sectors`, `market_config`, `announcements`, `roles`, `user_roles` (007), `retribution_rates` (008), `users` (009), `transactions`/`stalls`/`stall_owners` (010), `stall_categories` (011), `attendance`/`officers`/`retribution_types`/`setoran` (012) |
-| Sisa | PII `stall_owners` untuk anon (S-17 / P0-11) |
+| Memadai | `markets`, `market_sectors`, `market_config`, `announcements`, `roles`, `user_roles` (007), `retribution_rates` (008), `users` (009), `transactions`/`stalls`/`stall_owners` (010 + 013), `stall_categories` (011), `attendance`/`officers`/`retribution_types`/`setoran` (012) |

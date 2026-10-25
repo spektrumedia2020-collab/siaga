@@ -35,8 +35,9 @@
 - RLS sudah diperketat (2026-10-25): `user_roles` (007), `retribution_rates` (008), `users` (009 —
   own/admin/staf pasar + trigger), `transactions`/`stalls`/`stall_owners` (010 — market-scoped;
   baca publik lapak/owner dipertahankan), `stall_categories` (011 — RLS aktif),
-  `attendance`/`officers`/`retribution_types`/`setoran` (012 — scoped).
-  **Sisa:** PII `stall_owners` untuk anon; `retribution_types` UPDATE/DELETE tanpa policy.
+  `attendance`/`officers`/`retribution_types`/`setoran` (012 — scoped), `stall_owners` anon
+  hanya `id,name` (013).
+  **Sisa:** `retribution_types` UPDATE/DELETE tanpa policy (gap fungsional).
   *(VERIFIED di SQL + pg_policies)*
 
 ## Konstrain

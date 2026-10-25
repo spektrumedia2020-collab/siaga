@@ -13,12 +13,7 @@ Setiap item wajib punya evidence sebelum dieksekusi dan hasil verifikasi setelah
 > **P0-08 selesai 2026-10-25** (migration `010`) — lihat [DONE.md](./DONE.md).
 > **P0-09 selesai 2026-10-25** (migration `011`) — lihat [DONE.md](./DONE.md).
 > **P0-10 selesai 2026-10-25** (migration `012`) — lihat [DONE.md](./DONE.md).
-
-### P0-11 · PII `stall_owners` terbaca anon
-- **Evidence:** `stall_owners_select_public` = true untuk `anon` (dibutuhkan landing page).
-  Kolom `nik`, `phone`, `address` ikut terbaca via PostgREST dengan anon key publik.
-- **DoD:** view `public_stall_owners` (id, name) untuk anon; landing page memakai view;
-  SELECT tabel dibatasi `authenticated` (staf pasar/admin).
+> **P0-11 selesai 2026-10-25** (migration `013`) — lihat [DONE.md](./DONE.md).
 
 ### P0-03 · PIN halaman lapak default `1234`
 - **Evidence:** `api/lapak.ts:21-24` — `expectedPin = configuredPin || (!configuredPinHash ? '1234' : '')`.

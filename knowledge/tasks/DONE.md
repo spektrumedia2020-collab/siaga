@@ -1,5 +1,13 @@
 # DONE — Arsip Task Selesai
 
+## 2026-10-25 · P0-11 — PII `stall_owners` (migration `013`)
+
+- `REVOKE SELECT ON public.stall_owners FROM anon`; `GRANT SELECT (id, name) TO anon`.
+- `authenticated` tetap punya SELECT penuh; tidak perlu perubahan kode/deploy karena
+  `MarketLandingPage` memilih `id, name` eksplisit.
+- Verifikasi privilege: `anon_table_select=false`, `anon_id/name=true`, `anon_nik/phone/address=false`.
+- Uji runtime (rollback): `anon_id_name_rows=2000`, `anon_nik_blocked=true`.
+
 ## 2026-10-25 · P0-10 — Read scope & `setoran` (migration `012`)
 
 - `attendance`: select-wide dihapus → own + admin/kepala pasar.

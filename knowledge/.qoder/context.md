@@ -4,8 +4,8 @@
 
 ## Task aktif
 
-**P0-10 selesai** (migration 012 applied): read absensi/petugas/tipe retribusi dipersempit,
-`setoran` kini market-scoped. Berikutnya: **P0-11** (PII `stall_owners`).
+**P0-11 selesai** (migration 013 applied): anon hanya bisa membaca `id, name` pemilik lapak.
+Berikutnya: **P0-03/P0-04** (wajibkan env rahasia + deploy).
 
 ## Temuan yang memicu task berikutnya
 
@@ -35,9 +35,9 @@ Detail + evidence: [../security/SECURITY.md](../security/SECURITY.md).
 
 ## Next action (spesifik)
 
-1. P0-11: view publik `stall_owners` (id, name); landing page pindah ke view; batasi tabel.
-2. P0-03/P0-04: set `PUBLIC_STALL_PIN_HASH` dan `PERUMDA_JWT_SECRET` di env Vercel.
-3. CI merah: `tsc --noEmit` 40+ error lama — perbaiki bertahap (BACKLOG P1-05).
+1. P0-03/P0-04: set `PUBLIC_STALL_PIN_HASH` dan `PERUMDA_JWT_SECRET` di Vercel (env dulu, lalu deploy).
+2. CI merah: `tsc --noEmit` 40+ error lama — perbaiki bertahap (BACKLOG P1-05).
+3. Setelah P0: P1-04 test otomatis, P1-01 konsolidasi backend.
 
 ## Catatan akses DB
 

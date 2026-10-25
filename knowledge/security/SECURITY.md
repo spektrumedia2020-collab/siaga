@@ -23,7 +23,7 @@ Status konfigurasi DB produksi: **UNKNOWN** (tidak ada akses DB pada sesi ini).
 | S-14 | MEDIUM | `stall_categories` RLS **nonaktif**, 0 policy | **FIXED & TERVERIFIKASI di DB** |
 | S-15 | MEDIUM | Read over-broad: `attendance`, `officers`, `retribution_types` | **FIXED & TERVERIFIKASI di DB** |
 | S-16 | MEDIUM | `setoran` cek peran hanya `users.id_role`, tanpa scope market | **FIXED & TERVERIFIKASI di DB** |
-| S-17 | HIGH | `stall_owners` SELECT publik mengekspos `nik`/`phone`/`address` ke anon | OPEN |
+| S-17 | HIGH | `stall_owners` SELECT publik mengekspos `nik`/`phone`/`address` ke anon | **FIXED & TERVERIFIKASI di DB** |
 
 ---
 
@@ -312,6 +312,19 @@ Namun RLS tidak membatasi kolom, sehingga `nik`, `phone`, `address` juga terbaca
 dengan anon key publik.
 **Perbaikan**: buat view publik `public_stall_owners` (hanya `id, name`) dengan owner definer, ubah
 `MarketLandingPage` memakai view, lalu batasi SELECT tabel ke `authenticated` (staf pasar/admin).
+
+**Resolusi (2026-10-25, migration 013)**: dipilih jalur column-privilege agar **tanpa deploy**:
+- `REVOKE SELECT ON public.stall_owners FROM anon`
+- `GRANT SELECT (id, name) ON public.stall_owners TO anon`
+- `authenticated` tetap punya SELECT penuh.
+`MarketLandingPage` memang memilih `id, name` eksplisit, jadi tidak perlu perubahan kode.
+
+**Verifikasi**:
+```
+anon_table_select=false; anon_id=true; anon_name=true;
+anon_nik=false; anon_phone=false; anon_address=false; auth_table_select=true
+```
+**Uji runtime (rollback)**: `anon_id_name_rows=2000`, `anon_nik_blocked=true`.
 
 ---
 
