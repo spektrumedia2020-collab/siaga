@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "updated_at": "2026-10-25T20:05:00+07:00",
+  "commit": "73c7267e837735ef082dc50ce653bcb51833f6f0",
+  "checks": {
+    "typecheck": {
+      "status": "NOT_RUN",
+      "evidence": "Tidak dijalankan pada sesi ini (permintaan user dihentikan)."
+    },
+    "build_web": {
+      "status": "NOT_RUN",
+      "evidence": "Tidak dijalankan pada sesi ini."
+    },
+    "tests": {
+      "status": "NOT_FOUND",
+      "evidence": "Tidak ada *.test.* / *.spec.* di src/ dan api/ (tree source)."
+    },
+    "flutter_analyze": {
+      "status": "UNKNOWN",
+      "evidence": "Belum dijalankan. TODO_FIXES klaim 0 error per 23 Agu 2026 — tidak diverifikasi ulang."
+    },
+    "secrets_in_git": {
+      "status": "PASS",
+      "evidence": "git ls-files hanya memuat .env.template dan mobile/.env.example; .env/.env.local di .gitignore."
+    },
+    "api_auth_coverage": {
+      "status": "FAIL",
+      "evidence": "api/users.ts tidak memeriksa Authorization; GET/POST/DELETE dieksekusi dengan service role."
+    },
+    "rls_user_roles": {
+      "status": "FAIL",
+      "evidence": "create_user_roles_table.sql: SELECT/INSERT/UPDATE/DELETE TO authenticated USING (true)."
+    },
+    "rls_retribution_rates": {
+      "status": "FAIL",
+      "evidence": "retribution_rates_table.sql: SELECT/INSERT/UPDATE TO authenticated USING (true) WITH CHECK (true)."
+    }
+  }
+}

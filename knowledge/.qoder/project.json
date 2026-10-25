@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "project": "SIAGA",
+  "description": "Sistem Informasi Manajemen Pasar — retribusi pasar (web admin/petugas + mobile petugas + Supabase)",
+  "detected": {
+    "web": {
+      "framework": "React 19",
+      "language": "TypeScript",
+      "bundler": "Vite 8",
+      "routing": "manual hash router (src/App.tsx) + path publik",
+      "state": "zustand"
+    },
+    "backend_express": {
+      "framework": "Express 4",
+      "language": "TypeScript (tsx)",
+      "auth": "Supabase JWT via service client",
+      "status": "aktif hanya pada npm run server; tidak dibangun vercel.json"
+    },
+    "backend_vercel": {
+      "runtime": "@vercel/node",
+      "functions": ["api/users.ts", "api/lapak.ts", "api/perumda.ts"],
+      "auth": "per-endpoint (users: TIDAK ADA; lapak: PIN; perumda: JWT)"
+    },
+    "mobile": {
+      "framework": "Flutter (Dart SDK ^3.12)",
+      "state": "flutter_riverpod",
+      "routing": "go_router",
+      "offline": "sqflite + sync service",
+      "target": "petugas lapangan (siaga_officer)"
+    },
+    "database": {
+      "engine": "Supabase Postgres",
+      "auth": "Supabase Auth",
+      "storage": "Supabase Storage",
+      "table_count_referenced": 19
+    }
+  },
+  "deployment": {
+    "web": "Vercel (static dist + functions)",
+    "mobile": "build lokal (APK)",
+    "database": "Supabase managed"
+  },
+  "scanned_at": "2026-10-25T20:05:00+07:00",
+  "commit": "73c7267e837735ef082dc50ce653bcb51833f6f0"
+}

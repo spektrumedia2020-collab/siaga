@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "mode": "UNAVAILABLE",
+  "status": "UNAVAILABLE",
+  "indexed_commit": "73c7267e837735ef082dc50ce653bcb51833f6f0",
+  "last_index": "",
+  "last_validation": "2026-10-25T20:05:00+07:00",
+  "validation": {
+    "json_valid": true,
+    "path_canonical": "knowledge/.qoder/index/index-state.json",
+    "reason": "Tidak ada SQLite code.db dan INDEX belum dijalankan pada sesi ini."
+  },
+  "fallback": {
+    "strategy": "LIGHTWEIGHT_GREP",
+    "note": "Discovery memakai Grep/Glob pada src, api, mobile/lib, *.sql (AGY-QODER §4.2 / §0.8)."
+  },
+  "scope_not_indexed": ["src/**", "api/**", "mobile/lib/**", "migrations/**", "*.sql"],
+  "files_indexed": 0,
+  "relationships_indexed": 0
+}
