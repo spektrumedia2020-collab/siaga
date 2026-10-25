@@ -20,9 +20,9 @@ Setiap item wajib punya evidence sebelum dieksekusi dan hasil verifikasi setelah
 - **Blocker:** `PUBLIC_STALL_PIN_HASH` belum diset di Vercel (produksi masih menerima `1234`).
 - **DoD:** env diset → push → uji `pin=1234` = 401, PIN benar = 404/200.
 
-### P0-04 · Secret JWT Perumda memakai fallback service-role key
-- **Status:** kode fail-closed selesai (fallback dihapus, wajib >=32 char & != service key).
-- **Sisa:** set `PERUMDA_JWT_SECRET` di Vercel sebelum deploy; uji login dashboard Perumda.
+### P0-04 · ~~Secret JWT Perumda~~ — **DIHAPUS 2026-10-26**
+- Fitur `/perumda` (halaman + API + route Vercel) dihapus; ADMIN mewakili Perumda.
+- Tidak ada env Perumda yang perlu dikelola.
 
 ### P0-12 · Kredensial akun demo (termasuk ADMIN) di halaman publik
 - **Status:** kode dibersihkan (`JuriDocumentationPage` + tombol akun test `Auth.tsx`); bundle bersih.

@@ -6,11 +6,11 @@
 ## Arsitektur
 
 - **Supabase-first**: web & mobile mengakses Supabase langsung dengan anon key + RLS.
-  Express/Vercel hanya untuk operasi yang butuh service role (manajemen user, dashboard Perumda, halaman lapak publik).
+  Express/Vercel hanya untuk operasi yang butuh service role (manajemen user, halaman lapak publik).
 - Dua lapisan backend hidup bersamaan: Express (`src/server.ts`, 5 router) dan Vercel functions (`api/*.ts`).
   `vercel.json` **hanya** membangun `api/*`; Express tidak ikut deploy Vercel. *(VERIFIED)*
 - Web memakai hash router manual di `src/App.tsx`; route publik berbasis pathname:
-  `/@slug`, `/lapak/:marketId/:kode`, `/juri`, `/docs`, `/perumda`. *(VERIFIED)*
+  `/@slug`, `/lapak/:marketId/:kode`, `/juri`, `/docs`. *(VERIFIED)*
 
 ## Auth & peran
 
@@ -27,7 +27,7 @@
 ## Business rules (dari struktur DB & UI)
 
 - Retribusi: tarif per pasar/kategori di `retribution_rates`, jenis di `retribution_types`. *(INFERRED dari pemakaian kode)*
-- Transaksi retribusi mencatat `market_id`, `stall_id`, `amount`, `status` (`paid` dianggap lunas). *(VERIFIED dari `api/perumda.ts`)*
+- Transaksi retribusi mencatat `market_id`, `stall_id`, `amount`, `status` (`paid` dianggap lunas). *(VERIFIED dari kode web/mobile)*
 - Setoran petugas punya alur approval: `pending_treasurer` → `pending_head` → `approved`/`rejected`. *(VERIFIED dari `mobile/migrations/001_init.sql`)*
 - Absensi petugas menyimpan check-in/out + data lokasi (geolocator). *(VERIFIED dari pubspec + tabel attendance)*
 - Halaman lapak publik diakses dengan PIN 4 digit (env `PUBLIC_STALL_PIN`/`_HASH`). *(VERIFIED)*

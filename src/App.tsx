@@ -9,11 +9,10 @@ import { MarketEditPage } from './pages/MarketEditPage'
 import { MarketLandingPage } from './pages/MarketLandingPage'
 import { JuriDocumentationPage } from './pages/JuriDocumentationPage'
 import { PublicStallPage } from './pages/PublicStallPage'
-import { PerumdaPage } from './pages/PerumdaPage'
 import './App.css'
 import './styles/layout.css'
 
-type Route = 'login' | 'superadmin' | 'market' | 'market-edit' | 'market-landing' | 'public-stall' | 'juri-docs' | 'perumda'
+type Route = 'login' | 'superadmin' | 'market' | 'market-edit' | 'market-landing' | 'public-stall' | 'juri-docs'
 
 function App() {
   const [user, setUser] = useState<any>(null)
@@ -153,10 +152,6 @@ function App() {
       return 'juri-docs'
     }
 
-    if (window.location.pathname === '/perumda' || window.location.pathname === '/perumda/') {
-      return 'perumda'
-    }
-    
     if (!user) return 'login'
     const hash = window.location.hash.slice(1)
     const marketRoles = ['MARKET_HEAD', 'MARKET_ADMIN', 'ADMIN_PASAR', 'PASAR_ADMIN', 'OFFICER']
@@ -182,10 +177,6 @@ function App() {
   if (currentRoute === 'public-stall') {
     const pathParts = window.location.pathname.split('/').filter(Boolean)
     return <PublicStallPage marketId={pathParts[1]} stallCode={decodeURIComponent(pathParts[2])} />
-  }
-
-  if (currentRoute === 'perumda') {
-    return <PerumdaPage />
   }
 
   // Market Edit Page

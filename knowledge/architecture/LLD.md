@@ -13,7 +13,6 @@ Route ditentukan di `src/App.tsx:163-200`:
 | pathname `/@<slug>` | `market-landing` | `MarketLandingPage` | publik |
 | pathname `/lapak/<marketId>/<kode>` | `public-stall` | `PublicStallPage` | PIN (API) |
 | pathname `/juri` atau `/docs` | `juri-docs` | `JuriDocumentationPage` | publik |
-| pathname `/perumda` | `perumda` | `PerumdaPage` | PIN 6 digit → JWT (API) |
 | belum login | `login` | `Auth` | — |
 | role pasar (HEAD/ADMIN_PASAR/TREASURER/OFFICER) | `market` | `MarketDashboard` | role DB |
 | hash `superadmin/market-edit/<id>` | `market-edit` | `MarketEditPage` | `ADMIN` |
@@ -81,11 +80,10 @@ Catatan: `cors` melempar `Error` untuk origin tak dikenal → jatuh ke error han
 
 | Fungsi | Method | Otorisasi | Client |
 |---|---|---|---|
-| `users.ts` | GET/POST/DELETE | **tidak ada** | service role |
-| `lapak.ts` | POST | PIN 4 digit (`PUBLIC_STALL_PIN`/`_HASH`, default `1234`) | service role |
-| `perumda.ts` | POST login PIN 6 digit → JWT 1 jam; GET agregat | JWT (`PERUMDA_JWT_SECRET`) | service role |
+| `users.ts` | GET/POST/DELETE | JWT + peran ADMIN | service role |
+| `lapak.ts` | POST | PIN 4 digit (fail-closed bila env kosong) | service role |
 
-Semua mengirim header `Access-Control-Allow-Origin: *`.
+`users.ts` memakai CORS allowlist; `lapak.ts` masih `Access-Control-Allow-Origin: *`.
 
 ## Mobile (`mobile/lib`)
 

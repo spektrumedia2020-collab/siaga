@@ -33,7 +33,7 @@ lihat [architecture/LLD.md](./architecture/LLD.md#role-resolution).
 
 ### Web (`src/`)
 - React 19, TypeScript 5.6, Vite 8, zustand, recharts, react-qr-code, xlsx, papaparse
-- Routing: hash-based manual di `src/App.tsx` + path publik (`/@slug`, `/lapak/:id/:kode`, `/juri`, `/docs`, `/perumda`)
+- Routing: hash-based manual di `src/App.tsx` + path publik (`/@slug`, `/lapak/:id/:kode`, `/juri`, `/docs`)
 - Data akses: `@supabase/supabase-js` dengan anon key + RLS (`src/lib/supabase.ts`, `src/lib/api.ts`)
 
 ### Backend Express (`src/server.ts`, `src/routes/*`)
@@ -42,7 +42,7 @@ lihat [architecture/LLD.md](./architecture/LLD.md#role-resolution).
 - Dipakai saat menjalankan `npm run server` (port 3001); **tidak** dibangun oleh `vercel.json`
 
 ### Vercel Functions (`api/`)
-- `api/users.ts`, `api/lapak.ts`, `api/perumda.ts` — memakai service-role key
+- `api/users.ts`, `api/lapak.ts` — memakai service-role key
 - Status: **duplikasi lapisan backend** (konflik dengan rencana "hapus api/" di AUDIT_REPORT)
 
 ### Mobile (`mobile/`)
@@ -74,8 +74,7 @@ Tidak ada berkas env yang ter-track git (VERIFIED: `git ls-files` hanya `.env.te
 | `VITE_SUPABASE_STORAGE_BUCKET` | web | tidak (default `data-siaga`) |
 | `VITE_GOOGLE_CLIENT_ID`, `VITE_GOOGLE_API_KEY` | web | untuk export Google Sheets |
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | server/function | ya (rahasia) |
-| `PERUMDA_JWT_SECRET` | api/perumda | tidak (fallback ke service key — lihat SECURITY S-04) |
-| `PUBLIC_STALL_PIN` / `PUBLIC_STALL_PIN_HASH` | api/lapak | tidak (fallback `1234` — SECURITY S-03) |
+| `PUBLIC_STALL_PIN` / `PUBLIC_STALL_PIN_HASH` | api/lapak | ya (fail-closed bila kosong) |
 | `FRONTEND_URL` | Express CORS | produksi |
 
 ## Konvensi
@@ -90,7 +89,7 @@ Tidak ada berkas env yang ter-track git (VERIFIED: `git ls-files` hanya `.env.te
 
 ```
 src/            web React (components, pages, routes, lib, middleware)
-api/            Vercel serverless functions (users, lapak, perumda)
+api/            Vercel serverless functions (users, lapak)
 mobile/         Flutter app petugas + SQL assets + migrations
 migrations/     3 migrasi SQL terbaru (004–006)
 public/         aset statis web

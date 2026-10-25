@@ -50,12 +50,6 @@ Tanpa token → 401; peran tidak memenuhi → 403; origin di luar allowlist → 
 |---|---|---|---|
 | POST | PIN 4 digit | `{marketId, code, pin}` | Info pasar + lapak (+ data terkait) |
 
-### `/api/perumda` → `api/perumda.ts`
-| Method | Auth | Body/Query | Efek |
-|---|---|---|---|
-| POST | PIN 6 digit (`PERUMDA_PIN`/`_HASH`) | `{pin}` | Terbitkan JWT 1 jam (`scope: perumda-report`) |
-| GET | `Bearer` JWT | `?from=YYYY-MM-DD&to=YYYY-MM-DD` | Agregat laporan: revenue, tren harian, per pasar, setoran |
-
 ## 3. Route publik web (SPA, bukan API)
 
 | Path | Komponen | Akses |
@@ -63,7 +57,6 @@ Tanpa token → 401; peran tidak memenuhi → 403; origin di luar allowlist → 
 | `/@<slug>` | `MarketLandingPage` | publik (data pasar via anon + RLS) |
 | `/lapak/<marketId>/<kode>` | `PublicStallPage` | PIN via `/api/lapak` |
 | `/juri`, `/docs` | `JuriDocumentationPage` | publik |
-| `/perumda` | `PerumdaPage` | PIN via `/api/perumda` |
 | lainnya | login/dashboard | Supabase Auth |
 
 ## 4. Supabase (akses langsung klien)
@@ -77,4 +70,3 @@ CRUD pasar/lapak/transaksi/retribusi.
 - `transactions.amount` (bukan `total_amount`) — mobile sudah diseragamkan.
 - `setoran.status` ∈ {`pending_treasurer`,`pending_head`,`approved`,`rejected`}.
 - `users.auth_uid` wajib terisi agar role resolution & RLS bekerja.
-- Format tanggal laporan Perumda: `YYYY-MM-DD`, `from <= to`.

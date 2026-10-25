@@ -1,47 +1,39 @@
-# Context Aktif (L0) — 2026-10-25
+# Context Aktif (L0) — 2026-10-26
 
-**Sesi:** SESSION-2026-10-25-1 · **Commit:** `73c7267` · **Branch:** `main` · **Autonomy:** L1
+**Sesi:** SESSION-2026-10-25-1 · **Commit terakhir:** `6177e11` · **Branch:** `main` · **Autonomy:** L1
 
 ## Task aktif
 
-**P1-05 selesai**: `npx tsc --noEmit` 0 error, `npm run build` PASS; script `typecheck` ditambah.
-Deploy tetap tertunda: set `PUBLIC_STALL_PIN_HASH` + `PERUMDA_JWT_SECRET` di Vercel, lalu push.
+Semua perbaikan kode selesai: typecheck 0 error, build PASS, RLS 007–015 live, fitur Perumda dihapus.
+**Satu-satunya blocker deploy:** `PUBLIC_STALL_PIN_HASH` belum diset di Vercel (push 10 commit ditunda).
 
-## Temuan yang memicu task berikutnya
+## Status keamanan ringkas
 
-| ID | Ringkas | Severity |
-|---|---|---|
-| S-01 | `api/users.ts` tanpa autentikasi (list/create/delete user, service role, CORS `*`) | CRITICAL |
-| S-02 | Policy RLS `user_roles` memakai `USING (true)` untuk semua operasi | HIGH |
-| S-03 | `api/lapak.ts` fallback PIN `1234` bila env tidak diset | MEDIUM |
-| S-04 | `api/perumda.ts` memakai service-role key sebagai fallback secret JWT | MEDIUM |
+- S-01…S-17: **fixed/verified** (detail di [SECURITY.md](../security/SECURITY.md)).
+- S-18: kode bersih (tanpa kredensial di bundle); rotasi password **dipilih tidak dilakukan** user.
+- S-04: **removed** — fitur Perumda dihapus (admin = Perumda).
+- S-03: kode fail-closed; menunggu env + deploy.
 
-Detail + evidence: [../security/SECURITY.md](../security/SECURITY.md).
+## Data produksi
 
-## Berkas yang sudah dibaca (bukti)
+Wiped 2026-10-26: semua tabel operasional 0; tersisa 1 admin, 4 roles, 7 retribution_types,
+5 stall_categories; storage 0 objek.
 
-`package.json`, `vercel.json`, `src/App.tsx`, `src/server.ts`, `src/middleware/auth.ts`,
-`src/lib/supabase.ts`, `src/lib/api.ts`, `src/lib/roleUtils.ts`, `src/components/Auth.tsx`,
-`src/components/ProtectedRoute.tsx`, `src/pages/UserManagement.tsx` (potongan),
-`api/users.ts`, `api/perumda.ts` (potongan), `api/lapak.ts` (potongan),
-`create_user_roles_table.sql`, `mobile/migrations/001_init.sql`, `mobile/pubspec.yaml`,
-`.env.template`, `.gitignore`, `TODO_FIXES.md` (potongan), `AUDIT_REPORT.md` (potongan).
+## Berkas kunci
 
-## Keputusan sesi
-
-1. Knowledge root dibuat di `knowledge/` saja; dokumen root repo tidak dipindah/diubah.
-2. Code index **tidak** dibangun (butuh SQLite); status `UNAVAILABLE` + fallback grep dicatat.
-3. Validasi build/typecheck **belum dijalankan** (tidak diminta/ dihentikan user) → status `unknown`.
+`api/users.ts`, `api/lapak.ts`, `src/App.tsx`, `src/lib/roleUtils.ts`,
+`src/pages/SuperAdminDashboardImproved.tsx` (tab Setoran), `migrations/007–015`.
 
 ## Next action (spesifik)
 
-1. Set `PUBLIC_STALL_PIN_HASH` + `PERUMDA_JWT_SECRET` (>=32 char) di Vercel.
-2. Rotasi password `admin@siaga.id`, `kepala@siaga.id`, `petugas@siaga.id`.
-3. Push 6 commit → deploy → uji: `pin=1234` 401, Perumda login, head read-only, tanpa menu bendahara.
-4. CI merah: `tsc --noEmit` 40+ error lama — perbaiki bertahap (BACKLOG P1-05).
+1. Set `PUBLIC_STALL_PIN_HASH` di Vercel (Production).
+2. Push 10 commit → Vercel rebuild → verifikasi: `pin=1234` 401, login admin, halaman lapak normal,
+   `/juri` tanpa kredensial, `/api/perumda` 404.
+3. Cek CI web (`gh run list`) — seharusnya hijau.
+4. Opsional: siapkan data awal; P1-04 test otomatis.
 
 ## Catatan akses DB
 
 Host direct `db.<ref>.supabase.co` hanya IPv6 dan tidak terjangkau dari mesin ini
-(`getaddrinfo ENOTFOUND`). Eksekusi SQL dilakukan lewat **Supabase SQL Editor** di browser
-(sesi login user), atau butuh connection string **pooler IPv4**.
+(`getaddrinfo ENOTFOUND`). Eksekusi SQL lewat **Supabase SQL Editor** di browser (sesi login user),
+atau butuh connection string **pooler IPv4**.

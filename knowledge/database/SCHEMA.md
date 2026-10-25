@@ -37,8 +37,8 @@ dari query kode. Status terpasang di DB produksi: **UNKNOWN** (tidak ada akses D
 | Tabel | Kolom terverifikasi dari query | Dipakai di |
 |---|---|---|
 | `markets` | `id`, `code`, `name`, `status`, `city`, `address`, `street`, `street_number`, `kecamatan`, `province`, `postal_code`, `photo_url`, `head_photo_url`, `logo_url`, `id_head_market`, `slug` (untuk `/@slug`) | `api/lapak.ts`, `roleUtils.ts`, migration 004/005 |
-| `stalls` | `id`, `market_id`, `code`, `number`, `qr_code`, `status`, `sector_id`, `owner_id`, `category_id` | `api/lapak.ts`, `api/perumda.ts`, web |
-| `transactions` | `id`, `market_id`, `stall_id`, `amount`, `status` (`paid` = lunas), `transaction_date`, `created_at` | `api/perumda.ts`, mobile |
+| `stalls` | `id`, `market_id`, `code`, `number`, `qr_code`, `status`, `sector_id`, `owner_id`, `category_id` | `api/lapak.ts`, web |
+| `transactions` | `id`, `market_id`, `stall_id`, `amount`, `status` (`paid` = lunas), `transaction_date`, `created_at` | web, mobile |
 | `users` | `id_user`, `nama`, `username`, `email`, `no_hp`, `status`, `akses_global`, `id_role`, `market_id`, `auth_uid`, `avatar_url` | `api/users.ts`, `roleUtils.ts`, SQL |
 | `stall_owners` | `id`, `name`, `phone` (`INFERRED`) | `OwnersPage`, `StallsPage` |
 | `retribution_types` | `id`, `name` (`INFERRED`) | master tarif |

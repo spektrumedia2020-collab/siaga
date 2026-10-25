@@ -1,27 +1,30 @@
 {
   "version": 1,
   "session_id": "SESSION-2026-10-25-1",
-  "updated_at": "2026-10-25T20:05:00+07:00",
-  "current_task": "P0-02 RLS user_roles + deploy/uji P0-01",
+  "updated_at": "2026-10-26T02:20:00+07:00",
+  "current_task": "Deploy menunggu PUBLIC_STALL_PIN_HASH di Vercel",
   "active_files": [
     "api/users.ts",
-    "src/pages/UserManagement.tsx",
-    "create_user_roles_table.sql",
     "api/lapak.ts",
-    "api/perumda.ts",
-    "src/middleware/auth.ts"
+    "src/lib/roleUtils.ts",
+    "src/pages/SuperAdminDashboardImproved.tsx",
+    "migrations/014_admin_only_market_management.sql",
+    "migrations/015_remove_treasurer_role.sql"
   ],
   "active_modules": ["backend-api", "web-frontend", "database"],
   "active_decisions": [
     "knowledge root tunggal di knowledge/",
     "code index UNAVAILABLE + fallback grep",
-    "P0-01: auth ADMIN + CORS allowlist di api/users.ts"
+    "MARKET_HEAD read-only; ADMIN satu-satunya penulis",
+    "TREASURER & impersonation dihapus",
+    "Fitur /perumda dihapus (admin = Perumda)"
   ],
   "validation": {
-    "typecheck": "not_clean_pre_existing",
-    "build": "not_run",
+    "typecheck": "pass",
+    "build": "pass",
     "tests": "not_found",
-    "smoke_api_users": "pass"
+    "smoke_api_users": "pass",
+    "smoke_api_lapak_pin": "pass"
   },
-  "next_action": "Deploy 5f69b82, uji 401/403/201, lalu P0-02 (policy user_roles)"
+  "next_action": "Set PUBLIC_STALL_PIN_HASH, push 10 commit, verifikasi produksi."
 }

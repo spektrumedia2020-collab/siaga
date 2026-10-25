@@ -15,7 +15,7 @@ Status: **VERIFIED** (kode + konfigurasi deploy) · 2026-10-25
    │  SUPABASE                  │   │  VERCEL FUNCTIONS (api/)       │
    │  · Auth (JWT)              │◀──│  · users.ts   (service role)   │
    │  · Postgres + RLS          │   │  · lapak.ts   (service role)   │
-   │  · Storage                 │   │  · perumda.ts (service role)   │
+   │  · Storage                 │   │                                │
    └───────────▲────────────────┘   └────────────────────────────────┘
                │ anon key + JWT
                │
@@ -32,7 +32,7 @@ Status: **VERIFIED** (kode + konfigurasi deploy) · 2026-10-25
 |---|---|---|
 | Web SPA | UI admin/petugas, halaman publik, export | Akses data lewat Supabase langsung + 3 endpoint |
 | Supabase | Source of truth data, auth, storage, RLS | Skema dikelola via SQL manual |
-| Vercel functions | Operasi privileged (user admin, lapak publik, dashboard Perumda) | Service role, wajib otorisasi sendiri |
+| Vercel functions | Operasi privileged (user admin, lapak publik) | Service role, wajib otorisasi sendiri |
 | Express | Alternatif backend CRUD lengkap (markets/officers/stalls/transactions/users) | Hanya untuk `npm run server`; tidak deploy |
 | Mobile | Transaksi lapangan, absensi, setoran, struk, offline | Supabase langsung + sqflite |
 

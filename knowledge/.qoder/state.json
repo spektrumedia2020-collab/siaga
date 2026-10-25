@@ -3,7 +3,7 @@
   "project": "SIAGA",
   "project_root": "D:/_siaga",
   "branch": "main",
-  "commit": "36cfc92",
+  "commit": "6177e11",
   "status": "WIP",
   "autonomy": "L1",
   "runtime": {
@@ -32,18 +32,18 @@
   "memory_version": 1,
   "context_version": 1,
   "skill_registry_version": 1,
-  "current_task": "Deploy (set PUBLIC_STALL_PIN_HASH + PERUMDA_JWT_SECRET di Vercel)",
-  "last_task": "P1-05 — typecheck 0 error (tsconfig + cleanup)",
+  "current_task": "Deploy (set PUBLIC_STALL_PIN_HASH di Vercel)",
+  "last_task": "Hapus fitur Perumda (halaman, API, route, env)",
   "last_session_id": "SESSION-2026-10-25-1",
   "last_scan": "2026-10-25T20:05:00+07:00",
   "last_index": "",
-  "last_updated": "2026-10-26T02:00:00+07:00",
-  "last_validation": "2026-10-26T02:00:00+07:00",
+  "last_updated": "2026-10-26T02:20:00+07:00",
+  "last_validation": "2026-10-26T02:20:00+07:00",
   "last_test_status": "partial",
   "last_command": "TEST",
   "last_command_status": "COMPLETED",
   "open_wave": null,
   "dirty": true,
   "drift_detected": true,
-  "next_step": "Set PUBLIC_STALL_PIN_HASH + PERUMDA_JWT_SECRET; push 7 commits; verify prod empty state & no credentials page."
+  "next_step": "Set PUBLIC_STALL_PIN_HASH di Vercel; push 10 commits; verify prod (pin 401, /api/perumda 404, /juri no creds)."
 }

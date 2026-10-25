@@ -18,8 +18,8 @@
     },
     "backend_vercel": {
       "runtime": "@vercel/node",
-      "functions": ["api/users.ts", "api/lapak.ts", "api/perumda.ts"],
-      "auth": "per-endpoint (users: TIDAK ADA; lapak: PIN; perumda: JWT)"
+      "functions": ["api/users.ts", "api/lapak.ts"],
+      "auth": "per-endpoint (users: JWT + ADMIN; lapak: PIN)"
     },
     "mobile": {
       "framework": "Flutter (Dart SDK ^3.12)",

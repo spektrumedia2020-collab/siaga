@@ -12,7 +12,6 @@ Status: **VERIFIED** (kode) · 2026-10-25
 | Petugas (`OFFICER`) | Mobile (utama), Web | Catat transaksi retribusi, absensi, setoran |
 | Pedagang / publik | Web publik | Lihat info lapak via `/lapak/:marketId/:kode` (PIN) dan landing pasar `/@slug` |
 | Juri / reviewer | Web publik | `/juri`, `/docs` (dokumentasi demo, tanpa auth) |
-| Perumda | Web publik `/perumda` | Dashboard agregat (PIN 6 digit → JWT 1 jam) |
 
 ## Sistem eksternal
 
@@ -35,7 +34,7 @@ Status: **VERIFIED** (kode) · 2026-10-25
 
 - Kunci `VITE_*` bersifat publik; tidak boleh ada service key di sana (terverifikasi: tidak ada).
 - `api/*.ts` berjalan dengan **service role** → setiap fungsi wajib melakukan otorisasinya sendiri.
-  Saat ini hanya `lapak` (PIN) dan `perumda` (PIN+JWT) yang melakukannya; `users` tidak.
+  Saat ini: `users` (JWT + peran ADMIN) dan `lapak` (PIN).
 
 ## Asumsi yang belum diverifikasi
 

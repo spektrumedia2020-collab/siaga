@@ -72,22 +72,13 @@ GET /lapak/<marketId>/<kode> → PublicStallPage → POST /api/lapak {marketId, 
   → tampilkan status & riwayat lapak
 ```
 
-## 8. Dashboard Perumda
-
-```
-POST /api/perumda {pin} → JWT 1 jam (scope perumda-report)
-GET  /api/perumda?from&to (Bearer JWT)
-  → agregasi: markets, stalls, transactions (paid), setoran
-  → tren harian, total revenue, per pasar (bandingkan periode sebelumnya)
-```
-
-## 9. Export laporan
+## 8. Export laporan
 
 ```
 exportUtils → papaparse/xlsx (lokal) atau Google Sheets API (OAuth, VITE_GOOGLE_CLIENT_ID)
 ```
 
-## 10. Upload gambar
+## 9. Upload gambar
 
 ```
 imageUtils (kompres) → supabase.storage.from(bucket) → public URL disimpan di kolom *_url

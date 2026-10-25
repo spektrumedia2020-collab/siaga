@@ -1,5 +1,14 @@
 # DONE — Arsip Task Selesai
 
+## 2026-10-26 · Hapus fitur Perumda
+
+- Alasan: peran ADMIN sudah mewakili Perumda.
+- Dihapus: `src/pages/PerumdaPage.tsx` + CSS, `api/perumda.ts`, `PERUMDA_SETUP.md`,
+  route `/perumda` di `App.tsx`, build+route di `vercel.json`, semua referensi env `PERUMDA_*`.
+- Verifikasi: `grep -i perumda` di `src/`, `api/`, `vercel.json`, `.env.template` = kosong;
+  `npx tsc --noEmit` 0 error; `npm run build` PASS.
+- Deploy: tertunda bersama perubahan lain (menunggu `PUBLIC_STALL_PIN_HASH`).
+
 ## 2026-10-26 · P1-05 — Typecheck hijau (0 error)
 
 - `tsconfig.json`: `references` (dist-server) dihapus; `tsconfig.node.json` jadi `noEmit`.

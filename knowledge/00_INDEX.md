@@ -54,7 +54,7 @@
   klaim "semua route diamankan" tidak berlaku untuk `api/users.ts` (lihat SECURITY S-01).
 - `ARCHITECTURE_IMPROVEMENT_PLAN.md`, `ARCHITECTURE_REVIEW_COMPLETE.md`
 - `EXPORT_FEATURE.md`, `GOOGLE_SHEETS_SETUP.md`, `SETUP_STORAGE_BUCKET.md`, `URL_ROUTING.md`
-- `DEPLOYMENT_GUIDE.md`, `DEVELOPMENT.md`, `PERUMDA_SETUP.md`
+- `DEPLOYMENT_GUIDE.md`, `DEVELOPMENT.md`
 
 ## Legenda status bukti
 
