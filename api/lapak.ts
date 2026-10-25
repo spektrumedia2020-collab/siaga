@@ -1,8 +1,16 @@
 import { createClient } from '@supabase/supabase-js'
+import { timingSafeEqual } from 'node:crypto'
 import bcrypt from 'bcryptjs'
 
 function cleanEnvironmentValue(value?: string) {
   return String(value || '').trim().replace(/^['"]|['"]$/g, '')
+}
+
+function safeEqual(a: string, b: string) {
+  const left = Buffer.from(a)
+  const right = Buffer.from(b)
+  if (left.length !== right.length) return false
+  return timingSafeEqual(left, right)
 }
 
 export default async function handler(req: any, res: any) {
@@ -19,11 +27,22 @@ export default async function handler(req: any, res: any) {
   const pin = String(req.body?.pin || '')
   const configuredPin = cleanEnvironmentValue(process.env.PUBLIC_STALL_PIN)
   const configuredPinHash = cleanEnvironmentValue(process.env.PUBLIC_STALL_PIN_HASH)
-  const expectedPin = configuredPin || (!configuredPinHash ? '1234' : '')
-  const validPin = expectedPin
-    ? pin === expectedPin
+
+  // Fail-closed: tanpa PIN yang dikonfigurasi, endpoint tidak melayani.
+  if (!configuredPin && !configuredPinHash) {
+    console.error('PUBLIC_STALL_PIN / PUBLIC_STALL_PIN_HASH belum dikonfigurasi')
+    return res.status(503).json({ error: 'PIN lapak belum dikonfigurasi' })
+  }
+
+  if (!/^\d{4}$/.test(pin)) {
+    return res.status(401).json({ error: 'PIN tidak valid' })
+  }
+
+  const validPin = configuredPin
+    ? safeEqual(pin, configuredPin)
     : await bcrypt.compare(pin, configuredPinHash)
-  if (!/^\d{4}$/.test(pin) || !validPin) return res.status(401).json({ error: 'PIN tidak valid' })
+
+  if (!validPin) return res.status(401).json({ error: 'PIN tidak valid' })
   if (!Number.isInteger(marketId) || marketId <= 0 || !stallCode) {
     return res.status(400).json({ error: 'Market ID dan kode lapak wajib diisi' })
   }
