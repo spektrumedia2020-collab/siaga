@@ -13,7 +13,8 @@
 | 1 | Inisialisasi knowledge root (`knowledge/`) | **SELESAI** | Artefak wajib §2.2 ada dengan isi nyata |
 | 2 | Sprint 0 — amankan `api/users.ts` | **SELESAI** | Auth ADMIN + CORS; deploy `4a0e766`; produksi 401/403 terverifikasi |
 | 3 | Sprint 0 — tinjau policy `user_roles` | **SELESAI** | Migration 007 applied; 4 policy; tanpa `USING (true)` |
-| 4 | Sprint 0 — hapus fallback PIN `1234` & set `PERUMDA_JWT_SECRET` | **SEBAGIAN** | Kode PIN fail-closed selesai (`6c8ea42`); env + deploy belum |
+| 4 | Sprint 0 — hapus fallback PIN `1234` & set `PERUMDA_JWT_SECRET` | **SEBAGIAN** | Kode PIN & Perumda fail-closed selesai; env + deploy belum |
+| 18 | P0-04 — Perumda secret fail-closed | **SELESAI (kode)** | Fallback dihapus; uji lokal PASS; env + deploy belum |
 | 14 | P0-03 — env PIN lapak + deploy | **BELUM** | `PUBLIC_STALL_PIN_HASH` diset; produksi `1234` = 401 |
 | 15 | Role: MARKET_HEAD read-only + hapus impersonation | **SELESAI (DB+kode)** | Migration 014 applied; build PASS; deploy tertunda |
 | 16 | P0-12 — kredensial admin di halaman publik | **SEBAGIAN** | Kode & bundle bersih; rotasi password pending |

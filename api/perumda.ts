@@ -41,7 +41,12 @@ type DepositRow = {
 }
 
 function getSecret() {
-  return process.env.PERUMDA_JWT_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+  return cleanEnvironmentValue(process.env.PERUMDA_JWT_SECRET)
+}
+
+function secretIsSafe(secret: string) {
+  const serviceKey = cleanEnvironmentValue(process.env.SUPABASE_SERVICE_ROLE_KEY)
+  return secret.length >= 32 && (!serviceKey || secret !== serviceKey)
 }
 
 function cleanEnvironmentValue(value?: string) {
@@ -107,7 +112,10 @@ export default async function handler(req: any, res: any) {
   if (!['GET', 'POST'].includes(req.method)) return res.status(405).json({ error: 'Method not allowed' })
 
   const secret = getSecret()
-  if (!secret) return res.status(500).json({ error: 'Konfigurasi keamanan Perumda belum tersedia' })
+  if (!secret || !secretIsSafe(secret)) {
+    console.error('PERUMDA_JWT_SECRET wajib diisi (>=32 karakter) dan berbeda dari service role key')
+    return res.status(500).json({ error: 'Konfigurasi keamanan Perumda belum tersedia' })
+  }
 
   if (req.method === 'POST') {
     const submittedPin = String(req.body?.pin || '')

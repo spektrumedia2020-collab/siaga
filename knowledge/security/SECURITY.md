@@ -10,7 +10,7 @@ Status konfigurasi DB produksi: **UNKNOWN** (tidak ada akses DB pada sesi ini).
 | S-01 | CRITICAL | `api/users.ts` tanpa autentikasi | **FIXED & TERVERIFIKASI di produksi** |
 | S-02 | HIGH | RLS `user_roles` `USING (true)` | **FIXED & TERVERIFIKASI di DB** |
 | S-03 | MEDIUM | PIN lapak default `1234` | **FIXED (kode)** — menunggu env + deploy |
-| S-04 | MEDIUM | Secret JWT Perumda fallback ke service-role key | OPEN bila env kosong |
+| S-04 | MEDIUM | Secret JWT Perumda fallback ke service-role key | **FIXED (kode)** — menunggu env + deploy |
 | S-05 | HIGH | RLS `retribution_rates` `USING (true)` untuk insert/update | **FIXED & TERVERIFIKASI di DB** |
 | S-06 | LOW | CORS `*` pada Vercel functions | **PARTIAL** — `users` diperbaiki |
 | S-07 | LOW | Express: CORS error → 500; body limit 10 MB | OPEN |
@@ -130,17 +130,23 @@ lalu deploy + uji produksi: `1234` harus 401.
 
 ---
 
-## S-04 · MEDIUM — Secret JWT Perumda
+## S-04 · MEDIUM — Secret JWT Perumda — **FIXED (kode), BELUM DEPLOY**
 
-**Evidence**: `api/perumda.ts:43-45`
-```ts
-return process.env.PERUMDA_JWT_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+**Evidence awal**: `api/perumda.ts:43-45` (`PERUMDA_JWT_SECRET || SUPABASE_SERVICE_ROLE_KEY`).
+
+**Resolusi (kode)**
+- Fallback ke service key dihapus; `PERUMDA_JWT_SECRET` wajib.
+- Ditolak (500) bila kosong, < 32 karakter, atau sama dengan service role key.
+
+**Uji lokal (mock handler)**
 ```
-
-**Dampak**: service-role key dipakai sebagai kunci HMAC. Jika bocor, penyerang bisa menandatangani
-token laporan maupun mengakses Supabase sepenuhnya. Rotasi service key juga memutus token.
-
-**Perbaikan**: `PERUMDA_JWT_SECRET` wajib, panjang acak, berbeda dari service key; startup gagal bila kosong.
+tanpa secret -> 500
+secret == service key -> 500
+secret pendek -> 500
+PIN salah -> 401
+secret valid + PIN benar -> token terbit
+```
+**Sisa:** set `PERUMDA_JWT_SECRET` di Vercel sebelum deploy.
 
 ---
 

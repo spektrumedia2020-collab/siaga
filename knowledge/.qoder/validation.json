@@ -43,6 +43,10 @@
       "status": "PASS",
       "evidence": "Audit pg_class + pg_policies 2026-10-25: 16 tabel public, 46 policy. Rincian di database/SCHEMA.md. Temuan kritis: users SELECT/INSERT/UPDATE true."
     },
+    "api_perumda_secret": {
+      "status": "PASS",
+      "evidence": "Uji lokal: tanpa secret 500; secret==service key 500; secret <32 char 500; PIN salah 401; secret valid + PIN benar menerbitkan token. tsc file PASS. BELUM DEPLOY."
+    },
     "api_lapak_pin": {
       "status": "PASS",
       "evidence": "Uji lokal (mock): tanpa env -> 503; plaintext benar -> 400 (lolos PIN); salah -> 401; hash benar -> 400; hash salah -> 401. tsc file PASS. BELUM DEPLOY."

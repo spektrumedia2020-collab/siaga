@@ -4,9 +4,9 @@
 
 ## Task aktif
 
-**P0-12 kode selesai**: kredensial dihapus dari `/juri` & `/docs` dan tombol akun test login;
-bundle `dist/` bersih. **Sisa:** rotasi password `admin@siaga.id`, `kepala@siaga.id`, `petugas@siaga.id`
-(Supabase Auth). Deploy role changes masih tertahan `PUBLIC_STALL_PIN_HASH`.
+**P0-04 kode selesai**: fallback service key dihapus; `PERUMDA_JWT_SECRET` wajib (>=32 char, != service key).
+**Blocker deploy:** set `PUBLIC_STALL_PIN_HASH` + `PERUMDA_JWT_SECRET` di Vercel, dan rotasi password demo.
+6 commit lokal menunggu push.
 
 ## Temuan yang memicu task berikutnya
 
@@ -36,12 +36,10 @@ Detail + evidence: [../security/SECURITY.md](../security/SECURITY.md).
 
 ## Next action (spesifik)
 
-1. **P0-12 (CRITICAL)**: rotasi password akun demo + hapus kolom password dari halaman publik.
-2. Set `PUBLIC_STALL_PIN_HASH` di Vercel, lalu push & deploy (PIN fail-closed + role baru).
-3. Uji MARKET_HEAD read-only (banner + tulis ditolak); pastikan menu/akun bendahara hilang;
-   ADMIN bisa approve setoran lewat tab Setoran Petugas.
-4. P0-04: set `PERUMDA_JWT_SECRET` + fail-closed.
-5. CI merah: `tsc --noEmit` 40+ error lama — perbaiki bertahap (BACKLOG P1-05).
+1. Set `PUBLIC_STALL_PIN_HASH` + `PERUMDA_JWT_SECRET` (>=32 char) di Vercel.
+2. Rotasi password `admin@siaga.id`, `kepala@siaga.id`, `petugas@siaga.id`.
+3. Push 6 commit → deploy → uji: `pin=1234` 401, Perumda login, head read-only, tanpa menu bendahara.
+4. CI merah: `tsc --noEmit` 40+ error lama — perbaiki bertahap (BACKLOG P1-05).
 
 ## Catatan akses DB
 

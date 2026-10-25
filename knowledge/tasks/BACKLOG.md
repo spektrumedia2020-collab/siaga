@@ -21,8 +21,8 @@ Setiap item wajib punya evidence sebelum dieksekusi dan hasil verifikasi setelah
 - **DoD:** env diset → push → uji `pin=1234` = 401, PIN benar = 404/200.
 
 ### P0-04 · Secret JWT Perumda memakai fallback service-role key
-- **Evidence:** `api/perumda.ts:43-45` (`PERUMDA_JWT_SECRET || SUPABASE_SERVICE_ROLE_KEY`).
-- **DoD:** `PERUMDA_JWT_SECRET` wajib dan berbeda dari service key; startup gagal bila kosong.
+- **Status:** kode fail-closed selesai (fallback dihapus, wajib >=32 char & != service key).
+- **Sisa:** set `PERUMDA_JWT_SECRET` di Vercel sebelum deploy; uji login dashboard Perumda.
 
 ### P0-12 · Kredensial akun demo (termasuk ADMIN) di halaman publik
 - **Status:** kode dibersihkan (`JuriDocumentationPage` + tombol akun test `Auth.tsx`); bundle bersih.
