@@ -155,7 +155,7 @@ export function SetoranPage({ marketId }: SetoranPageProps) {
 
   const statusLabel = (status: string) => {
     const labels: Record<string, string> = {
-      pending_treasurer: 'Menunggu Bendahara',
+      pending_treasurer: 'Menunggu Admin',
       pending_head: 'Menunggu Kepala Pasar',
       approved: 'Disetujui',
       rejected: 'Ditolak'
@@ -257,7 +257,7 @@ export function SetoranPage({ marketId }: SetoranPageProps) {
                 style={{ padding: '6px 12px', borderRadius: 6, border: '1px solid #d1d5db' }}
               >
                 <option value="">Semua Status</option>
-                <option value="pending_treasurer">Menunggu Bendahara</option>
+                <option value="pending_treasurer">Menunggu Admin</option>
                 <option value="pending_head">Menunggu Kepala Pasar</option>
                 <option value="approved">Disetujui</option>
                 <option value="rejected">Ditolak</option>

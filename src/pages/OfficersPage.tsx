@@ -10,7 +10,6 @@ const ROLE_NAMES: Record<string, string> = {
   'MARKET_ADMIN': 'Admin Pasar',
   'OFFICER': 'Petugas',
   'CASHIER': 'Kasir',
-  'TREASURER': 'Bendahara',
   'SUPER_ADMIN': 'Super Admin',
   'ADMIN': 'Admin'
 }

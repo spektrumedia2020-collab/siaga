@@ -56,9 +56,11 @@ wajib memperbarui keduanya.
   UI menampilkan banner "Mode baca-saja".
 - **Pengecualian yang dipertahankan**:
   - `OFFICER`: INSERT transaksi & absensi miliknya, INSERT setoran miliknya.
-  - `TREASURER`: UPDATE setoran (approval tahap 1) pada pasar terkait.
   - Semua user: UPDATE profil sendiri (kolom aman; trigger `guard_users_privileged_columns`).
-- Approval setoran tahap 2 (sebelumnya kepala pasar) kini menjadi kewenangan ADMIN.
+- **Role TREASURER dihapus total** (2026-10-25, migration 015): 2 akun dihapus dari
+  `public.users` + `auth.users`; baris `roles` dihapus. Approval setoran dua tahap
+  (`pending_treasurer → pending_head → approved`) dijalankan **ADMIN** lewat tab
+  “Setoran Petugas” di dashboard admin.
 
 ## Express (`src/server.ts`)
 

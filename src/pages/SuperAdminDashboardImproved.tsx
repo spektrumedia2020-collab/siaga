@@ -4,6 +4,7 @@ import '../pages/SuperAdminDashboardImproved.css'
 import '../styles/layout.css'
 import { MarketsManagement } from './MarketsManagement'
 import { UserManagement } from './UserManagement'
+import { SetoranPage } from './SetoranPage'
 import { OwnersPage } from './OwnersPage'
 import { RetribusiPage } from './RetribusiPage'
 import { ThemeManagement } from './ThemeManagement'
@@ -69,7 +70,9 @@ const addDays = (value: string, days: number) => {
 }
 
 export function SuperAdminDashboardImproved() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'markets' | 'analytics' | 'users' | 'pedagang' | 'retribusi' | 'themes' | 'settings' | 'backup'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'markets' | 'setoran' | 'analytics' | 'users' | 'pedagang' | 'retribusi' | 'themes' | 'settings' | 'backup'>('overview')
+  const [marketsList, setMarketsList] = useState<Array<{ id: number; name: string }>>([])
+  const [setoranMarketId, setSetoranMarketId] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [userEmail, setUserEmail] = useState<string>('')
   const [showProfile, setShowProfile] = useState(false)
@@ -101,6 +104,16 @@ export function SuperAdminDashboardImproved() {
 
   useEffect(() => {
     loadUser()
+  }, [])
+
+  useEffect(() => {
+    const loadMarkets = async () => {
+      const { data } = await getSupabaseClient().from('markets').select('id, name').order('name')
+      const list = (data || []) as Array<{ id: number; name: string }>
+      setMarketsList(list)
+      setSetoranMarketId((prev) => prev ?? (list[0]?.id ?? null))
+    }
+    loadMarkets()
   }, [])
 
   useEffect(() => {
@@ -401,6 +414,9 @@ export function SuperAdminDashboardImproved() {
             <button className={`sidebar-item ${activeTab === 'retribusi' ? 'active' : ''}`} onClick={() => setActiveTab('retribusi')}>
               💰 Retribusi
             </button>
+            <button className={`sidebar-item ${activeTab === 'setoran' ? 'active' : ''}`} onClick={() => setActiveTab('setoran')}>
+              📥 Setoran Petugas
+            </button>
             <button className={`sidebar-item ${activeTab === 'users' ? 'active' : ''}`} onClick={() => setActiveTab('users')}>
               👥 Manajemen User
             </button>
@@ -663,6 +679,32 @@ export function SuperAdminDashboardImproved() {
               <h2>🏪 Manajemen Pasar</h2>
             </div>
             <MarketsManagement />
+          </section>
+        )}
+
+        {activeTab === 'setoran' && (
+          <section className="markets-section">
+            <div className="section-header">
+              <h2>📥 Setoran Petugas</h2>
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <label htmlFor="setoran-market">Pasar: </label>
+              <select
+                id="setoran-market"
+                value={setoranMarketId ?? ''}
+                onChange={(e) => setSetoranMarketId(Number(e.target.value))}
+              >
+                <option value="" disabled>Pilih pasar</option>
+                {marketsList.map((m) => (
+                  <option key={m.id} value={m.id}>{m.name}</option>
+                ))}
+              </select>
+            </div>
+            {setoranMarketId ? (
+              <SetoranPage marketId={setoranMarketId} />
+            ) : (
+              <p>Pilih pasar terlebih dahulu.</p>
+            )}
           </section>
         )}
 

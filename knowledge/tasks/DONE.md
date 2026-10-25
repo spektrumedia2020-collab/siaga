@@ -1,5 +1,23 @@
 # DONE — Arsip Task Selesai
 
+## 2026-10-25 · Role overhaul — MARKET_HEAD read-only, impersonation & TREASURER dihapus
+
+**Database (applied)**
+- Migration 014: tulis master/operasional ADMIN-only; MARKET_HEAD read-only.
+- Migration 015: role TREASURER dihapus; akun `bendahara@siaga.id` (id_user 7) dan
+  `bendahara_psterong@siaga.app` (id_user 8) dihapus dari `public.users` + `auth.users`.
+  Verifikasi: role=0, assignments=0, auth users=0; policy `setoran_update_admin` aktif.
+
+**Kode**
+- Impersonation dihapus total (App, Dashboard, MarketDashboard, MarketsManagement,
+  SuperAdminDashboard, roleUtils, localStorage cleanup).
+- `TreasurerDashboard` + CSS dihapus; menu/sidebar bendahara dihapus dari web & mobile.
+- Dashboard ADMIN mendapat tab **Setoran Petugas** (pilih pasar → approve dua tahap).
+- Halaman `/juri` tidak lagi memuat baris bendahara (kredensial lain masih ada → P0-12).
+- `npm run build` PASS.
+
+**Deploy:** tertunda menunggu `PUBLIC_STALL_PIN_HASH` (agar P0-03 tidak mematikan halaman lapak).
+
 ## 2026-10-25 · P0-11 — PII `stall_owners` (migration `013`)
 
 - `REVOKE SELECT ON public.stall_owners FROM anon`; `GRANT SELECT (id, name) TO anon`.

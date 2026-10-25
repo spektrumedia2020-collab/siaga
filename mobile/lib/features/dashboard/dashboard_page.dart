@@ -805,7 +805,6 @@ class _ProfilePageState extends State<ProfilePage> {
       'ADMIN': 'Admin',
       'MARKET_HEAD': 'Kepala Pasar',
       'OFFICER': 'Petugas',
-      'TREASURER': 'Bendahara',
       'MERCHANT': 'Pedagang',
     };
     role = roleMap[role.toUpperCase()] ?? role;

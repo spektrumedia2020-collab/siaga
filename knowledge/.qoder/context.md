@@ -4,9 +4,9 @@
 
 ## Task aktif
 
-**Role model baru aktif di DB** (migration 014): MARKET_HEAD read-only, ADMIN satu-satunya penulis.
-Impersonation dihapus dari kode. **Belum deploy** karena `PUBLIC_STALL_PIN_HASH` belum diset.
-**Temuan baru CRITICAL:** kredensial 4 akun demo (termasuk ADMIN) terpampang di `/juri` & `/docs` (S-18).
+**Role overhaul aktif di DB**: MARKET_HEAD read-only, impersonation dihapus, **TREASURER dihapus**
+(2 akun auth+public). ADMIN punya tab Setoran Petugas. **Belum deploy** (blocker `PUBLIC_STALL_PIN_HASH`).
+**P0-12 CRITICAL masih terbuka**: password admin di `/juri` & `/docs`.
 
 ## Temuan yang memicu task berikutnya
 
@@ -38,7 +38,8 @@ Detail + evidence: [../security/SECURITY.md](../security/SECURITY.md).
 
 1. **P0-12 (CRITICAL)**: rotasi password akun demo + hapus kolom password dari halaman publik.
 2. Set `PUBLIC_STALL_PIN_HASH` di Vercel, lalu push & deploy (PIN fail-closed + role baru).
-3. Uji MARKET_HEAD read-only (banner + tulis ditolak); impersonation hilang.
+3. Uji MARKET_HEAD read-only (banner + tulis ditolak); pastikan menu/akun bendahara hilang;
+   ADMIN bisa approve setoran lewat tab Setoran Petugas.
 4. P0-04: set `PERUMDA_JWT_SECRET` + fail-closed.
 5. CI merah: `tsc --noEmit` 40+ error lama — perbaiki bertahap (BACKLOG P1-05).
 

@@ -347,7 +347,7 @@ class _SetoranPageState extends ConsumerState<SetoranPage> {
       case 'pending_treasurer':
         bgColor = Colors.orange[50]!;
         textColor = Colors.orange[800]!;
-        label = 'Menunggu ACC Bendahara';
+        label = 'Menunggu ACC Admin';
         icon = Icons.hourglass_empty;
         break;
       case 'pending_head':
@@ -515,7 +515,7 @@ class _SetoranPageState extends ConsumerState<SetoranPage> {
       case 'pending_treasurer':
         bgColor = Colors.orange;
         textColor = Colors.white;
-        label = 'Bendahara';
+        label = 'Admin';
         break;
       case 'pending_head':
         bgColor = Colors.blue;
@@ -643,7 +643,7 @@ class _SetoranPageState extends ConsumerState<SetoranPage> {
             },
             itemBuilder: (context) => [
               _filterMenuItem('all', 'Semua', Icons.all_inclusive),
-              _filterMenuItem('pending_treasurer', 'Menunggu Bendahara', Icons.hourglass_empty),
+              _filterMenuItem('pending_treasurer', 'Menunggu Admin', Icons.hourglass_empty),
               _filterMenuItem('pending_head', 'Menunggu Kepala Pasar', Icons.hourglass_top),
               _filterMenuItem('approved', 'Disetujui', Icons.check_circle),
               _filterMenuItem('rejected', 'Ditolak', Icons.cancel),

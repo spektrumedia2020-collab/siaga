@@ -234,7 +234,6 @@ export async function getUserMarket(userId: string): Promise<any | null> {
           roleName === 'PASAR_ADMIN' ||
           roleName === 'MARKET_ADMIN' ||
           roleName === 'ADMIN' ||
-          roleName === 'TREASURER' ||
           roleName === 'OFFICER'
         )
       }) || userRoleRows.find((row: any) => row.market_id != null && row.market_id !== '') || userRoleRows[0]
@@ -303,7 +302,6 @@ export function getRoleDisplayName(roleName: string): string {
     ADMIN: '🔐 Superadmin',
     MARKET_HEAD: '📍 Admin Pasar',
     OFFICER: '👮 Petugas',
-    TREASURER: '💰 Bendahara',
     MERCHANT: '🏪 Pedagang'
   }
   return roleMap[roleName] || roleName

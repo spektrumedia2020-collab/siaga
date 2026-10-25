@@ -73,7 +73,7 @@ Sumber: query langsung `pg_class` + `pg_policies` di Supabase SQL Editor
 | `retribution_rates` | ON | 4 | OK — 008 + 014: SELECT authenticated; tulis ADMIN |
 | `retribution_types` | ON | 2 | OK — 014: SELECT authenticated; INSERT ADMIN; UPDATE/DELETE tanpa policy |
 | `roles` | ON | 1 | OK — read everyone |
-| `setoran` | ON | 3 | OK — 012 + 014: insert own; update ADMIN/TREASURER pasar; head read-only |
+| `setoran` | ON | 3 | OK — 012 + 014 + 015: insert own; update ADMIN; head read-only |
 | `stall_categories` | ON | 4 | OK — 014: read authenticated; tulis ADMIN |
 | `stall_owners` | ON | 4 | OK — 010/013/014: anon hanya `id,name`; baca staff penuh; tulis ADMIN |
 | `stalls` | ON | 4 | OK — 010 + 014: SELECT publik; tulis ADMIN |

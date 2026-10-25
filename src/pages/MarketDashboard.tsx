@@ -10,7 +10,6 @@ import { RetribusiPage } from './RetribusiPage'
 import { TransactionsPage } from './TransactionsPage'
 import { ReconciliationsPage } from './ReconciliationsPage'
 import { SetoranPage } from './SetoranPage'
-import { TreasurerDashboard } from './TreasurerDashboard'
 import { MarketDetailPage } from './MarketDetailPage'
 import {
   LineChart,
@@ -65,7 +64,7 @@ interface PublicNewsItem {
   link: string
 }
 
-type PageType = 'overview' | 'officers' | 'stalls' | 'sectors' | 'owners' | 'categories' | 'retribusi' | 'transactions' | 'reconciliations' | 'setoran' | 'treasurer' | 'marketDetail' | 'publicContent'
+type PageType = 'overview' | 'officers' | 'stalls' | 'sectors' | 'owners' | 'categories' | 'retribusi' | 'transactions' | 'reconciliations' | 'setoran' | 'marketDetail' | 'publicContent'
 
 function formatMarketAddress(market: any) {
   const clean = (value: unknown) => String(value || '').trim().replace(/^[,\s]+|[,\s]+$/g, '')
@@ -696,8 +695,6 @@ export function MarketDashboard({ userId, onLogout }: Props) {
     }
   }
 
-  const isTreasurer = (userRoleName || profileRole || '').toUpperCase() === 'TREASURER'
-
   const getPageFromHash = (): PageType | null => {
     const hash = window.location.hash.slice(1)
     const pageSegment = hash.replace(/^market\/dashboard\/?/, '').replace(/^\//, '')
@@ -705,7 +702,6 @@ export function MarketDashboard({ userId, onLogout }: Props) {
     if (!pageSegment || pageSegment === 'overview') return 'overview'
 
     const pageMap: Record<string, PageType> = {
-      treasurer: 'treasurer',
       transactions: 'transactions',
       setoran: 'setoran',
       reconciliations: 'reconciliations',
@@ -739,19 +735,11 @@ export function MarketDashboard({ userId, onLogout }: Props) {
       return
     }
 
-    if (isTreasurer) {
-      setCurrentPage('treasurer')
-      if (!window.location.hash || !window.location.hash.includes('/treasurer')) {
-        window.location.hash = 'market/dashboard/treasurer'
-      }
-      return
-    }
-
     setCurrentPage('overview')
     if (!window.location.hash || window.location.hash === '#market/dashboard') {
       window.location.hash = 'market/dashboard'
     }
-  }, [isTreasurer])
+  }, [])
 
   if (loading) {
     return <div className="loading">Memuat data pasar...</div>
@@ -802,8 +790,6 @@ export function MarketDashboard({ userId, onLogout }: Props) {
         return <ReconciliationsPage marketId={stats.market.id} />
       case 'setoran':
         return <SetoranPage marketId={stats.market.id} />
-      case 'treasurer':
-        return <TreasurerDashboard marketId={stats.market.id} />
       case 'publicContent':
         return (
           <div className="content-editor-panel">
@@ -1278,43 +1264,8 @@ export function MarketDashboard({ userId, onLogout }: Props) {
         <div className="dashboard-layout">
           <aside className="sidebar">
             <div className="sidebar-nav">
-              {isTreasurer ? (
-                <>
-                  <div className="sidebar-group">
-                    <div className="sidebar-group-title">Bendahara</div>
-                    <button
-                      className={`sidebar-item ${currentPage === 'treasurer' ? 'active' : ''}`}
-                      onClick={() => updatePageRoute('treasurer')}
-                    >
-                      <span className="sidebar-icon">💼</span>
-                      <span>Dashboard Bendahara</span>
-                    </button>
-                    <button
-                      className={`sidebar-item ${currentPage === 'transactions' ? 'active' : ''}`}
-                      onClick={() => updatePageRoute('transactions')}
-                    >
-                      <span className="sidebar-icon"><IconTransactions /></span>
-                      <span>Transaksi</span>
-                    </button>
-                    <button
-                      className={`sidebar-item ${currentPage === 'setoran' ? 'active' : ''}`}
-                      onClick={() => updatePageRoute('setoran')}
-                    >
-                      <span className="sidebar-icon"><IconReconciliations /></span>
-                      <span>Setoran</span>
-                    </button>
-                    <button
-                      className={`sidebar-item ${currentPage === 'reconciliations' ? 'active' : ''}`}
-                      onClick={() => updatePageRoute('reconciliations')}
-                    >
-                      <span className="sidebar-icon"><IconReconciliations /></span>
-                      <span>Rekonsiliasi</span>
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="sidebar-group">
+              <>
+                <div className="sidebar-group">
                     <div className="sidebar-group-title">Overview</div>
                     <button
                       className={`sidebar-item ${currentPage === 'overview' ? 'active' : ''}`}
@@ -1388,15 +1339,6 @@ export function MarketDashboard({ userId, onLogout }: Props) {
                       <span className="sidebar-icon"><IconReconciliations /></span>
                       <span>Setoran</span>
                     </button>
-                    {isTreasurer && (
-                      <button
-                        className={`sidebar-item ${currentPage === 'treasurer' ? 'active' : ''}`}
-                        onClick={() => updatePageRoute('treasurer')}
-                      >
-                        <span className="sidebar-icon">💼</span>
-                        <span>Dashboard Bendahara</span>
-                      </button>
-                    )}
                   </div>
                   <div className="sidebar-group">
                     <div className="sidebar-group-title">Operasional</div>
@@ -1416,7 +1358,6 @@ export function MarketDashboard({ userId, onLogout }: Props) {
                     </button>
                   </div>
                 </>
-              )}
             </div>
 
             <div className="sidebar-footer">

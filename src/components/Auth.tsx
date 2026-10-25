@@ -102,17 +102,6 @@ export function Auth({ onLoginSuccess }: AuthProps) {
               >
                 Kepala Pasar Niaga
               </button>
-              <button
-                type="button"
-                className="test-account-button"
-                onClick={() => {
-                  setEmail('bendahara@siaga.id')
-                  setPassword('DemiSiaga2026!')
-                  setError('')
-                }}
-              >
-                Bendahara Pasar Niaga
-              </button>
             </div>
           </div>
         )}

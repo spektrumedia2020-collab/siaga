@@ -20,8 +20,9 @@
 - Express: `authenticateToken` (verifikasi Supabase JWT) + `requireAdmin` untuk `/api/users`. *(VERIFIED)*
 - Vercel `api/users.ts`: wajib JWT + peran `ADMIN`; CORS allowlist (commit `5f69b82`, deploy `4a0e766`). *(VERIFIED)*
 - **Role model (2026-10-25)**: ADMIN satu-satunya penulis master/operasional; MARKET_HEAD **read-only**;
-  OFFICER insert transaksi/absensi/setoran miliknya; TREASURER update setoran pasar.
-  **Impersonation dihapus total** dari UI/state/localStorage. *(VERIFIED — migration 014 + kode)*
+  OFFICER insert transaksi/absensi/setoran miliknya. **TREASURER dihapus total** (akun + role);
+  approval setoran dua tahap dijalankan ADMIN. **Impersonation dihapus** dari UI/state/localStorage.
+  *(VERIFIED — migration 014/015 + kode)*
 
 ## Business rules (dari struktur DB & UI)
 

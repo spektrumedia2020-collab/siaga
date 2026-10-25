@@ -348,13 +348,14 @@ RLS karena penyerang bisa login sebagai admin sah.
 3. Bila tetap perlu demo, gunakan akun khusus demo ber-role terbatas + password yang dirotasi rutin,
    dan lindungi halaman dengan akses terbatas.
 
-### Perubahan kebijakan akses — 2026-10-25 (migration 014)
+### Perubahan kebijakan akses — 2026-10-25 (migration 014 + 015)
 - `MARKET_HEAD` menjadi **read-only**; semua penulisan master/operasional hanya ADMIN.
-- Pengecualian: OFFICER (insert transaksi/absensi/setoran miliknya), TREASURER (update setoran pasar),
-  user (update profil sendiri).
+- **Role TREASURER dihapus total**; 2 akun bendahara dihapus dari `public.users` + `auth.users`.
+- Setoran UPDATE kini **ADMIN-only** (approval dua tahap dijalankan admin); status tetap.
+- Pengecualian: OFFICER (insert transaksi/absensi/setoran miliknya), user (update profil sendiri).
 - Impersonation dihapus dari aplikasi.
-- Verifikasi runtime: head update markets/stalls = 0 baris; admin = 1; treasurer setoran = 1;
-  officer insert transaksi = 1; head tetap bisa membaca setoran pasar (286 baris).
+- Verifikasi runtime: head update markets/stalls = 0 baris; admin = 1; officer insert transaksi = 1;
+  head tetap bisa membaca setoran pasar. Verifikasi hapus: role=0, assignments=0, auth users=0.
 
 ---
 
