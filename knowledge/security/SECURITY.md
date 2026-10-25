@@ -7,12 +7,12 @@ Status konfigurasi DB produksi: **UNKNOWN** (tidak ada akses DB pada sesi ini).
 
 | ID | Severity | Temuan | Status |
 |---|---|---|---|
-| S-01 | CRITICAL | `api/users.ts` tanpa autentikasi | OPEN |
+| S-01 | CRITICAL | `api/users.ts` tanpa autentikasi | **FIXED (code)** — menunggu deploy |
 | S-02 | HIGH | RLS `user_roles` `USING (true)` | OPEN (file SQL) |
 | S-03 | MEDIUM | PIN lapak default `1234` | OPEN bila env kosong |
 | S-04 | MEDIUM | Secret JWT Perumda fallback ke service-role key | OPEN bila env kosong |
 | S-05 | HIGH | RLS `retribution_rates` `USING (true)` untuk insert/update | OPEN (file SQL) |
-| S-06 | LOW | CORS `*` pada semua Vercel function | OPEN |
+| S-06 | LOW | CORS `*` pada Vercel functions | **PARTIAL** — `users` diperbaiki |
 | S-07 | LOW | Express: CORS error → 500; body limit 10 MB | OPEN |
 | S-08 | INFO | Tombol akun test tampil default di produksi | OPEN |
 | S-09 | INFO | Role gating web bersifat client-side; impersonation bukan kontrol | BY DESIGN |
@@ -20,9 +20,19 @@ Status konfigurasi DB produksi: **UNKNOWN** (tidak ada akses DB pada sesi ini).
 
 ---
 
-## S-01 · CRITICAL — `/api/users` tanpa autentikasi
+## S-01 · CRITICAL — `/api/users` tanpa autentikasi — **FIXED (code, 2026-10-25)**
 
-**Evidence**
+**Resolusi**
+- `api/users.ts` kini memverifikasi `Authorization: Bearer <supabase access token>` via
+  `supabaseAdmin.auth.getUser(token)` dan mewajibkan peran `ADMIN` (`user_roles`, fallback `users.id_role`).
+- Semua method (GET/POST/DELETE) menolak request tanpa token → 401; non-admin → 403.
+- CORS `*` diganti allowlist (localhost dev, `FRONTEND_URL`, atau same-origin).
+- Guard konfigurasi: env Supabase kosong → 500 `Server configuration error` (fail-closed).
+- `src/pages/UserManagement.tsx` mengirim access token pada POST.
+- Smoke test lokal: POST/GET tanpa token → 401; origin asing → 403; OPTIONS sah → 200; semua PASS.
+- **Belum diverifikasi di produksi** — butuh deploy Vercel + uji manual dengan akun non-admin.
+
+**Evidence awal (sebelum perbaikan)**
 - `api/users.ts:3-6` — header CORS `Access-Control-Allow-Origin: *`.
 - `api/users.ts:88-116` — GET: `auth.admin.listUsers()` + join `user_roles` (email semua user).
 - `api/users.ts:19-79` — POST: buat user auth dengan `roleId` dari body (bebas), email langsung dikonfirmasi.

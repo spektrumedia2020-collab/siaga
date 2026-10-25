@@ -2,24 +2,26 @@
   "version": 1,
   "session_id": "SESSION-2026-10-25-1",
   "updated_at": "2026-10-25T20:05:00+07:00",
-  "current_task": "Tindak lanjut temuan keamanan audit (S-01, S-02)",
+  "current_task": "P0-02 RLS user_roles + deploy/uji P0-01",
   "active_files": [
     "api/users.ts",
+    "src/pages/UserManagement.tsx",
+    "create_user_roles_table.sql",
     "api/lapak.ts",
     "api/perumda.ts",
-    "create_user_roles_table.sql",
-    "src/middleware/auth.ts",
-    "src/routes/users.ts"
+    "src/middleware/auth.ts"
   ],
   "active_modules": ["backend-api", "web-frontend", "database"],
   "active_decisions": [
     "knowledge root tunggal di knowledge/",
-    "code index UNAVAILABLE + fallback grep"
+    "code index UNAVAILABLE + fallback grep",
+    "P0-01: auth ADMIN + CORS allowlist di api/users.ts"
   ],
   "validation": {
-    "typecheck": "not_run",
+    "typecheck": "not_clean_pre_existing",
     "build": "not_run",
-    "tests": "not_found"
+    "tests": "not_found",
+    "smoke_api_users": "pass"
   },
-  "next_action": "Wajibkan auth + role ADMIN pada api/users.ts; tinjau policy user_roles"
+  "next_action": "Deploy 5f69b82, uji 401/403/201, lalu P0-02 (policy user_roles)"
 }

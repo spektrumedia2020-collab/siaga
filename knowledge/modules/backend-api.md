@@ -24,7 +24,7 @@ untuk pengembangan lokal/self-host.
 
 | Fungsi | Ringkas | Risiko |
 |---|---|---|
-| `users.ts` | create/list/delete user (service role) | **tanpa auth** (SECURITY S-01) |
+| `users.ts` | create/list/delete user (service role) | auth + role `ADMIN` + CORS allowlist (S-01 FIXED di kode, menunggu deploy) |
 | `lapak.ts` | info lapak publik via PIN | fallback `1234` (S-03) |
 | `perumda.ts` | login PIN 6 → JWT; agregat laporan | secret fallback (S-04) |
 

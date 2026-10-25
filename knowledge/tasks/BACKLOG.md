@@ -5,14 +5,7 @@ Setiap item wajib punya evidence sebelum dieksekusi dan hasil verifikasi setelah
 
 ## P0 — Keamanan
 
-### P0-01 · `api/users.ts` tanpa autentikasi
-- **Evidence:** `api/users.ts:3-10` (CORS `*`), `:17-79` (POST create user + roleId bebas),
-  `:86-116` (GET list semua user + email), `:118-139` (DELETE user + role + public.users).
-  Tidak ada pembacaan `Authorization`. `vercel.json` merutekan `/api/users` → fungsi ini.
-- **Dampak:** siapa pun yang tahu URL dapat membuat akun ber-role apa pun, membaca seluruh email user,
-  dan menghapus akun. Memakai service-role (bypass RLS).
-- **DoD:** verifikasi JWT Supabase + cek role `ADMIN` dari `user_roles`; CORS dibatasi ke origin web;
-  semua method mengembalikan 401/403 tanpa kredensial valid.
+> **P0-01 selesai 2026-10-25** (commit `5f69b82`) — lihat [DONE.md](./DONE.md). Sisa: deploy + uji produksi.
 
 ### P0-02 · Policy RLS `user_roles` permisif
 - **Evidence:** `create_user_roles_table.sql:37-51` — SELECT/INSERT/UPDATE/DELETE `TO authenticated USING (true)`.

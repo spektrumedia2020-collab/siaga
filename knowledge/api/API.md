@@ -36,11 +36,14 @@ otorisasi sepenuhnya bergantung pada middleware. `authenticateToken` memverifika
 Semua mengirim `Access-Control-Allow-Origin: *`.
 
 ### `/api/users` → `api/users.ts`
+Wajib `Authorization: Bearer <Supabase access token>` milik user dengan peran `ADMIN`.
+Tanpa token → 401; peran tidak memenuhi → 403; origin di luar allowlist → 403.
+
 | Method | Auth | Efek |
 |---|---|---|
-| GET | **TIDAK ADA** | Daftar semua user auth + email + role |
-| POST | **TIDAK ADA** | Buat user auth + `user_roles` + `users` |
-| DELETE | **TIDAK ADA** | Hapus `user_roles`, `users`, lalu auth user |
+| GET | JWT + `ADMIN` | Daftar semua user auth + email + role |
+| POST | JWT + `ADMIN` | Buat user auth + `user_roles` + `users` |
+| DELETE | JWT + `ADMIN` | Hapus `user_roles`, `users`, lalu auth user |
 
 ### `/api/lapak` → `api/lapak.ts`
 | Method | Auth | Body | Efek |

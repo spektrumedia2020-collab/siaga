@@ -1,5 +1,20 @@
 # DONE — Arsip Task Selesai
 
+## 2026-10-25 · P0-01 — Amankan `/api/users` (commit `5f69b82`)
+
+**Perubahan**
+- `api/users.ts`: verifikasi Bearer token Supabase (`auth.getUser`) + wajib peran `ADMIN`
+  (`user_roles`, fallback `users.id_role`); berlaku untuk GET/POST/DELETE; CORS allowlist
+  (localhost, `FRONTEND_URL`, same-origin); guard env Supabase (fail-closed).
+- `src/pages/UserManagement.tsx`: kirim `Authorization: Bearer <access_token>` pada POST.
+
+**Verifikasi**
+- `tsc --noEmit`: tidak ada error pada `api/users.ts` & `UserManagement.tsx`
+  (error lain sudah ada sebelumnya — lihat `.qoder/validation.json`).
+- Smoke test handler (mock req/res): tanpa token → 401; token tak valid tanpa env → 500 config
+  (fail-closed); origin asing → 403; OPTIONS sah → 200. Semua PASS.
+- **Belum**: deploy Vercel & uji dengan akun non-admin di produksi.
+
 ## 2026-10-25 · SESSION-2026-10-25-1
 
 **Inisialisasi knowledge root SIAGA** (START PROJECT, AGY-QODER OS §2.1–§2.2).

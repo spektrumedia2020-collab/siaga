@@ -4,12 +4,16 @@
   "commit": "73c7267e837735ef082dc50ce653bcb51833f6f0",
   "checks": {
     "typecheck": {
-      "status": "NOT_RUN",
-      "evidence": "Tidak dijalankan pada sesi ini (permintaan user dihentikan)."
+      "status": "NOT_CLEAN",
+      "evidence": "tsc --noEmit (references dimatikan) menghasilkan 40+ error PRE-EXISTING di src/*; tidak ada error di api/users.ts dan src/pages/UserManagement.tsx. Typecheck penuh juga terblokir TS6305 (dist-server project reference)."
     },
     "build_web": {
-      "status": "NOT_RUN",
-      "evidence": "Tidak dijalankan pada sesi ini."
+      "status": "PASS",
+      "evidence": "npm run build sukses (vite, ~1s). Peringatan: chunk utama 1.42 MB (>500 kB), tanpa code-splitting."
+    },
+    "api_users_auth_smoke": {
+      "status": "PASS",
+      "evidence": "Smoke test lokal (mock req/res): POST/GET tanpa token -> 401; origin asing -> 403; OPTIONS lokal -> 200; token tanpa env -> 500 config (fail-closed)."
     },
     "tests": {
       "status": "NOT_FOUND",
@@ -24,8 +28,8 @@
       "evidence": "git ls-files hanya memuat .env.template dan mobile/.env.example; .env/.env.local di .gitignore."
     },
     "api_auth_coverage": {
-      "status": "FAIL",
-      "evidence": "api/users.ts tidak memeriksa Authorization; GET/POST/DELETE dieksekusi dengan service role."
+      "status": "PASS",
+      "evidence": "api/users.ts kini memverifikasi Bearer token Supabase + peran ADMIN untuk GET/POST/DELETE (smoke test PASS). api/lapak & api/perumda sudah punya PIN/JWT."
     },
     "rls_user_roles": {
       "status": "FAIL",
