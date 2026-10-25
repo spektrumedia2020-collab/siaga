@@ -72,7 +72,6 @@ Tidak ada berkas env yang ter-track git (VERIFIED: `git ls-files` hanya `.env.te
 |---|---|---|
 | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` | web (publik) | ya |
 | `VITE_SUPABASE_STORAGE_BUCKET` | web | tidak (default `data-siaga`) |
-| `VITE_SHOW_TEST_ACCOUNTS` | web | tidak — **default tombol akun test TAMPIL** |
 | `VITE_GOOGLE_CLIENT_ID`, `VITE_GOOGLE_API_KEY` | web | untuk export Google Sheets |
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | server/function | ya (rahasia) |
 | `PERUMDA_JWT_SECRET` | api/perumda | tidak (fallback ke service key — lihat SECURITY S-04) |

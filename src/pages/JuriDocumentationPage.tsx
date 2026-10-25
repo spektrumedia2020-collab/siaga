@@ -5,7 +5,6 @@ interface AccountRow {
   roleBadge: string
   nama: string
   email: string
-  password: string
   platform: string
   akses: string
 }
@@ -72,9 +71,9 @@ const workFlow = [
 ]
 
 const DEMO_ACCOUNTS: AccountRow[] = [
-  { role: 'ADMIN', roleBadge: 'Superadmin', nama: 'Super Admin', email: 'admin@siaga.id', password: 'DemiSiaga2026!', platform: 'Web', akses: 'Kelola semua pasar, petugas, lapak, retribusi, dan pengguna' },
-  { role: 'MARKET_HEAD', roleBadge: 'Kepala Pasar', nama: 'Kepala Pasar', email: 'kepala@siaga.id', password: 'DemiSiaga2026!', platform: 'Web', akses: 'Dashboard pasar miliknya untuk memantau lapak, petugas, retribusi, dan transaksi' },
-  { role: 'OFFICER', roleBadge: 'Petugas', nama: 'Petugas Lapangan', email: 'petugas@siaga.id', password: 'DemiSiaga2026!', platform: 'Mobile', akses: 'Scan QR lapak, catat transaksi, absensi, dan setoran harian' },
+  { role: 'ADMIN', roleBadge: 'Superadmin', nama: 'Super Admin', email: 'admin@siaga.id', platform: 'Web', akses: 'Kelola semua pasar, petugas, lapak, retribusi, dan pengguna' },
+  { role: 'MARKET_HEAD', roleBadge: 'Kepala Pasar', nama: 'Kepala Pasar', email: 'kepala@siaga.id', platform: 'Web', akses: 'Dashboard pasar miliknya untuk memantau lapak, petugas, retribusi, dan transaksi' },
+  { role: 'OFFICER', roleBadge: 'Petugas', nama: 'Petugas Lapangan', email: 'petugas@siaga.id', platform: 'Mobile', akses: 'Scan QR lapak, catat transaksi, absensi, dan setoran harian' },
 ]
 
 const impactValues = [
@@ -334,7 +333,7 @@ export function JuriDocumentationPage() {
                 </div>
                 <div className="juri-credential-row">
                   <label>Password</label>
-                  <code>{account.password}</code>
+                  <span>Hubungi admin</span>
                 </div>
                 <div className="juri-credential-row">
                   <label>Platform</label>

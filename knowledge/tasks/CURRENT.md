@@ -16,7 +16,7 @@
 | 4 | Sprint 0 — hapus fallback PIN `1234` & set `PERUMDA_JWT_SECRET` | **SEBAGIAN** | Kode PIN fail-closed selesai (`6c8ea42`); env + deploy belum |
 | 14 | P0-03 — env PIN lapak + deploy | **BELUM** | `PUBLIC_STALL_PIN_HASH` diset; produksi `1234` = 401 |
 | 15 | Role: MARKET_HEAD read-only + hapus impersonation | **SELESAI (DB+kode)** | Migration 014 applied; build PASS; deploy tertunda |
-| 16 | P0-12 — kredensial admin di halaman publik | **BELUM** | Rotasi password + hapus dari `/juri` & `/docs` |
+| 16 | P0-12 — kredensial admin di halaman publik | **SEBAGIAN** | Kode & bundle bersih; rotasi password pending |
 | 17 | Role: hapus TREASURER (DB + auth + UI) | **SELESAI (DB+kode)** | 2 akun & role dihapus; admin ambil alih approval |
 | 5 | Verifikasi build/typecheck web | **SEBAGIAN** | `npm run build` PASS; `tsc --noEmit` masih 40+ error lama |
 | 6 | Deploy + uji P0-01 di produksi | **SELESAI** | Tanpa token 401, origin asing 403; uji role belum |

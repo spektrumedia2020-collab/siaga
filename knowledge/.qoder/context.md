@@ -4,9 +4,9 @@
 
 ## Task aktif
 
-**Role overhaul aktif di DB**: MARKET_HEAD read-only, impersonation dihapus, **TREASURER dihapus**
-(2 akun auth+public). ADMIN punya tab Setoran Petugas. **Belum deploy** (blocker `PUBLIC_STALL_PIN_HASH`).
-**P0-12 CRITICAL masih terbuka**: password admin di `/juri` & `/docs`.
+**P0-12 kode selesai**: kredensial dihapus dari `/juri` & `/docs` dan tombol akun test login;
+bundle `dist/` bersih. **Sisa:** rotasi password `admin@siaga.id`, `kepala@siaga.id`, `petugas@siaga.id`
+(Supabase Auth). Deploy role changes masih tertahan `PUBLIC_STALL_PIN_HASH`.
 
 ## Temuan yang memicu task berikutnya
 

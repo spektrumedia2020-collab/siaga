@@ -25,10 +25,10 @@ Setiap item wajib punya evidence sebelum dieksekusi dan hasil verifikasi setelah
 - **DoD:** `PERUMDA_JWT_SECRET` wajib dan berbeda dari service key; startup gagal bila kosong.
 
 ### P0-12 · Kredensial akun demo (termasuk ADMIN) di halaman publik
-- **Evidence:** `src/pages/JuriDocumentationPage.tsx:74-79` — email + password 4 akun, halaman publik
-  `/juri` & `/docs`.
-- **DoD:** rotasi password akun tersebut; hapus kolom password dari halaman publik; verifikasi tidak
-  ada kredensial di bundle (`grep` hasil build).
+- **Status:** kode dibersihkan (`JuriDocumentationPage` + tombol akun test `Auth.tsx`); bundle bersih.
+- **Sisa:** rotasi password `admin@siaga.id`, `kepala@siaga.id`, `petugas@siaga.id` (Supabase Auth).
+  Password lama pernah publik & ada di Git history → wajib rotasi.
+- **DoD:** ketiga akun memakai password baru; login lama gagal; tidak ada kredensial di bundle.
 
 ### P1 — Arsitektur & kualitas
 

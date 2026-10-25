@@ -35,6 +35,9 @@
 ## Aturan keamanan yang mengikat
 
 - Service-role key **hanya** boleh di server/function, tidak pernah `VITE_*`. *(VERIFIED: hanya ada di `src/`, `api/`)*
+- Kredensial demo dihapus dari halaman publik & bundle (S-18); password lama (`admin@siaga.id`,
+  `kepala@siaga.id`, `petugas@siaga.id`) **wajib dirotasi** karena pernah publik + ada di Git history.
+  *(VERIFIED — scan `dist` bersih)*
 - Jangan andalkan `ProtectedRoute` (client-side) sebagai kontrol akses tunggal — kontrol sebenarnya adalah RLS. *(VERIFIED)*
 - RLS sudah diperketat (2026-10-25): `user_roles` (007), `retribution_rates` (008), `users` (009 —
   own/admin/staf pasar + trigger), `transactions`/`stalls`/`stall_owners` (010 — market-scoped;

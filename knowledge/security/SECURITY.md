@@ -24,7 +24,7 @@ Status konfigurasi DB produksi: **UNKNOWN** (tidak ada akses DB pada sesi ini).
 | S-15 | MEDIUM | Read over-broad: `attendance`, `officers`, `retribution_types` | **FIXED & TERVERIFIKASI di DB** |
 | S-16 | MEDIUM | `setoran` cek peran hanya `users.id_role`, tanpa scope market | **FIXED & TERVERIFIKASI di DB** |
 | S-17 | HIGH | `stall_owners` SELECT publik mengekspos `nik`/`phone`/`address` ke anon | **FIXED & TERVERIFIKASI di DB** |
-| S-18 | CRITICAL | Kredensial 4 akun demo (termasuk ADMIN) terpampang di halaman publik `/juri`, `/docs` | OPEN |
+| S-18 | CRITICAL | Kredensial 4 akun demo (termasuk ADMIN) terpampang di halaman publik `/juri`, `/docs` | **FIXED (kode)** — rotasi password pending |
 
 ---
 
@@ -336,17 +336,23 @@ anon_nik=false; anon_phone=false; anon_address=false; auth_table_select=true
 ```
 **Uji runtime (rollback)**: `anon_id_name_rows=2000`, `anon_nik_blocked=true`.
 
-### S-18 · CRITICAL — Kredensial admin di halaman publik
-**Evidence**: `src/pages/JuriDocumentationPage.tsx:74-79` — `DEMO_ACCOUNTS` memuat email + password
-untuk ADMIN, MARKET_HEAD, OFFICER, TREASURER (password sama), dan halaman ini bisa diakses tanpa
-login di `/juri` dan `/docs`.
-**Dampak**: siapa pun yang membuka URL mendapat kredensial admin. Ini membatalkan seluruh hardening
-RLS karena penyerang bisa login sebagai admin sah.
-**Perbaikan wajib**:
-1. **Rotasi password** keempat akun demo (atau nonaktifkan).
-2. Hapus kolom password dari halaman publik; ganti "hubungi admin".
-3. Bila tetap perlu demo, gunakan akun khusus demo ber-role terbatas + password yang dirotasi rutin,
-   dan lindungi halaman dengan akses terbatas.
+### S-18 · CRITICAL — Kredensial admin di halaman publik — **FIXED (kode), ROTASI PENDING**
+
+**Resolusi (2026-10-25)**
+- `JuriDocumentationPage`: field `password` dihapus dari data & UI; baris Password kini
+  menampilkan “Hubungi admin”.
+- `Auth.tsx`: blok tombol akun test (yang menanam `admin@siaga.id` + password di bundle) dihapus;
+  env `VITE_SHOW_TEST_ACCOUNTS` tidak dipakai lagi.
+- `npm run build` PASS; scan `dist/` → **tidak ada** string password demo.
+
+**Wajib dilakukan user (tidak bisa diwakilkan tanpa menulis secret)**
+- Rotasi password: `admin@siaga.id`, `kepala@siaga.id`, `petugas@siaga.id`
+  (Supabase Dashboard → Authentication → Users → Update password).
+- Password lama pernah publik + ada di riwayat Git → harus dianggap bocor permanen.
+- Pertimbangkan menonaktifkan akun demo setelah presentasi.
+
+**Evidence awal**: `src/pages/JuriDocumentationPage.tsx:74-79` — email + password 4 akun demo,
+halaman `/juri` & `/docs` publik.
 
 ### Perubahan kebijakan akses — 2026-10-25 (migration 014 + 015)
 - `MARKET_HEAD` menjadi **read-only**; semua penulisan master/operasional hanya ADMIN.
