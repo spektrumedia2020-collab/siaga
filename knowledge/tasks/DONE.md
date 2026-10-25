@@ -1,5 +1,16 @@
 # DONE — Arsip Task Selesai
 
+## 2026-10-25 · P0-07 — Tutup RLS `users` (migration `009`)
+
+- Migration dijalankan di Supabase SQL Editor (PRODUCTION).
+- Policy: SELECT own/admin/staf pasar; INSERT admin/kepala pasar (role bukan ADMIN);
+  UPDATE own/admin/kepala pasar.
+- Fungsi `is_current_user_market_head(bigint)` + trigger `guard_users_privileged_columns`
+  (blok perubahan `auth_uid`, `akses_global`, `id_role`→ADMIN, dan pindah market oleh non-admin).
+- Verifikasi DB: `pg_policies` 3 policy baru; `pg_trigger` memuat trigger penjaga.
+- Alur `OfficersPage` (kepala pasar mengelola staff) tetap didukung.
+- Belum diuji: percobaan eskalasi dari sesi non-admin nyata (butuh kredensial user).
+
 ## 2026-10-25 · P0-05 — Audit RLS produksi
 
 - Query `pg_class` + `pg_policies` di Supabase SQL Editor: **16 tabel**, **46 policy**.

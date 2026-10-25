@@ -9,14 +9,7 @@ Setiap item wajib punya evidence sebelum dieksekusi dan hasil verifikasi setelah
 > **P0-02 selesai 2026-10-25** (migration `007`) — lihat [DONE.md](./DONE.md).
 > **P0-06 selesai 2026-10-25** (migration `008`) — lihat [DONE.md](./DONE.md).
 > **P0-05 selesai 2026-10-25** (audit RLS) — hasil: [database/SCHEMA.md](../database/SCHEMA.md#audit-rls-produksi--2026-10-25-p0-05).
-
-### P0-07 · RLS `users` terbuka — eskalasi ADMIN (CRITICAL)
-- **Evidence:** policy `SELECT/INSERT/UPDATE` `USING (true)` / `WITH CHECK (true)` pada `users`.
-- **Dampak:** user login mana pun bisa membaca semua profil, menyisipkan profil, dan mengubah
-  `id_role` dirinya menjadi ADMIN. `is_current_user_admin()` & fallback `roleUtils` memakai kolom itu.
-- **DoD:** migration 009 — SELECT own/admin; INSERT hanya self dengan `id_role IS NULL`; UPDATE hanya
-  kolom aman milik sendiri; perubahan peran hanya admin/service role. Verifikasi `pg_policies`
-  + uji bahwa update `id_role` oleh non-admin ditolak.
+> **P0-07 selesai 2026-10-25** (migration `009`) — lihat [DONE.md](./DONE.md).
 
 ### P0-08 · RLS `transactions`, `stalls`, `stall_owners` terbuka
 - **Evidence:** `transactions` INSERT/UPDATE/SELECT `true`; `stalls` & `stall_owners` policy `ALL true`.

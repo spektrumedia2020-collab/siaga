@@ -32,11 +32,9 @@
 
 - Service-role key **hanya** boleh di server/function, tidak pernah `VITE_*`. *(VERIFIED: hanya ada di `src/`, `api/`)*
 - Jangan andalkan `ProtectedRoute` (client-side) sebagai kontrol akses tunggal — kontrol sebenarnya adalah RLS. *(VERIFIED)*
-- RLS sudah diperketat (2026-10-25): `user_roles` (007) read sendiri/admin, tulis admin;
-  `retribution_rates` (008) tulis admin atau staf pasar terkait; SELECT tarif tetap terbuka.
-  **Namun `users` masih terbuka** (SELECT/INSERT/UPDATE `true`) → eskalasi ADMIN lewat `users.id_role`;
-  `transactions`, `stalls`, `stall_owners` juga `true`; `stall_categories` RLS nonaktif.
-  *(VERIFIED di SQL + pg_policies)*
+- RLS sudah diperketat (2026-10-25): `user_roles` (007), `retribution_rates` (008), dan `users` (009 —
+  own/admin/staf pasar + trigger penjaga `id_role`). **Masih terbuka:** `transactions`, `stalls`,
+  `stall_owners` (`true`), `stall_categories` (RLS nonaktif). *(VERIFIED di SQL + pg_policies)*
 
 ## Konstrain
 

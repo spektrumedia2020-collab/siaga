@@ -43,6 +43,10 @@
       "status": "PASS",
       "evidence": "Audit pg_class + pg_policies 2026-10-25: 16 tabel public, 46 policy. Rincian di database/SCHEMA.md. Temuan kritis: users SELECT/INSERT/UPDATE true."
     },
+    "rls_users": {
+      "status": "PASS",
+      "evidence": "migration 009 diterapkan. pg_policies users = 3 policy (select_own_admin_or_market, insert_admin_or_head, update_own_admin_or_head); pg_trigger memuat guard_users_privileged_columns."
+    },
     "rls_user_roles": {
       "status": "PASS",
       "evidence": "migration 007 diterapkan di Supabase SQL Editor. pg_policies user_roles = 4 rows: select_own_or_admin, insert_admin, update_admin, delete_admin; tidak ada USING (true)."

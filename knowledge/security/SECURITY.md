@@ -17,7 +17,7 @@ Status konfigurasi DB produksi: **UNKNOWN** (tidak ada akses DB pada sesi ini).
 | S-08 | INFO | Tombol akun test tampil default di produksi | OPEN |
 | S-09 | INFO | Role gating web bersifat client-side; impersonation bukan kontrol | BY DESIGN |
 | S-10 | INFO | Tidak ada test otomatis / lint | OPEN |
-| S-11 | CRITICAL | RLS `users` `USING (true)` untuk SELECT/INSERT/UPDATE | OPEN (audit 2026-10-25) |
+| S-11 | CRITICAL | RLS `users` `USING (true)` untuk SELECT/INSERT/UPDATE | **FIXED & TERVERIFIKASI di DB** |
 | S-12 | HIGH | RLS `transactions` `true` untuk INSERT/SELECT/UPDATE | OPEN (audit 2026-10-25) |
 | S-13 | HIGH | RLS `stalls` & `stall_owners` `ALL true` | OPEN (audit 2026-10-25) |
 | S-14 | MEDIUM | `stall_categories` RLS **nonaktif**, 0 policy | OPEN (audit 2026-10-25) |
@@ -197,8 +197,26 @@ Regresi keamanan (seperti S-01) tidak akan tertangkap otomatis.
 
 Detail tabel & jumlah policy: [database/SCHEMA.md](../database/SCHEMA.md#audit-rls-produksi--2026-10-25-p0-05).
 
-### S-11 · CRITICAL — `users` RLS terbuka (eskalasi ADMIN)
-**Evidence** (`pg_policies`, diambil dari DB produksi):
+### S-11 · CRITICAL — `users` RLS terbuka (eskalasi ADMIN) — **FIXED & APPLIED (2026-10-25)**
+
+**Resolusi**
+- Migrasi `migrations/009_secure_users_rls.sql` dijalankan di Supabase SQL Editor.
+- Policy lama (SELECT ×2, INSERT, UPDATE `true`) dihapus; diganti 3 policy:
+  ```
+  SELECT | users_select_own_admin_or_market | auth_uid = auth.uid() OR admin OR staf pasar yang sama
+  INSERT | users_insert_admin_or_head       | admin OR kepala pasar (role bukan ADMIN)
+  UPDATE | users_update_own_admin_or_head   | own OR admin OR kepala pasar
+  ```
+- Fungsi `is_current_user_market_head(bigint)` (SECURITY DEFINER).
+- Trigger `guard_users_privileged_columns` (BEFORE UPDATE):
+  non-admin tidak bisa mengubah `auth_uid`/`akses_global`; `id_role` hanya admin/kepala pasar,
+  dan role `ADMIN` hanya oleh admin; pindah `market_id` hanya admin/kepala pasar kedua pasar.
+- Verifikasi DB: `pg_policies` = 3 policy baru; `pg_trigger` = `guard_users_privileged_columns`.
+- Dampak: eskalasi mandiri ke ADMIN via `users.id_role` tertutup. Market head tetap bisa
+  membuat/mengubah staff pasar-nya (alur `OfficersPage`).
+- Catatan: user non-admin tanpa `market_id` (mis. role global) kini hanya melihat profilnya sendiri.
+
+**Evidence awal (sebelum perbaikan)**
 - `Allow authenticated users to view own profile` — SELECT `true`
 - `Users can view own profile` — SELECT `true`
 - `Allow authenticated users to insert their own profile` — INSERT `WITH CHECK (true)`
