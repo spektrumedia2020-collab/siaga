@@ -8,6 +8,31 @@ Setiap item wajib punya evidence sebelum dieksekusi dan hasil verifikasi setelah
 > **P0-01 selesai 2026-10-25** (commit `5f69b82`, deploy `4a0e766`) — lihat [DONE.md](./DONE.md).
 > **P0-02 selesai 2026-10-25** (migration `007`) — lihat [DONE.md](./DONE.md).
 > **P0-06 selesai 2026-10-25** (migration `008`) — lihat [DONE.md](./DONE.md).
+> **P0-05 selesai 2026-10-25** (audit RLS) — hasil: [database/SCHEMA.md](../database/SCHEMA.md#audit-rls-produksi--2026-10-25-p0-05).
+
+### P0-07 · RLS `users` terbuka — eskalasi ADMIN (CRITICAL)
+- **Evidence:** policy `SELECT/INSERT/UPDATE` `USING (true)` / `WITH CHECK (true)` pada `users`.
+- **Dampak:** user login mana pun bisa membaca semua profil, menyisipkan profil, dan mengubah
+  `id_role` dirinya menjadi ADMIN. `is_current_user_admin()` & fallback `roleUtils` memakai kolom itu.
+- **DoD:** migration 009 — SELECT own/admin; INSERT hanya self dengan `id_role IS NULL`; UPDATE hanya
+  kolom aman milik sendiri; perubahan peran hanya admin/service role. Verifikasi `pg_policies`
+  + uji bahwa update `id_role` oleh non-admin ditolak.
+
+### P0-08 · RLS `transactions`, `stalls`, `stall_owners` terbuka
+- **Evidence:** `transactions` INSERT/UPDATE/SELECT `true`; `stalls` & `stall_owners` policy `ALL true`.
+- **Dampak:** data finansial & master lapak/pemilik bisa dibaca/diubah semua user login.
+- **DoD:** tulis dibatasi `is_current_user_market_member(market_id)`; transaksi UPDATE admin/treasurer;
+  read transaksi market-scoped; SELECT lapak publik dipertahankan.
+
+### P0-09 · `stall_categories` RLS nonaktif
+- **Evidence:** `relrowsecurity = false`, 0 policy.
+- **DoD:** aktifkan RLS; SELECT authenticated; tulis admin/head; verifikasi via `pg_policies`.
+
+### P0-10 · Read over-broad + scope `setoran`
+- **Evidence:** `attendance_select` `true`; `officers_select_auth` `true`; `retribution_types_insert` `true`;
+  policy `setoran` memakai `users.id_role` tanpa scope market.
+- **DoD:** absensi/petugas own atau admin/head market; insert types admin/head; `setoran` memakai
+  `is_current_user_admin_full()` + `market_id`.
 
 ### P0-03 · PIN halaman lapak default `1234`
 - **Evidence:** `api/lapak.ts:21-24` — `expectedPin = configuredPin || (!configuredPinHash ? '1234' : '')`.
@@ -17,13 +42,7 @@ Setiap item wajib punya evidence sebelum dieksekusi dan hasil verifikasi setelah
 - **Evidence:** `api/perumda.ts:43-45` (`PERUMDA_JWT_SECRET || SUPABASE_SERVICE_ROLE_KEY`).
 - **DoD:** `PERUMDA_JWT_SECRET` wajib dan berbeda dari service key; startup gagal bila kosong.
 
-### P0-05 · Verifikasi status RLS tabel inti di produksi
-- **Konteks:** file SQL RLS tersebar (root, `mobile/migrations/003_rls_policies.sql`, `mobile/assets/sql/*`),
-  status terpasang di DB **UNKNOWN**.
-- **DoD:** audit `pg_policies` per tabel inti (`markets`, `stalls`, `transactions`, `users`,
-  `retribution_rates`, `stall_owners`, `setoran`, `attendance`); catat hasil di knowledge.
-
-## P1 — Arsitektur & kualitas
+### P1 — Arsitektur & kualitas
 
 - **P1-01 Duplikasi backend**: `src/routes/*` (Express) vs `api/*` (Vercel) mengeksekusi logika user mirip.
   Putuskan satu jalur (rekomendasi: Express logic dipindah/dipakai ulang, atau `api/` dihapus setelah

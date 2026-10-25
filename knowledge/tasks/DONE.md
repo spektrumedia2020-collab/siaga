@@ -1,5 +1,15 @@
 # DONE — Arsip Task Selesai
 
+## 2026-10-25 · P0-05 — Audit RLS produksi
+
+- Query `pg_class` + `pg_policies` di Supabase SQL Editor: **16 tabel**, **46 policy**.
+- Hasil lengkap: [database/SCHEMA.md](../database/SCHEMA.md#audit-rls-produksi--2026-10-25-p0-05).
+- Temuan baru: S-11 (users CRITICAL), S-12 (transactions), S-13 (stalls/stall_owners),
+  S-14 (stall_categories RLS off), S-15 (read over-broad), S-16 (setoran scope).
+- Tabel `lapak`, `pemilik_lapak`, `market_themes` **tidak ada** di schema `public`
+  (padahal dirujuk kode) — dicatat sebagai drift kode↔DB.
+- Tidak ada perubahan DB pada fase ini (read-only).
+
 ## 2026-10-25 · P0-06 — Tutup RLS `retribution_rates` (migration `008`)
 
 - `migrations/008_secure_retribution_rates_rls.sql` dijalankan di Supabase SQL Editor (PRODUCTION).

@@ -17,6 +17,12 @@ Status konfigurasi DB produksi: **UNKNOWN** (tidak ada akses DB pada sesi ini).
 | S-08 | INFO | Tombol akun test tampil default di produksi | OPEN |
 | S-09 | INFO | Role gating web bersifat client-side; impersonation bukan kontrol | BY DESIGN |
 | S-10 | INFO | Tidak ada test otomatis / lint | OPEN |
+| S-11 | CRITICAL | RLS `users` `USING (true)` untuk SELECT/INSERT/UPDATE | OPEN (audit 2026-10-25) |
+| S-12 | HIGH | RLS `transactions` `true` untuk INSERT/SELECT/UPDATE | OPEN (audit 2026-10-25) |
+| S-13 | HIGH | RLS `stalls` & `stall_owners` `ALL true` | OPEN (audit 2026-10-25) |
+| S-14 | MEDIUM | `stall_categories` RLS **nonaktif**, 0 policy | OPEN (audit 2026-10-25) |
+| S-15 | MEDIUM | Read over-broad: `attendance`, `officers`, `retribution_types` | OPEN (audit 2026-10-25) |
+| S-16 | MEDIUM | `setoran` cek peran hanya `users.id_role`, tanpa scope market | OPEN (audit 2026-10-25) |
 
 ---
 
@@ -184,6 +190,62 @@ di produksi dan dipagari env eksplisit.
 
 Tidak ada test file di `src/` dan `api/`; tidak ada konfigurasi ESLint/Prettier.
 Regresi keamanan (seperti S-01) tidak akan tertangkap otomatis.
+
+---
+
+## Hasil audit RLS (P0-05, 2026-10-25)
+
+Detail tabel & jumlah policy: [database/SCHEMA.md](../database/SCHEMA.md#audit-rls-produksi--2026-10-25-p0-05).
+
+### S-11 · CRITICAL — `users` RLS terbuka (eskalasi ADMIN)
+**Evidence** (`pg_policies`, diambil dari DB produksi):
+- `Allow authenticated users to view own profile` — SELECT `true`
+- `Users can view own profile` — SELECT `true`
+- `Allow authenticated users to insert their own profile` — INSERT `WITH CHECK (true)`
+- `Allow authenticated users to update own profile` — UPDATE `USING (true) WITH CHECK (true)`
+
+**Dampak**: user login mana pun bisa (a) membaca seluruh profil user (email, no_hp, market, role),
+(b) menyisipkan baris profil dengan `id_role`/`auth_uid` bebas, (c) mengubah baris user mana pun,
+termasuk menaikkan `id_role` dirinya ke `ADMIN`. Karena `is_current_user_admin()` dan fallback
+`roleUtils` membaca `users.id_role`, ini memberi **akses admin penuh** — lebih parah daripada S-02.
+
+**Perbaikan minimum**
+- SELECT: `auth_uid = auth.uid() OR is_current_user_admin_full()`.
+- INSERT: hanya `auth_uid = auth.uid()` dan `id_role IS NULL` (pembuatan user tetap lewat service role).
+- UPDATE: `auth_uid = auth.uid()` dengan kolom terbatas (nama/no_hp/avatar), **tanpa** `id_role`,
+  `market_id`, `akses_global`; perubahan peran hanya oleh admin/service role.
+- Hapus policy duplikat.
+
+### S-12 · HIGH — `transactions` terbuka
+**Evidence**: `authenticated_can_insert_transactions` INSERT `true`; `transactions_select_own` SELECT
+`true`; `transactions_update_own` UPDATE `true`/`true`.
+**Dampak**: semua transaksi bisa dibaca dan diubah user login mana pun.
+**Perbaikan**: SELECT/INSERT/UPDATE dibatasi pasar petugas (`is_current_user_market_member`),
+UPDATE hanya admin/treasurer.
+
+### S-13 · HIGH — `stalls` & `stall_owners` `ALL true`
+**Evidence**: `Authenticated users can manage stalls` (ALL, `true`/`true`);
+`Authenticated users can manage stall owners` (ALL, `true`/`true`).
+**Dampak**: user login mana pun bisa menambah/mengubah/menghapus lapak dan data pemilik.
+**Perbaikan**: tulis dibatasi `is_current_user_market_member(market_id)`; SELECT lapak publik tetap.
+
+### S-14 · MEDIUM — `stall_categories` RLS nonaktif
+**Evidence**: `relrowsecurity = false`, 0 policy.
+**Dampak**: tabel terbuka mengikuti grant default (anon/authenticated).
+**Perbaikan**: aktifkan RLS; SELECT authenticated; tulis admin/head.
+
+### S-15 · MEDIUM — Read over-broad
+- `attendance_select` `true` → semua user login membaca absensi (termasuk lokasi).
+- `officers_select_auth` `true` → semua petugas terbaca.
+- `retribution_types_insert` `true` → user login bisa menambah tipe retribusi.
+**Perbaikan**: own/admin untuk absensi & petugas (scoped market); insert types untuk admin/head.
+
+### S-16 · MEDIUM — `setoran` cek peran tidak konsisten
+**Evidence**: policy select/update memakai `users.id_role` (bukan `user_roles`) dan tidak membatasi
+`market_id`.
+**Dampak**: admin yang hanya terdaftar di `user_roles` bisa tertolak; bendahara bisa menyetujui
+setoran pasar lain.
+**Perbaikan**: pakai `is_current_user_admin_full()` + scope market.
 
 ---
 

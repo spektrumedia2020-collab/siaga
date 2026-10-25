@@ -17,6 +17,7 @@
 | 5 | Verifikasi build/typecheck web | **SEBAGIAN** | `npm run build` PASS; `tsc --noEmit` masih 40+ error lama |
 | 6 | Deploy + uji P0-01 di produksi | **SELESAI** | Tanpa token 401, origin asing 403; uji role belum |
 | 7 | P0-06 — tutup RLS `retribution_rates` | **SELESAI** | Migration 008 applied; 4 policy terverifikasi |
+| 8 | P0-05 — audit RLS produksi | **SELESAI** | 16 tabel / 46 policy; 6 temuan baru (S-11…S-16) |
 
 ## Scope sesi ini (sudah dieksekusi)
 
@@ -34,9 +35,11 @@ Tidak ada gelombang paralel. `open_wave = null`.
 ## Next Session Handoff
 
 1. Baca urutan resume: `state.json` → `index/index-state.json` → `context.md` → `memory.md` → `00_INDEX.md` → berkas ini.
-2. **P0-05**: audit `pg_policies` tabel inti (`markets`, `stalls`, `transactions`, `users`,
-   `stall_owners`, `setoran`, `attendance`) — hasil dicatat di `database/SCHEMA.md`.
-3. **P0-03/P0-04**: set `PUBLIC_STALL_PIN_HASH` dan `PERUMDA_JWT_SECRET` di env Vercel.
-4. Opsional: uji produksi dengan akun non-admin (403) dan admin (201).
-5. CI merah karena `tsc --noEmit` (40+ error lama). Perbaiki bertahap; jangan tutup dengan CI merah
+2. **P0-07 (CRITICAL)**: tutup RLS `users` — migration 009 (SELECT own/admin, INSERT self `id_role NULL`,
+   UPDATE kolom aman saja). Ini jalur eskalasi ADMIN karena `is_current_user_admin()` membaca `users.id_role`.
+3. **P0-08**: `transactions`, `stalls`, `stall_owners` — batasi tulis ke pasar terkait.
+4. **P0-09**: aktifkan RLS `stall_categories`.
+5. **P0-10**: persempit read `attendance`/`officers`/`retribution_types`; scope `setoran`.
+6. **P0-03/P0-04**: set `PUBLIC_STALL_PIN_HASH` dan `PERUMDA_JWT_SECRET` di env Vercel.
+7. CI merah karena `tsc --noEmit` (40+ error lama). Perbaiki bertahap; jangan tutup dengan CI merah
    tanpa catatan.

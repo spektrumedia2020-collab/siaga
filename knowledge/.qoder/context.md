@@ -4,8 +4,9 @@
 
 ## Task aktif
 
-**P0-06 selesai** (migration 008 applied): tulis `retribution_rates` kini admin atau staf pasar terkait.
-Berikutnya: **P0-05** — audit `pg_policies` tabel inti yang belum diketahui.
+**P0-05 selesai** (audit RLS: 16 tabel, 46 policy). Temuan paling serius: **`users` RLS terbuka**
+(S-11 CRITICAL) — user login bisa mengubah `id_role` sendiri menjadi ADMIN.
+Berikutnya: **P0-07** (migration 009).
 
 ## Temuan yang memicu task berikutnya
 
@@ -35,11 +36,13 @@ Detail + evidence: [../security/SECURITY.md](../security/SECURITY.md).
 
 ## Next action (spesifik)
 
-1. P0-05: jalankan `pg_policies` untuk tabel inti (`markets`, `stalls`, `transactions`, `users`,
-   `stall_owners`, `setoran`, `attendance`) via SQL Editor; catat di `database/SCHEMA.md`.
-2. P0-03/P0-04: set `PUBLIC_STALL_PIN_HASH` dan `PERUMDA_JWT_SECRET` di env Vercel.
-3. Uji produksi dengan akun non-admin (harus 403) dan ADMIN (201) bila kredensial tersedia.
-4. CI merah: `tsc --noEmit` 40+ error lama — perbaiki bertahap (BACKLOG P1-05).
+1. P0-07: migration 009 untuk `users` — SELECT own/admin; INSERT self `id_role NULL`;
+   UPDATE hanya kolom aman milik sendiri; perubahan peran hanya admin/service role.
+2. P0-08: `transactions`, `stalls`, `stall_owners` — tulis market-scoped.
+3. P0-09: aktifkan RLS `stall_categories`.
+4. P0-10: persempit read `attendance`/`officers`/`retribution_types`; scope `setoran`.
+5. P0-03/P0-04: set `PUBLIC_STALL_PIN_HASH` dan `PERUMDA_JWT_SECRET` di env Vercel.
+6. CI merah: `tsc --noEmit` 40+ error lama — perbaiki bertahap (BACKLOG P1-05).
 
 ## Catatan akses DB
 

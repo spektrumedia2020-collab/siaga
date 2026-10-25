@@ -39,6 +39,10 @@
       "status": "PASS",
       "evidence": "api/users.ts kini memverifikasi Bearer token Supabase + peran ADMIN untuk GET/POST/DELETE (smoke test PASS). api/lapak & api/perumda sudah punya PIN/JWT."
     },
+    "rls_audit_prod": {
+      "status": "PASS",
+      "evidence": "Audit pg_class + pg_policies 2026-10-25: 16 tabel public, 46 policy. Rincian di database/SCHEMA.md. Temuan kritis: users SELECT/INSERT/UPDATE true."
+    },
     "rls_user_roles": {
       "status": "PASS",
       "evidence": "migration 007 diterapkan di Supabase SQL Editor. pg_policies user_roles = 4 rows: select_own_or_admin, insert_admin, update_admin, delete_admin; tidak ada USING (true)."

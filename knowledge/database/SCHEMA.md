@@ -30,7 +30,7 @@ dari query kode. Status terpasang di DB produksi: **UNKNOWN** (tidak ada akses D
 | `announcements` | `id`, `market_id`, `title`, `content`, `priority`, `is_active`, `start_date`, `end_date`, `created_by`→users.id_user | read authenticated; kelola oleh petugas pasar |
 | `retribution_rates` | `id`, `amount`, `stall_id`→stalls, `market_id`→markets, `types_id`→retribution_types | SELECT authenticated; INSERT/UPDATE/DELETE admin atau staf pasar terkait (migration 008) |
 | `market_sectors` | `market_id`, (+ `officer_id`), kolom sektor | select authenticated; tulis ADMIN / MARKET_HEAD pasar terkait (`migrations/004`) |
-| `market_themes` | `UNKNOWN` (dipakai `ThemeManagement.tsx`) | `UNKNOWN` |
+| `market_themes` | **tidak ada di schema `public`** (audit 2026-10-25); dirujuk `ThemeManagement.tsx` | — |
 
 ### Direferensikan kode, DDL tidak ada di repo (INFERRED)
 
@@ -42,8 +42,8 @@ dari query kode. Status terpasang di DB produksi: **UNKNOWN** (tidak ada akses D
 | `users` | `id_user`, `nama`, `username`, `email`, `no_hp`, `status`, `akses_global`, `id_role`, `market_id`, `auth_uid`, `avatar_url` | `api/users.ts`, `roleUtils.ts`, SQL |
 | `stall_owners` | `id`, `name`, `phone` (`INFERRED`) | `OwnersPage`, `StallsPage` |
 | `retribution_types` | `id`, `name` (`INFERRED`) | master tarif |
-| `lapak` (legacy) | `id_lapak`, `id_pemilik`, `kode_lapak`, `nomor_lapak` | `mobile/lib/services/stall_repository.dart:41`, `payment_page.dart:75` |
-| `pemilik_lapak` (legacy) | `id_pemilik`, `nama_pemilik` | `stall_repository.dart:84`, `payment_page.dart:91` |
+| `lapak` (legacy) | `id_lapak`, `id_pemilik`, `kode_lapak`, `nomor_lapak` | **tidak ada di DB** (audit 2026-10-25); dirujuk `mobile/lib/services/stall_repository.dart:41`, `payment_page.dart:75` |
+| `pemilik_lapak` (legacy) | `id_pemilik`, `nama_pemilik` | **tidak ada di DB**; dirujuk `stall_repository.dart:84`, `payment_page.dart:91` |
 
 > `avatars` **bukan tabel** — itu nama bucket Supabase Storage.
 
@@ -53,10 +53,41 @@ dari query kode. Status terpasang di DB produksi: **UNKNOWN** (tidak ada akses D
 - `trg_validate_transaction_market` — klaim validasi market pada insert transaksi
   (disebut `TODO_FIXES.md`; keberadaan di DB `UNKNOWN`).
 
+## Audit RLS produksi — 2026-10-25 (P0-05)
+
+Sumber: query langsung `pg_class` + `pg_policies` di Supabase SQL Editor
+(project `hlvsbmxpkqvniemunygh`). **VERIFIED**. Total: 16 tabel `public`, 46 policy.
+
+| Tabel | RLS | Policy | Verdict |
+|---|---|---|---|
+| `announcements` | ON | 2 | OK — read authenticated; tulis market-scoped (ADMIN/HEAD/TREASURER) |
+| `attendance` | ON | 4 | **PARTIAL** — own insert/update, tetapi `attendance_select` `true` → semua user login bisa baca absensi semua |
+| `market_config` | ON | 3 | OK — read authenticated; tulis market-scoped |
+| `market_sectors` | ON | 5 | OK — read everyone; tulis admin/head |
+| `markets` | ON | 4 | OK — read everyone (landing publik); tulis admin/head |
+| `officers` | ON | 4 | **PARTIAL** — `officers_select_auth` `true` → semua user login baca semua petugas |
+| `retribution_rates` | ON | 4 | OK — migration 008 |
+| `retribution_types` | ON | 2 | **PARTIAL** — INSERT `true` → user login bisa menambah tipe retribusi |
+| `roles` | ON | 1 | OK — read everyone |
+| `setoran` | ON | 3 | **PARTIAL** — cek peran hanya `users.id_role` (bukan `user_roles`) dan tidak dibatasi market |
+| `stall_categories` | **OFF** | 0 | **OPEN** — RLS tidak aktif, 0 policy |
+| `stall_owners` | ON | 1 | **OPEN** — `ALL` `true`/`true` → semua user login kelola semua pemilik |
+| `stalls` | ON | 2 | **OPEN** — `ALL` `true`/`true` (+ SELECT publik) → semua user login kelola semua lapak |
+| `transactions` | ON | 3 | **OPEN** — INSERT/UPDATE `true`, SELECT `true` → semua transaksi bisa dibaca & diubah |
+| `user_roles` | ON | 4 | OK — migration 007 |
+| `users` | ON | 4 | **CRITICAL** — SELECT/INSERT/UPDATE `true` → baca semua profil & ubah `id_role` sendiri (eskalasi ADMIN) |
+
+### Yang tidak ada di DB (padahal dirujuk kode)
+
+- `lapak`, `pemilik_lapak` (legacy fallback mobile) — **tidak ada** di schema `public`.
+- `market_themes` (`ThemeManagement.tsx`) — **tidak ada** di schema `public`.
+
+Implikasi: fallback mobile ke tabel legacy akan gagal; halaman Theme Management akan error.
+
 ## Ringkasan RLS
 
 | Status | Tabel |
 |---|---|
-| Scoped memadai | `officers`, `attendance`, `setoran`, `market_config`, `announcements`, `market_sectors` |
-| Baru diperketat | `user_roles` (007: read sendiri/admin, tulis admin) · `retribution_rates` (008: tulis admin/staf pasar) |
-| Belum diketahui | `markets`, `stalls`, `transactions`, `users`, `stall_owners`, `retribution_types`, `market_themes`, `stall_categories` |
+| Memadai | `markets`, `market_sectors`, `market_config`, `announcements`, `roles`, `user_roles` (007), `retribution_rates` (008) |
+| Perlu ditutup | `users` (CRITICAL), `transactions`, `stalls`, `stall_owners`, `stall_categories` (RLS off) |
+| Perlu dipersempit | `attendance`, `officers`, `retribution_types`, `setoran` |
