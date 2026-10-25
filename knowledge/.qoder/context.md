@@ -4,9 +4,9 @@
 
 ## Task aktif
 
-**Deploy produksi selesai** (`d6e9f7a`): token QR aktif, PIN/Perumda/juri dihapus, `/api/*` tak dikenal
-404. CI web & SQL hijau; **mobile analyze masih merah** (warning/info lama).
-Berikutnya: Fase 2 mobile (QR URL/token + WA) dan perbaikan CI mobile.
+**Batch UI/UX P0–P2 selesai di kode**: tema (migration 017), placeholder dihapus, read-only 9 halaman,
+tab Superadmin deep-link, `/login` + 404, typo/QR/dialog/pagination. Typecheck 0, build PASS.
+Menunggu deploy; path-based URL penuh dan Fase 2 mobile masih tertunda.
 
 ## Status keamanan ringkas
 

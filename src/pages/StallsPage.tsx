@@ -97,6 +97,8 @@ export function StallsPage({ marketId, readOnly = false }: Props) {
   const [rateSaving, setRateSaving] = useState(false)
   const [retributionTypes, setRetributionTypes] = useState<DbRetributionType[]>([])
   const [deleteTarget, setDeleteTarget] = useState<Stall | null>(null)
+  const [regenerateTarget, setRegenerateTarget] = useState<Stall | null>(null)
+  const [regenerating, setRegenerating] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [rateDeleteTarget, setRateDeleteTarget] = useState<RetributionRate | null>(null)
   const [rateDeleting, setRateDeleting] = useState(false)
@@ -446,17 +448,20 @@ export function StallsPage({ marketId, readOnly = false }: Props) {
   }
 
   const handleRegenerateToken = async (stall: Stall) => {
-    if (!window.confirm(`Regenerate token publik lapak ${stall.code}? QR/link lama tidak berlaku.`)) return
     try {
+      setRegenerating(true)
       const bytes = new Uint8Array(16)
       crypto.getRandomValues(bytes)
       const newToken = Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('')
       const supabase = getSupabaseClient()
       const { error } = await supabase.from('stalls').update({ public_token: newToken }).eq('id', stall.id)
       if (error) throw error
+      setRegenerateTarget(null)
       loadData()
     } catch (err: any) {
       alert(err.message || 'Gagal regenerate token')
+    } finally {
+      setRegenerating(false)
     }
   }
 
@@ -651,6 +656,7 @@ export function StallsPage({ marketId, readOnly = false }: Props) {
                         <QRCodeGenerator
                           value={String(stall.code || stall.id)}
                           label={`Lapak ${stall.code || stall.number}`}
+                          title="QR Petugas (scan aplikasi)"
                         />
                         <QRCodeGenerator
                           value={stall.public_token
@@ -658,11 +664,12 @@ export function StallsPage({ marketId, readOnly = false }: Props) {
                             : `${window.location.origin}/lapak/${stall.market_id}/${encodeURIComponent(stall.code)}`}
                           label={`QR Pemilik — Lapak ${stall.code || stall.number}`}
                           icon="🔗"
+                          title="QR Pemilik (kamera / Google Lens)"
                         />
                         {!readOnly && (
                           <>
                             <button
-                              onClick={() => handleRegenerateToken(stall)}
+                              onClick={() => setRegenerateTarget(stall)}
                               className="btn-edit"
                               title="Regenerate token publik"
                               aria-label={`Regenerate token publik lapak ${stall.code || stall.number}`}
@@ -816,6 +823,15 @@ export function StallsPage({ marketId, readOnly = false }: Props) {
         loading={rateDeleting}
         onConfirm={() => rateDeleteTarget && handleRateDelete(rateDeleteTarget.id)}
         onCancel={() => setRateDeleteTarget(null)}
+      />
+      <ConfirmDialog
+        open={!!regenerateTarget}
+        title="Regenerate Token Publik"
+        message={`Regenerate token publik lapak "${regenerateTarget?.code || regenerateTarget?.number || ''}"? QR/link lama tidak berlaku.`}
+        confirmLabel="Regenerate"
+        loading={regenerating}
+        onConfirm={() => regenerateTarget && handleRegenerateToken(regenerateTarget)}
+        onCancel={() => setRegenerateTarget(null)}
       />
     </div>
   )

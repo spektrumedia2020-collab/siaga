@@ -6,9 +6,10 @@ interface Props {
   label?: string
   size?: number
   icon?: string
+  title?: string
 }
 
-export function QRCodeGenerator({ value, label, size = 160, icon = '🔳' }: Props) {
+export function QRCodeGenerator({ value, label, size = 160, icon = '🔳', title }: Props) {
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement | null>(null)
 
@@ -53,7 +54,8 @@ export function QRCodeGenerator({ value, label, size = 160, icon = '🔳' }: Pro
       <button
         className="btn-qr"
         onClick={() => setOpen(true)}
-        title="Tampilkan QR"
+        title={title || 'Tampilkan QR'}
+        aria-label={title || 'Tampilkan QR'}
         style={{ padding: 6, borderRadius: 6 }}
       >
         {icon}

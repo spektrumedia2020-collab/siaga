@@ -69,8 +69,11 @@ const addDays = (value: string, days: number) => {
   return formatDateInput(date)
 }
 
+const ADMIN_TABS = ['overview', 'analytics', 'markets', 'retribusi', 'setoran', 'users', 'pedagang', 'themes'] as const
+type AdminTab = (typeof ADMIN_TABS)[number]
+
 export function SuperAdminDashboardImproved() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'markets' | 'setoran' | 'analytics' | 'users' | 'pedagang' | 'retribusi' | 'themes'>('overview')
+  const [activeTab, setActiveTab] = useState<AdminTab>('overview')
   const [marketsList, setMarketsList] = useState<Array<{ id: number; name: string }>>([])
   const [setoranMarketId, setSetoranMarketId] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
@@ -105,6 +108,25 @@ export function SuperAdminDashboardImproved() {
   useEffect(() => {
     loadUser()
   }, [])
+
+  useEffect(() => {
+    const readHash = () => {
+      const segment = window.location.hash.replace(/^#/, '').split('/')[1] || ''
+      if ((ADMIN_TABS as readonly string[]).includes(segment)) {
+        setActiveTab(segment as AdminTab)
+      }
+    }
+    readHash()
+    window.addEventListener('hashchange', readHash)
+    return () => window.removeEventListener('hashchange', readHash)
+  }, [])
+
+  useEffect(() => {
+    const nextHash = `#superadmin/${activeTab}`
+    if (window.location.hash !== nextHash) {
+      window.location.hash = nextHash
+    }
+  }, [activeTab])
 
   useEffect(() => {
     const loadMarkets = async () => {
@@ -421,7 +443,7 @@ export function SuperAdminDashboardImproved() {
               👥 Manajemen User
             </button>
             <button className={`sidebar-item ${activeTab === 'pedagang' ? 'active' : ''}`} onClick={() => setActiveTab('pedagang')}>
-              🧑‍💼 Manjement Pedagang
+              🧑‍💼 Manajemen Pedagang
             </button>
           </div>
 
@@ -714,7 +736,7 @@ export function SuperAdminDashboardImproved() {
         {activeTab === 'pedagang' && (
           <section className="pedagang-section">
             <div className="section-header">
-              <h2>🧑‍💼 Manjement Pedagang</h2>
+              <h2>🧑‍💼 Manajemen Pedagang</h2>
             </div>
             <OwnersPage mode="superadmin" />
           </section>

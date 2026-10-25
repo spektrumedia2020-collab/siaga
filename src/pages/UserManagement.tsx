@@ -42,6 +42,12 @@ export function UserManagement() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterRole, setFilterRole] = useState('')
   const [filterMarket, setFilterMarket] = useState('')
+  const [page, setPage] = useState(1)
+  const pageSize = 10
+
+  useEffect(() => {
+    setPage(1)
+  }, [searchTerm, filterRole, filterMarket])
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -184,6 +190,9 @@ export function UserManagement() {
     return matchesSearch && matchesRole && matchesMarket
   })
 
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / pageSize))
+  const pagedUsers = filteredUsers.slice((page - 1) * pageSize, page * pageSize)
+
   if (loading) {
     return <div className="siage-loading">Memuat data users...</div>
   }
@@ -280,8 +289,7 @@ export function UserManagement() {
           {filteredUsers.length === 0 ? (
             <tr><td colSpan={6} style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>Tidak ada user yang sesuai filter.</td></tr>
           ) : (
-            filteredUsers.map((user) => (
-              <tr key={user.id}>
+            pagedUsers.map((user) => (              <tr key={user.id}>
                 <td style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb' }}>{getUserDisplayName(user)}</td>
                 <td style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb' }}>{user.email}</td>
                 <td style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb' }}>{user.phone || '-'}</td>
@@ -298,6 +306,31 @@ export function UserManagement() {
           )}
         </tbody>
       </table>
+
+      {filteredUsers.length > 0 && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
+          <span style={{ color: '#6b7280', fontSize: 13 }}>
+            Menampilkan {pagedUsers.length} dari {filteredUsers.length} user
+          </span>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <button
+              className="siage-btn siage-btn-outline"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              ‹ Sebelumnya
+            </button>
+            <span style={{ fontSize: 13 }}>Hal {page}/{totalPages}</span>
+            <button
+              className="siage-btn siage-btn-outline"
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            >
+              Berikutnya ›
+            </button>
+          </div>
+        </div>
+      )}
 
       <ConfirmDialog
         open={!!deleteTarget}

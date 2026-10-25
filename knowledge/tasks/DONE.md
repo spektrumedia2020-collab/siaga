@@ -1,5 +1,29 @@
 # DONE — Arsip Task Selesai
 
+## 2026-10-26 · Batch UI/UX & routing (P0–P2)
+
+**P0**
+- Migration 017 (applied): tabel `market_themes` + seed 4 tema + `markets.theme_id` +
+  policy UPDATE/DELETE `retribution_types` untuk ADMIN.
+- Hapus menu placeholder **Pengaturan** & **Backup** dari Superadmin.
+- Hapus user via `/api/users` DELETE (service role) dengan token admin.
+- `readOnly` UI untuk MARKET_HEAD di 9 halaman (Stalls, Owners, Officers, Sectors, Categories,
+  Retribusi, Transactions, Setoran, MarketDetail) + sembunyikan simpan Publikasi/Edit pasar.
+
+**P1**
+- Tab Superadmin kini deep-link: `#superadmin/<tab>` + `hashchange` (refresh/back/share).
+- Route `/login` eksplisit + halaman **404** untuk path tak dikenal.
+- (Ditunda) migrasi penuh ke path-based `/admin/*` & `/market/*`; hash tetap kanonik untuk dashboard.
+
+**P2**
+- Typo “Manjement Pedagang” → “Manajemen Pedagang”.
+- Tooltip/aria QR: “QR Petugas” vs “QR Pemilik”.
+- Regenerate token memakai `ConfirmDialog` (bukan `window.confirm`).
+- Pagination 10/halaman + reset saat filter pada Manajemen User.
+- (Sisa) toast menggantikan sebagian `alert`, pembersihan inline style/emoji, aksesibilitas modal.
+
+**Verifikasi:** `tsc --noEmit` 0 error; `npm run build` PASS.
+
 ## 2026-10-26 · Deploy produksi penuh (16 commit)
 
 - Push `01df2cc..d6e9f7a` ke `main`; Vercel build aktif.

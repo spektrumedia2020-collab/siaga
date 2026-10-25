@@ -8,10 +8,11 @@ import { MarketDashboard } from './pages/MarketDashboard'
 import { MarketEditPage } from './pages/MarketEditPage'
 import { MarketLandingPage } from './pages/MarketLandingPage'
 import { PublicStallPage } from './pages/PublicStallPage'
+import { NotFoundPage } from './pages/NotFoundPage'
 import './App.css'
 import './styles/layout.css'
 
-type Route = 'login' | 'superadmin' | 'market' | 'market-edit' | 'market-landing' | 'public-stall'
+type Route = 'login' | 'superadmin' | 'market' | 'market-edit' | 'market-landing' | 'public-stall' | 'not-found'
 
 function App() {
   const [user, setUser] = useState<any>(null)
@@ -146,6 +147,14 @@ function App() {
       return 'public-stall'
     }
 
+    if (window.location.pathname === '/login') {
+      return 'login'
+    }
+
+    if (window.location.pathname !== '/' && window.location.pathname !== '/index.html') {
+      return 'not-found'
+    }
+
     if (!user) return 'login'
     const hash = window.location.hash.slice(1)
     const marketRoles = ['MARKET_HEAD', 'MARKET_ADMIN', 'ADMIN_PASAR', 'PASAR_ADMIN', 'OFFICER']
@@ -167,6 +176,10 @@ function App() {
   }
 
   const currentRoute = getCurrentRoute()
+
+  if (currentRoute === 'not-found') {
+    return <NotFoundPage />
+  }
 
   if (currentRoute === 'public-stall') {
     const pathParts = window.location.pathname.split('/').filter(Boolean)

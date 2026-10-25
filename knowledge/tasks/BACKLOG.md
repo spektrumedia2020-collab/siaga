@@ -43,9 +43,10 @@ Setiap item wajib punya evidence sebelum dieksekusi dan hasil verifikasi setelah
   dan integration test `api/users` auth.
 - ~~P1-05 typecheck/lint~~ **selesai 2026-10-26**: `npm run typecheck` 0 error (script ditambahkan).
   ESLint/Prettier belum dipasang.
-- **P1-06 UI read-only untuk MARKET_HEAD.** Saat ini tombol aksi masih tampil meski RLS menolak;
-  sembunyikan/disable aksi tulis di halaman pasar (stalls, owners, officers, sectors, categories,
-  retribusi, transactions, setoran) untuk kepala pasar.
+- ~~P1-06 UI read-only untuk MARKET_HEAD~~ **selesai 2026-10-26**: prop `readOnly` di 9 halaman.
+- **P1-07 Migrasi URL path-based** (`/admin/*`, `/market/*`) — ditunda; saat ini dashboard memakai
+  hash deep-link (`#superadmin/<tab>`, `#market/dashboard/<page>`). Butuh penyesuaian semua link
+  internal + redirect legacy.
 
 ## P2 — Kebersihan
 

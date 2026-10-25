@@ -32,8 +32,8 @@
   "memory_version": 1,
   "context_version": 1,
   "skill_registry_version": 1,
-  "current_task": "Fase 2 (mobile QR URL) / perbaiki mobile CI",
-  "last_task": "Deploy produksi 16 commit + verifikasi endpoint",
+  "current_task": "Deploy batch UI/UX & routing",
+  "last_task": "P0–P2 UI/UX: tema, read-only, routing deep-link, polish",
   "last_session_id": "SESSION-2026-10-25-1",
   "last_scan": "2026-10-25T20:05:00+07:00",
   "last_index": "",
@@ -45,5 +45,5 @@
   "open_wave": null,
   "dirty": true,
   "drift_detected": true,
-  "next_step": "Fase 2: mobile membaca QR URL/token + tombol WA; perbaiki mobile CI (warning analyzer)."
+  "next_step": "Deploy batch UI/UX; verifikasi tab deep-link, read-only, pagination; lanjut path-based URL + Fase 2 mobile."
 }
