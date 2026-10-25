@@ -16,8 +16,8 @@ Semua perbaikan kode selesai: typecheck 0 error, build PASS, RLS 007–015 live,
 
 ## Data produksi
 
-Wiped 2026-10-26: semua tabel operasional 0; tersisa 1 admin, 4 roles, 7 retribution_types,
-5 stall_categories; storage 0 objek.
+Wiped 2026-10-26: semua tabel operasional 0; master retribusi (`retribution_types`, `retribution_rates`)
+dan `stall_categories` juga 0. Tersisa 1 admin + 4 `roles`; storage 0 objek.
 
 ## Berkas kunci
 

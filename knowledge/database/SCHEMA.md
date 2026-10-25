@@ -63,8 +63,9 @@ Sumber: query langsung `pg_class` + `pg_policies` di Supabase SQL Editor
 > TREASURER update setoran pasar; user update profil sendiri.
 
 > **Status data (2026-10-26):** seluruh data operasional **dikosongkan** (wipe terkonfirmasi).
-> Tersisa 1 akun `admin@siaga.id`, 4 roles, 7 retribution_types, 5 stall_categories.
-> Storage: 0 objek. Lihat [DONE.md](../tasks/DONE.md).
+> Tersisa 1 akun `admin@siaga.id` dan 4 `roles`. `retribution_types`, `retribution_rates`, dan
+> `stall_categories` juga dikosongkan pada 2026-10-26. Storage: 0 objek.
+> Lihat [DONE.md](../tasks/DONE.md).
 
 | Tabel | RLS | Policy | Verdict |
 |---|---|---|---|

@@ -1,5 +1,12 @@
 # DONE — Arsip Task Selesai
 
+## 2026-10-26 · Hapus data retribusi & kategori lapak
+
+- `DELETE` semua baris `retribution_rates`, `retribution_types`, `stall_categories`.
+- Verifikasi: `rates=0, types=0, categories=0`; `roles=4`, `users=1` tetap.
+- Efek: master retribusi & kategori kosong; admin dapat menambah ulang lewat dashboard
+  (policy INSERT admin aktif).
+
 ## 2026-10-26 · Hapus halaman juri
 
 - Dihapus: `src/pages/JuriDocumentationPage.tsx` + CSS, route `/juri` & `/docs` di `App.tsx`
