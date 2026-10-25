@@ -4,8 +4,9 @@
 
 ## Task aktif
 
-**P0-11 selesai** (migration 013 applied): anon hanya bisa membaca `id, name` pemilik lapak.
-Berikutnya: **P0-03/P0-04** (wajibkan env rahasia + deploy).
+**P0-03 kode selesai** (`6c8ea42`): `api/lapak.ts` fail-closed bila PIN belum dikonfigurasi.
+**Blocker:** env `PUBLIC_STALL_PIN_HASH` belum diset di Vercel — produksi masih menerima `1234`,
+jadi **belum di-push**. Berikutnya: env → push → verifikasi.
 
 ## Temuan yang memicu task berikutnya
 
@@ -35,9 +36,10 @@ Detail + evidence: [../security/SECURITY.md](../security/SECURITY.md).
 
 ## Next action (spesifik)
 
-1. P0-03/P0-04: set `PUBLIC_STALL_PIN_HASH` dan `PERUMDA_JWT_SECRET` di Vercel (env dulu, lalu deploy).
-2. CI merah: `tsc --noEmit` 40+ error lama — perbaiki bertahap (BACKLOG P1-05).
-3. Setelah P0: P1-04 test otomatis, P1-01 konsolidasi backend.
+1. Set `PUBLIC_STALL_PIN_HASH` di Vercel (Production), lalu push `6c8ea42`.
+2. Verifikasi produksi: `pin=1234` → 401; PIN benar + kode valid → 200/404.
+3. P0-04: set `PERUMDA_JWT_SECRET`, ubah kode fail-closed, deploy, uji dashboard Perumda.
+4. CI merah: `tsc --noEmit` 40+ error lama — perbaiki bertahap (BACKLOG P1-05).
 
 ## Catatan akses DB
 

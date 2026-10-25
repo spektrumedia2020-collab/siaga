@@ -16,8 +16,9 @@ Setiap item wajib punya evidence sebelum dieksekusi dan hasil verifikasi setelah
 > **P0-11 selesai 2026-10-25** (migration `013`) — lihat [DONE.md](./DONE.md).
 
 ### P0-03 · PIN halaman lapak default `1234`
-- **Evidence:** `api/lapak.ts:21-24` — `expectedPin = configuredPin || (!configuredPinHash ? '1234' : '')`.
-- **DoD:** `PUBLIC_STALL_PIN_HASH` wajib di produksi; fallback dihapus; rate limit per IP/endpoint.
+- **Status:** kode fail-closed selesai (commit `6c8ea42`), **belum deploy**.
+- **Blocker:** `PUBLIC_STALL_PIN_HASH` belum diset di Vercel (produksi masih menerima `1234`).
+- **DoD:** env diset → push → uji `pin=1234` = 401, PIN benar = 404/200.
 
 ### P0-04 · Secret JWT Perumda memakai fallback service-role key
 - **Evidence:** `api/perumda.ts:43-45` (`PERUMDA_JWT_SECRET || SUPABASE_SERVICE_ROLE_KEY`).

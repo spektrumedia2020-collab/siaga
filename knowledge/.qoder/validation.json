@@ -43,6 +43,14 @@
       "status": "PASS",
       "evidence": "Audit pg_class + pg_policies 2026-10-25: 16 tabel public, 46 policy. Rincian di database/SCHEMA.md. Temuan kritis: users SELECT/INSERT/UPDATE true."
     },
+    "api_lapak_pin": {
+      "status": "PASS",
+      "evidence": "Uji lokal (mock): tanpa env -> 503; plaintext benar -> 400 (lolos PIN); salah -> 401; hash benar -> 400; hash salah -> 401. tsc file PASS. BELUM DEPLOY."
+    },
+    "prod_lapak_pin": {
+      "status": "FAIL",
+      "evidence": "Produksi masih menerima PIN default 1234 (404 dengan kode tak ada) pada 2026-10-25; env PIN belum diset."
+    },
     "anon_stall_owners_columns": {
       "status": "PASS",
       "evidence": "migration 013: anon_table_select=false, anon_id/name=true, anon_nik/phone/address=false, auth_table_select=true. Uji runtime (rollback): anon_id_name_rows=2000, anon_nik_blocked=true."

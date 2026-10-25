@@ -9,7 +9,7 @@ Status konfigurasi DB produksi: **UNKNOWN** (tidak ada akses DB pada sesi ini).
 |---|---|---|---|
 | S-01 | CRITICAL | `api/users.ts` tanpa autentikasi | **FIXED & TERVERIFIKASI di produksi** |
 | S-02 | HIGH | RLS `user_roles` `USING (true)` | **FIXED & TERVERIFIKASI di DB** |
-| S-03 | MEDIUM | PIN lapak default `1234` | OPEN bila env kosong |
+| S-03 | MEDIUM | PIN lapak default `1234` | **FIXED (kode)** — menunggu env + deploy |
 | S-04 | MEDIUM | Secret JWT Perumda fallback ke service-role key | OPEN bila env kosong |
 | S-05 | HIGH | RLS `retribution_rates` `USING (true)` untuk insert/update | **FIXED & TERVERIFIKASI di DB** |
 | S-06 | LOW | CORS `*` pada Vercel functions | **PARTIAL** — `users` diperbaiki |
@@ -107,16 +107,25 @@ sehingga eskalasi tidak selalu butuh akun internal.
 
 ---
 
-## S-03 · MEDIUM — PIN lapak default `1234`
+## S-03 · MEDIUM — PIN lapak default `1234` — **FIXED (kode), BELUM DEPLOY**
 
-**Evidence**: `api/lapak.ts:21-24`
-```ts
-const expectedPin = configuredPin || (!configuredPinHash ? '1234' : '')
+**Evidence awal**: `api/lapak.ts:21-24` (`expectedPin = configuredPin || (!configuredPinHash ? '1234' : '')`).
+
+**Bukti produksi sebelum perbaikan (2026-10-25)**:
 ```
+POST /api/lapak {marketId:1, code:"ZZZ-NOT-EXIST", pin:"1234"} -> 404 (PIN diterima)
+POST /api/lapak {marketId:1, code:"ZZZ-NOT-EXIST", pin:"9999"} -> 401
+```
+Artinya env PIN belum diset di Vercel dan default `1234` masih aktif.
 
-**Dampak**: bila env tidak diset, seluruh data lapak publik terbuka dengan PIN `1234`.
+**Resolusi (kode, commit `6c8ea42`)**:
+- Tanpa `PUBLIC_STALL_PIN` / `PUBLIC_STALL_PIN_HASH` → **503 fail-closed**.
+- PIN wajib 4 digit; plaintext dibandingkan constant-time (`timingSafeEqual`); hash via bcrypt.
 
-**Perbaikan**: wajibkan `PUBLIC_STALL_PIN_HASH` (bcrypt); fail-closed bila kosong; rate limit.
+**Uji lokal**: tanpa env 503; plaintext benar 400 (lolos PIN); salah 401; hash benar 400; hash salah 401.
+
+**Sisa**: env belum diset di Vercel → **jangan push** sampai `PUBLIC_STALL_PIN_HASH` dipasang,
+lalu deploy + uji produksi: `1234` harus 401.
 
 ---
 
