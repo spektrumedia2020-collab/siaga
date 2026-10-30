@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../core/theme/app_theme.dart';
 
 class LapakPage extends ConsumerStatefulWidget {
   const LapakPage({super.key, required this.lapakId});
@@ -18,7 +17,7 @@ class _LapakPageState extends ConsumerState<LapakPage> {
   Map<String, dynamic>? stallData;
   List<Map<String, dynamic>> retributionTypes = [];
   List<Map<String, dynamic>> transactionHistory = [];
-  int _selectedTabIndex = 0;
+  final int _selectedTabIndex = 0;
   String? _accessDeniedMessage;
   bool _alreadyCollectedDailyToday = false;
 
@@ -99,43 +98,43 @@ class _LapakPageState extends ConsumerState<LapakPage> {
         // Get owner details
         if (ownerId != null) {
           try {
-            print('DEBUG: Loading owner for ownerId=$ownerId');
+            debugPrint('DEBUG: Loading owner for ownerId=$ownerId');
             final owner = await supabase
                 .from('stall_owners')
                 .select('name, nik, phone, address')
                 .eq('id', ownerId)
                 .maybeSingle();
-            print('DEBUG: Owner result=$owner');
+            debugPrint('DEBUG: Owner result=$owner');
             if (owner != null) {
               ownerName = owner['name']?.toString();
               ownerNIK = owner['nik']?.toString();
               ownerPhone = owner['phone']?.toString();
               ownerAddress = owner['address']?.toString();
-              print('DEBUG: ownerName=$ownerName, ownerNIK=$ownerNIK');
+              debugPrint('DEBUG: ownerName=$ownerName, ownerNIK=$ownerNIK');
             }
-          } catch (e) {
-            print('Error loading owner: $e');
+          } on Exception catch (e) {
+            debugPrint('Error loading owner: $e');
           }
         } else {
-          print('DEBUG: ownerId is null');
+          debugPrint('DEBUG: ownerId is null');
         }
         
         // Get sector name
         if (sectorId != null) {
           try {
-            print('DEBUG: Loading sector for sectorId=$sectorId');
+            debugPrint('DEBUG: Loading sector for sectorId=$sectorId');
             final sector = await supabase
                 .from('market_sectors')
                 .select('name')
                 .eq('id', sectorId)
                 .maybeSingle();
-            print('DEBUG: Sector result=$sector');
+            debugPrint('DEBUG: Sector result=$sector');
             sectorName = sector?['name']?.toString();
-          } catch (e) {
-            print('Error loading sector: $e');
+          } on Exception catch (e) {
+            debugPrint('Error loading sector: $e');
           }
         } else {
-          print('DEBUG: sectorId is null');
+          debugPrint('DEBUG: sectorId is null');
         }
         
         stallData = row;
@@ -205,7 +204,7 @@ class _LapakPageState extends ConsumerState<LapakPage> {
             .toList();
         
         // Load rates for this stall
-        if (row != null && row['market_id'] != null) {
+        if (row['market_id'] != null) {
           final marketId = row['market_id'] as int;
           final stallId = row['id'] as int;
           
@@ -243,7 +242,6 @@ class _LapakPageState extends ConsumerState<LapakPage> {
         
         if (mounted) {
           setState(() {
-            this.ownerName = ownerName;
             _ownerNIK = ownerNIK;
             _ownerPhone = ownerPhone;
             _ownerAddress = ownerAddress;
@@ -252,8 +250,8 @@ class _LapakPageState extends ConsumerState<LapakPage> {
             retributionTypes = loadedTypes;
           });
         }
-      } catch (e) {
-        print('Error loading types/rates: $e');
+      } on Exception catch (e) {
+        debugPrint('Error loading types/rates: $e');
         if (mounted) {
           setState(() => loadingOwner = false);
         }
@@ -264,7 +262,7 @@ class _LapakPageState extends ConsumerState<LapakPage> {
         final transactionsResult = await supabase
             .from('transactions')
             .select('id, amount, payment_method, status, created_at')
-            .eq('stall_id', row!['id'])
+            .eq('stall_id', row['id'])
             .order('created_at', ascending: false)
             .limit(20);
         
@@ -275,11 +273,11 @@ class _LapakPageState extends ConsumerState<LapakPage> {
                 .toList();
           });
         }
-      } catch (e) {
-        print('Error loading transactions: $e');
+      } on Exception catch (e) {
+        debugPrint('Error loading transactions: $e');
       }
-    } catch (e) {
-      print('Error in _loadLapakData: $e');
+    } on Exception catch (e) {
+      debugPrint('Error in _loadLapakData: $e');
       if (mounted) {
         setState(() => loadingOwner = false);
       }
@@ -302,8 +300,6 @@ class _LapakPageState extends ConsumerState<LapakPage> {
     final stallNumber = stallData?['number'] ?? '-';
     final stallStatus = stallData?['status'] ?? 'AKTIF';
     final isActive = stallStatus == 'AKTIF';
-    final sectorName = _sectorName ?? 'Belum ditentukan';
-    final ownerName = this.ownerName ?? 'Belum ada pemilik';
 
     return DefaultTabController(
       length: 3,
@@ -326,10 +322,10 @@ class _LapakPageState extends ConsumerState<LapakPage> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: isActive ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                color: isActive ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: isActive ? Colors.green.withOpacity(0.3) : Colors.red.withOpacity(0.3),
+                  color: isActive ? Colors.green.withValues(alpha: 0.3) : Colors.red.withValues(alpha: 0.3),
                 ),
               ),
               child: Text(
@@ -353,7 +349,7 @@ class _LapakPageState extends ConsumerState<LapakPage> {
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withOpacity(0.05),
+                    color: Colors.grey.withValues(alpha: 0.05),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -520,7 +516,7 @@ class _LapakPageState extends ConsumerState<LapakPage> {
             borderRadius: BorderRadius.circular(14),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withOpacity(0.05),
+                color: Colors.grey.withValues(alpha: 0.05),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -642,7 +638,7 @@ class _LapakPageState extends ConsumerState<LapakPage> {
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
+                  color: Colors.grey.withValues(alpha: 0.1),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -796,7 +792,7 @@ class _LapakPageState extends ConsumerState<LapakPage> {
             borderRadius: BorderRadius.circular(14),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withOpacity(0.05),
+                color: Colors.grey.withValues(alpha: 0.05),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -813,7 +809,7 @@ class _LapakPageState extends ConsumerState<LapakPage> {
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.receipt_long,
                   color: Colors.white,
                   size: 24,
@@ -846,9 +842,9 @@ class _LapakPageState extends ConsumerState<LapakPage> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
+                  color: statusColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: statusColor.withOpacity(0.3)),
+                  border: Border.all(color: statusColor.withValues(alpha: 0.3)),
                 ),
                 child: Text(
                   statusText,
@@ -885,7 +881,7 @@ class _LapakPageState extends ConsumerState<LapakPage> {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
+              color: iconColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, size: 20, color: iconColor),

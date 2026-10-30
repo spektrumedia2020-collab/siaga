@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../core/theme/app_theme.dart';
 import '../../services/auth_service.dart';
 import '../../config/router.dart';
 
@@ -19,13 +18,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   bool _isLoading = false;
   bool _isPasswordVisible = false;
   String? _errorMessage;
-  late final AuthService _authService;
-
-  @override
-  void initState() {
-    super.initState();
-    _authService = AuthService(Supabase.instance.client);
-  }
 
   Future<void> _login() async {
     setState(() {
@@ -34,7 +26,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     });
 
     try {
-      final response = await _authService.loginOfficer(
+      final response = await AuthService(Supabase.instance.client).loginOfficer(
         _emailController.text.trim(),
         _passwordController.text,
       );
@@ -52,7 +44,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
       ref.read(authProvider.notifier).state = true;
       context.go('/dashboard');
-    } catch (e) {
+    } on Exception catch (e) {
       if (!mounted) return;
       setState(() {
         _errorMessage = 'Login gagal: ${e.toString()}';
@@ -118,10 +110,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         prefixIcon: Icon(Icons.email_outlined),
                       ),
                       validator: (value) {
-                        if (value == null || value.isEmpty)
+                        if (value == null || value.isEmpty) {
                           return 'Email wajib diisi';
-                        if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value))
+                        }
+                        if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
                           return 'Format email tidak valid';
+                        }
                         return null;
                       },
                     ),
@@ -147,8 +141,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         ),
                       ),
                       validator: (value) {
-                        if (value == null || value.isEmpty)
+                        if (value == null || value.isEmpty) {
                           return 'Kata sandi wajib diisi';
+                        }
                         return null;
                       },
                     ),

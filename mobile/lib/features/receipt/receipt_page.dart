@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
-import '../../core/theme/app_theme.dart';
 
 class ReceiptPage extends ConsumerStatefulWidget {
   const ReceiptPage({super.key, required this.receipt});
@@ -44,7 +43,7 @@ Tanggal: ${widget.receipt['createdAt']}
             child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                pw.Text('Bukti Transaksi SiAga Officer', style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold)),
+                pw.Text('Bukti Transaksi SiAga Officer', style: const pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold)),
                 pw.SizedBox(height: 16),
                 pw.Text('ID Transaksi: ${widget.receipt['transactionId']}', style: const pw.TextStyle(fontSize: 14)),
                 pw.Text('Stall ID: ${widget.receipt['stallId'] ?? widget.receipt['lapakId']}', style: const pw.TextStyle(fontSize: 14)),

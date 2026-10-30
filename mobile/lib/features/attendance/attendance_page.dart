@@ -17,7 +17,6 @@ class _AttendancePageState extends ConsumerState<AttendancePage> {
   String? _errorMessage;
   bool _isCheckedIn = false;
   DateTime? _checkInTime;
-  Position? _currentPosition;
 
   @override
   void initState() {
@@ -35,7 +34,7 @@ class _AttendancePageState extends ConsumerState<AttendancePage> {
       if (permission == LocationPermission.denied) {
         await Geolocator.requestPermission();
       }
-    } catch (e) {
+    } on Exception {
       // ignore
     }
   }
@@ -66,7 +65,7 @@ class _AttendancePageState extends ConsumerState<AttendancePage> {
           _checkInTime = checkIn;
         });
       }
-    } catch (e) {
+    } on Exception {
       // ignore errors
     }
   }
@@ -95,7 +94,9 @@ class _AttendancePageState extends ConsumerState<AttendancePage> {
       }
 
       final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
       );
 
       final user = Supabase.instance.client.auth.currentUser;
@@ -141,10 +142,9 @@ class _AttendancePageState extends ConsumerState<AttendancePage> {
         setState(() {
           _isCheckedIn = true;
           _checkInTime = DateTime.now();
-          _currentPosition = position;
         });
       }
-    } catch (e) {
+    } on Exception catch (e) {
       if (mounted) {
         setState(() {
           _errorMessage = 'Check-in gagal: ${e.toString()}';
@@ -191,7 +191,9 @@ class _AttendancePageState extends ConsumerState<AttendancePage> {
       }
 
       final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
       );
 
       final attendance = await Supabase.instance.client
@@ -215,7 +217,7 @@ class _AttendancePageState extends ConsumerState<AttendancePage> {
           _checkInTime = null;
         });
       }
-    } catch (e) {
+    } on Exception catch (e) {
       if (mounted) {
         setState(() {
           _errorMessage = 'Check-out gagal: ${e.toString()}';

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/theme/app_theme.dart';
 import '../../services/sync_service.dart';
@@ -71,7 +70,7 @@ class _LandingPageState extends State<LandingPage> {
 
         showSuccessSnackBar(context, 'Sinkronisasi berhasil: $syncedTx transaksi');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       if (mounted) {
         setState(() {
           _syncing = false;
@@ -119,7 +118,7 @@ class _LandingPageState extends State<LandingPage> {
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.15),
+                            color: Colors.black.withValues(alpha: 0.15),
                             blurRadius: 20,
                             offset: const Offset(0, 8),
                           ),
@@ -152,7 +151,7 @@ class _LandingPageState extends State<LandingPage> {
                     Text(
                       'Aplikasi Petugas Retribusi Pasar',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.85),
+                        color: Colors.white.withValues(alpha: 0.85),
                         fontSize: 14,
                       ),
                     ),
@@ -212,7 +211,7 @@ class _LandingPageState extends State<LandingPage> {
                       Switch(
                         value: _isOnlineMode,
                         onChanged: (_) => _toggleOnlineMode(),
-                        activeColor: Colors.green,
+                        activeThumbColor: Colors.green,
                         inactiveThumbColor: Colors.orange,
                       ),
                     ],

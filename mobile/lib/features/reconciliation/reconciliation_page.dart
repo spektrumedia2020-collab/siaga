@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 
@@ -67,7 +66,11 @@ class _ReconciliationPageState extends ConsumerState<ReconciliationPage> {
         final id = s['id'] as int;
         final owner = s['stall_owners'] is Map ? (s['stall_owners'] as Map)['name']?.toString() ?? '-' : '-';
         final row = {'id': id, 'code': s['code']?.toString() ?? '$id', 'number': s['number']?.toString() ?? '-', 'owner_name': owner};
-        if (paidIds.contains(id)) paid.add(row); else unpaid.add(row);
+        if (paidIds.contains(id)) {
+          paid.add(row);
+        } else {
+          unpaid.add(row);
+        }
       }
 
       double expected = 0;
@@ -79,10 +82,10 @@ class _ReconciliationPageState extends ConsumerState<ReconciliationPage> {
           if (r['stall_id'] is int) rateMap[r['stall_id'] as int] = (r['amount'] as num?)?.toDouble() ?? 0;
         }
         for (final s in stalls) { if (rateMap.containsKey(s['id'])) expected += rateMap[s['id']]!; }
-      } catch (_) { expected = actual; }
+      } on Exception catch (_) { expected = actual; }
 
       if (mounted) setState(() { actualRevenue = actual; expectedRevenue = expected; variance = expected - actual; paidStalls = paid.length; unpaidStalls = unpaid.length; paidList = paid; unpaidList = unpaid; loading = false; });
-    } catch (e) { if (mounted) setState(() { loading = false; errorMessage = 'Gagal: $e'; }); }
+    } on Exception catch (e) { if (mounted) setState(() { loading = false; errorMessage = 'Gagal: $e'; }); }
   }
 
   @override
@@ -186,7 +189,7 @@ class _StatCard extends StatelessWidget {
   const _StatCard({required this.title, required this.value, required this.color});
   @override
   Widget build(BuildContext context) {
-    return Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: color.withOpacity(0.08), borderRadius: BorderRadius.circular(16), border: Border.all(color: color.withOpacity(0.3))), child: Column(children: [Text(title, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600)), const SizedBox(height: 6), Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey[800]))]));
+    return Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: color.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(16), border: Border.all(color: color.withValues(alpha: 0.3))), child: Column(children: [Text(title, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600)), const SizedBox(height: 6), Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey[800]))]));
   }
 }
 

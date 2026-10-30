@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../core/theme/app_theme.dart';
 
 class PaymentPage extends ConsumerStatefulWidget {
   const PaymentPage({super.key, required this.lapakId});
@@ -46,7 +45,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
           });
         }
       }
-    } catch (e) {
+    } on Exception {
       // ignore
     }
   }
@@ -102,7 +101,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
       if (stallId != null) {
         _stallId = stallId;
       }
-    } catch (e) {
+    } on Exception {
       // ignore errors silently
     }
   }
@@ -147,7 +146,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
       };
 
       context.go('/receipt', extra: receipt);
-    } catch (e) {
+    } on Exception catch (e) {
       if (!mounted) return;
       setState(() => _message = 'Gagal menyimpan pembayaran: $e');
     } finally {
@@ -179,7 +178,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
             TextField(controller: _amountController, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Jumlah (Rp)', prefixIcon: Icon(Icons.payments_outlined))),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
-              value: _paymentMethod,
+              initialValue: _paymentMethod,
               decoration: const InputDecoration(labelText: 'Metode Pembayaran', prefixIcon: Icon(Icons.payment_outlined)),
               items: const [
                 DropdownMenuItem(value: 'QRIS', child: Text('QRIS')),

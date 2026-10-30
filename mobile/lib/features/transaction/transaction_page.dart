@@ -28,7 +28,6 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
   List<Map<String, dynamic>> _retributionTypes = [];
   bool _loadingTypes = true;
   bool _loadingPaymentData = true;
-  bool _typeLoaded = false;
 
   @override
   void initState() {
@@ -63,7 +62,7 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
             if (rate != null && rate['amount'] != null) {
               t['amount'] = rate['amount'];
             }
-          } catch (_) {}
+          } on Exception catch (_) {}
         }
       }
       if (mounted) {
@@ -72,7 +71,7 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
           _loadingTypes = false;
         });
       }
-    } catch (e) {
+    } on Exception {
       if (mounted) setState(() => _loadingTypes = false);
     }
   }
@@ -119,7 +118,7 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
             row = Map<String, dynamic>.from(match.first as Map);
             debugPrint('DEBUG TransactionPage: Found stall in legacy table');
           }
-        } catch (e) {
+        } on Exception catch (e) {
           debugPrint('DEBUG TransactionPage: Legacy lookup failed: $e');
         }
       }
@@ -135,7 +134,7 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
             if (owner != null && owner['name'] != null) {
               _nameController.text = owner['name'] as String;
             }
-          } catch (e) {
+          } on Exception catch (e) {
             debugPrint('DEBUG TransactionPage: Owner lookup failed: $e');
           }
         }
@@ -152,7 +151,6 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
             _retributionTypeName = typeResult['name']?.toString();
             final typeText = '${typeResult['code'] ?? ''} ${typeResult['name'] ?? ''} ${typeResult['unit'] ?? ''}'.toUpperCase();
             _isDailyRetribution = typeText.contains('HARIAN') || typeText.contains('HARI');
-            _typeLoaded = true;
             debugPrint('DEBUG TransactionPage: Found type name: $_retributionTypeName');
             // Ambil amount dari retribution_rates sesuai stall_id atau market_id
             final stallIdLocal = _stallId;
@@ -174,7 +172,7 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
                   // Jika tidak ada, cari rate yang berlaku untuk semua stall di market ini
                   debugPrint('DEBUG TransactionPage: No rate found for stall=$_stallId, market=$_marketId, type=$typeIdNumeric');
                 }
-              } catch (e) {
+              } on Exception catch (e) {
                 debugPrint('DEBUG TransactionPage: Rate lookup error: $e');
               }
             } else {
@@ -193,7 +191,7 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
                   _amountController.text = rateAny['amount'].toString();
                   debugPrint('DEBUG TransactionPage: Found amount (no stall): ${rateAny['amount']}');
                 }
-              } catch (e) {
+              } on Exception catch (e) {
                 debugPrint('DEBUG TransactionPage: Rate lookup error: $e');
               }
             }
@@ -201,7 +199,7 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
           } else {
             debugPrint('DEBUG TransactionPage: Type not found for id=$typeIdNumeric');
           }
-        } catch (e) {
+        } on Exception catch (e) {
           debugPrint('DEBUG TransactionPage: Type lookup error: $e');
         }
       } else {
@@ -213,7 +211,7 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
           _loadingPaymentData = false;
         });
       }
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('DEBUG TransactionPage: _loadPaymentData error: $e');
       if (mounted) setState(() => _loadingPaymentData = false);
     }
@@ -314,7 +312,7 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
       };
 
       context.go('/receipt', extra: receipt);
-    } catch (e) {
+    } on Exception catch (e) {
       if (!mounted) return;
       setState(() {
         _message = 'Gagal menyimpan transaksi: $e';
@@ -434,8 +432,8 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: _messageIsError
-                            ? Colors.red.withOpacity(0.1)
-                            : Colors.green.withOpacity(0.1),
+                            ? Colors.red.withValues(alpha: 0.1)
+                            : Colors.green.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
                           color: _messageIsError ? Colors.red : Colors.green,

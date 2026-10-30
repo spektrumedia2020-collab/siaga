@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Service for handling officer authentication
@@ -19,7 +20,7 @@ class AuthService {
       );
       
       return response;
-    } catch (error) {
+    } on Exception {
       // If auth fails, try legacy check via RPC (if available)
       // This requires the check_officer_login RPC to be set up in Supabase
       rethrow;
@@ -37,8 +38,8 @@ class AuthService {
       });
       
       return response as bool? ?? false;
-    } catch (error) {
-      print('Auth check error: $error');
+    } on Exception catch (error) {
+      debugPrint('Auth check error: $error');
       return false;
     }
   }
@@ -57,8 +58,8 @@ class AuthService {
           .maybeSingle();
 
       return response;
-    } catch (error) {
-      print('Error getting officer profile: $error');
+    } on Exception catch (error) {
+      debugPrint('Error getting officer profile: $error');
       return null;
     }
   }

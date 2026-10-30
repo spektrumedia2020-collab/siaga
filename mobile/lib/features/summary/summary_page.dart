@@ -142,7 +142,7 @@ class _SummaryPageBodyState extends State<SummaryPageBody> {
           _loading = false;
         });
       }
-    } catch (e) {
+    } on Exception catch (e) {
       if (mounted) setState(() { _error = 'Gagal memuat rekap: ${e.toString()}'; _loading = false; });
     }
   }
@@ -249,9 +249,9 @@ class _SummaryCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

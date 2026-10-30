@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 /// try {
 ///   await supabase.from('transactions').insert(...);
 ///   showSuccessSnackBar(context, 'Transaksi berhasil disimpan');
-/// } catch (e) {
+/// } on Exception catch (e) {
 ///   showErrorSnackBar(context, 'Gagal menyimpan transaksi: $e');
 /// }
 /// ```

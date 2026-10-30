@@ -1,7 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
-import '../../shared/models/stall.dart';
 
 class AttendanceService {
   final SupabaseClient _client;
@@ -39,9 +39,11 @@ class AttendanceService {
 
     try {
       return await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
       );
-    } catch (e) {
+    } on Exception {
       return null;
     }
   }
@@ -55,7 +57,7 @@ class AttendanceService {
     try {
       final position = await getCurrentPosition();
 
-      final response = await _client.from('attendance').insert({
+      await _client.from('attendance').insert({
         'id': _uuid.v4(),
         'officer_id': officerId,
         'officer_name': officerName,
@@ -66,9 +68,9 @@ class AttendanceService {
         'status': 'present',
       }).select().single();
 
-      return response != null;
-    } catch (e) {
-      print('Check-in failed: $e');
+      return true;
+    } on Exception catch (e) {
+      debugPrint('Check-in failed: $e');
       return false;
     }
   }
@@ -80,15 +82,15 @@ class AttendanceService {
     try {
       final position = await getCurrentPosition();
 
-      final response = await _client.from('attendance').update({
+      await _client.from('attendance').update({
         'check_out': DateTime.now().toIso8601String(),
         'check_out_lat': position?.latitude,
         'check_out_lng': position?.longitude,
       }).eq('id', attendanceId).select().single();
 
-      return response != null;
-    } catch (e) {
-      print('Check-out failed: $e');
+      return true;
+    } on Exception catch (e) {
+      debugPrint('Check-out failed: $e');
       return false;
     }
   }
@@ -110,7 +112,7 @@ class AttendanceService {
         return Map<String, dynamic>.from(response);
       }
       return null;
-    } catch (e) {
+    } on Exception {
       return null;
     }
   }

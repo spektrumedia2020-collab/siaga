@@ -43,6 +43,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Provide .env for analysis
+        run: cp .env.example .env
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:

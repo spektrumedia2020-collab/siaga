@@ -63,7 +63,7 @@ class _SetoranPageState extends ConsumerState<SetoranPage> {
           _loadingRevenue = false;
         });
       }
-    } catch (e) {
+    } on Exception {
       if (mounted) setState(() => _loadingRevenue = false);
     }
   }
@@ -117,7 +117,7 @@ class _SetoranPageState extends ConsumerState<SetoranPage> {
           _isLoading = false;
         });
       }
-    } catch (e) {
+    } on Exception catch (e) {
       if (mounted) {
         setState(() {
           _errorMessage = 'Gagal memuat setoran: ${e.toString()}';
@@ -147,7 +147,7 @@ class _SetoranPageState extends ConsumerState<SetoranPage> {
 
       final marketId = officerData['market_id'] as int;
       await _showCreateSetoranDialog(user.id, marketId);
-    } catch (e) {
+    } on Exception catch (e) {
       if (mounted) {
         showErrorSnackBar(context, 'Gagal: ${e.toString()}');
       }

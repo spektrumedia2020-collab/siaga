@@ -58,7 +58,7 @@ class StallRepository {
       }
 
       return stall;
-    } catch (e) {
+    } on Exception {
       return null;
     }
   }
@@ -89,7 +89,7 @@ class StallRepository {
       if (legacyOwner != null && legacyOwner['nama_pemilik'] != null) {
         return legacyOwner['nama_pemilik'] as String;
       }
-    } catch (e) {
+    } on Exception {
       // ignore errors
     }
     return null;
@@ -108,7 +108,7 @@ class StallRepository {
       return response
           .map((e) => Stall.fromJson(Map<String, dynamic>.from(e as Map)))
           .toList();
-    } catch (e) {
+    } on Exception {
       return [];
     }
   }

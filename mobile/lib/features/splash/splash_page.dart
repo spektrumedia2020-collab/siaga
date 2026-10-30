@@ -103,7 +103,7 @@ class _SplashPageState extends State<SplashPage>
                   height: 250,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.05),
+                    color: Colors.white.withValues(alpha: 0.05),
                   ),
                 ),
               ),
@@ -115,7 +115,7 @@ class _SplashPageState extends State<SplashPage>
                   height: 180,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.05),
+                    color: Colors.white.withValues(alpha: 0.05),
                   ),
                 ),
               ),
@@ -127,7 +127,7 @@ class _SplashPageState extends State<SplashPage>
                   height: 120,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.05),
+                    color: Colors.white.withValues(alpha: 0.05),
                   ),
                 ),
               ),
@@ -156,7 +156,7 @@ class _SplashPageState extends State<SplashPage>
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.25),
+                            color: Colors.black.withValues(alpha: 0.25),
                             blurRadius: 30,
                             offset: const Offset(0, 12),
                           ),
@@ -175,7 +175,7 @@ class _SplashPageState extends State<SplashPage>
                               child: Image.asset(
                                 'assets/logo.jpeg',
                                 fit: BoxFit.contain,
-                                errorBuilder: (context, error, stackTrace) => Icon(
+                                errorBuilder: (context, error, stackTrace) => const Icon(
                                   Icons.store_mall_directory_rounded,
                                   size: 80,
                                   color: AppTheme.primaryGreen,
@@ -261,7 +261,7 @@ class _SplashPageState extends State<SplashPage>
                             borderRadius: BorderRadius.circular(30),
                           ),
                           elevation: 5,
-                          shadowColor: Colors.black.withOpacity(0.3),
+                          shadowColor: Colors.black.withValues(alpha: 0.3),
                         ),
                         child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -292,9 +292,9 @@ class _SplashPageState extends State<SplashPage>
                         child: child,
                       );
                     },
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 30),
-                      child: const Text(
+                    child: const Padding(
+                      padding: EdgeInsets.only(bottom: 30),
+                      child: Text(
                         'v1.0.0 · Perumda Pasar Karya Makassar',
                         style: TextStyle(
                           color: Colors.white,
@@ -308,22 +308,6 @@ class _SplashPageState extends State<SplashPage>
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _LoginNavigator extends StatelessWidget {
-  const _LoginNavigator();
-
-  @override
-  Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.go('/login');
-    });
-    return const Scaffold(
-      body: Center(
-        child: CircularProgressIndicator(),
       ),
     );
   }

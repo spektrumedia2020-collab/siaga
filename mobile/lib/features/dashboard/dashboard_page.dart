@@ -24,7 +24,7 @@ class _DashboardPageState extends State<DashboardPage> {
   late int _currentIndex;
   double _todayRevenue = 0;
   int _paidStalls = 0;
-  int _targetStalls = 50;
+  final int _targetStalls = 50;
   bool _loadingStats = true;
   String _marketName = '';
   String _marketAddress = '';
@@ -58,7 +58,7 @@ class _DashboardPageState extends State<DashboardPage> {
       final parts = <String>[];
       result.forEach((key, value) {
         if (value > 0) {
-          total += (value as int);
+          total += value;
           parts.add('$key: $value');
         }
       });
@@ -70,7 +70,7 @@ class _DashboardPageState extends State<DashboardPage> {
           showInfoSnackBar(context, 'Tidak ada data yang perlu disinkronkan');
         }
       }
-    } catch (e) {
+    } on Exception {
       if (mounted) {
         showErrorSnackBar(context, 'Sinkronisasi gagal');
       }
@@ -133,7 +133,7 @@ class _DashboardPageState extends State<DashboardPage> {
         }
 
         response = await todayQuery;
-      } catch (e) {
+      } on Exception catch (e) {
         final errorString = e.toString();
         if (errorString.contains('42703') || errorString.contains('market_id')) {
           response = await Supabase.instance.client
@@ -155,7 +155,7 @@ class _DashboardPageState extends State<DashboardPage> {
           _loadingStats = false;
         });
       }
-    } catch (e) {
+    } on Exception {
       if (mounted) setState(() => _loadingStats = false);
     }
   }
@@ -247,7 +247,7 @@ class _DashboardPageState extends State<DashboardPage> {
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, -2)),
+            BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, -2)),
           ],
         ),
         child: BottomAppBar(
@@ -404,7 +404,7 @@ class DashboardHomePage extends StatelessWidget {
                   border: Border.all(color: const Color(0xFFA5D6A7), width: 1.5),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF1F7A1F).withOpacity(0.15),
+                      color: const Color(0xFF1F7A1F).withValues(alpha: 0.15),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     ),
@@ -416,7 +416,7 @@ class DashboardHomePage extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.payments, color: const Color(0xFF1F7A1F), size: 24),
+                        const Icon(Icons.payments, color: Color(0xFF1F7A1F), size: 24),
                         const SizedBox(width: 8),
                         Flexible(
                           child: Text(
@@ -443,7 +443,7 @@ class DashboardHomePage extends StatelessWidget {
                   border: Border.all(color: const Color(0xFFCC8050), width: 1.5),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFE65100).withOpacity(0.15),
+                      color: const Color(0xFFE65100).withValues(alpha: 0.15),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     ),
@@ -455,7 +455,7 @@ class DashboardHomePage extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.storefront, color: const Color(0xFFE65100), size: 24),
+                        const Icon(Icons.storefront, color: Color(0xFFE65100), size: 24),
                         const SizedBox(width: 8),
                         Text(
                           '$paidStalls/$targetStalls',
@@ -482,16 +482,21 @@ class DashboardHomePage extends StatelessWidget {
   Widget _buildGreetingSection(BuildContext context, String userName, String marketName, String marketAddress) {
     final hour = DateTime.now().hour;
     String greeting;
-    if (hour < 12) greeting = 'Selamat pagi';
-    else if (hour < 15) greeting = 'Selamat siang';
-    else if (hour < 19) greeting = 'Selamat sore';
-    else greeting = 'Selamat malam';
+    if (hour < 12) {
+      greeting = 'Selamat pagi';
+    } else if (hour < 15) {
+      greeting = 'Selamat siang';
+    } else if (hour < 19) {
+      greeting = 'Selamat sore';
+    } else {
+      greeting = 'Selamat malam';
+    }
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Theme.of(context).colorScheme.primary, Theme.of(context).colorScheme.primary.withOpacity(0.8)]),
+        gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Theme.of(context).colorScheme.primary, Theme.of(context).colorScheme.primary.withValues(alpha: 0.8)]),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -505,13 +510,13 @@ class DashboardHomePage extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             'Anda bertugas di Pasar $marketName',
-            style: TextStyle(color: Colors.white.withOpacity(0.85), fontSize: 14),
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 14),
             textAlign: TextAlign.center,
           ),
           if (marketAddress.isNotEmpty)
             Text(
               marketAddress,
-              style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12),
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12),
               textAlign: TextAlign.center,
             ),
         ],
@@ -530,7 +535,7 @@ class DashboardHomePage extends StatelessWidget {
         border: Border.all(color: const Color(0xFFD9D9D9), width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -587,7 +592,7 @@ class _MenuCard extends StatelessWidget {
             border: Border.all(color: const Color(0xFFD9D9D9), width: 1.0),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
+                color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 6,
                 offset: const Offset(0, 3),
               ),
@@ -725,7 +730,7 @@ class _ProfilePageState extends State<ProfilePage> {
             .eq('market_id', marketId)
             .gte('created_at', startOfMonth)
             .lt('created_at', endOfMonth);
-      } catch (e) {
+      } on Exception catch (e) {
         final errorString = e.toString();
         if (errorString.contains('42703') || errorString.contains('market_id')) {
           transactions = await Supabase.instance.client
@@ -760,7 +765,7 @@ class _ProfilePageState extends State<ProfilePage> {
           _loadingStats = false;
         });
       }
-    } catch (e) {
+    } on Exception {
       if (mounted) setState(() => _loadingStats = false);
     }
   }
@@ -783,8 +788,8 @@ class _ProfilePageState extends State<ProfilePage> {
           _loading = false;
         });
       }
-    } catch (e) {
-      print('Error loading profile: $e');
+    } on Exception catch (e) {
+      debugPrint('Error loading profile: $e');
       if (mounted) setState(() => _loading = false);
     }
   }
@@ -897,7 +902,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         await Supabase.instance.client.from('users').update({'avatar_url': publicUrl}).eq('auth_uid', authUser.id);
                       }
 
-                      if (mounted) {
+                      if (mounted && context.mounted) {
                         setState(() => _avatarUrl = publicUrl);
                         showSuccessSnackBar(context, 'Foto profil berhasil diperbarui');
                       }
@@ -910,7 +915,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 const SizedBox(height: 16),
                 Text(name, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 4),
-                Text(role, style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 14)),
+                Text(role, style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 14)),
               ],
             ),
           ),
@@ -993,7 +998,7 @@ class _StatCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.6), width: 1.5),
+        border: Border.all(color: color.withValues(alpha: 0.6), width: 1.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

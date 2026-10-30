@@ -57,7 +57,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
           _isLoading = false;
         });
       }
-    } catch (e) {
+    } on Exception catch (e) {
       if (mounted) {
         setState(() {
           _errorMessage = 'Gagal memuat riwayat: ${e.toString()}';

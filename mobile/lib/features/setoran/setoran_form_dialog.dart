@@ -64,7 +64,7 @@ class _SetoranFormDialogState extends State<SetoranFormDialog> {
           _updatingRevenue = false;
         });
       }
-    } catch (_) {
+    } on Exception catch (_) {
       if (mounted) setState(() => _updatingRevenue = false);
     }
   }
@@ -157,7 +157,7 @@ class _SetoranFormDialogState extends State<SetoranFormDialog> {
         Navigator.of(context).pop(true);
         showSuccessSnackBar(context, 'Setoran berhasil dibuat!');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       if (mounted) {
         setState(() => _loading = false);
         showErrorSnackBar(context, 'Gagal membuat setoran: ${e.toString()}');

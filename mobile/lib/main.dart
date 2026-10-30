@@ -51,7 +51,7 @@ class SiagaOfficerApp extends StatelessWidget {
         // Update system navigation bar color based on theme
         final brightness = Theme.of(context).brightness;
         SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-          systemNavigationBarColor: brightness == Brightness.dark ? Color(0xFF1B1B1B) : Color(0xFFF5F5F5),
+          systemNavigationBarColor: brightness == Brightness.dark ? const Color(0xFF1B1B1B) : const Color(0xFFF5F5F5),
           systemNavigationBarIconBrightness: brightness == Brightness.dark ? Brightness.light : Brightness.dark,
         ));
         return child!;

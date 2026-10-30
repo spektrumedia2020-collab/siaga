@@ -10,8 +10,8 @@ class SyncService {
 
   /// Check if device has internet connection
   Future<bool> isConnected() async {
-    final connectivityResult = await Connectivity().checkConnectivity();
-    return connectivityResult != ConnectivityResult.none;
+    final connectivityResults = await Connectivity().checkConnectivity();
+    return !connectivityResults.contains(ConnectivityResult.none);
   }
 
   /// Sync pending transactions to Supabase
@@ -36,7 +36,7 @@ class SyncService {
         // Mark as synced
         await DatabaseService().markTransactionSynced(transaction.id?.toString() ?? transaction.stallId.toString());
         syncedCount++;
-      } catch (e) {
+      } on Exception {
         // ignore error, continue syncing
       }
     }
