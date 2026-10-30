@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "updated_at": "2026-10-25T20:05:00+07:00",
-  "commit": "73c7267e837735ef082dc50ce653bcb51833f6f0",
+  "updated_at": "2026-10-31T10:00:00+07:00",
+  "commit": "8bf2dd076452590171ee3bf8f6417bb32092c1ec",
   "checks": {
     "typecheck": {
       "status": "PASS",
@@ -28,8 +28,12 @@
       "evidence": "Tidak ada *.test.* / *.spec.* di src/ dan api/ (tree source)."
     },
     "flutter_analyze": {
-      "status": "UNKNOWN",
-      "evidence": "Belum dijalankan. TODO_FIXES klaim 0 error per 23 Agu 2026 — tidak diverifikasi ulang."
+      "status": "PASS",
+      "evidence": "flutter analyze (Flutter SDK lokal, 2026-10-31): No issues found. Sebelumnya 147 issue; diperbaiki deprecated API, catch clauses, const/braces, dead code."
+    },
+    "flutter_test": {
+      "status": "PASS",
+      "evidence": "flutter test (2026-10-31): All tests passed (1 test: LoginPage menampilkan 'SiAga Officer'). LoginPage membuat AuthService lazily agar tidak butuh Supabase.initialize."
     },
     "secrets_in_git": {
       "status": "PASS",
@@ -48,12 +52,12 @@
       "evidence": "Fitur /perumda (halaman, api/perumda.ts, route Vercel, PERUMDA_SETUP.md) dihapus 2026-10-26; tidak ada secret Perumda lagi."
     },
     "api_lapak_pin": {
-      "status": "PASS",
-      "evidence": "Uji lokal (mock): tanpa env -> 503; plaintext benar -> 400 (lolos PIN); salah -> 401; hash benar -> 400; hash salah -> 401. tsc file PASS. BELUM DEPLOY."
+      "status": "SUPERSEDED",
+      "evidence": "PIN dihapus; api/lapak.ts memakai token per lapak (32 hex, migration 016). Uji PIN tidak berlaku lagi."
     },
     "prod_lapak_pin": {
-      "status": "FAIL",
-      "evidence": "Produksi masih menerima PIN default 1234 (404 dengan kode tak ada) pada 2026-10-25; env PIN belum diset."
+      "status": "SUPERSEDED",
+      "evidence": "Tidak ada lagi parameter PIN di produksi. Akses publik lewat /lapak/<token>."
     },
     "anon_stall_owners_columns": {
       "status": "PASS",

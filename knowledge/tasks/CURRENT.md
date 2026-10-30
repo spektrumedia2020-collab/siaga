@@ -1,6 +1,6 @@
 # CURRENT — Task Aktif
 
-**Sesi:** SESSION-2026-10-25-1 · **Update:** 2026-10-25T20:05:00+07:00 · **Branch:** `main` @ `73c7267`
+**Sesi:** SESSION-2026-10-31-1 · **Update:** 2026-10-31T10:00:00+07:00 · **Branch:** `main` @ `8bf2dd0`
 
 ## Status
 
@@ -25,8 +25,10 @@
 | 26 | P0 UI/UX batch (tema, placeholder, read-only, user delete) | **SELESAI (kode+DB)** | Migration 017; readOnly 9 halaman |
 | 27 | P1 routing (deep-link admin, /login, 404) | **SELESAI** | `#superadmin/<tab>`; path-based ditunda |
 | 28 | P2 polish (typo, QR, dialog, pagination) | **SELESAI** | Build/typecheck PASS |
-| 14 | P0-03 — env PIN lapak + deploy | **BELUM** | `PUBLIC_STALL_PIN_HASH` diset; produksi `1234` = 401 |
-| 15 | Role: MARKET_HEAD read-only + hapus impersonation | **SELESAI (DB+kode)** | Migration 014 applied; build PASS; deploy tertunda |
+| 29 | CI mobile — analyzer + widget test hijau | **SELESAI** | `flutter analyze` 0 issue; `flutter test` PASS; CI `.env` step |
+| 30 | Sync knowledge sesi mobile CI | **SELESAI** | log, state, CURRENT, validation diperbarui |
+| 14 | P0-03 — env PIN lapak + deploy | **DIGANTI** | PIN dihapus; digantikan token QR per lapak (migration 016) |
+| 15 | Role: MARKET_HEAD read-only + hapus impersonation | **SELESAI** | Migration 014; build PASS; deploy `86b62d6` |
 | 16 | P0-12 — kredensial admin di halaman publik | **SELESAI (kode)** | Bundle bersih; rotasi password dipilih tidak dilakukan user |
 | 17 | Role: hapus TREASURER (DB + auth + UI) | **SELESAI (DB+kode)** | 2 akun & role dihapus; admin ambil alih approval |
 | 5 | Verifikasi build/typecheck web | **SELESAI** | `npm run typecheck` 0 error; `npm run build` PASS |
@@ -41,12 +43,13 @@
 
 ## Scope sesi ini
 
-- Knowledge, kode aplikasi, migration DB, dan wipe data produksi (dengan konfirmasi user).
+- Kode mobile (analyzer/test/CI), knowledge, dan sinkronisasi state. Tanpa perubahan web/DB.
 
 ## Blocker
 
-- Deploy tertunda: `PUBLIC_STALL_PIN_HASH` + `PERUMDA_JWT_SECRET` belum diset di Vercel.
-- Rotasi password `admin@siaga.id` belum dilakukan (password lama pernah bocor).
+- Tidak ada blocker teknis aktif; CI web/SQL/mobile hijau setelah `8bf2dd0` di-push.
+- Risiko diterima: password `admin@siaga.id` tidak dirotasi (keputusan user, S-18).
+- Data produksi kosong (0 pasar/lapak/transaksi) — operasional belum bisa diuji end-to-end.
 
 ## Team Waves
 
@@ -55,11 +58,9 @@ Tidak ada gelombang paralel. `open_wave = null`.
 ## Next Session Handoff
 
 1. Baca urutan resume: `state.json` → `index/index-state.json` → `context.md` → `memory.md` → `00_INDEX.md` → berkas ini.
-2. **Rotasi password `admin@siaga.id`** (Supabase Auth) — satu-satunya akun tersisa; password lama bocor.
-3. Set `PUBLIC_STALL_PIN_HASH` + `PERUMDA_JWT_SECRET` di Vercel, lalu push 6 commit & deploy.
-4. Setelah deploy: verifikasi `pin=1234` → 401, Perumda login, head read-only, tanpa menu bendahara,
-   `/juri` tanpa kredensial.
-5. Data produksi kosong (0 pasar/lapak/transaksi). Bila ingin mulai operasional, impor ulang data
-   pasar dari CSV di root repo atau buat lewat dashboard admin.
-6. CI merah karena `tsc --noEmit` (40+ error lama). Perbaiki bertahap; jangan tutup dengan CI merah
-   tanpa catatan.
+2. **Seed data awal** (pasar, lapak, kategori, jenis/tarif retribusi) lewat dashboard admin
+   agar `/lapak/<token>` dan alur petugas bisa diuji end-to-end.
+3. **Fase 2 mobile**: `scan_page.dart` membaca URL/token QR (satu QR untuk petugas & pemilik)
+   + tombol notifikasi `wa.me`.
+4. **Path-based URL** `/admin/*`, `/market/*` — ditunda; hash deep-link masih kanonik.
+5. Opsional: toast menggantikan sebagian `alert`, focus-trap modal, pembersihan inline style.
