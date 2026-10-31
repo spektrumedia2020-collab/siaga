@@ -228,6 +228,14 @@ export function PublicStallPage({ token, marketId, stallCode }: Props) {
   return (
     <main className="public-stall-page">
       <div className="public-stall-panel">
+        <div className="public-stall-brand">
+          <img src={market.photo_url || '/logo.jpeg'} alt={`Logo Pasar ${market.name}`} />
+          <div>
+            <h1>Pasar {market.name}</h1>
+            {market.address ? <p>{market.address}</p> : null}
+          </div>
+        </div>
+
         <section className={`public-stall-today public-stall-today--${todayTone}`} aria-live="polite">
           <div>
             <span className="public-stall-today-label">Hari ini · {formatDate(summary.today.date)}</span>
@@ -243,14 +251,6 @@ export function PublicStallPage({ token, marketId, stallCode }: Props) {
             )}
           </div>
         </section>
-
-        <div className="public-stall-brand">
-          <img src={market.photo_url || '/logo.jpeg'} alt={`Logo Pasar ${market.name}`} />
-          <div>
-            <h1>Pasar {market.name}</h1>
-            {market.address ? <p>{market.address}</p> : null}
-          </div>
-        </div>
 
         <div className="public-stall-body-title">Informasi Lapak</div>
 
