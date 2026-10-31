@@ -438,8 +438,15 @@ class _LapakPageState extends ConsumerState<LapakPage> {
     final dailyTypes = retributionTypes
         .where((type) => _dailyTypeIds.contains((type['id'] as num?)?.toInt()))
         .toList();
+    final billedTypeIds = billRows
+        .map((bill) => (bill['types_id'] as num?)?.toInt())
+        .whereType<int>()
+        .toSet();
     final otherTypes = retributionTypes
-        .where((type) => !_dailyTypeIds.contains((type['id'] as num?)?.toInt()))
+        .where((type) {
+          final typeId = (type['id'] as num?)?.toInt();
+          return !_dailyTypeIds.contains(typeId) && !billedTypeIds.contains(typeId);
+        })
         .toList();
 
     final children = <Widget>[];
