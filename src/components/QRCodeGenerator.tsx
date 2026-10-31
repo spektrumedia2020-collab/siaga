@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import type { ReactNode } from 'react'
 import QRCode from 'react-qr-code'
 import { IconQr } from './Icons'
+import './QRCodeGenerator.css'
 
 interface Props {
   value: string
@@ -11,7 +12,7 @@ interface Props {
   title?: string
 }
 
-export function QRCodeGenerator({ value, label, size = 160, icon, title }: Props) {
+export function QRCodeGenerator({ value, label, size = 220, icon, title }: Props) {
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement | null>(null)
 
@@ -20,28 +21,35 @@ export function QRCodeGenerator({ value, label, size = 160, icon, title }: Props
       const svg = containerRef.current?.querySelector('svg') as SVGSVGElement | null
       if (!svg) return
 
+      // Render at a print-friendly resolution regardless of the on-screen size.
+      const exportSize = Math.max(size * 4, 800)
+      const clone = svg.cloneNode(true) as SVGSVGElement
+      clone.setAttribute('width', String(exportSize))
+      clone.setAttribute('height', String(exportSize))
+      clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+
       const serializer = new XMLSerializer()
-      const svgString = serializer.serializeToString(svg)
+      const svgString = serializer.serializeToString(clone)
       const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' })
       const url = URL.createObjectURL(blob)
       const img = new Image()
       img.onload = () => {
         const caption = label?.trim() || ''
-        const captionHeight = caption ? 36 : 0
+        const captionHeight = caption ? Math.round(exportSize * 0.1) : 0
         const canvas = document.createElement('canvas')
-        canvas.width = size
-        canvas.height = size + captionHeight
+        canvas.width = exportSize
+        canvas.height = exportSize + captionHeight
         const ctx = canvas.getContext('2d')
         if (ctx) {
           ctx.fillStyle = '#ffffff'
           ctx.fillRect(0, 0, canvas.width, canvas.height)
-          ctx.drawImage(img, 0, 0, size, size)
+          ctx.drawImage(img, 0, 0, exportSize, exportSize)
           if (caption) {
             ctx.fillStyle = '#111111'
-            ctx.font = 'bold 16px Arial, sans-serif'
+            ctx.font = `bold ${Math.round(exportSize * 0.045)}px Arial, sans-serif`
             ctx.textAlign = 'center'
             ctx.textBaseline = 'middle'
-            ctx.fillText(caption, size / 2, size + captionHeight / 2, size - 16)
+            ctx.fillText(caption, exportSize / 2, exportSize + captionHeight / 2, exportSize - exportSize * 0.04)
           }
           const pngUrl = canvas.toDataURL('image/png')
           const link = document.createElement('a')
@@ -103,10 +111,10 @@ export function QRCodeGenerator({ value, label, size = 160, icon, title }: Props
               <button onClick={() => navigator.clipboard?.writeText(value)} className="btn-secondary">
                 Salin link
               </button>
-              <button onClick={downloadPNG} className="btn-secondary">
+              <button onClick={downloadPNG} className="btn-primary">
                 Unduh PNG
               </button>
-              <button onClick={() => setOpen(false)} className="btn-primary">
+              <button onClick={() => setOpen(false)} className="btn-secondary">
                 Tutup
               </button>
             </div>

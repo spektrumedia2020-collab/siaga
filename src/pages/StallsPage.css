@@ -231,7 +231,7 @@
   gap: 0.2rem;
 }
 
-.stalls-page .action-buttons svg {
+.stalls-page .action-buttons > button > svg {
   width: 16px;
   height: 16px;
 }

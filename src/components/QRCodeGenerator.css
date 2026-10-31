@@ -1,0 +1,33 @@
+.qr-modal .btn-secondary {
+  background: #e0e0e0;
+  color: #1a1a1a;
+  border: none;
+  padding: 0.65rem 1.1rem;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.qr-modal .btn-secondary:hover {
+  background: #d0d0d0;
+  transform: none;
+  box-shadow: none;
+}
+
+.qr-modal .btn-primary {
+  background: #1e3a8a;
+  color: #ffffff;
+  border: none;
+  padding: 0.65rem 1.1rem;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.qr-modal .btn-primary:hover {
+  background: #152c5b;
+  transform: none;
+  box-shadow: none;
+}
+
+.qr-modal-content {
+  max-width: 92vw;
+}
