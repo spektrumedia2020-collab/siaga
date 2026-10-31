@@ -164,6 +164,17 @@ export default async function handler(req: any, res: any) {
       return String(embedded?.unit || typeById.get(Number(rate.types_id))?.unit || '').toUpperCase()
     }
 
+    const rateName = (rate: any) => {
+      const embedded = Array.isArray(rate.retribution_types) ? rate.retribution_types[0] : rate.retribution_types
+      return String(embedded?.name || typeById.get(Number(rate.types_id))?.name || '')
+    }
+
+    const rateById = new Map((rates || []).map((rate: any) => [Number(rate.id), rate]))
+    const rateNameById = (id: any) => {
+      const rate = rateById.get(Number(id))
+      return rate ? rateName(rate) : null
+    }
+
     const timeOf = (value: string | null | undefined) => (value ? new Date(value).getTime() : 0)
     const paidSorted = [...paidTransactions].sort(
       (a, b) => timeOf(b.transaction_date || b.created_at) - timeOf(a.transaction_date || a.created_at)
@@ -184,12 +195,18 @@ export default async function handler(req: any, res: any) {
 
     const dailyRates = (rates || []).filter((rate: any) => rateUnit(rate) === 'HARI')
     const dailyDue = dailyRates.reduce((sum: number, rate: any) => sum + Number(rate.amount || 0), 0)
+    const dailyNames = Array.from(new Set(dailyRates.map((rate: any) => rateName(rate)).filter(Boolean)))
     const dailyRateIds = new Set(dailyRates.map((rate: any) => Number(rate.id)).filter(Boolean))
     const dailyPaidToday = todayTransactions.some(
       (tx) =>
         (tx.rate_id != null && dailyRateIds.has(Number(tx.rate_id))) ||
         (dailyDue > 0 && Number(tx.amount || 0) >= dailyDue)
     )
+    const paidNames = Array.from(new Set(
+      todayTransactions
+        .map((tx) => rateNameById(tx.rate_id))
+        .filter((name): name is string => Boolean(name))
+    ))
     const todayStatus = dailyRates.length === 0 ? 'TIDAK_ADA_TARIF' : dailyPaidToday ? 'SUDAH' : 'BELUM'
 
     const installmentsByBill = new Map<number, any[]>()
@@ -251,7 +268,8 @@ export default async function handler(req: any, res: any) {
           transaction_date: tx.transaction_date,
           status: tx.status,
           bill_id: tx.bill_id,
-          period_year: tx.period_year
+          period_year: tx.period_year,
+          rate_name: rateNameById(tx.rate_id)
         }))
       },
       summary: {
@@ -263,6 +281,8 @@ export default async function handler(req: any, res: any) {
           amount: todayAmount,
           count: todayTransactions.length,
           daily_due: dailyDue,
+          daily_names: dailyNames,
+          paid_names: paidNames,
           status: todayStatus
         },
         bills_outstanding: billsOutstanding,

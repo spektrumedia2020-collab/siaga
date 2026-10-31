@@ -23,13 +23,13 @@ interface StallResponse {
     sector_name: string | null
     owner_name: string | null
     rates: { amount: number; name: string | null; unit: string | null }[]
-    transactions: { amount: number; payment_method: string | null; created_at: string; transaction_date: string | null; status: string; bill_id?: number | null; period_year?: number | null }[]
+    transactions: { amount: number; payment_method: string | null; created_at: string; transaction_date: string | null; status: string; bill_id?: number | null; period_year?: number | null; rate_name?: string | null }[]
   }
   summary: {
     total_paid: number
     paid_count: number
     last_paid_at: string | null
-    today: { date: string; amount: number; count: number; daily_due: number; status: 'SUDAH' | 'BELUM' | 'TIDAK_ADA_TARIF' }
+    today: { date: string; amount: number; count: number; daily_due: number; daily_names: string[]; paid_names: string[]; status: 'SUDAH' | 'BELUM' | 'TIDAK_ADA_TARIF' }
     bills_outstanding: number
     bills_count: number
   }
@@ -243,9 +243,15 @@ export function PublicStallPage({ token, marketId, stallCode }: Props) {
           </div>
           <div className="public-stall-today-meta">
             {summary.today.amount > 0 ? (
-              <>Dibayar <strong>{formatRupiah(summary.today.amount)}</strong></>
+              <>
+                Dibayar <strong>{formatRupiah(summary.today.amount)}</strong>
+                {summary.today.paid_names.length > 0 ? ` · ${summary.today.paid_names.join(', ')}` : ''}
+              </>
             ) : summary.today.daily_due > 0 ? (
-              <>Tarif <strong>{formatRupiah(summary.today.daily_due)}</strong></>
+              <>
+                {summary.today.daily_names.length > 0 ? `${summary.today.daily_names.join(', ')} · ` : ''}
+                Tarif <strong>{formatRupiah(summary.today.daily_due)}</strong>
+              </>
             ) : (
               'Tidak ada tarif harian'
             )}
@@ -341,7 +347,7 @@ export function PublicStallPage({ token, marketId, stallCode }: Props) {
             <div className="public-stall-section-heading"><h2>Riwayat Transaksi</h2><span>{stall.transactions.length} transaksi</span></div>
             {stall.transactions.length === 0 ? <p className="public-stall-muted">Belum ada transaksi pembayaran.</p> : (
               <div className="public-stall-list">
-                {sortedTransactions.map((transaction, index) => <div className="public-stall-list-row" key={`${transaction.created_at}-${index}`}><span>{new Date(transaction.transaction_date || transaction.created_at).toLocaleDateString('id-ID')}<small>{transaction.payment_method || 'Pembayaran'}{transaction.period_year ? ` • ${transaction.period_year}` : ''}</small></span><strong>Rp {Number(transaction.amount).toLocaleString('id-ID')}</strong></div>)}
+                {sortedTransactions.map((transaction, index) => <div className="public-stall-list-row" key={`${transaction.created_at}-${index}`}><span>{new Date(transaction.transaction_date || transaction.created_at).toLocaleDateString('id-ID')}<small>{transaction.rate_name ? `${transaction.rate_name} · ` : ''}{transaction.payment_method || 'Pembayaran'}{transaction.period_year ? ` • ${transaction.period_year}` : ''}</small></span><strong>Rp {Number(transaction.amount).toLocaleString('id-ID')}</strong></div>)}
               </div>
             )}
           </section>
