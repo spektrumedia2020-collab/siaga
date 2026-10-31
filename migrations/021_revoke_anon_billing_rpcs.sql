@@ -2,7 +2,7 @@
 -- 021_revoke_anon_billing_rpcs.sql
 --
 -- Supabase memberi EXECUTE bawaan kepada role `anon` saat fungsi dibuat,
--- sehingga REVOKE ... FROM PUBLIC pada migration 020 belum cukup.
+-- sehingga REVOKE ALL FROM PUBLIC pada migration 020 belum cukup.
 -- Kedua RPC tagihan sudah menolak anon lewat cek internal, tetapi hak
 -- eksekusinya sebaiknya dicabut eksplisit (defense in depth).
 --
