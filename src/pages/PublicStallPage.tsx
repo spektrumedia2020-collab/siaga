@@ -33,6 +33,7 @@ interface StallResponse {
     bills_outstanding: number
     bills_count: number
     pin_is_default: boolean
+    owner_has_phone: boolean
   }
   bills: Array<{
     bill_id: number
@@ -62,6 +63,9 @@ export function PublicStallPage({ token, marketId, stallCode }: Props) {
   const [resetConfirm, setResetConfirm] = useState('')
   const [resetMessage, setResetMessage] = useState('')
   const [resetSaving, setResetSaving] = useState(false)
+  const [ownerPhone, setOwnerPhone] = useState('')
+  const [ownerPhoneError, setOwnerPhoneError] = useState('')
+  const [ownerPhoneSaving, setOwnerPhoneSaving] = useState(false)
   const [changeOpen, setChangeOpen] = useState(false)
   const [newPin, setNewPin] = useState('')
   const [confirmPin, setConfirmPin] = useState('')
@@ -177,6 +181,47 @@ export function PublicStallPage({ token, marketId, stallCode }: Props) {
       setResetMessage(err?.message || 'Gagal mengganti PIN')
     } finally {
       setResetSaving(false)
+    }
+  }
+
+  const handleSaveOwnerPhone = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setOwnerPhoneError('')
+
+    const digits = ownerPhone.replace(/\D/g, '').replace(/^62/, '0')
+    if (digits.length < 10) {
+      setOwnerPhoneError('Nomor HP tidak valid')
+      return
+    }
+    if (!unlockedPin) return
+
+    setOwnerPhoneSaving(true)
+    try {
+      const response = await fetch('/api/lapak', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'set_phone',
+          token,
+          marketId,
+          code: stallCode,
+          pin: unlockedPin,
+          phone: ownerPhone
+        })
+      })
+      const result = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(result.error || 'Gagal menyimpan nomor HP')
+
+      setData((previous) => (
+        previous
+          ? { ...previous, summary: { ...previous.summary, owner_has_phone: true } }
+          : previous
+      ))
+      setOwnerPhone('')
+    } catch (err: any) {
+      setOwnerPhoneError(err?.message || 'Gagal menyimpan nomor HP')
+    } finally {
+      setOwnerPhoneSaving(false)
     }
   }
 
@@ -522,6 +567,28 @@ export function PublicStallPage({ token, marketId, stallCode }: Props) {
 
         <footer>Data resmi SiAga • {market.code || market.name}</footer>
       </div>
+
+      {!data.summary.owner_has_phone && (
+        <div className="public-stall-phone-overlay" role="dialog" aria-modal="true" aria-labelledby="owner-phone-title">
+          <form className="public-stall-phone-card" onSubmit={handleSaveOwnerPhone}>
+            <h2 id="owner-phone-title">Lengkapi Nomor HP Pemilik</h2>
+            <p>Nomor HP wajib diisi. Nomor ini dipakai untuk memverifikasi Anda saat lupa PIN.</p>
+            <input
+              inputMode="tel"
+              autoComplete="tel"
+              placeholder="08xxxxxxxxxx"
+              value={ownerPhone}
+              onChange={(e) => setOwnerPhone(e.target.value)}
+              autoFocus
+            />
+            <button type="submit" disabled={ownerPhoneSaving}>
+              {ownerPhoneSaving ? 'Menyimpan...' : 'Simpan nomor HP'}
+            </button>
+            <span className="public-stall-muted">Administrator juga dapat mengisi nomor ini dari dashboard.</span>
+            {ownerPhoneError && <p className="public-stall-pin-error">{ownerPhoneError}</p>}
+          </form>
+        </div>
+      )}
     </main>
   )
 }

@@ -157,6 +157,75 @@ export default async function handler(req: any, res: any) {
       return res.json({ ok: true })
     }
 
+    if (action === 'set_phone') {
+      if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Gunakan metode POST untuk menyimpan nomor HP' })
+      }
+
+      const rawPhone = String(req.body?.phone || '').trim()
+      const pinValue = String(req.body?.pin || '').trim()
+      let digits = rawPhone.replace(/\D/g, '')
+      if (digits.startsWith('62')) digits = '0' + digits.slice(2)
+
+      if (!/^0\d{8,14}$/.test(digits)) {
+        return res.status(400).json({ error: 'Nomor HP tidak valid' })
+      }
+      if (!pinValue) {
+        return res.status(401).json({ error: 'PIN wajib diisi' })
+      }
+
+      let scanToken = token
+      if (!scanToken) {
+        const { data: found, error: findError } = await supabaseAdmin
+          .from('stalls')
+          .select('public_token')
+          .eq('market_id', marketId)
+          .ilike('code', stallCode)
+          .maybeSingle()
+        if (findError) throw findError
+        if (!found?.public_token) return res.status(404).json({ error: 'Lapak tidak ditemukan' })
+        scanToken = found.public_token as string
+      }
+
+      const { data: targetStall, error: targetError } = await supabaseAdmin
+        .from('stalls')
+        .select('id, owner_id')
+        .eq('public_token', scanToken)
+        .maybeSingle()
+      if (targetError) throw targetError
+      if (!targetStall) return res.status(404).json({ error: 'Lapak tidak ditemukan' })
+
+      const { data: pinOk, error: pinError } = await supabaseAdmin.rpc('verify_stall_pin', {
+        p_stall_id: targetStall.id,
+        p_pin: pinValue
+      })
+      if (pinError) return res.status(503).json({ error: 'Fitur PIN lapak belum aktif di server' })
+      if (!pinOk) return res.status(401).json({ error: 'PIN salah' })
+
+      if (targetStall.owner_id == null) {
+        return res.status(400).json({ error: 'Pemilik lapak belum terdaftar; hubungi administrator' })
+      }
+
+      const { data: ownerRow, error: ownerError } = await supabaseAdmin
+        .from('stall_owners')
+        .select('id, phone')
+        .eq('id', targetStall.owner_id)
+        .maybeSingle()
+      if (ownerError) throw ownerError
+      if (!ownerRow) return res.status(404).json({ error: 'Pemilik lapak tidak ditemukan' })
+      if (String(ownerRow.phone || '').trim()) {
+        return res.status(409).json({ error: 'Nomor HP pemilik sudah terdaftar' })
+      }
+
+      const { error: updateError } = await supabaseAdmin
+        .from('stall_owners')
+        .update({ phone: digits, updated_at: new Date().toISOString() })
+        .eq('id', ownerRow.id)
+      if (updateError) throw updateError
+
+      return res.json({ ok: true })
+    }
+
     let stallQuery = supabaseAdmin
       .from('stalls')
       .select('id, market_id, code, number, qr_code, status, sector_id, owner_id')
@@ -209,7 +278,7 @@ export default async function handler(req: any, res: any) {
         ? supabaseAdmin.from('market_sectors').select('name').eq('id', stall.sector_id).maybeSingle()
         : Promise.resolve({ data: null }),
       stall.owner_id
-        ? supabaseAdmin.from('stall_owners').select('name').eq('id', stall.owner_id).maybeSingle()
+        ? supabaseAdmin.from('stall_owners').select('name, phone').eq('id', stall.owner_id).maybeSingle()
         : Promise.resolve({ data: null }),
       supabaseAdmin
         .from('retribution_rates')
@@ -382,6 +451,7 @@ export default async function handler(req: any, res: any) {
         paid_count: paidSorted.length,
         last_paid_at: lastPaidAt,
         pin_is_default: Boolean(pinIsDefault),
+        owner_has_phone: Boolean(owner?.phone && String(owner.phone).trim()),
         today: {
           date: witaDate,
           amount: todayAmount,
