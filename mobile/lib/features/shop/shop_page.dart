@@ -283,7 +283,7 @@ class _ShopPageBodyState extends State<ShopPageBody> {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              Container(width: 12, height: 12, decoration: BoxDecoration(color: isActive ? Colors.green : Colors.grey, shape: BoxShape.circle)),
+              Container(width: 12, height: 12, decoration: BoxDecoration(color: isActive ? const Color(0xFF1D4E89) : Colors.grey, shape: BoxShape.circle)),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(

@@ -194,12 +194,12 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
             Container(
               width: 40, height: 40,
               decoration: BoxDecoration(
-                color: isPaid ? Colors.green[50] : Colors.orange[50],
+                color: isPaid ? const Color(0xFFE6EDF7) : Colors.orange[50],
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
                 isPaid ? Icons.check_circle : Icons.pending,
-                color: isPaid ? Colors.green : Colors.orange,
+                color: isPaid ? const Color(0xFF1D4E89) : Colors.orange,
                 size: 22,
               ),
             ),
@@ -239,18 +239,18 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
               children: [
                 Text(
                   currency.format(amount),
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: isPaid ? Colors.green[800] : Colors.orange[800]),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: isPaid ? const Color(0xFF152C5B) : Colors.orange[800]),
                 ),
                 const SizedBox(height: 4),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: isPaid ? Colors.green[50] : Colors.orange[50],
+                    color: isPaid ? const Color(0xFFE6EDF7) : Colors.orange[50],
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     isPaid ? 'Lunas' : 'Pending',
-                    style: TextStyle(fontSize: 10, color: isPaid ? Colors.green[700] : Colors.orange[700]),
+                    style: TextStyle(fontSize: 10, color: isPaid ? const Color(0xFF1D4E89) : Colors.orange[700]),
                   ),
                 ),
               ],

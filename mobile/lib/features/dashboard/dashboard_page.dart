@@ -373,12 +373,12 @@ class DashboardHomePage extends StatelessWidget {
               physics: const NeverScrollableScrollPhysics(),
               childAspectRatio: 1.0,
               children: [
-                _MenuCard(icon: Icons.receipt_long, title: 'Transaksi', subtitle: 'Baru', color: const Color(0xFFE8F5E9), iconColor: const Color(0xFF1F7A1F), onTap: () => context.go('/shop')),
+                _MenuCard(icon: Icons.receipt_long, title: 'Transaksi', subtitle: 'Baru', color: const Color(0xFFE6EDF7), iconColor: const Color(0xFF1E3A8A), onTap: () => context.go('/shop')),
                 _MenuCard(icon: Icons.person_pin, title: 'Absensi', subtitle: 'Check-In/Out', color: const Color(0xFFFFF3E0), iconColor: const Color(0xFFE65100), onTap: () => context.go('/attendance')),
-                _MenuCard(icon: Icons.insert_chart, title: 'Rekap', subtitle: 'Ringkasan', color: const Color(0xFFE0F7FA), iconColor: const Color(0xFF00838F), onTap: () => context.go('/summary')),
-                _MenuCard(icon: isOfflineMode ? Icons.wifi_off : Icons.wifi, title: isOfflineMode ? 'Offline' : 'Online', subtitle: isOfflineMode ? 'Mode Offline' : 'Terhubung', color: isOfflineMode ? const Color(0xFFFFEBEE) : const Color(0xFFE8F5E9), iconColor: isOfflineMode ? const Color(0xFFD32F2F) : const Color(0xFF2E7D32), onTap: isSyncing ? () {} : onToggleOffline),
+                _MenuCard(icon: Icons.insert_chart, title: 'Rekap', subtitle: 'Ringkasan', color: const Color(0xFFE3EBF7), iconColor: const Color(0xFF1B4B7A), onTap: () => context.go('/summary')),
+                _MenuCard(icon: isOfflineMode ? Icons.wifi_off : Icons.wifi, title: isOfflineMode ? 'Offline' : 'Online', subtitle: isOfflineMode ? 'Mode Offline' : 'Terhubung', color: isOfflineMode ? const Color(0xFFFFEBEE) : const Color(0xFFE6EDF7), iconColor: isOfflineMode ? const Color(0xFFD32F2F) : const Color(0xFF1D4E89), onTap: isSyncing ? () {} : onToggleOffline),
                 _MenuCard(icon: Icons.sync, title: 'Sinkron', subtitle: isSyncing ? 'Menyinkronkan...' : 'Data', color: const Color(0xFFE3F2FD), iconColor: const Color(0xFF1565C0), onTap: isSyncing ? () {} : onSync),
-                _MenuCard(icon: Icons.account_balance_wallet, title: 'Setoran', subtitle: 'Deposit', color: const Color(0xFFE8F5E9), iconColor: const Color(0xFF1F7A1F), onTap: () => context.go('/setoran')),
+                _MenuCard(icon: Icons.account_balance_wallet, title: 'Setoran', subtitle: 'Deposit', color: const Color(0xFFE6EDF7), iconColor: const Color(0xFF1E3A8A), onTap: () => context.go('/setoran')),
               ],
             ),
           ],
@@ -399,12 +399,12 @@ class DashboardHomePage extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE8F5E9),
+                  color: const Color(0xFFE6EDF7),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFA5D6A7), width: 1.5),
+                  border: Border.all(color: const Color(0xFF9DB6D8), width: 1.5),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF1F7A1F).withValues(alpha: 0.15),
+                      color: const Color(0xFF1E3A8A).withValues(alpha: 0.15),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     ),
@@ -416,12 +416,12 @@ class DashboardHomePage extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.payments, color: Color(0xFF1F7A1F), size: 24),
+                        const Icon(Icons.payments, color: Color(0xFF1E3A8A), size: 24),
                         const SizedBox(width: 8),
                         Flexible(
                           child: Text(
                             currencyFormat.format(todayRevenue),
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1F7A1F)),
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E3A8A)),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -931,8 +931,8 @@ class _ProfilePageState extends State<ProfilePage> {
                           label: _loadingStats ? '-' : NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(_totalRevenue),
                           title: 'Total Omset',
                           icon: Icons.payments,
-                          color: const Color(0xFFE8F5E9),
-                          iconColor: const Color(0xFF1F7A1F),
+                          color: const Color(0xFFE6EDF7),
+                          iconColor: const Color(0xFF1E3A8A),
                         ),
                       ),
                       const SizedBox(width: 12),

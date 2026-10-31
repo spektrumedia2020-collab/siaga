@@ -143,7 +143,7 @@ class _ReconciliationPageState extends ConsumerState<ReconciliationPage> {
           const SizedBox(height: 16),
           _buildSummaryCards(currency),
           const SizedBox(height: 20),
-          _buildDetailSection(title: 'Lunas', items: paidList, color: Colors.green),
+          _buildDetailSection(title: 'Lunas', items: paidList, color: const Color(0xFF1D4E89)),
           const SizedBox(height: 16),
           _buildDetailSection(title: 'Belum Lunas', items: unpaidList, color: Colors.red),
         ],
@@ -156,7 +156,7 @@ class _ReconciliationPageState extends ConsumerState<ReconciliationPage> {
       Row(children: [
         Expanded(child: _StatCard(title: 'Target', value: '$totalTargetStalls lapak', color: Colors.blue)),
         const SizedBox(width: 12),
-        Expanded(child: _StatCard(title: 'Lunas', value: '$paidStalls', color: Colors.green)),
+        Expanded(child: _StatCard(title: 'Lunas', value: '$paidStalls', color: const Color(0xFF1D4E89))),
         const SizedBox(width: 12),
         Expanded(child: _StatCard(title: 'Belum', value: '$unpaidStalls', color: Colors.red)),
       ]),
@@ -167,7 +167,7 @@ class _ReconciliationPageState extends ConsumerState<ReconciliationPage> {
         Expanded(child: _StatCard(title: 'Actual', value: currency.format(actualRevenue), color: Colors.teal)),
       ]),
       const SizedBox(height: 12),
-      _StatCard(title: 'Variance', value: currency.format(variance), color: variance >= 0 ? Colors.green : Colors.red),
+      _StatCard(title: 'Variance', value: currency.format(variance), color: variance >= 0 ? const Color(0xFF1D4E89) : Colors.red),
     ]);
   }
 

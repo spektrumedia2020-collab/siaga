@@ -235,7 +235,7 @@ export function MarketEditPage({ marketId, onBack }: Props) {
   return (
     <div className="siaga-card" style={{ maxWidth: 900, margin: '0 auto' }}>
       <div className="siaga-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2 style={{ margin: 0, fontSize: '1.5rem', color: '#2D5016' }}>✏️ Edit Pasar: {market.name}</h2>
+        <h2 style={{ margin: 0, fontSize: '1.5rem', color: '#1e3a8a' }}>✏️ Edit Pasar: {market.name}</h2>
         <button className="siaga-btn siaga-btn-outline" onClick={onBack}>← Kembali</button>
       </div>
 
@@ -268,7 +268,7 @@ export function MarketEditPage({ marketId, onBack }: Props) {
             <div className="form-group">
               <label>Foto Kepala Pasar</label>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                {formData.head_photo_url && <img src={formData.head_photo_url} alt="Kepala Pasar" style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: '50%', border: '2px solid #2D5016' }} />}
+                {formData.head_photo_url && <img src={formData.head_photo_url} alt="Kepala Pasar" style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: '50%', border: '2px solid #1e3a8a' }} />}
                 <input type="file" ref={headPhotoInputRef} accept="image/*" onChange={(e) => handleFileChange(e, 'head')} style={{ display: 'none' }} />
                 <button type="button" className="siaga-btn siaga-btn-outline" onClick={() => headPhotoInputRef.current?.click()}>📎 {formData.head_photo_url ? 'Ganti Foto' : 'Upload Foto'}</button>
               </div>

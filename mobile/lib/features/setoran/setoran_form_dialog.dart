@@ -217,27 +217,27 @@ class _SetoranFormDialogState extends State<SetoranFormDialog> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.green[50],
+                    color: const Color(0xFFE6EDF7),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Total Pendapatan',
-                          style: TextStyle(fontSize: 12, color: Colors.green[800])),
+                      const Text('Total Pendapatan',
+                          style: TextStyle(fontSize: 12, color: Color(0xFF152C5B))),
                       const SizedBox(height: 4),
                       _updatingRevenue
                           ? const LinearProgressIndicator()
                           : Text(
                               currency.format(_amount),
-                              style: TextStyle(
+                              style: const TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.green[900]),
+                                  color: Color(0xFF0B1F3A)),
                             ),
                       const SizedBox(height: 4),
                       Text('$_txCount transaksi',
-                          style: TextStyle(fontSize: 12, color: Colors.green[600])),
+                          style: const TextStyle(fontSize: 12, color: Color(0xFF2A5690))),
                     ],
                   ),
                 ),
@@ -332,7 +332,7 @@ class _SetoranFormDialogState extends State<SetoranFormDialog> {
                       child: ElevatedButton(
                         onPressed: _loading ? null : _submit,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
+                          backgroundColor: const Color(0xFF1D4E89),
                           foregroundColor: Colors.white,
                         ),
                         child: _loading

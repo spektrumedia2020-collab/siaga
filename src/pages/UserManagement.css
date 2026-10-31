@@ -12,7 +12,7 @@
 .page-header h2 {
   margin: 0;
   font-size: 1.8rem;
-  color: #2D5016;
+  color: #1e3a8a;
 }
 
 .form-section {
@@ -59,8 +59,8 @@
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #2D5016;
-  box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.1);
+  border-color: #1e3a8a;
+  box-shadow: 0 0 0 3px rgba(16, 45, 84, 0.1);
 }
 
 .form-actions {
@@ -70,8 +70,8 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #2D5016 0%, #1a1a1a 100%);
-  color: #FFD700;
+  background: linear-gradient(135deg, #1e3a8a 0%, #1a1a1a 100%);
+  color: #ffd700;
   border: none;
   padding: 0.75rem 1.5rem;
   border-radius: 4px;
@@ -83,7 +83,7 @@
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(45, 80, 22, 0.4);
+  box-shadow: 0 5px 15px rgba(16, 45, 84, 0.4);
 }
 
 .btn-secondary {
@@ -113,17 +113,17 @@
   margin-bottom: 1.5rem;
   font-size: 1.3rem;
   color: #333;
-  border-bottom: 2px solid #2D5016;
+  border-bottom: 2px solid #1e3a8a;
   padding-bottom: 0.75rem;
 }
 
 .error-message {
-  background-color: #FFEBEE;
-  border: 1px solid #EF9A9A;
+  background-color: #ffebee;
+  border: 1px solid #ef9a9a;
   border-radius: 4px;
   padding: 1rem;
   margin-bottom: 1rem;
-  color: #C62828;
+  color: #c62828;
 }
 
 .users-list {
@@ -141,8 +141,8 @@
 }
 
 .user-card:hover {
-  border-color: #2D5016;
-  box-shadow: 0 4px 12px rgba(45, 80, 22, 0.1);
+  border-color: #1e3a8a;
+  box-shadow: 0 4px 12px rgba(16, 45, 84, 0.1);
 }
 
 .user-header {
@@ -156,7 +156,7 @@
 
 .user-header h4 {
   margin: 0;
-  color: #2D5016;
+  color: #1e3a8a;
   font-size: 1.1rem;
   word-break: break-all;
 }
@@ -200,8 +200,8 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: linear-gradient(135deg, #2D5016 0%, #1a1a1a 100%);
-  color: #FFD700;
+  background: linear-gradient(135deg, #1e3a8a 0%, #1a1a1a 100%);
+  color: #ffd700;
   padding: 0.5rem 0.75rem;
   border-radius: 4px;
   font-size: 0.85rem;
@@ -211,7 +211,7 @@
 .remove-role {
   background: none;
   border: none;
-  color: #FFD700;
+  color: #ffd700;
   cursor: pointer;
   font-size: 1.2rem;
   padding: 0;

@@ -28,15 +28,15 @@
 }
 
 .siaga-nav-link:hover {
-  background: rgba(31, 122, 31, 0.05);
-  color: #1f7a1f;
+  background: rgba(30, 58, 138, 0.05);
+  color: #1e3a8a;
   border-left-color: #e5e7eb;
 }
 
 .siaga-nav-link.active {
-  background: rgba(31, 122, 31, 0.1);
-  color: #1f7a1f;
-  border-left-color: #1f7a1f;
+  background: rgba(30, 58, 138, 0.1);
+  color: #1e3a8a;
+  border-left-color: #1e3a8a;
 }
 
 .siaga-nav-icon {

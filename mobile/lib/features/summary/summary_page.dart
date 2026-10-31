@@ -194,7 +194,7 @@ class _SummaryPageBodyState extends State<SummaryPageBody> {
           Text('Ringkasan ${titleMap[_period] ?? 'Periode'}', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
           Row(children: [
-            Expanded(child: _SummaryCard(title: 'Pendapatan', value: _period == 'today' ? _todayRevenue : _periodRevenue, icon: Icons.trending_up, color: Colors.green)),
+            Expanded(child: _SummaryCard(title: 'Pendapatan', value: _period == 'today' ? _todayRevenue : _periodRevenue, icon: Icons.trending_up, color: const Color(0xFF1D4E89))),
             const SizedBox(width: 12),
             Expanded(child: _SummaryCard(title: 'Setoran Disetujui', value: _approvedSetoranAmount, subtitle: '$_approvedSetoranCount setoran', icon: Icons.check_circle, color: Colors.purple)),
           ]),
@@ -222,7 +222,7 @@ class _SummaryPageBodyState extends State<SummaryPageBody> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
         decoration: BoxDecoration(
-          color: active ? AppTheme.primaryGreen : Colors.grey[200],
+          color: active ? AppTheme.primaryNavy : Colors.grey[200],
           borderRadius: BorderRadius.circular(20),
         ),
         child: Center(

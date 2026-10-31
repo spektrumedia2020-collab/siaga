@@ -99,7 +99,7 @@ export const ExportButtons: React.FC<ExportButtonsProps> = ({
         disabled={isExporting || data.length === 0}
         style={{
           padding: '8px 16px',
-          background: '#10b981',
+          background: '#1e3a8a',
           color: 'white',
           border: 'none',
           borderRadius: '6px',

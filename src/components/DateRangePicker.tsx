@@ -147,15 +147,15 @@ export function DateRangePicker({ dateFrom, dateTo, onDateFromChange, onDateToCh
                   width: '100%',
                   padding: '8px 16px',
                   border: 'none',
-                  background: activePreset?.key === p.key ? '#f0fdf4' : 'transparent',
+                  background: activePreset?.key === p.key ? '#eef3fa' : 'transparent',
                   cursor: 'pointer',
                   fontSize: 14,
                   textAlign: 'left',
-                  color: activePreset?.key === p.key ? '#2D5016' : '#333',
+                  color: activePreset?.key === p.key ? '#1e3a8a' : '#333',
                   fontWeight: activePreset?.key === p.key ? 600 : 400
                 }}
                 onMouseEnter={(e) => (e.currentTarget.style.background = '#f5f5f5')}
-                onMouseLeave={(e) => (e.currentTarget.style.background = activePreset?.key === p.key ? '#f0fdf4' : 'transparent')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = activePreset?.key === p.key ? '#eef3fa' : 'transparent')}
               >
                 {p.label}
               </button>

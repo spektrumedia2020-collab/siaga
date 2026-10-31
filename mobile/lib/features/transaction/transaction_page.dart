@@ -433,17 +433,17 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
                       decoration: BoxDecoration(
                         color: _messageIsError
                             ? Colors.red.withValues(alpha: 0.1)
-                            : Colors.green.withValues(alpha: 0.1),
+                            : const Color(0xFF1D4E89).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: _messageIsError ? Colors.red : Colors.green,
+                          color: _messageIsError ? Colors.red : const Color(0xFF1D4E89),
                         ),
                       ),
                       child: Row(
                         children: [
                           Icon(
                             _messageIsError ? Icons.error_outline : Icons.check_circle,
-                            color: _messageIsError ? Colors.red : Colors.green,
+                            color: _messageIsError ? Colors.red : const Color(0xFF1D4E89),
                           ),
                           const SizedBox(width: 8),
                           Expanded(child: Text(_message!)),
@@ -522,7 +522,7 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
             subtitle: amount != null
                 ? Text(
                     'Rp ${(amount as num).toStringAsFixed(0)}',
-                    style: TextStyle(color: Colors.green[700], fontWeight: FontWeight.w700, fontSize: 16),
+                    style: const TextStyle(color: Color(0xFF1D4E89), fontWeight: FontWeight.w700, fontSize: 16),
                   )
                 : null,
             trailing: Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey[400]),

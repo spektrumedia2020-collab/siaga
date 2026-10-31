@@ -34,8 +34,8 @@
 }
 
 .empty-state-action {
-  background: linear-gradient(135deg, #2D5016 0%, #1a1a1a 100%);
-  color: #FFD700;
+  background: linear-gradient(135deg, #1e3a8a 0%, #1a1a1a 100%);
+  color: #ffd700;
   border: none;
   padding: 0.65rem 1.4rem;
   border-radius: 8px;
@@ -46,11 +46,11 @@
 }
 
 .empty-state-action:hover {
-  box-shadow: 0 4px 12px rgba(45, 80, 22, 0.35);
+  box-shadow: 0 4px 12px rgba(16, 45, 84, 0.35);
   transform: translateY(-1px);
 }
 
 .empty-state-action:focus-visible {
-  outline: 3px solid rgba(45, 80, 22, 0.4);
+  outline: 3px solid rgba(16, 45, 84, 0.4);
   outline-offset: 2px;
 }

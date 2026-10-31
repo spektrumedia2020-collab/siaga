@@ -17,8 +17,8 @@ const DEFAULT_THEMES: Theme[] = [
   {
     id: 'default',
     name: 'Hijau (Default)',
-    primary_color: '#1f7a1f',
-    secondary_color: '#3d5224',
+    primary_color: '#1e3a8a',
+    secondary_color: '#23406b',
     accent_color: '#f4c300',
     description: 'Tema hijau klasik untuk semua pasar',
     is_active: true
@@ -59,8 +59,8 @@ export function ThemeManagement() {
   const [showForm, setShowForm] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
-    primary_color: '#1f7a1f',
-    secondary_color: '#3d5224',
+    primary_color: '#1e3a8a',
+    secondary_color: '#23406b',
     accent_color: '#f4c300',
     description: ''
   })
@@ -105,8 +105,8 @@ export function ThemeManagement() {
       
       setFormData({
         name: '',
-        primary_color: '#1f7a1f',
-        secondary_color: '#3d5224',
+        primary_color: '#1e3a8a',
+        secondary_color: '#23406b',
         accent_color: '#f4c300',
         description: ''
       })
@@ -194,7 +194,7 @@ export function ThemeManagement() {
                   className="siaga-input"
                   value={formData.primary_color}
                   onChange={(e) => setFormData({ ...formData, primary_color: e.target.value })}
-                  placeholder="#1f7a1f"
+                  placeholder="#1e3a8a"
                 />
               </div>
             </div>
@@ -212,7 +212,7 @@ export function ThemeManagement() {
                   className="siaga-input"
                   value={formData.secondary_color}
                   onChange={(e) => setFormData({ ...formData, secondary_color: e.target.value })}
-                  placeholder="#3d5224"
+                  placeholder="#23406b"
                 />
               </div>
             </div>
@@ -275,8 +275,8 @@ export function ThemeManagement() {
               {theme.is_active && (
                 <span style={{
                   padding: '2px 8px',
-                  background: '#dcfce7',
-                  color: '#166534',
+                  background: '#e3eaf6',
+                  color: '#1d4e89',
                   borderRadius: '999px',
                   fontSize: '11px',
                   fontWeight: '600'

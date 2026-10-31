@@ -16,7 +16,7 @@ interface ConfirmDialogProps {
 
 /**
  * Dialog konfirmasi reusable menggantikan `confirm()` bawaan browser.
- * Gaya konsisten dengan modal aplikasi (brand hijau #2D5016).
+ * Gaya konsisten dengan modal aplikasi (brand hijau #1e3a8a).
  *
  * Contoh pemakaian:
  * ```tsx

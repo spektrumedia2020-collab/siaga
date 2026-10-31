@@ -98,7 +98,7 @@ class _LandingPageState extends State<LandingPage> {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      AppTheme.primaryGreen,
+                      AppTheme.primaryNavy,
                       AppTheme.primaryDark,
                     ],
                   ),
@@ -132,7 +132,7 @@ class _LandingPageState extends State<LandingPage> {
                           errorBuilder: (context, error, stackTrace) => const Icon(
                             Icons.account_balance,
                             size: 44,
-                            color: AppTheme.primaryGreen,
+                            color: AppTheme.primaryNavy,
                           ),
                         ),
                       ),
@@ -168,10 +168,10 @@ class _LandingPageState extends State<LandingPage> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: _isOnlineMode ? Colors.green[50] : Colors.orange[50],
+                    color: _isOnlineMode ? const Color(0xFFE6EDF7) : Colors.orange[50],
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: _isOnlineMode ? Colors.green[200]! : Colors.orange[200]!,
+                      color: _isOnlineMode ? const Color(0xFF9DB6D8) : Colors.orange[200]!,
                       width: 2,
                     ),
                   ),
@@ -179,7 +179,7 @@ class _LandingPageState extends State<LandingPage> {
                     children: [
                       Icon(
                         _isOnlineMode ? Icons.wifi : Icons.wifi_off,
-                        color: _isOnlineMode ? Colors.green[700] : Colors.orange[700],
+                        color: _isOnlineMode ? const Color(0xFF1D4E89) : Colors.orange[700],
                         size: 32,
                       ),
                       const SizedBox(width: 16),
@@ -192,7 +192,7 @@ class _LandingPageState extends State<LandingPage> {
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: _isOnlineMode ? Colors.green[900] : Colors.orange[900],
+                                color: _isOnlineMode ? const Color(0xFF0B1F3A) : Colors.orange[900],
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -202,7 +202,7 @@ class _LandingPageState extends State<LandingPage> {
                                   : 'Menyimpan data locally',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: _isOnlineMode ? Colors.green[700] : Colors.orange[700],
+                                color: _isOnlineMode ? const Color(0xFF1D4E89) : Colors.orange[700],
                               ),
                             ),
                           ],
@@ -211,7 +211,7 @@ class _LandingPageState extends State<LandingPage> {
                       Switch(
                         value: _isOnlineMode,
                         onChanged: (_) => _toggleOnlineMode(),
-                        activeThumbColor: Colors.green,
+                        activeThumbColor: const Color(0xFF1D4E89),
                         inactiveThumbColor: Colors.orange,
                       ),
                     ],
@@ -243,7 +243,7 @@ class _LandingPageState extends State<LandingPage> {
                       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryGreen,
+                      backgroundColor: AppTheme.primaryNavy,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
@@ -283,7 +283,7 @@ class _LandingPageState extends State<LandingPage> {
                           width: 4,
                           height: 20,
                           decoration: BoxDecoration(
-                            color: AppTheme.primaryGreen,
+                            color: AppTheme.primaryNavy,
                             borderRadius: BorderRadius.circular(2),
                           ),
                         ),
@@ -316,8 +316,8 @@ class _LandingPageState extends State<LandingPage> {
                             icon: Icons.receipt_long,
                             title: 'Transaksi',
                             subtitle: 'Catat Bayaran',
-                            color: const Color(0xFFE8F5E9),
-                            iconColor: AppTheme.primaryGreen,
+                            color: const Color(0xFFE6EDF7),
+                            iconColor: AppTheme.primaryNavy,
                             onTap: () => context.go('/transaction'),
                           ),
                         ),

@@ -322,17 +322,17 @@ class _LapakPageState extends ConsumerState<LapakPage> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: isActive ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
+                color: isActive ? const Color(0xFF1D4E89).withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: isActive ? Colors.green.withValues(alpha: 0.3) : Colors.red.withValues(alpha: 0.3),
+                  color: isActive ? const Color(0xFF1D4E89).withValues(alpha: 0.3) : Colors.red.withValues(alpha: 0.3),
                 ),
               ),
               child: Text(
                 stallStatus,
                 style: TextStyle(
                   fontSize: 13,
-                  color: isActive ? Colors.green[700] : Colors.red[700],
+                  color: isActive ? const Color(0xFF1D4E89) : Colors.red[700],
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -383,17 +383,17 @@ class _LapakPageState extends ConsumerState<LapakPage> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: isActive ? Colors.green[50] : Colors.red[50],
+                      color: isActive ? const Color(0xFFE6EDF7) : Colors.red[50],
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: isActive ? Colors.green[200]! : Colors.red[200]!,
+                        color: isActive ? const Color(0xFF9DB6D8) : Colors.red[200]!,
                       ),
                     ),
                     child: Text(
                       isActive ? 'Aktif' : 'Tidak Aktif',
                       style: TextStyle(
                         fontSize: 12,
-                        color: isActive ? Colors.green[700] : Colors.red[700],
+                        color: isActive ? const Color(0xFF1D4E89) : Colors.red[700],
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -466,12 +466,12 @@ class _LapakPageState extends ConsumerState<LapakPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.task_alt, size: 64, color: Colors.green[600]),
+              const Icon(Icons.task_alt, size: 64, color: Color(0xFF2A5690)),
               const SizedBox(height: 16),
-              Text(
+              const Text(
                 'Retribusi harian lapak ini sudah ditarik hari ini.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.green[700], fontSize: 16, fontWeight: FontWeight.w600),
+                style: TextStyle(color: Color(0xFF1D4E89), fontSize: 16, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
               Text(
@@ -575,8 +575,8 @@ class _LapakPageState extends ConsumerState<LapakPage> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                             decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [Colors.green[400]!, Colors.green[600]!],
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF5478B5), Color(0xFF2A5690)],
                               ),
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -655,7 +655,7 @@ class _LapakPageState extends ConsumerState<LapakPage> {
                         width: 14,
                         height: 14,
                         decoration: BoxDecoration(
-                          color: (stallData?['status'] == 'AKTIF') ? Colors.green : Colors.grey,
+                          color: (stallData?['status'] == 'AKTIF') ? const Color(0xFF1D4E89) : Colors.grey,
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -708,7 +708,7 @@ class _LapakPageState extends ConsumerState<LapakPage> {
                     if (_ownerPhone != null && _ownerPhone!.isNotEmpty)
                       _buildInfoRow(
                         icon: Icons.phone_outlined,
-                        iconColor: Colors.green,
+                        iconColor: const Color(0xFF1D4E89),
                         label: 'Telepon',
                         value: _ownerPhone!,
                       ),
@@ -777,7 +777,7 @@ class _LapakPageState extends ConsumerState<LapakPage> {
         Color statusColor = Colors.grey;
         String statusText = 'Pending';
         if (status == 'paid' || status == 'success') {
-          statusColor = Colors.green;
+          statusColor = const Color(0xFF1D4E89);
           statusText = 'Berhasil';
         } else if (status == 'failed') {
           statusColor = Colors.red;

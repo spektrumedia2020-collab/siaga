@@ -217,20 +217,20 @@ class _SetoranPageState extends ConsumerState<SetoranPage> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.green[50],
+                      color: const Color(0xFFE6EDF7),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
                       children: [
                         const Icon(Icons.account_balance_wallet,
-                            color: Colors.green, size: 32),
+                            color: Color(0xFF1D4E89), size: 32),
                         const SizedBox(width: 12),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Total Setoran',
+                            const Text('Total Setoran',
                                 style: TextStyle(
-                                    fontSize: 12, color: Colors.green[800])),
+                                    fontSize: 12, color: Color(0xFF152C5B))),
                             const SizedBox(height: 4),
                             Text(
                               currency.format(
@@ -357,8 +357,8 @@ class _SetoranPageState extends ConsumerState<SetoranPage> {
         icon = Icons.hourglass_top;
         break;
       case 'approved':
-        bgColor = Colors.green[50]!;
-        textColor = Colors.green[800]!;
+        bgColor = const Color(0xFFE6EDF7);
+        textColor = const Color(0xFF152C5B);
         label = 'Disetujui';
         icon = Icons.check_circle;
         break;
@@ -451,27 +451,27 @@ class _SetoranPageState extends ConsumerState<SetoranPage> {
         width: double.infinity,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.green[50]!, Colors.green[100]!],
+          gradient: const LinearGradient(
+            colors: [Color(0xFFE6EDF7), Color(0xFFD8E3F3)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.green[200]!),
+          border: Border.all(color: const Color(0xFF9DB6D8)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.trending_up, color: Colors.green[700], size: 20),
+                const Icon(Icons.trending_up, color: Color(0xFF1D4E89), size: 20),
                 const SizedBox(width: 8),
                 Text(
                   'Pendapatan ${dateFormat.format(_selectedDate)}',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: Colors.green[800],
+                    color: Color(0xFF152C5B),
                   ),
                 ),
               ],
@@ -485,18 +485,18 @@ class _SetoranPageState extends ConsumerState<SetoranPage> {
             else ...[
               Text(
                 currency.format(_dailyRevenue),
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: Colors.green[900],
+                  color: Color(0xFF0B1F3A),
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 '$_dailyTransactionCount transaksi',
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 12,
-                  color: Colors.green[700],
+                  color: Color(0xFF1D4E89),
                 ),
               ),
             ],
@@ -523,7 +523,7 @@ class _SetoranPageState extends ConsumerState<SetoranPage> {
         label = 'Kepala Pasar';
         break;
       case 'approved':
-        bgColor = Colors.green;
+        bgColor = const Color(0xFF1D4E89);
         textColor = Colors.white;
         label = 'Disetujui';
         break;
@@ -771,7 +771,7 @@ class _SetoranPageState extends ConsumerState<SetoranPage> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _createSetoran,
-        backgroundColor: Colors.green,
+        backgroundColor: const Color(0xFF1D4E89),
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
         label: const Text('Setor Baru'),
@@ -787,7 +787,7 @@ class _SetoranPageState extends ConsumerState<SetoranPage> {
         children: [
           Icon(icon,
               size: 18,
-              color: _filterStatus == value ? Colors.green : Colors.grey),
+              color: _filterStatus == value ? const Color(0xFF1D4E89) : Colors.grey),
           const SizedBox(width: 8),
           Text(label,
               style: TextStyle(

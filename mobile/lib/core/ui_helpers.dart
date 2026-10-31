@@ -24,14 +24,14 @@ void showErrorSnackBar(BuildContext context, String message) {
   );
 }
 
-/// Tampilkan SnackBar sukses (hijau) dengan gaya floating konsisten.
+/// Tampilkan SnackBar sukses (navy) dengan gaya floating konsisten.
 void showSuccessSnackBar(BuildContext context, String message) {
   if (!context.mounted) return;
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
       content: Text(message),
       behavior: SnackBarBehavior.floating,
-      backgroundColor: Colors.green.shade700,
+      backgroundColor: const Color(0xFF1D4E89),
     ),
   );
 }

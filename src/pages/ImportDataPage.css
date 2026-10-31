@@ -9,8 +9,8 @@
   padding: 0.9rem 1rem;
   border-left: 4px solid var(--siaga-primary);
   border-radius: var(--siaga-radius-md);
-  background: #eef7ee;
-  color: #23421a;
+  background: #eff4fa;
+  color: #192643;
   font-size: 0.92rem;
 }
 
@@ -21,9 +21,9 @@
 }
 
 .import-alert.is-success {
-  border-left-color: #1f7a1f;
-  background: #e7f6e7;
-  color: #1c4d1c;
+  border-left-color: #1e3a8a;
+  background: #e9f0f9;
+  color: #1b2a4e;
 }
 
 .import-upload {
@@ -34,14 +34,14 @@
   gap: 1rem;
   padding: 1.25rem 1.5rem;
   background: var(--siaga-bg-card);
-  border: 2px dashed rgba(31, 122, 31, 0.35);
+  border: 2px dashed rgba(30, 58, 138, 0.35);
   border-radius: var(--siaga-radius-lg);
   transition: border-color 0.15s, background 0.15s;
 }
 
 .import-upload.is-dragging {
   border-color: var(--siaga-primary);
-  background: #f2fbf2;
+  background: #f3f7fc;
 }
 
 .import-upload-icon {
@@ -70,7 +70,7 @@
 
 .import-upload-input:focus-visible + .import-upload-button,
 .import-upload-button:focus-visible {
-  outline: 3px solid rgba(31, 122, 31, 0.35);
+  outline: 3px solid rgba(30, 58, 138, 0.35);
   outline-offset: 2px;
 }
 
@@ -93,7 +93,7 @@
 }
 
 .import-templates a:focus-visible {
-  outline: 3px solid rgba(31, 122, 31, 0.35);
+  outline: 3px solid rgba(30, 58, 138, 0.35);
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -129,7 +129,7 @@
 }
 
 .import-job.is-done {
-  border-color: rgba(31, 122, 31, 0.35);
+  border-color: rgba(30, 58, 138, 0.35);
 }
 
 .import-job.is-failed {
@@ -238,7 +238,7 @@
 .import-stat {
   padding: 0.6rem 0.7rem;
   border-radius: var(--siaga-radius-md);
-  background: #f7f9f5;
+  background: #f7f9fc;
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
@@ -273,7 +273,7 @@
 }
 
 .import-type-note code {
-  background: #f1f4ee;
+  background: #f3f6fa;
   padding: 0.1rem 0.35rem;
   border-radius: 4px;
   color: var(--siaga-primary-dark);
@@ -296,8 +296,8 @@
   gap: 0.75rem;
   padding: 1rem;
   border-radius: var(--siaga-radius-md);
-  background: #f8faf6;
-  border: 1px solid rgba(31, 122, 31, 0.12);
+  background: #f7f9fc;
+  border: 1px solid rgba(30, 58, 138, 0.12);
 }
 
 .import-field-hint {
@@ -377,7 +377,7 @@
 }
 
 .import-summary-grid div {
-  background: #f4f8f1;
+  background: #f5f8fc;
   border-radius: var(--siaga-radius-md);
   padding: 0.55rem 0.65rem;
   display: flex;

@@ -4,9 +4,9 @@
 
 /* Root & Base Styles */
 :root {
-  --primary: #10b981;
-  --primary-dark: #059669;
-  --primary-light: #d1fae5;
+  --primary: #1e3a8a;
+  --primary-dark: #152c5b;
+  --primary-light: #dbe6f4;
   --dark: #1e293b;
   --dark-light: #334155;
   --text: #64748b;
@@ -481,7 +481,7 @@ a:hover {
 }
 
 .advantage-card {
-  background: linear-gradient(135deg, var(--primary-light) 0%, rgba(16, 185, 129, 0.05) 100%);
+  background: linear-gradient(135deg, var(--primary-light) 0%, rgba(30, 58, 138, 0.05) 100%);
   padding: 2rem;
   border-radius: 12px;
   border-left: 4px solid var(--primary);

@@ -16,8 +16,8 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #2D5016 0%, #1a1a1a 100%);
-  color: #FFD700;
+  background: linear-gradient(135deg, #1e3a8a 0%, #1a1a1a 100%);
+  color: #ffd700;
   border: none;
   padding: 0.75rem 1.5rem;
   border-radius: 4px;
@@ -29,7 +29,7 @@
 
 .btn-primary:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(45, 80, 22, 0.4);
+  box-shadow: 0 5px 15px rgba(16, 45, 84, 0.4);
 }
 
 .btn-primary:disabled {
@@ -53,12 +53,12 @@
 }
 
 .error-message {
-  background-color: #FFEBEE;
-  border: 1px solid #EF9A9A;
+  background-color: #ffebee;
+  border: 1px solid #ef9a9a;
   border-radius: 4px;
   padding: 1rem;
   margin-bottom: 1rem;
-  color: #C62828;
+  color: #c62828;
 }
 
 .modal-overlay {
@@ -135,8 +135,8 @@
 .form-group textarea:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #2D5016;
-  box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.1);
+  border-color: #1e3a8a;
+  box-shadow: 0 0 0 3px rgba(16, 45, 84, 0.1);
 }
 
 .form-row {
@@ -314,13 +314,13 @@
 }
 
 .status-aktif {
-  background-color: #C8E6C9;
-  color: #2D5016;
+  background-color: #d6e2f2;
+  color: #1e3a8a;
 }
 
 .status-nonaktif {
-  background-color: #FFCCBC;
-  color: #D84315;
+  background-color: #ffccbc;
+  color: #d84315;
 }
 
 .action-cell {
@@ -338,20 +338,20 @@
 }
 
 .btn-edit {
-  background: #2D5016;
-  color: #FFD700;
+  background: #1e3a8a;
+  color: #ffd700;
 }
 
 .btn-edit:hover {
   background: #1a1a1a;
-  color: #FFD700;
+  color: #ffd700;
 }
 
 .btn-delete {
-  background: #D84315;
+  background: #d84315;
   color: white;
 }
 
 .btn-delete:hover {
-  background: #BF360C;
+  background: #bf360c;
 }

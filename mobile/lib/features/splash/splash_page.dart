@@ -84,10 +84,10 @@ class _SplashPageState extends State<SplashPage>
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFF1B5E20),
-              Color(0xFF2E7D32),
-              Color(0xFF43A047),
-              Color(0xFF66BB6A),
+              Color(0xFF152C5B),
+              Color(0xFF1D4E89),
+              Color(0xFF2F5B92),
+              Color(0xFF5478B5),
             ],
             stops: [0.0, 0.3, 0.6, 1.0],
           ),
@@ -178,7 +178,7 @@ class _SplashPageState extends State<SplashPage>
                                 errorBuilder: (context, error, stackTrace) => const Icon(
                                   Icons.store_mall_directory_rounded,
                                   size: 80,
-                                  color: AppTheme.primaryGreen,
+                                  color: AppTheme.primaryNavy,
                                 ),
                               ),
                             ),
@@ -255,7 +255,7 @@ class _SplashPageState extends State<SplashPage>
                         onPressed: _goToLogin,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
-                          foregroundColor: const Color(0xFF1B5E20),
+                          foregroundColor: const Color(0xFF152C5B),
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(30),

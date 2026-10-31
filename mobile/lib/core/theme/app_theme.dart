@@ -1,20 +1,28 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  static const Color primaryGreen = Color(0xFF1F7A1F);
-  static const Color primaryLight = Color(0xFF4CAF50);
-  static const Color primaryDark = Color(0xFF1B5E20);
-  
+  static const Color primaryNavy = Color(0xFF1E3A8A);
+  static const Color primaryLight = Color(0xFF3B6FB5);
+  static const Color primaryDark = Color(0xFF152C5B);
+  static const Color navyInk = Color(0xFF0B1F3A);
+  static const Color navyTint = Color(0xFFE6EDF7);
+
   static ThemeData get lightTheme {
     final colorScheme = ColorScheme.fromSeed(
-      seedColor: primaryGreen,
+      seedColor: primaryNavy,
       brightness: Brightness.light,
+    ).copyWith(
+      primary: primaryNavy,
+      onPrimary: Colors.white,
+      primaryContainer: navyTint,
+      onPrimaryContainer: navyInk,
+      secondary: primaryLight,
     );
-    
+
     return ThemeData(
       colorScheme: colorScheme,
       useMaterial3: true,
-      scaffoldBackgroundColor: const Color(0xFFF5F5F5),
+      scaffoldBackgroundColor: const Color(0xFFF4F7FC),
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
           TargetPlatform.android: ZoomPageTransitionsBuilder(),

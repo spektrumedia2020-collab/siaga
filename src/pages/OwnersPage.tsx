@@ -563,9 +563,9 @@ export function OwnersPage({ marketId, mode = 'market', readOnly = false }: Owne
                           style={{
                             padding: '6px 8px',
                             borderRadius: 6,
-                            border: '1px solid #16a34a',
-                            background: '#dcfce7',
-                            color: '#166534',
+                            border: '1px solid #2f6b8f',
+                            background: '#e3eaf6',
+                            color: '#1d4e89',
                             fontWeight: 700,
                             cursor: 'pointer',
                             fontSize: 12,

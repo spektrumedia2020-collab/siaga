@@ -1093,9 +1093,9 @@ export function MarketDashboard({ userId, onLogout }: Props) {
                   <div className="chart-wrapper">
                     <ResponsiveContainer width="100%" height={260}>
                       <LineChart data={displayChartData} margin={{ top: 10, right: 20, left: 20, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(29, 61, 7, 0.12)" />
-                        <XAxis dataKey="name" stroke="#3d5224" tickLine={false} axisLine={false} />
-                        <YAxis yAxisId="revenue" stroke="#3d5224" tickLine={false} axisLine={false} tickFormatter={(value) => `${Math.round(Number(value) / 1000)}k`} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(11, 31, 58, 0.12)" />
+                        <XAxis dataKey="name" stroke="#23406b" tickLine={false} axisLine={false} />
+                        <YAxis yAxisId="revenue" stroke="#23406b" tickLine={false} axisLine={false} tickFormatter={(value) => `${Math.round(Number(value) / 1000)}k`} />
                         <YAxis yAxisId="transactions" orientation="right" stroke="#b58b00" tickLine={false} axisLine={false} allowDecimals={false} />
                         <Tooltip
                           formatter={(value: number | string | readonly (number | string)[] | undefined) => {
@@ -1111,7 +1111,7 @@ export function MarketDashboard({ userId, onLogout }: Props) {
                           }}
                         />
                         <Legend verticalAlign="top" height={36} />
-                        <Line yAxisId="revenue" type="monotone" dataKey="revenue" stroke="#1f4e12" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                        <Line yAxisId="revenue" type="monotone" dataKey="revenue" stroke="#152c5b" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
                         <Line yAxisId="transactions" type="monotone" dataKey="transactions" stroke="#f4c300" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
                       </LineChart>
                     </ResponsiveContainer>
@@ -1287,7 +1287,7 @@ export function MarketDashboard({ userId, onLogout }: Props) {
                               layout="vertical"
                               margin={{ top: 0, right: 12, left: 4, bottom: 0 }}
                             >
-                              <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="rgba(29, 61, 7, 0.1)" />
+                              <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="rgba(11, 31, 58, 0.1)" />
                               <XAxis
                                 type="number"
                                 tickLine={false}
@@ -1304,7 +1304,7 @@ export function MarketDashboard({ userId, onLogout }: Props) {
                                 tick={{ fill: '#475569', fontSize: 11 }}
                               />
                               <Tooltip formatter={(value: number | string | readonly (number | string)[] | undefined) => `Rp ${Number(value || 0).toLocaleString('id-ID')}`} />
-                              <Bar dataKey="revenue" fill="#2f6b1f" radius={[0, 5, 5, 0]} />
+                              <Bar dataKey="revenue" fill="#2f5b92" radius={[0, 5, 5, 0]} />
                             </BarChart>
                           </ResponsiveContainer>
                         </div>

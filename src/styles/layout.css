@@ -2,15 +2,15 @@
 /* Design System Variables */
 :root {
   /* Colors */
-  --siaga-primary: #1f7a1f;
-  --siaga-primary-dark: #193d0c;
-  --siaga-primary-light: #d1fae5;
+  --siaga-primary: #1e3a8a;
+  --siaga-primary-dark: #0b1f3a;
+  --siaga-primary-light: #dbe6f4;
   --siaga-accent: #f4c300;
   --siaga-accent-light: #fff3b0;
   
   /* Background */
-  --siaga-bg-primary: #fff9e0;
-  --siaga-bg-secondary: #fff8de;
+  --siaga-bg-primary: #f4f7fc;
+  --siaga-bg-secondary: #f2f6fb;
   --siaga-bg-card: #ffffff;
   
   /* Text */
@@ -154,8 +154,8 @@ body {
 
 .siaga-input:focus {
   outline: none;
-  border-color: #2D5016;
-  box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.12);
+  border-color: #1e3a8a;
+  box-shadow: 0 0 0 3px rgba(16, 45, 84, 0.12);
 }
 
 .siaga-card-header {
@@ -222,7 +222,7 @@ body {
 .siaga-input:focus {
   outline: none;
   border-color: var(--siaga-primary);
-  box-shadow: 0 0 0 3px rgba(31, 122, 31, 0.2);
+  box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.2);
 }
 
 /* Responsive Utilities */

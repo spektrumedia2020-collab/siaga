@@ -60,7 +60,7 @@
 
 .tx-table thead tr {
   background: #f9fafb;
-  border-bottom: 2px solid #2D5016;
+  border-bottom: 2px solid #1e3a8a;
 }
 
 .tx-table th {
@@ -129,18 +129,18 @@
 }
 
 .tx-status-lunas {
-  background: #C8E6C9;
-  color: #2D5016;
+  background: #d6e2f2;
+  color: #1e3a8a;
 }
 
 .tx-status-batal {
-  background: #FFCCBC;
-  color: #D84315;
+  background: #ffccbc;
+  color: #d84315;
 }
 
 .tx-status-pending {
-  background: #FFF9C4;
-  color: #F57F17;
+  background: #fff9c4;
+  color: #f57f17;
 }
 
 .tx-actions {

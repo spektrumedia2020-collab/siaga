@@ -183,17 +183,17 @@ export function ReconciliationsPage({ marketId }: ReconciliationsPageProps) {
 
       {/* Summary Cards */}
       <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
-        <div style={{ padding: 16, background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8 }}>
-          <div style={{ fontSize: 13, color: '#166534' }}>Total Tagihan</div>
-          <div style={{ fontSize: 22, fontWeight: 700, color: '#166534' }}>Rp {totalExpected.toLocaleString('id-ID')}</div>
+        <div style={{ padding: 16, background: '#eef3fa', border: '1px solid #c9d9ef', borderRadius: 8 }}>
+          <div style={{ fontSize: 13, color: '#1d4e89' }}>Total Tagihan</div>
+          <div style={{ fontSize: 22, fontWeight: 700, color: '#1d4e89' }}>Rp {totalExpected.toLocaleString('id-ID')}</div>
         </div>
         <div style={{ padding: 16, background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 8 }}>
           <div style={{ fontSize: 13, color: '#1e40af' }}>Total Realisasi</div>
           <div style={{ fontSize: 22, fontWeight: 700, color: '#1e40af' }}>Rp {totalActual.toLocaleString('id-ID')}</div>
         </div>
-        <div style={{ padding: 16, background: totalDiff === 0 ? '#f0fdf4' : '#fff7ed', border: `1px solid ${totalDiff === 0 ? '#bbf7d0' : '#fed7aa'}`, borderRadius: 8 }}>
-          <div style={{ fontSize: 13, color: totalDiff === 0 ? '#166534' : '#9a3412' }}>Selisih</div>
-          <div style={{ fontSize: 22, fontWeight: 700, color: totalDiff === 0 ? '#166534' : '#9a3412' }}>
+        <div style={{ padding: 16, background: totalDiff === 0 ? '#eef3fa' : '#fff7ed', border: `1px solid ${totalDiff === 0 ? '#c9d9ef' : '#fed7aa'}`, borderRadius: 8 }}>
+          <div style={{ fontSize: 13, color: totalDiff === 0 ? '#1d4e89' : '#9a3412' }}>Selisih</div>
+          <div style={{ fontSize: 22, fontWeight: 700, color: totalDiff === 0 ? '#1d4e89' : '#9a3412' }}>
             {totalDiff === 0 ? '✓ LUNAS' : `Rp ${Math.abs(totalDiff).toLocaleString('id-ID')} (${totalDiff > 0 ? 'Kurang' : 'Lebih'})`}
           </div>
         </div>
@@ -260,7 +260,7 @@ export function ReconciliationsPage({ marketId }: ReconciliationsPageProps) {
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff', border: '1px solid #e5e7eb', fontSize: '0.95rem' }}>
             <thead>
-              <tr style={{ background: '#f9fafb', borderBottom: '2px solid #2D5016' }}>
+              <tr style={{ background: '#f9fafb', borderBottom: '2px solid #1e3a8a' }}>
                 <th style={{ padding: 10, border: '1px solid #e5e7eb', textAlign: 'left' }}>Lapak</th>
                 <th style={{ padding: 10, border: '1px solid #e5e7eb', textAlign: 'left' }}>Sektor</th>
                 <th style={{ padding: 10, border: '1px solid #e5e7eb', textAlign: 'left' }}>Pemilik</th>
@@ -273,8 +273,8 @@ export function ReconciliationsPage({ marketId }: ReconciliationsPageProps) {
             </thead>
             <tbody>
               {paginatedSummaries.map((s) => {
-                const diffColor = s.difference === 0 ? '#166534' : s.difference > 0 ? '#9a3412' : '#1e40af'
-                const diffBg = s.difference === 0 ? '#f0fdf4' : s.difference > 0 ? '#fff7ed' : '#f0f9ff'
+                const diffColor = s.difference === 0 ? '#1d4e89' : s.difference > 0 ? '#9a3412' : '#1e40af'
+                const diffBg = s.difference === 0 ? '#eef3fa' : s.difference > 0 ? '#fff7ed' : '#f0f9ff'
 
                 return (
                   <tr key={s.stall_id} style={{ borderBottom: '1px solid #e5e7eb', background: s.difference !== 0 ? '#fffbeb' : undefined }}>
@@ -300,8 +300,8 @@ export function ReconciliationsPage({ marketId }: ReconciliationsPageProps) {
                         borderRadius: 4,
                         fontSize: '0.85rem',
                         fontWeight: 600,
-                        background: s.difference === 0 ? '#C8E6C9' : '#FFCCBC',
-                        color: s.difference === 0 ? '#2D5016' : '#D84315'
+                        background: s.difference === 0 ? '#d6e2f2' : '#ffccbc',
+                        color: s.difference === 0 ? '#1e3a8a' : '#d84315'
                       }}>
                         {s.difference === 0 ? 'LUNAS' : 'SELISIH'}
                       </span>

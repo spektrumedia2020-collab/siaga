@@ -13,7 +13,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, Legend
 } from 'recharts'
 
-const CHART_COLORS = ['#1f7a1f', '#f4c300', '#3d5224', '#ff6b6b', '#4ecdc4', '#45b7d1']
+const CHART_COLORS = ['#1e3a8a', '#f4c300', '#23406b', '#ff6b6b', '#4b73d0', '#45b7d1']
 
 const PAGE_SIZE = 1000
 
@@ -599,13 +599,13 @@ export function SuperAdminDashboardImproved() {
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
                     <span style={{ color: '#64748b' }}>Delta</span>
-                    <strong style={{ color: analytics.summary.revenueDelta >= 0 ? '#166534' : '#b91c1c' }}>
+                    <strong style={{ color: analytics.summary.revenueDelta >= 0 ? '#1d4e89' : '#b91c1c' }}>
                       {analytics.summary.revenueDelta >= 0 ? '+' : '-'}Rp {Math.abs(analytics.summary.revenueDelta).toLocaleString('id-ID')}
                     </strong>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
                     <span style={{ color: '#64748b' }}>Persentase perubahan</span>
-                    <strong style={{ color: analytics.summary.revenueDeltaPercent >= 0 ? '#166534' : '#b91c1c' }}>
+                    <strong style={{ color: analytics.summary.revenueDeltaPercent >= 0 ? '#1d4e89' : '#b91c1c' }}>
                       {analytics.summary.revenueDeltaPercent >= 0 ? '+' : ''}{analytics.summary.revenueDeltaPercent.toFixed(1)}%
                     </strong>
                   </div>
@@ -623,7 +623,7 @@ export function SuperAdminDashboardImproved() {
                     <YAxis tickFormatter={(v: number) => `Rp ${(v / 1000000).toFixed(1)}jt`} />
                     <Tooltip formatter={(value) => [`Rp ${Number(value || 0).toLocaleString('id-ID')}`, 'Pendapatan']} />
                     <Legend />
-                    <Line type="monotone" dataKey="revenue" stroke="#1f7a1f" strokeWidth={3} name="Pendapatan (Rp)" dot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="revenue" stroke="#1e3a8a" strokeWidth={3} name="Pendapatan (Rp)" dot={{ r: 4 }} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>

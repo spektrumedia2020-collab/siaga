@@ -273,7 +273,7 @@ export function SectorsPage({ marketId, readOnly = false }: SectorsPageProps) {
                   </button>
                   {!readOnly && (
                     <>
-                      <button type="button" className="btn-secondary" style={{ background: '#166534', color: '#fff', border: '1px solid #14532d' }} onClick={() => handleEdit(sector)}>
+                      <button type="button" className="btn-secondary" style={{ background: '#1d4e89', color: '#fff', border: '1px solid #122655' }} onClick={() => handleEdit(sector)}>
                         Edit
                       </button>
                       <button type="button" className="btn-delete-user" style={{ background: '#dc2626', color: '#fff', border: '1px solid #b91c1c' }} onClick={() => setDeleteTarget({ id: sector.id, name: sector.name })}>
