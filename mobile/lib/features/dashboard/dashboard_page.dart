@@ -10,6 +10,7 @@ import '../shop/shop_page.dart';
 import '../history/history_page.dart';
 import '../summary/summary_page.dart';
 import '../../services/sync_service.dart';
+import '../../core/qr_payload.dart';
 import '../../core/ui_helpers.dart';
 
 class DashboardPage extends StatefulWidget {
@@ -641,11 +642,12 @@ class _BottomScanPageState extends ConsumerState<BottomScanPage> {
           Expanded(
             child: MobileScanner(
               onDetect: (capture) {
-                final value = capture.barcodes.first.rawValue;
-                if (value != null && value != scannedCode) {
-                  setState(() => scannedCode = value);
+                final raw = capture.barcodes.first.rawValue;
+                final code = raw == null ? null : extractStallCode(raw);
+                if (code != null && code != scannedCode) {
+                  setState(() => scannedCode = code);
                   if (mounted) {
-                    showInfoSnackBar(context, 'QR terdeteksi: $value');
+                    showInfoSnackBar(context, 'QR terdeteksi: $code');
                   }
                 }
               },

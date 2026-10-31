@@ -5,7 +5,7 @@ import { getPublicBaseUrl } from '../lib/publicUrl'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { Loading } from '../components/Loading'
 import { EmptyState } from '../components/EmptyState'
-import { IconEdit, IconTrash, IconMoney, IconQr, IconLink, IconRefresh } from '../components/Icons'
+import { IconEdit, IconTrash, IconMoney, IconLink, IconRefresh } from '../components/Icons'
 import '../pages/StallsPage.css'
 
 interface Stall {
@@ -701,20 +701,13 @@ export function StallsPage({ marketId, marketName, readOnly = false }: Props) {
                       <div className="action-buttons">
                         <QRCodeGenerator
                           value={stall.public_token
-                            ? `${getPublicBaseUrl()}/lapak/${stall.public_token}`
+                            ? `${getPublicBaseUrl()}/lapak/${stall.public_token}?code=${encodeURIComponent(stall.code || '')}`
                             : `${getPublicBaseUrl()}/lapak/${stall.market_id}/${encodeURIComponent(stall.code)}`}
                           heading={marketName}
-                          label={`QR Pemilik — ${stall.code || stall.number}${stall.legacy_code ? ` | ${stall.legacy_code}` : ''}`}
+                          label={`QR Lapak — ${stall.code || stall.number}${stall.legacy_code ? ` | ${stall.legacy_code}` : ''}`}
+                          hint="Bisa dipindai petugas (aplikasi) maupun pemilik (kamera/Google Lens)."
                           icon={<IconLink />}
-                          title="QR Pemilik (kamera / Google Lens)"
-                        />
-                        <QRCodeGenerator
-                          value={String(stall.code || stall.id)}
-                          heading={marketName}
-                          label={`QR Petugas — ${stall.code || stall.number}${stall.legacy_code ? ` | ${stall.legacy_code}` : ''}`}
-                          hint="Berisi kode lapak untuk aplikasi petugas — bukan link."
-                          icon={<IconQr />}
-                          title="QR Petugas (scan aplikasi)"
+                          title="QR Lapak (petugas & pemilik)"
                         />
                         {!readOnly && (
                           <>
