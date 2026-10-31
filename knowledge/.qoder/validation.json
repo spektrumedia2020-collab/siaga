@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "updated_at": "2026-10-31T11:15:00+07:00",
-  "commit": "d18059188543949efc2b78346c360b05e63aa41b",
+  "updated_at": "2026-10-31T11:32:00+07:00",
+  "commit": "3bb00fc",
   "checks": {
     "superadmin_market_access": {
       "status": "PASS",
@@ -132,12 +132,12 @@
       "evidence": "migration 008 diterapkan. pg_policies retribution_rates = 4 rows; insert/update/delete memakai is_current_user_admin_full() OR is_current_user_market_member(market_id); select tetap true."
     },
     "stall_legacy_code": {
-      "status": "PARTIAL",
-      "evidence": "2026-10-31: parser CSV legacy kini mengambil KODE LAMA untuk keempat format (NGD-0001 | 1 | Blok I No. 01; SWH-0001 | SWH.L.A.0001 | Lods A No.27; PNK-0001 | PNK.K2.D.0005 | FT; TRG-0001 | 1 | Kios Dlm Brt Bsmnt). csvImportRunner menulis stalls.legacy_code (insert/update + deteksi perubahan). StallsPage: field Kode Lama di form, kolom Kode Lama di tabel, label QR lapak & QR pemilik menjadi \"KODE | KODE LAMA\" (payload QR tidak berubah). typecheck 0 error; build sukses. Push d180591, CI run 41167534042 success (Web/Mobile/SQL sanity); produksi index.kharcMe7.js memuat placeholder Kode Lama. TERBLOKIR: kolom stalls.legacy_code belum ada di prod — probe PostgREST 2026-10-31 menjawab HTTP 400 code 42703 \"column stalls.legacy_code does not exist\"; menyimpan lapak akan gagal sampai migrations/018 dijalankan user."
+      "status": "PASS",
+      "evidence": "2026-10-31: migration 018 dijalankan lewat pooler (aws-0-ap-northeast-1.pooler.supabase.com:5432, user postgres.hlvsbmxpkqvniemunygh) — info_schema sebelum=0 kolom, sesudah legacy_code text nullable, komentar kolom terpasang, server PostgreSQL 17.6. PostgREST select=legacy_code HTTP 200 (sebelumnya 400/42703). Uji UI dev 5199: Edit MC-0001 -> isi Kode Lama SWH.L.A.0001 -> Update tanpa error, tabel menampilkan kolom Kode Lama = SWH.L.A.0001, dialog QR Petugas berlabel \"Lapak MC-0001 | SWH.L.A.0001\" dengan SVG QR dan tombol Salin link/Unduh PNG/Tutup, payload QR tetap kode lapak (nilai prop tidak diubah). Field lalu dikosongkan untuk mengembalikan data contoh: tabel kembali \"-\" dan DB id=4261 legacy_code=null. Screenshot tidak tersedia (in-app browser tanpa surface terlihat); bukti berupa DOM."
     },
     "deploy_legacy_code": {
       "status": "PASS",
-      "evidence": "Push a6491ee..d180591 origin/main; CI run 41167534042 success (Web build+typecheck, Mobile analyze+test, SQL sanity). Produksi siaga-pi.vercel.app index.html menunjuk assets/index.kharcMe7.js yang memuat string \"opsional, mis. SWH.L.A.0001\", \"Kode Lama\" (2x) dan legacy_code (18x)."
+      "evidence": "Push a6491ee..d180591 origin/main; CI run 41167534042 success (Web build+typecheck, Mobile analyze+test, SQL sanity). Produksi siaga-pi.vercel.app index.html menunjuk assets/index.kharcMe7.js yang memuat \"opsional, mis. SWH.L.A.0001\", \"Kode Lama\" (2x) dan legacy_code (18x)."
     }
   }
 }
