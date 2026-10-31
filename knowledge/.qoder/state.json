@@ -3,7 +3,7 @@
   "project": "SIAGA",
   "project_root": "D:/_siaga",
   "branch": "main",
-  "commit": "1d1bf71",
+  "commit": "4ac4c1d",
   "status": "WIP",
   "autonomy": "L1",
   "runtime": {
@@ -32,18 +32,18 @@
   "memory_version": 1,
   "context_version": 1,
   "skill_registry_version": 1,
-  "current_task": "Selesai: 12 tema pasar (8 preset baru) + halaman Tema di #market/dashboard",
-  "last_task": "Tambah 8 color schema baru (total 12) dan halaman Tema di dashboard pasar",
+  "current_task": "Menunggu pemilik menjalankan migrations/020_retribution_annual_bills.sql; kode web tagihan tahunan sudah commit 4ac4c1d",
+  "last_task": "Migration 020 + halaman Tagihan Tahunan (terbitkan, bayar cicil FIFO, tunggakan) + kolom Tahun di Transaksi",
   "last_session_id": "SESSION-2026-10-31-3",
   "last_scan": "2026-10-25T20:05:00+07:00",
   "last_index": "",
-  "last_updated": "2026-10-31T17:25:00+07:00",
-  "last_validation": "2026-10-31T17:25:00+07:00",
+  "last_updated": "2026-10-31T18:10:00+07:00",
+  "last_validation": "2026-10-31T18:05:00+07:00",
   "last_test_status": "pass",
   "last_command": "IMPLEMENT",
   "last_command_status": "COMPLETED",
   "open_wave": null,
-  "dirty": false,
+  "dirty": true,
   "drift_detected": false,
-  "next_step": "Deploy `7fab51a` terverifikasi (CI 41188749207 hijau; produksi menampilkan 12 tema di #market/dashboard/theme). Markets.id=39 = `theme_id=sunset`. Berikutnya: (1) uji alur petugas (5 officer belum punya auth_uid), (2) opsional ganti sisa `Colors.orange` status belum-bayar/offline di mobile, (3) opsional naikkan kontras preset lama ocean (2,77) dan sunset (3,56) bila teks di tombol terasa pudar."
+  "next_step": "1) Pemilik jalankan migrations/020_retribution_annual_bills.sql di SQL Editor Supabase (DDL produksi). 2) Isi tarif Jaspro per lapak (dialog Tarif di halaman Lapak atau impor CSV tarif; jenis NGD-JASPRO sudah dibuat tanpa tarif). 3) Buka #market/dashboard/bills -> Terbitkan Tagihan (tahun berjalan) -> uji bayar sebagian + FIFO ke tunggakan. 4) Verifikasi #market/dashboard/transactions kolom Tahun. 5) Fase mobile berikutnya: kartu tagihan + bayar cicil + sisa di struk."
 }
