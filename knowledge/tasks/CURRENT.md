@@ -1,6 +1,6 @@
 # CURRENT — Task Aktif
 
-**Sesi:** SESSION-2026-10-31-3 · **Update:** 2026-10-31T17:10:00+07:00 · **Branch:** `main` @ `1d1bf71`
+**Sesi:** SESSION-2026-10-31-3 · **Update:** 2026-10-31T19:20:00+07:00 · **Branch:** `main` @ `4ac4c1d`
 
 ## Status
 
@@ -50,8 +50,9 @@ menampilkan data.
 | 53 | Tema per pasar benar-benar berlaku | **SELESAI** | Pemilih tema di `#superadmin/market-edit/<id>`; `src/lib/marketTheme.ts` memetakan theme_id -> token `--siaga-*`; landing + dashboard ikut tema; uji lokal Biru Laut lalu kembali Navy |
 | 54 | Halaman Tema di dashboard pasar (`#market/dashboard`) | **SELESAI** | Tab Operasional "🎨 Tema" (`MarketThemePage`); `theme_id` ditambahkan ke select `getUserMarket`; uji Biru Laut -> reload tetap -> kembali Sunset; commit `4c31822` |
 | 55 | 12 color schema tema pasar | **SELESAI (deploy)** | 8 preset baru (Kuning Keemasan, Merah Marun, Teal Tosca, Olive Zaitun, Rose Anggrek, Indigo Malam, Kopi Tanah, Grafit Batu) + 4 lama; 12 baris `market_themes`; 3 halaman tema menampilkan 12; commit `1d1bf71`; CI `41188749207`; produksi 12 tema |
-| 56 | Migration 020 — tagihan tahunan + cicilan + tunggakan | **SIAP (menunggu pemilik)** | `migrations/020_retribution_annual_bills.sql`: `billing_period`/`allow_installment`, tabel `retribution_bills`, `transactions.bill_id`/`period_year`, view saldo, RPC `generate_retribution_bills` + `pay_retribution_bills` (FIFO), trigger penjaga, RLS, seed `NGD-JASPRO` (tanpa tarif) |
-| 57 | Web: halaman Tagihan Tahunan + kolom Tahun | **SELESAI (kode)** | `MarketBillsPage` di `#market/dashboard/bills` (terbitkan, bayar/cicil FIFO, filter, ringkasan tunggakan); `RetribusiPage` simpan periode + izin cicil; `TransactionsPage` kolom Tahun + normalisasi `paid`→LUNAS; typecheck 0 error, build PASS |
+| 56 | Migration 020 — tagihan tahunan + cicilan + tunggakan | **SELESAI (dijalankan pemilik)** | Objek live: `retribution_types.billing_period`/`allow_installment`, tabel `retribution_bills` (UNIQUE lapak+jenis+tahun), `transactions.bill_id`/`period_year`, view saldo, RPC `generate_retribution_bills` + `pay_retribution_bills` (FIFO), trigger penjaga, RLS, seed `NGD-JASPRO` (id 104, tanpa tarif) |
+| 57 | Web: halaman Tagihan Tahunan + kolom Tahun | **SELESAI (deploy)** | `MarketBillsPage` di `#market/dashboard/bills` (terbitkan, bayar/cicil FIFO, filter, ringkasan tunggakan); `RetribusiPage` simpan periode + izin cicil; `TransactionsPage` kolom Tahun + normalisasi `paid`→LUNAS; CI `41191095713`; produksi `index.C-AeMmVn.js` |
+| 58 | Uji fungsional tagihan (rollback) | **SELESAI** | Transaksi uji diakhiri ROLLBACK, residu 0: generate 2025+2026 idempoten, FIFO 2025 penuh lalu 2026 sebagian, lebih bayar ditolak, pelunasan menutup 2026; semua LUNAS |
 | 52 | Palet biru muda + navy (header biru muda) | **SELESAI** | Web + mobile; header #e3efff->#bfdbfe teks navy; sisa amber/oranye diganti biru/merah; CI 41180125573, deploy `a543be7` |
 | 49 | 5 petugas untuk transaksi simulasi | **SELESAI** | `users` 31–35 role OFFICER di NGD; 6.412 transaksi ber-`officer_id`; Overview TOTAL PETUGAS 5, Top Petugas terisi |
 | 50 | Nama pasar di dashboard pasar | **SELESAI** | Blok `.market-identity` di atas sidebar: "Pasar dikelola · Niaga Daya · NGD · Makassar"; ikut Ganti Pasar |
@@ -103,12 +104,15 @@ Tidak ada gelombang paralel. `open_wave = null`.
 ## Next Session Handoff
 
 1. Baca urutan resume: `state.json` → `index/index-state.json` → `context.md` → `memory.md` → `00_INDEX.md` → berkas ini.
-2. **Data produksi saat ini** sudah terisi: import ulang CSV tidak perlu. Bila ingin mengulang
-   simulasi transaksi: hapus dulu `delete from transactions where source='SIMULASI'` lewat pooler,
-   lalu jalankan seed ulang (skrip sekali pakai, tidak disimpan di repo).
-   Jalur import tetap tersedia: `contoh-pasar.csv` → `contoh-lapak.csv` → `contoh-tarif.csv`.
-   Setelah itu uji `/@<slug>`, `/lapak/<token>`, dan alur petugas.
-3. **Fase 2 mobile**: `scan_page.dart` membaca URL/token QR (satu QR untuk petugas & pemilik)
+2. **Tagihan tahunan (Jaspro) siap dipakai.** Schema live + logika FIFO terbukti lewat uji rollback.
+   Langkah pemilik: isi tarif Jaspro per lapak (dialog Tarif di halaman Lapak atau impor
+   `contoh-tarif.csv` dengan `KODE-JENIS = NGD-JASPRO`), lalu buka `#market/dashboard/bills`
+   → pilih tahun → "Terbitkan Tagihan". Bayar/cicil dari tombol bayar di baris lapak.
+   Belum ada tarif Jaspro di produksi, jadi penerbitan saat ini akan menghasilkan 0 tagihan.
+3. **Fase mobile tagihan** (belum mulai): kartu tagihan per lapak, input cicilan, tampilkan sisa
+   setelah bayar; mobile belum menulis `bill_id`, sehingga pembayaran cicilan harus lewat web/RPC.
+4. **Laporan tagihan**: realisasi vs target per tahun + daftar tunggakan per umur (belum dibuat).
+5. **Fase 2 mobile**: `scan_page.dart` membaca URL/token QR (satu QR untuk petugas & pemilik)
    + tombol notifikasi `wa.me`.
-4. **Path-based URL** `/admin/*`, `/market/*` — ditunda; hash deep-link masih kanonik.
-5. Opsional: toast menggantikan sebagian `alert`, focus-trap modal, pembersihan inline style.
+6. **Path-based URL** `/admin/*`, `/market/*` — ditunda; hash deep-link masih kanonik.
+7. Opsional: toast menggantikan sebagian `alert`, focus-trap modal, pembersihan inline style.
