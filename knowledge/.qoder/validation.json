@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-10-31T11:32:00+07:00",
+  "updated_at": "2026-10-31T12:05:00+07:00",
   "commit": "3bb00fc",
   "checks": {
     "superadmin_market_access": {
@@ -138,6 +138,10 @@
     "deploy_legacy_code": {
       "status": "PASS",
       "evidence": "Push a6491ee..d180591 origin/main; CI run 41167534042 success (Web build+typecheck, Mobile analyze+test, SQL sanity). Produksi siaga-pi.vercel.app index.html menunjuk assets/index.kharcMe7.js yang memuat \"opsional, mis. SWH.L.A.0001\", \"Kode Lama\" (2x) dan legacy_code (18x)."
+    },
+    "legacy_import_rollback": {
+      "status": "PASS",
+      "evidence": "2026-10-31: 4 CSV legacy diimpor lewat #superadmin/import (NGD 1396, SWH 262, PNK 626, TRG 1814; 0 gagal) -> 4098 lapak, 7196 tarif, 91 sektor, 8 jenis, 1824 pemilik baru, 3 pasar baru (36 SWH, 37 PNK, 38 TRG); NGD memakai pasar yang sudah ada, MKS tidak tersentuh. Cakupan legacy_code 4085/4098 (13 kosong di sumber CSV). Atas permintaan user (typed \"HAPUS DATA IMPOR\") seluruh data impor dihapus dalam satu transaksi: rates 7196, stalls 4098, sectors 91, types 8, pemilik yatim 1824, markets 3 -> COMMIT. Guard sebelum delete: transactions/setoran/attendance/announcements/market_config/officers/user_roles/users untuk pasar 35-38 semuanya 0. Hasil akhir terverifikasi: 2 pasar (MKS id34, NGD id35), 5 lapak, 5 pemilik, 2 sektor, 4 jenis, 8 tarif untuk MKS (dibaca langsung lewat pooler; PostgREST anon mengembalikan 0 untuk rates/types karena policy SELECT authenticated). UI Manajemen Pasar: 2 kartu, MKS \"5 lapak\", NGD \"Belum ada lapak\"."
     }
   }
 }

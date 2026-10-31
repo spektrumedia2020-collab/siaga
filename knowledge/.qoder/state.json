@@ -32,18 +32,18 @@
   "memory_version": 1,
   "context_version": 1,
   "skill_registry_version": 1,
-  "current_task": "Selesai: kode lama lapak tersimpan di stalls.legacy_code dan tampil di QR sebagai \"KODE | KODE LAMA\"",
-  "last_task": "Legacy code: parser CSV 4 format, runner tulis legacy_code, field+kolom Kode Lama, label QR, migration 018 dijalankan via pooler, uji UI + revert data contoh",
+  "current_task": "Selesai: impor 4 CSV legacy dijalankan lalu dihapus kembali atas permintaan user (DB kembali ke MKS 5 lapak + NGD kosong)",
+  "last_task": "legacy_code + QR label; impor legacy 4098 lapak; rollback impor lewat pooler",
   "last_session_id": "SESSION-2026-10-31-3",
   "last_scan": "2026-10-25T20:05:00+07:00",
   "last_index": "",
-  "last_updated": "2026-10-31T11:32:00+07:00",
-  "last_validation": "2026-10-31T11:32:00+07:00",
+  "last_updated": "2026-10-31T12:05:00+07:00",
+  "last_validation": "2026-10-31T12:05:00+07:00",
   "last_test_status": "pass",
   "last_command": "IMPLEMENT",
   "last_command_status": "COMPLETED",
   "open_wave": null,
   "dirty": false,
   "drift_detected": false,
-  "next_step": "Isi kode lama data nyata: impor ulang CSV legacy per pasar (idempoten, hanya mengisi legacy_code) atau lewat form Edit. Opsional: putuskan akses tulis MARKET_HEAD dan perbaiki copy landing."
+  "next_step": "Data produksi hanya berisi MKS (5 lapak contoh) dan NGD (kosong). Impor legacy bisa diulang kapan saja dari 4 CSV di root repo (idempoten, mengisi legacy_code)."
 }
