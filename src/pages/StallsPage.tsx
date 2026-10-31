@@ -5,7 +5,7 @@ import { getPublicBaseUrl } from '../lib/publicUrl'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { Loading } from '../components/Loading'
 import { EmptyState } from '../components/EmptyState'
-import { IconEdit, IconTrash, IconMoney, IconLink, IconRefresh } from '../components/Icons'
+import { IconEdit, IconTrash, IconMoney, IconQr, IconRefresh } from '../components/Icons'
 import '../pages/StallsPage.css'
 
 interface Stall {
@@ -706,7 +706,7 @@ export function StallsPage({ marketId, marketName, readOnly = false }: Props) {
                           heading={marketName}
                           label={`QR Lapak — ${stall.code || stall.number}${stall.legacy_code ? ` | ${stall.legacy_code}` : ''}`}
                           hint="Bisa dipindai petugas (aplikasi) maupun pemilik (kamera/Google Lens)."
-                          icon={<IconLink />}
+                          icon={<IconQr />}
                           title="QR Lapak (petugas & pemilik)"
                         />
                         {!readOnly && (
