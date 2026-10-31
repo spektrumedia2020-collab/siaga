@@ -273,7 +273,7 @@ export function PublicStallPage({ token, marketId, stallCode }: Props) {
 
   const contactDigits = marketContact.replace(/\D/g, '')
   const contactNumber = contactDigits.startsWith('0') ? `62${contactDigits.slice(1)}` : contactDigits
-  const contactMessage = `Halo pengelola ${marketContactName || 'pasar'}, saya ingin menambahkan nomor HP pemilik untuk lapak ${marketStallCode || '(kode lapak)'} dengan nomor HP: `
+  const contactMessage = `Halo pengelola ${marketContactName || 'pasar'}, saya pemilik lapak ${marketStallCode || '(kode lapak)'}. Saya ingin mendaftarkan nomor HP untuk lapak ini. Nomor HP saya: [tulis nomer hape kamu di sini]`
   const contactWhatsApp = `https://wa.me/${contactNumber}?text=${encodeURIComponent(contactMessage)}`
 
   if (!unlockedPin) {
