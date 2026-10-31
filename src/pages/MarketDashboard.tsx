@@ -3,6 +3,7 @@ import { getSupabaseClient, STORAGE_BUCKET, getStorageConfigurationMessage } fro
 import { getAllMarkets, getUserMarket, getUserRole } from '../lib/roleUtils'
 import { clearSelectedAdminMarketId, getSelectedAdminMarketId, setSelectedAdminMarketId } from '../lib/adminMarketSelection'
 import { applyMarketTheme, applyMarketThemeById } from '../lib/marketTheme'
+import { getPublicBaseUrl } from '../lib/publicUrl'
 import { OfficersPage } from './OfficersPage'
 import { StallsPage } from './StallsPage'
 import { SectorsPage } from './SectorsPage'
@@ -840,7 +841,7 @@ export function MarketDashboard({ userId, onLogout }: Props) {
 
   const handleCopyPublicLink = async () => {
     try {
-      await navigator.clipboard.writeText(window.location.origin + publicMarketUrl)
+      await navigator.clipboard.writeText(getPublicBaseUrl() + publicMarketUrl)
       setPublicLinkCopied(true)
       window.setTimeout(() => setPublicLinkCopied(false), 1800)
     } catch (error) {

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import QRCodeGenerator from '../components/QRCodeGenerator'
 import { getSupabaseClient } from '../lib/supabase'
+import { getPublicBaseUrl } from '../lib/publicUrl'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { Loading } from '../components/Loading'
 import { EmptyState } from '../components/EmptyState'
@@ -707,8 +708,8 @@ export function StallsPage({ marketId, marketName, readOnly = false }: Props) {
                         />
                         <QRCodeGenerator
                           value={stall.public_token
-                            ? `${window.location.origin}/lapak/${stall.public_token}`
-                            : `${window.location.origin}/lapak/${stall.market_id}/${encodeURIComponent(stall.code)}`}
+                            ? `${getPublicBaseUrl()}/lapak/${stall.public_token}`
+                            : `${getPublicBaseUrl()}/lapak/${stall.market_id}/${encodeURIComponent(stall.code)}`}
                           heading={marketName}
                           label={`QR Pemilik — ${stall.code || stall.number}${stall.legacy_code ? ` | ${stall.legacy_code}` : ''}`}
                           icon={<IconLink />}
