@@ -32,32 +32,36 @@ export function QRCodeGenerator({ value, heading, label, size = 220, icon, title
 
     // Export at a print-friendly resolution regardless of the on-screen size.
     const qrSize = Math.max(size * 4, 800)
+    const modules = svg.viewBox?.baseVal?.width || 0
+    const margin = modules > 0 ? Math.round((qrSize / modules) * 4) : Math.round(qrSize * 0.08)
+    const outerSize = qrSize + margin * 2
+
     const headingText = heading?.trim() || ''
     const labelText = label?.trim() || ''
-    const headingHeight = headingText ? Math.round(qrSize * 0.11) : 0
-    const labelHeight = labelText ? Math.round(qrSize * 0.1) : 0
-    const totalHeight = headingHeight + qrSize + labelHeight
+    const headingHeight = headingText ? Math.round(outerSize * 0.1) : 0
+    const labelHeight = labelText ? Math.round(outerSize * 0.09) : 0
+    const totalHeight = headingHeight + outerSize + labelHeight
 
     const qr = svg.cloneNode(true) as SVGSVGElement
-    qr.setAttribute('x', '0')
-    qr.setAttribute('y', String(headingHeight))
+    qr.setAttribute('x', String(margin))
+    qr.setAttribute('y', String(headingHeight + margin))
     qr.setAttribute('width', String(qrSize))
     qr.setAttribute('height', String(qrSize))
 
     const parts = [
-      `<rect width="${qrSize}" height="${totalHeight}" fill="#ffffff"/>`,
+      `<rect width="${outerSize}" height="${totalHeight}" fill="#ffffff"/>`,
       headingText
-        ? `<text x="${qrSize / 2}" y="${Math.round(headingHeight * 0.66)}" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="${Math.round(qrSize * 0.05)}" fill="#111111">${escapeXml(headingText)}</text>`
+        ? `<text x="${outerSize / 2}" y="${Math.round(headingHeight * 0.66)}" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="${Math.round(outerSize * 0.05)}" fill="#111111">${escapeXml(headingText)}</text>`
         : '',
       new XMLSerializer().serializeToString(qr),
       labelText
-        ? `<text x="${qrSize / 2}" y="${Math.round(headingHeight + qrSize + labelHeight * 0.58)}" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="${Math.round(qrSize * 0.045)}" fill="#111111">${escapeXml(labelText)}</text>`
+        ? `<text x="${outerSize / 2}" y="${Math.round(headingHeight + outerSize + labelHeight * 0.58)}" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="${Math.round(outerSize * 0.045)}" fill="#111111">${escapeXml(labelText)}</text>`
         : ''
     ]
 
     return {
-      markup: `<svg xmlns="http://www.w3.org/2000/svg" width="${qrSize}" height="${totalHeight}" viewBox="0 0 ${qrSize} ${totalHeight}">${parts.join('')}</svg>`,
-      width: qrSize,
+      markup: `<svg xmlns="http://www.w3.org/2000/svg" width="${outerSize}" height="${totalHeight}" viewBox="0 0 ${outerSize} ${totalHeight}">${parts.join('')}</svg>`,
+      width: outerSize,
       height: totalHeight
     }
   }
@@ -139,10 +143,11 @@ export function QRCodeGenerator({ value, heading, label, size = 220, icon, title
             }}
           >
             {heading && <h3 className="qr-modal-heading">{heading}</h3>}
-            <div style={{ display: 'inline-block', padding: 8, background: '#fff' }} ref={containerRef}>
-              <QRCode value={value} size={size} />
+            <div style={{ display: 'inline-block', padding: 16, background: '#fff' }} ref={containerRef}>
+              <QRCode value={value} size={size} level="M" bgColor="#ffffff" fgColor="#000000" />
             </div>
             {label && <h4 style={{ marginTop: 12, marginBottom: 0 }}>{label}</h4>}
+            <p className="qr-modal-hint">Pindai dengan kamera atau Google Lens.</p>
             <div style={{ marginTop: 12, display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
               <button onClick={() => navigator.clipboard?.writeText(value)} className="btn-secondary">
                 Salin link

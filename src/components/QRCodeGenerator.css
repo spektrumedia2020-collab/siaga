@@ -37,3 +37,9 @@
   font-size: 1.15rem;
   color: #0b1f3a;
 }
+
+.qr-modal-hint {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 0.8rem;
+}
