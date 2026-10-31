@@ -242,6 +242,45 @@
   transition: transform 0.2s ease;
 }
 
+/* Markets.css defines .btn-edit/.btn-delete globally with white text for its
+   filled buttons; these are icon-only buttons on a white table, so set the
+   colour explicitly and scope it to beat the global rule. */
+.stalls-page .btn-rate,
+.stalls-page .btn-edit,
+.stalls-page .btn-delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #1e3a8a;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  padding: 0.3rem;
+  line-height: 1;
+}
+
+.stalls-page .btn-delete {
+  color: #b91c1c;
+}
+
+.stalls-page .btn-rate:hover,
+.stalls-page .btn-edit:hover {
+  color: #152c5b;
+  background: #e6edf7;
+}
+
+.stalls-page .btn-delete:hover {
+  color: #7f1d1d;
+  background: #fee2e2;
+}
+
+.stalls-page .btn-rate:focus-visible,
+.stalls-page .btn-edit:focus-visible,
+.stalls-page .btn-delete:focus-visible {
+  outline: 2px solid #1e3a8a;
+  outline-offset: 2px;
+}
+
 .btn-rate:hover,
 .btn-edit:hover,
 .btn-delete:hover {
