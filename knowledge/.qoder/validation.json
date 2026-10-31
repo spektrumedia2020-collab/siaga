@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "updated_at": "2026-10-31T22:05:00+07:00",
-  "commit": "19f8647deb456c8b3e96312307d9135dcb6de4fa",
+  "updated_at": "2026-10-31T23:10:00+07:00",
+  "commit": "4494cc8e911dcb394c649068635189922ef442e3",
   "checks": {
     "typecheck": {
       "status": "PASS",
@@ -61,7 +61,11 @@
     },
     "tests": {
       "status": "NOT_FOUND",
-      "evidence": "Tidak ada *.test.* / *.spec.* di src/ dan api/ (tree source)."
+      "evidence": "Tidak ada *.test.* / *.spec.* di src/ dan api/ (tree source); `npm test` (node --test) tidak menemukan berkas uji web."
+    },
+    "test_rerun_2026_10_31": {
+      "status": "PASS",
+      "evidence": "Rerun penuh 2026-10-31 pada 4494cc8: `npm run typecheck` 0 error; `npm run build` PASS 2.17s (bundle 1.407 kB, gzip 402 kB); Flutter `analyze` No issues dan `test` All tests passed (butuh mobile/.env disalin dari .env.example, seperti CI); harness tsx 21/21 PASS — 3 template terdeteksi markets/stalls/rates, alur pasar->lapak->tarif (2 pasar, 5 lapak, 4 jenis, 8 tarif), idempoten 0 create/0 update, guard pasar 'ZZZ', 4 CSV legacy combined 0 dilewati, Sawah 262 lapak + 518 tarif idempoten. Harness dihapus setelah uji; UI produksi tetap belum dirender (gate login)."
     },
     "flutter_analyze": {
       "status": "PASS",
