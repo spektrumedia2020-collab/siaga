@@ -471,3 +471,63 @@
   color: #1d4e89;
   white-space: nowrap;
 }
+
+.public-stall-today-list {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.public-stall-today-list li {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.public-stall-today-list em {
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-style: normal;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.public-stall-today-list em.is-paid { background: #bbf7d0; color: #166534; }
+.public-stall-today-list em.is-unpaid { background: #fde68a; color: #92400e; }
+
+.public-stall-pin-forgot {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #1d4e89;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.public-stall-pin-forgot:hover {
+  color: #152c5b;
+  transform: none;
+  box-shadow: none;
+}
+
+.public-stall-pin-forgot-note {
+  margin-top: 8px;
+  color: #64748b;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 560px) {
+  .public-stall-today-list li {
+    justify-content: flex-start;
+  }
+}

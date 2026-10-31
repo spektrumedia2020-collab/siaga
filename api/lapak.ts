@@ -87,6 +87,15 @@ export default async function handler(req: any, res: any) {
     if (stallError) throw stallError
     if (!stall) return res.status(404).json({ error: 'Lapak tidak ditemukan' })
 
+    if (String(req.query?.pin_status || '') === '1') {
+      const { data: isDefault, error: statusError } = await supabaseAdmin.rpc('verify_stall_pin', {
+        p_stall_id: stall.id,
+        p_pin: '7777'
+      })
+      if (statusError) return res.status(503).json({ error: 'Fitur PIN lapak belum aktif di server' })
+      return res.json({ pin_is_default: Boolean(isDefault) })
+    }
+
     if (!pin) return res.status(401).json({ error: 'PIN lapak wajib diisi' })
 
     const { data: pinOk, error: pinError } = await supabaseAdmin.rpc('verify_stall_pin', {
@@ -197,6 +206,14 @@ export default async function handler(req: any, res: any) {
     const dailyDue = dailyRates.reduce((sum: number, rate: any) => sum + Number(rate.amount || 0), 0)
     const dailyNames = Array.from(new Set(dailyRates.map((rate: any) => rateName(rate)).filter(Boolean)))
     const dailyRateIds = new Set(dailyRates.map((rate: any) => Number(rate.id)).filter(Boolean))
+    const todayRateIds = new Set(todayTransactions.map((tx) => Number(tx.rate_id)).filter(Boolean))
+    const dailyItems = dailyRates.map((rate: any) => ({
+      name: rateName(rate),
+      amount: Number(rate.amount || 0),
+      paid:
+        todayRateIds.has(Number(rate.id)) ||
+        todayTransactions.some((tx) => tx.rate_id == null && Number(tx.amount || 0) >= Number(rate.amount || 0))
+    }))
     const dailyPaidToday = todayTransactions.some(
       (tx) =>
         (tx.rate_id != null && dailyRateIds.has(Number(tx.rate_id))) ||
@@ -238,6 +255,11 @@ export default async function handler(req: any, res: any) {
       0
     )
 
+    const { data: pinIsDefault } = await supabaseAdmin.rpc('verify_stall_pin', {
+      p_stall_id: stall.id,
+      p_pin: '7777'
+    })
+
     const publicAddress = market.address?.startsWith('Belum ditemukan data lokasi') ? null : market.address
     const cleanPart = (value: string | null) => value?.trim().replace(/^[,\s]+|[,\s]+$/g, '') || null
     const structuredAddress = [
@@ -276,12 +298,14 @@ export default async function handler(req: any, res: any) {
         total_paid: totalPaid,
         paid_count: paidSorted.length,
         last_paid_at: lastPaidAt,
+        pin_is_default: Boolean(pinIsDefault),
         today: {
           date: witaDate,
           amount: todayAmount,
           count: todayTransactions.length,
           daily_due: dailyDue,
           daily_names: dailyNames,
+          daily_items: dailyItems,
           paid_names: paidNames,
           status: todayStatus
         },

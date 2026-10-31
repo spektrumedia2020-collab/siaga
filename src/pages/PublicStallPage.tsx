@@ -29,9 +29,10 @@ interface StallResponse {
     total_paid: number
     paid_count: number
     last_paid_at: string | null
-    today: { date: string; amount: number; count: number; daily_due: number; daily_names: string[]; paid_names: string[]; status: 'SUDAH' | 'BELUM' | 'TIDAK_ADA_TARIF' }
+    today: { date: string; amount: number; count: number; daily_due: number; daily_names: string[]; daily_items: Array<{ name: string; amount: number; paid: boolean }>; paid_names: string[]; status: 'SUDAH' | 'BELUM' | 'TIDAK_ADA_TARIF' }
     bills_outstanding: number
     bills_count: number
+    pin_is_default: boolean
   }
   bills: Array<{
     bill_id: number
@@ -54,6 +55,8 @@ export function PublicStallPage({ token, marketId, stallCode }: Props) {
   const [pinInput, setPinInput] = useState('')
   const [unlockedPin, setUnlockedPin] = useState<string | null>(null)
   const [pinError, setPinError] = useState('')
+  const [pinIsDefault, setPinIsDefault] = useState<boolean | null>(null)
+  const [forgotOpen, setForgotOpen] = useState(false)
   const [changeOpen, setChangeOpen] = useState(false)
   const [newPin, setNewPin] = useState('')
   const [confirmPin, setConfirmPin] = useState('')
@@ -96,6 +99,23 @@ export function PublicStallPage({ token, marketId, stallCode }: Props) {
     loadStall()
     return () => controller.abort()
   }, [token, marketId, stallCode, unlockedPin])
+
+  useEffect(() => {
+    if (!token && !marketId) return
+    const controller = new AbortController()
+    const query = token
+      ? `token=${encodeURIComponent(token)}`
+      : `marketId=${encodeURIComponent(String(marketId || ''))}&code=${encodeURIComponent(String(stallCode || ''))}`
+
+    fetch(`/api/lapak?${query}&pin_status=1`, { signal: controller.signal })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((result) => {
+        setPinIsDefault(typeof result?.pin_is_default === 'boolean' ? result.pin_is_default : null)
+      })
+      .catch(() => {})
+
+    return () => controller.abort()
+  }, [token, marketId, stallCode])
 
   const handleUnlock = (e: React.FormEvent) => {
     e.preventDefault()
@@ -164,7 +184,11 @@ export function PublicStallPage({ token, marketId, stallCode }: Props) {
             <div className="public-stall-pin-heading">
               <p>Akses pemilik</p>
               <h2>Masukkan PIN</h2>
-              <span>PIN awal 7777. Segera ganti setelah berhasil masuk.</span>
+              <span>
+                {pinIsDefault === true
+                  ? 'PIN awal 7777. Segera ganti setelah berhasil masuk.'
+                  : 'Masukkan PIN pemilik lapak Anda.'}
+              </span>
             </div>
             <form className="public-stall-pin-form" onSubmit={handleUnlock}>
               <label htmlFor="stall-pin">PIN 4 angka</label>
@@ -182,6 +206,19 @@ export function PublicStallPage({ token, marketId, stallCode }: Props) {
               </button>
             </form>
             {pinError && <p className="public-stall-pin-error">{pinError}</p>}
+            <button
+              type="button"
+              className="public-stall-pin-forgot"
+              onClick={() => setForgotOpen((value) => !value)}
+            >
+              Lupa PIN?
+            </button>
+            {forgotOpen && (
+              <p className="public-stall-pin-forgot-note">
+                PIN tidak dapat dipulihkan dari halaman ini. Hubungi pengelola pasar atau admin untuk
+                mereset PIN lapak Anda, lalu masuk kembali dengan PIN baru.
+              </p>
+            )}
           </div>
         </div>
       </main>
@@ -242,7 +279,17 @@ export function PublicStallPage({ token, marketId, stallCode }: Props) {
             <strong className="public-stall-today-status">{todayLabel}</strong>
           </div>
           <div className="public-stall-today-meta">
-            {summary.today.amount > 0 ? (
+            {summary.today.daily_items.length > 1 ? (
+              <ul className="public-stall-today-list">
+                {summary.today.daily_items.map((item) => (
+                  <li key={`${item.name}-${item.amount}`}>
+                    <span>{item.name}</span>
+                    <strong>{formatRupiah(item.amount)}</strong>
+                    <em className={item.paid ? 'is-paid' : 'is-unpaid'}>{item.paid ? 'lunas' : 'belum'}</em>
+                  </li>
+                ))}
+              </ul>
+            ) : summary.today.amount > 0 ? (
               <>
                 Dibayar <strong>{formatRupiah(summary.today.amount)}</strong>
                 {summary.today.paid_names.length > 0 ? ` · ${summary.today.paid_names.join(', ')}` : ''}
@@ -325,7 +372,7 @@ export function PublicStallPage({ token, marketId, stallCode }: Props) {
 
         <div className="public-stall-tabs" role="tablist" aria-label="Informasi lapak">
           <button type="button" className={activeTab === 'rates' ? 'active' : ''} onClick={() => setActiveTab('rates')} role="tab" aria-selected={activeTab === 'rates'}>
-            Tarif <span>{stall.rates.length}</span>
+            Jenis Retribusi <span>{stall.rates.length}</span>
           </button>
           <button type="button" className={activeTab === 'transactions' ? 'active' : ''} onClick={() => setActiveTab('transactions')} role="tab" aria-selected={activeTab === 'transactions'}>
             Riwayat Transaksi{' '}
@@ -382,7 +429,11 @@ export function PublicStallPage({ token, marketId, stallCode }: Props) {
               {!token && <span className="public-stall-muted">Ganti PIN hanya lewat tautan QR pemilik.</span>}
             </form>
           ) : (
-            <p className="public-stall-muted">Gunakan PIN untuk membuka halaman ini. PIN awal 7777.</p>
+            <p className="public-stall-muted">
+              {summary.pin_is_default
+                ? 'PIN awal 7777. Segera ganti agar hanya Anda yang mengetahuinya.'
+                : 'PIN sudah diganti. Simpan PIN Anda dengan aman.'}
+            </p>
           )}
           {pinMessage && <p className="public-stall-pin-manage-message">{pinMessage}</p>}
         </section>
