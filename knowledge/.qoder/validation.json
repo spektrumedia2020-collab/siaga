@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-10-31T19:55:00+07:00",
+  "updated_at": "2026-10-31T20:05:00+07:00",
   "checks": {
     "superadmin_market_access": {
       "status": "PASS",
@@ -281,6 +281,10 @@
     "contact_settings": {
       "status": "PASS",
       "evidence": "2026-10-31. Migration 024 dijalankan pemilik: `markets.contact_phone` ada; tabel `app_settings` ada dengan RLS aktif + 4 policy admin (`is_current_user_admin_full`), grant authenticated, tanpa akses anon, 0 baris. Admin: tab baru **⚙️ Pengaturan** (`#superadmin/settings`, ContactSettingsPage) berisi 'Nomor Kontak Admin'; field per pasar 'Nomor Kontak Pengelola' ada di Edit Pasar. API `/api/lapak?pin_status=1` mengembalikan `market_name` + `contact_phone` efektif (pasar dulu, lalu app_settings). UI panel Lupa PIN menampilkan tombol WhatsApp/Telepon bila nomor terisi; saat ini belum ada nomor sehingga tampil 'Nomor kontak pengelola belum diatur. Silakan hubungi petugas pasar.' Verifikasi produksi (CSS index.CJjvHASR.css, commit 26f848e, CI 41201324549): tab Pengaturan tampil dengan heading 'Kontak Bantuan', input 'Nomor Kontak Admin', tombol Simpan; pin_status contact_phone=null. TINDAK LANJUT: pemilik mengisi kontak per pasar lewat Edit Pasar (markets.contact_phone = 081320118218, 12 digit). pin_status kini mengembalikan contact_phone tersebut; panel Lupa PIN menampilkan 'Hubungi pengelola Niaga Daya: WhatsApp / Telepon / 081320118218' dengan href https://wa.me/6281320118218 dan tel:+6281320118218; fallback 'belum diatur' tidak lagi tampil. TAMBAHAN 2026-10-31: tombol WhatsApp kini membuka chat dengan pesan terisi otomatis; `pin_status` juga mengembalikan `stall_code`. Produksi (commit 6a7716c, CI 41202069876): href `https://wa.me/6281320118218?text=Halo%20pengelola%20Niaga%20Daya%2C%20saya%20ingin%20menambahkan%20nomor%20HP%20pemilik%20untuk%20lapak%20NGD-0150%20dengan%20nomor%20HP%3A%20` — teks ter-decode: 'Halo pengelola Niaga Daya, saya ingin menambahkan nomor HP pemilik untuk lapak NGD-0150 dengan nomor HP: '."
+    },
+    "qr_unified": {
+      "status": "PASS",
+      "evidence": "2026-10-31. Satu QR per lapak: nilai `https://siaga.app/lapak/<token>?code=<kode>` (fallback legacy `/lapak/<marketId>/<kode>`); hanya satu tombol QR di tabel. Owner membuka halaman (query diabaikan); petugas memakai parser baru `mobile/lib/core/qr_payload.dart` (`extractStallCode`) di `scan_page.dart` dan `dashboard_page.dart` — menerima kode mentah, `?code=`, dan path legacy; token-only mengembalikan null. Verifikasi: `flutter analyze` No issues; `flutter test` 5 test lulus (termasuk 4 test parser); web typecheck/build PASS; produksi menyalin link `https://siaga.app/lapak/7c3b09f92e3f4147a2801e78f00bc7d6?code=NGD-0150`, label 'QR Lapak — NGD-0150 | 1', hint 'Bisa dipindai petugas (aplikasi) maupun pemilik (kamera/Google Lens).'; halaman dengan ?code tetap menampilkan gate PIN. Commit 8c86252 + 3460f37; CI 41203460029 success. Catatan: layout dua ikon (Pemilik/Petugas) pada check sebelumnya sudah digantikan."
     },
     "annual_bills_web": {
       "status": "PASS",
