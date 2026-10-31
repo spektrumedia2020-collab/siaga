@@ -240,10 +240,25 @@ export function OwnersPage({ marketId, mode = 'market', readOnly = false }: Owne
       setSaving(true)
       setError('')
       const supabase = getSupabaseClient()
+
+      // The admin list can be stale (e.g. the owner saved a phone after this
+      // page loaded). Never overwrite a stored phone with an empty form field.
+      let phoneValue = phone.trim() || null
+      if (editingId) {
+        const { data: current, error: currentError } = await supabase
+          .from('stall_owners')
+          .select('phone')
+          .eq('id', editingId)
+          .maybeSingle()
+        if (currentError) throw currentError
+        const currentPhone = String(current?.phone || '').trim()
+        if (!phoneValue && currentPhone) phoneValue = currentPhone
+      }
+
       const payload = {
         name: name.trim(),
         nik: nik.trim() || null,
-        phone: phone.trim() || null,
+        phone: phoneValue,
         address: address.trim() || null
       }
 
