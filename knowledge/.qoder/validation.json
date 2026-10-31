@@ -178,6 +178,10 @@
     "analytics_seed_ui": {
       "status": "PARTIAL",
       "evidence": "Analytics & Overview diverifikasi lewat DOM di dev server (data ter-render: KPI, teks grafik, top pasar/lapak). Bukti visual (screenshot) tidak dapat diambil karena in-app browser tidak menyediakan surface terlihat; panel 'Top Petugas' kosong karena seed tidak mengisi officer_id (produksi 0 petugas)."
+    },
+    "simulated_officers": {
+      "status": "PASS",
+      "evidence": "2026-10-31 atas permintaan 'tambahkan 5 petugas untuk yang melakukan transaksi': 5 baris `users` dibuat lewat pooler untuk market 39 (id_user 31–35, id_role 3 = OFFICER, status AKTIF, akses_global false, auth_uid null): Andi Saputra, Rahmat Hidayat, Sitti Aminah, Muhammad Yusuf, Nurul Fadhilah (username petugas.andi/rahmat/sitti/yusuf/nurul). Guard: skrip berhenti bila sudah ada user OFFICER di pasar itu. 6.412 transaksi `source='SIMULASI'` di-assign `officer_id` berdasarkan sektor lapak (round-robin 24 sektor -> 5 petugas) dalam satu transaksi DB. Distribusi (pooler): Rahmat 1.717/Rp 17.294.000; Sitti 1.485/Rp 14.332.000; Muhammad 1.220/Rp 12.874.000; Andi 1.107/Rp 9.969.000; Nurul 883/Rp 9.062.000 — total tetap 6.412/Rp 63.531.000, with_officer 6.412. UI dev 5199 setelah reload: Overview TOTAL PETUGAS 5; Analytics 'Top Petugas' menampilkan kelima nama dengan transaksi periode ini (Rahmat 542/Rp 4.450.000, Sitti 476, Muhammad 414, Andi 375, Nurul 318). Catatan: akun ini tanpa `auth_uid` sehingga belum bisa login di aplikasi; tabel `officers` tetap 0."
     }
   }
 }

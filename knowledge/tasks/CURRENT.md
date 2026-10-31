@@ -1,11 +1,12 @@
 # CURRENT — Task Aktif
 
-**Sesi:** SESSION-2026-10-31-3 · **Update:** 2026-10-31T13:40:00+07:00 · **Branch:** `main` @ `6506c31`
+**Sesi:** SESSION-2026-10-31-3 · **Update:** 2026-10-31T13:55:00+07:00 · **Branch:** `main` @ `cc06fb3`
 
 ## Status
 
-`WIP` — produksi berisi 1 pasar nyata (NGD, 1396 lapak) plus 6.412 transaksi simulasi 3 bulan
-(2026-08-01…2026-10-31, source `SIMULASI`); dashboard & Analytics menampilkan data.
+`WIP` — produksi berisi 1 pasar nyata (NGD, 1396 lapak), 5 petugas, dan 6.412 transaksi simulasi
+3 bulan (2026-08-01…2026-10-31, source `SIMULASI`, `officer_id` terisi); dashboard & Analytics
+menampilkan data.
 
 ## Task
 
@@ -46,6 +47,7 @@
 | 46 | Label QR di bawah kode, tanpa kata "Lapak" | **SELESAI** | Format `NGD-0150 \| 1`; PNG unduhan ikut mencetak label |
 | 47 | Seed 3 bulan transaksi simulasi (NGD) | **SELESAI** | 6.412 baris, Rp 63.531.000, source `SIMULASI`, status `paid`; Rollback: `delete from transactions where source='SIMULASI'` |
 | 48 | Verifikasi Analytics/Overview memuat data seed | **SELESAI** | Overview Rp 63.531.000 / 1396 lapak; Analytics: periode ini Rp 17.961.000 vs sebelumnya Rp 17.070.000 (+5,2%), 3 grafik SVG ter-render |
+| 49 | 5 petugas untuk transaksi simulasi | **SELESAI** | `users` 31–35 role OFFICER di NGD; 6.412 transaksi ber-`officer_id`; Overview TOTAL PETUGAS 5, Top Petugas terisi |
 | 14 | P0-03 — env PIN lapak + deploy | **DIGANTI** | PIN dihapus; digantikan token QR per lapak (migration 016) |
 | 15 | Role: MARKET_HEAD read-only + hapus impersonation | **SELESAI** | Migration 014; build PASS; deploy `86b62d6` |
 | 16 | P0-12 — kredensial admin di halaman publik | **SELESAI (kode)** | Bundle bersih; rotasi password dipilih tidak dilakukan user |
@@ -77,9 +79,11 @@
 - Tidak ada blocker teknis aktif; typecheck/build/simulasi impor lokal hijau.
 - Risiko diterima: password `admin@siaga.id` tidak dirotasi (keputusan user, S-18).
 - Produksi kini berisi 1 pasar nyata: NGD / Niaga Daya (1396 lapak, 24 sektor, 740 pemilik,
-  2 jenis sewa, 2792 tarif) + 6.412 transaksi simulasi 2026-08-01…2026-10-31. SWH/PNK/TRG belum diimpor.
-- Transaksi simulasi tidak punya `officer_id` (produksi 0 petugas), jadi panel "Top Petugas"
-  di Analytics menampilkan "Belum ada data petugas" — bukan bug.
+  2 jenis sewa, 2792 tarif) + 5 petugas + 6.412 transaksi simulasi 2026-08-01…2026-10-31.
+  SWH/PNK/TRG belum diimpor.
+- 5 petugas (Andi Saputra, Rahmat Hidayat, Sitti Aminah, Muhammad Yusuf, Nurul Fadhilah) adalah
+  baris `users` role OFFICER **tanpa `auth_uid`** — belum bisa login; hanya untuk data simulasi.
+  Tabel `officers` tetap 0 (aplikasi memakai `users` untuk daftar petugas).
 
 ## Team Waves
 
