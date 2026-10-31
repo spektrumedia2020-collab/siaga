@@ -23,6 +23,32 @@ function isRateLimited(ip: string) {
 
 const PAGE_SIZE = 1000
 
+const RESET_WINDOW_MS = 10 * 60_000
+const RESET_MAX_ATTEMPTS = 5
+const resetAttempts = new Map<string, { count: number; resetAt: number }>()
+
+function isResetLimited(key: string) {
+  const now = Date.now()
+  if (resetAttempts.size > 2000) resetAttempts.clear()
+  const current = resetAttempts.get(key)
+  if (!current || current.resetAt <= now) return false
+  return current.count >= RESET_MAX_ATTEMPTS
+}
+
+function recordResetFailure(key: string) {
+  const now = Date.now()
+  const current = resetAttempts.get(key)
+  if (!current || current.resetAt <= now) {
+    resetAttempts.set(key, { count: 1, resetAt: now + RESET_WINDOW_MS })
+    return
+  }
+  current.count += 1
+}
+
+function clearResetAttempts(key: string) {
+  resetAttempts.delete(key)
+}
+
 async function fetchAllPaidTransactions(supabaseAdmin: any, stallId: number) {
   const rows: any[] = []
   for (let from = 0; ; from += PAGE_SIZE) {
@@ -59,6 +85,7 @@ export default async function handler(req: any, res: any) {
   const marketId = Number(req.query?.marketId ?? req.body?.marketId)
   const stallCode = String(req.query?.code || req.body?.code || '').trim()
   const pin = String(req.query?.pin ?? req.body?.pin ?? '').trim()
+  const action = String(req.query?.action || req.body?.action || '').trim()
 
   const usingToken = Boolean(token)
   if (usingToken && !/^[a-f0-9]{32}$/i.test(token)) {
@@ -73,6 +100,62 @@ export default async function handler(req: any, res: any) {
       process.env.SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
+
+    if (action === 'reset_pin') {
+      if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Gunakan metode POST untuk reset PIN' })
+      }
+
+      const phone = String(req.body?.phone || '').trim()
+      const newPin = String(req.body?.new_pin || '').trim()
+
+      if (!/^\d{4}$/.test(newPin)) {
+        return res.status(400).json({ error: 'PIN baru harus 4 angka' })
+      }
+      if (phone.replace(/\D/g, '').length < 8) {
+        return res.status(400).json({ error: 'Nomor HP tidak valid' })
+      }
+
+      let resetToken = token
+      if (!resetToken) {
+        const { data: found, error: findError } = await supabaseAdmin
+          .from('stalls')
+          .select('public_token')
+          .eq('market_id', marketId)
+          .ilike('code', stallCode)
+          .maybeSingle()
+        if (findError) throw findError
+        if (!found?.public_token) return res.status(404).json({ error: 'Lapak tidak ditemukan' })
+        resetToken = found.public_token as string
+      }
+
+      if (isResetLimited(resetToken)) {
+        return res.status(429).json({ error: 'Terlalu banyak percobaan. Coba lagi beberapa menit lagi.' })
+      }
+
+      const { data: resetOk, error: resetError } = await supabaseAdmin.rpc('reset_stall_pin_with_phone', {
+        p_token: resetToken,
+        p_phone: phone,
+        p_new_pin: newPin
+      })
+
+      if (resetError) {
+        const message = String(resetError.message || '')
+        if (/does not exist|could not find the function|schema cache/i.test(message)) {
+          return res.status(503).json({ error: 'Fitur reset PIN belum aktif di server' })
+        }
+        recordResetFailure(resetToken)
+        return res.status(400).json({ error: message || 'Gagal mengganti PIN' })
+      }
+
+      if (!resetOk) {
+        recordResetFailure(resetToken)
+        return res.status(400).json({ error: 'Nomor HP tidak cocok' })
+      }
+
+      clearResetAttempts(resetToken)
+      return res.json({ ok: true })
+    }
 
     let stallQuery = supabaseAdmin
       .from('stalls')

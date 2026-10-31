@@ -57,6 +57,11 @@ export function PublicStallPage({ token, marketId, stallCode }: Props) {
   const [pinError, setPinError] = useState('')
   const [pinIsDefault, setPinIsDefault] = useState<boolean | null>(null)
   const [forgotOpen, setForgotOpen] = useState(false)
+  const [resetPhone, setResetPhone] = useState('')
+  const [resetPin, setResetPin] = useState('')
+  const [resetConfirm, setResetConfirm] = useState('')
+  const [resetMessage, setResetMessage] = useState('')
+  const [resetSaving, setResetSaving] = useState(false)
   const [changeOpen, setChangeOpen] = useState(false)
   const [newPin, setNewPin] = useState('')
   const [confirmPin, setConfirmPin] = useState('')
@@ -125,6 +130,54 @@ export function PublicStallPage({ token, marketId, stallCode }: Props) {
     }
     setPinError('')
     setUnlockedPin(pinInput)
+  }
+
+  const handleResetPin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setResetMessage('')
+
+    if (!/^\d{4}$/.test(resetPin)) {
+      setResetMessage('PIN baru harus 4 angka')
+      return
+    }
+    if (resetPin !== resetConfirm) {
+      setResetMessage('Konfirmasi PIN tidak sama')
+      return
+    }
+    if (resetPhone.replace(/\D/g, '').length < 8) {
+      setResetMessage('Nomor HP tidak valid')
+      return
+    }
+
+    setResetSaving(true)
+    try {
+      const response = await fetch('/api/lapak', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'reset_pin',
+          token,
+          marketId,
+          code: stallCode,
+          phone: resetPhone,
+          new_pin: resetPin
+        })
+      })
+      const result = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(result.error || 'Gagal mengganti PIN')
+
+      setPinInput(resetPin)
+      setUnlockedPin(resetPin)
+      setPinIsDefault(false)
+      setForgotOpen(false)
+      setResetPhone('')
+      setResetPin('')
+      setResetConfirm('')
+    } catch (err: any) {
+      setResetMessage(err?.message || 'Gagal mengganti PIN')
+    } finally {
+      setResetSaving(false)
+    }
   }
 
   const handleChangePin = async (e: React.FormEvent) => {
@@ -211,13 +264,42 @@ export function PublicStallPage({ token, marketId, stallCode }: Props) {
               className="public-stall-pin-forgot"
               onClick={() => setForgotOpen((value) => !value)}
             >
-              Lupa PIN?
+              {forgotOpen ? 'Batal' : 'Lupa PIN?'}
             </button>
             {forgotOpen && (
-              <p className="public-stall-pin-forgot-note">
-                PIN tidak dapat dipulihkan dari halaman ini. Hubungi pengelola pasar atau admin untuk
-                mereset PIN lapak Anda, lalu masuk kembali dengan PIN baru.
-              </p>
+              <form className="public-stall-pin-reset" onSubmit={handleResetPin}>
+                <p className="public-stall-pin-forgot-note">
+                  Masukkan nomor HP pemilik yang terdaftar di pasar, lalu buat PIN baru.
+                </p>
+                <input
+                  inputMode="tel"
+                  autoComplete="tel"
+                  placeholder="Nomor HP pemilik"
+                  value={resetPhone}
+                  onChange={(e) => setResetPhone(e.target.value)}
+                />
+                <input
+                  inputMode="numeric"
+                  maxLength={4}
+                  placeholder="PIN baru (4 angka)"
+                  value={resetPin}
+                  onChange={(e) => setResetPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                />
+                <input
+                  inputMode="numeric"
+                  maxLength={4}
+                  placeholder="Ulangi PIN baru"
+                  value={resetConfirm}
+                  onChange={(e) => setResetConfirm(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                />
+                <button type="submit" disabled={resetSaving}>
+                  {resetSaving ? 'Memproses...' : 'Ganti PIN'}
+                </button>
+                <span className="public-stall-pin-forgot-note">
+                  Jika nomor HP belum terdaftar, hubungi pengelola pasar.
+                </span>
+                {resetMessage && <p className="public-stall-pin-error">{resetMessage}</p>}
+              </form>
             )}
           </div>
         </div>

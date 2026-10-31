@@ -531,3 +531,42 @@
     justify-content: flex-start;
   }
 }
+
+.public-stall-pin-reset {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+  text-align: left;
+}
+
+.public-stall-pin-reset input {
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.public-stall-pin-reset input:focus {
+  outline: none;
+  border-color: #1e3a8a;
+  box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.12);
+}
+
+.public-stall-pin-reset button {
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: #1e3a8a;
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.public-stall-pin-reset button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.public-stall-pin-reset .public-stall-pin-error {
+  margin-top: 2px;
+}
