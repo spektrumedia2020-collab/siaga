@@ -20,6 +20,7 @@ class _LapakPageState extends ConsumerState<LapakPage> {
   List<Map<String, dynamic>> transactionHistory = [];
   List<Map<String, dynamic>> billRows = [];
   Map<int, String> billTypeNames = {};
+  Set<int> _dailyTypeIds = <int>{};
   final int _selectedTabIndex = 0;
   String? _accessDeniedMessage;
   bool _alreadyCollectedDailyToday = false;
@@ -206,6 +207,7 @@ class _LapakPageState extends ConsumerState<LapakPage> {
           _sectorName = sectorRow?['name']?.toString();
           retributionTypes = loadedTypes;
           transactionHistory = historyRows;
+          _dailyTypeIds = dailyTypeIds;
         });
       }
 
@@ -433,174 +435,233 @@ class _LapakPageState extends ConsumerState<LapakPage> {
       );
     }
 
-    if (_alreadyCollectedDailyToday) {
-      return ListView(
-        padding: const EdgeInsets.all(16),
+    final dailyTypes = retributionTypes
+        .where((type) => _dailyTypeIds.contains((type['id'] as num?)?.toInt()))
+        .toList();
+    final otherTypes = retributionTypes
+        .where((type) => !_dailyTypeIds.contains((type['id'] as num?)?.toInt()))
+        .toList();
+
+    final children = <Widget>[];
+
+    if (dailyTypes.isNotEmpty) {
+      children.add(_buildSectionHeader('Retribusi Harian'));
+      if (_alreadyCollectedDailyToday) {
+        children.add(_buildDailyPaidCard());
+      } else {
+        children.addAll(dailyTypes.map(_buildTypeCard));
+      }
+    }
+
+    children.add(_buildBillsSection());
+
+    if (otherTypes.isNotEmpty) {
+      children.add(_buildSectionHeader('Retribusi Lain'));
+      for (final type in otherTypes) {
+        final typeId = (type['id'] as num?)?.toInt();
+        children.add(_buildTypeCard(
+          type,
+          disabled: typeId != null && _typeIsLunas(typeId),
+        ));
+      }
+    }
+
+    if (children.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.receipt_long_outlined, size: 64, color: Colors.grey[300]),
+            const SizedBox(height: 16),
+            Text(
+              'Belum ada jenis retribusi',
+              style: TextStyle(color: Colors.grey[600], fontSize: 16),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: children,
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 4, bottom: 10),
+      child: Text(
+        title,
+        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF1D4E89)),
+      ),
+    );
+  }
+
+  Widget _buildDailyPaidCard() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE6EDF7),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFF9DB6D8)),
+      ),
+      child: const Row(
         children: [
-          _buildBillsSection(),
-          Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              children: [
-                const Icon(Icons.task_alt, size: 64, color: Color(0xFF2A5690)),
-                const SizedBox(height: 16),
-                const Text(
-                  'Retribusi harian lapak ini sudah ditarik hari ini.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Color(0xFF1D4E89), fontSize: 16, fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Penagihan ganda tidak diizinkan.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey[600]),
-                ),
-              ],
+          Icon(Icons.task_alt, size: 32, color: Color(0xFF2A5690)),
+          SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Retribusi harian sudah dibayar hari ini',
+              style: TextStyle(color: Color(0xFF1D4E89), fontSize: 15, fontWeight: FontWeight.w600),
             ),
           ),
         ],
-      );
-    }
+      ),
+    );
+  }
 
-    if (retributionTypes.isEmpty) {
-      return ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _buildBillsSection(),
-          const SizedBox(height: 24),
-          Icon(Icons.receipt_long_outlined, size: 64, color: Colors.grey[300]),
-          const SizedBox(height: 16),
-          Text(
-            'Belum ada jenis retribusi',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey[600], fontSize: 16),
-          ),
-        ],
-      );
-    }
+  bool _typeIsLunas(int typeId) {
+    final bills = billRows
+        .where((bill) => (bill['types_id'] as num?)?.toInt() == typeId)
+        .toList();
+    if (bills.isEmpty) return false;
+    return bills.every((bill) {
+      final status = (bill['status'] ?? '').toString();
+      final outstanding = (bill['outstanding'] as num?)?.toDouble() ?? 0;
+      return status == 'LUNAS' || status == 'DIBATALKAN' || outstanding <= 0;
+    });
+  }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: retributionTypes.length + (billRows.isEmpty ? 0 : 1),
-      itemBuilder: (context, index) {
-        if (billRows.isNotEmpty && index == 0) {
-          return _buildBillsSection();
-        }
-        final type = retributionTypes[billRows.isEmpty ? index : index - 1];
-        final typeName = type['name'] ?? 'Tidak diketahui';
-        final typeCode = type['code'] ?? '-';
-        final amount = (type['rate'] as num?)?.toDouble() ?? 0;
-        
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withValues(alpha: 0.05),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-            child: InkWell(
-              onTap: () {
-                final typeId = type['id'];
-                if (typeId != null) {
-                  _selectRetributionType(typeId.toString());
-                }
-              },
-              borderRadius: BorderRadius.circular(14),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Colors.orange[300]!, Colors.orange[500]!],
+  Widget _buildTypeCard(Map<String, dynamic> type, {bool disabled = false}) {
+    final typeName = type['name'] ?? 'Tidak diketahui';
+    final typeCode = type['code'] ?? '-';
+    final amount = (type['rate'] as num?)?.toDouble() ?? 0;
+    final typeId = (type['id'] as num?)?.toInt();
+    final hasBills = typeId != null &&
+        billRows.any((bill) => (bill['types_id'] as num?)?.toInt() == typeId);
+    final onTap = disabled || typeId == null
+        ? null
+        : (hasBills
+            ? () => _openBillPayment(typeId)
+            : () => _selectRetributionType(typeId.toString()));
+
+    return Opacity(
+      opacity: disabled ? 0.6 : 1,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withValues(alpha: 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: disabled
+                          ? [Colors.grey[300]!, Colors.grey[400]!]
+                          : [Colors.orange[300]!, Colors.orange[500]!],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.payments_outlined,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        typeName,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                          color: Colors.black87,
+                        ),
                       ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.payments_outlined,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          typeName,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16,
-                            color: Colors.black87,
+                      const SizedBox(height: 4),
+                      Text(
+                        typeCode,
+                        style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                      ),
+                      const SizedBox(height: 6),
+                      if (amount > 0)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF5478B5), Color(0xFF2A5690)],
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            'Rp ${amount.toStringAsFixed(0)}',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        )
+                      else
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[200],
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            'Belum ada tarif',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          typeCode,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[500],
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        if (amount > 0)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF5478B5), Color(0xFF2A5690)],
-                              ),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              'Rp ${amount.toStringAsFixed(0)}',
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          )
-                        else
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              'Belum ada tarif',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
+                    ],
                   ),
+                ),
+                if (disabled)
+                  const Text(
+                    'Lunas',
+                    style: TextStyle(
+                      color: Color(0xFF2E7D32),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
+                  )
+                else
                   Icon(
                     Icons.arrow_forward_ios,
                     size: 16,
                     color: Colors.orange[700],
                   ),
-                ],
-              ),
+              ],
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
@@ -744,12 +805,14 @@ class _LapakPageState extends ConsumerState<LapakPage> {
       .toStringAsFixed(0)
       .replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (match) => '.');
 
-  Future<void> _openBillPayment() async {
+  Future<void> _openBillPayment([int? typeId]) async {
     final stallId = (stallData?['id'] as num?)?.toInt();
     if (stallId == null) return;
 
     final openBills = billRows
-        .where((bill) => ((bill['outstanding'] as num?)?.toDouble() ?? 0) > 0)
+        .where((bill) =>
+            ((bill['outstanding'] as num?)?.toDouble() ?? 0) > 0 &&
+            (typeId == null || (bill['types_id'] as num?)?.toInt() == typeId))
         .toList();
     final totalOutstanding = openBills.fold<double>(
       0,
@@ -789,7 +852,7 @@ class _LapakPageState extends ConsumerState<LapakPage> {
                   params: {
                     'p_stall_id': stallId,
                     'p_amount': amount,
-                    'p_types_id': null,
+                    'p_types_id': typeId,
                     'p_payment_method': method,
                     'p_payer_name': payerController.text.trim(),
                     'p_note': noteController.text.trim(),
