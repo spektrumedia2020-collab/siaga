@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-10-31T19:35:00+07:00",
+  "updated_at": "2026-10-31T19:45:00+07:00",
   "checks": {
     "superadmin_market_access": {
       "status": "PASS",
@@ -280,7 +280,7 @@
     },
     "contact_settings": {
       "status": "PASS",
-      "evidence": "2026-10-31. Migration 024 dijalankan pemilik: `markets.contact_phone` ada; tabel `app_settings` ada dengan RLS aktif + 4 policy admin (`is_current_user_admin_full`), grant authenticated, tanpa akses anon, 0 baris. Admin: tab baru **⚙️ Pengaturan** (`#superadmin/settings`, ContactSettingsPage) berisi 'Nomor Kontak Admin'; field per pasar 'Nomor Kontak Pengelola' ada di Edit Pasar. API `/api/lapak?pin_status=1` mengembalikan `market_name` + `contact_phone` efektif (pasar dulu, lalu app_settings). UI panel Lupa PIN menampilkan tombol WhatsApp/Telepon bila nomor terisi; saat ini belum ada nomor sehingga tampil 'Nomor kontak pengelola belum diatur. Silakan hubungi petugas pasar.' Verifikasi produksi (CSS index.CJjvHASR.css, commit 26f848e, CI 41201324549): tab Pengaturan tampil dengan heading 'Kontak Bantuan', input 'Nomor Kontak Admin', tombol Simpan; pin_status contact_phone=null."
+      "evidence": "2026-10-31. Migration 024 dijalankan pemilik: `markets.contact_phone` ada; tabel `app_settings` ada dengan RLS aktif + 4 policy admin (`is_current_user_admin_full`), grant authenticated, tanpa akses anon, 0 baris. Admin: tab baru **⚙️ Pengaturan** (`#superadmin/settings`, ContactSettingsPage) berisi 'Nomor Kontak Admin'; field per pasar 'Nomor Kontak Pengelola' ada di Edit Pasar. API `/api/lapak?pin_status=1` mengembalikan `market_name` + `contact_phone` efektif (pasar dulu, lalu app_settings). UI panel Lupa PIN menampilkan tombol WhatsApp/Telepon bila nomor terisi; saat ini belum ada nomor sehingga tampil 'Nomor kontak pengelola belum diatur. Silakan hubungi petugas pasar.' Verifikasi produksi (CSS index.CJjvHASR.css, commit 26f848e, CI 41201324549): tab Pengaturan tampil dengan heading 'Kontak Bantuan', input 'Nomor Kontak Admin', tombol Simpan; pin_status contact_phone=null. TINDAK LANJUT: pemilik mengisi kontak per pasar lewat Edit Pasar (markets.contact_phone = 081320118218, 12 digit). pin_status kini mengembalikan contact_phone tersebut; panel Lupa PIN menampilkan 'Hubungi pengelola Niaga Daya: WhatsApp / Telepon / 081320118218' dengan href https://wa.me/6281320118218 dan tel:+6281320118218; fallback 'belum diatur' tidak lagi tampil."
     },
     "annual_bills_web": {
       "status": "PASS",
