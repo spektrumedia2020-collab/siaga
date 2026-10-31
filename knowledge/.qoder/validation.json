@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-10-31T21:00:00+07:00",
+  "updated_at": "2026-10-31T21:15:00+07:00",
   "checks": {
     "superadmin_market_access": {
       "status": "PASS",
@@ -297,6 +297,10 @@
     "fifo_installment_ui_test": {
       "status": "PASS",
       "evidence": "2026-10-31. (a) Uji rollback di NGD-0001: bayar Rp 1.000.000 → hanya 2025 tersentuh, status CICILAN sisa Rp 4.600.000; 2026 tetap BELUM_LUNAS Rp 5.600.000; lebih bayar Rp 20.000.000 ditolak 'Pembayaran melebihi total tunggakan (lebih 9800000.00)'; residu transaksi 0. (b) Uji UI nyata: admin membayar **Rp 1.000** di NGD-0001 lewat dialog Bayar (Tunai, pembayar 'Uji FIFO', catatan 'Uji cicilan FIFO') → transaksi id 287693, source TAGIHAN, bill_id 11, period_year 2025, status paid; saldo 2025 dibayar Rp 1.000/sisa Rp 5.599.000 CICILAN, 2026 tetap Rp 5.600.000 BELUM_LUNAS. UI admin: kartu Tunggakan tahun lalu Rp 7.817.599.000; baris NGD-0001 'Dicicil', total sisa Rp 11.199.000. Halaman pemilik: tagihan 2025 badge Cicilan dengan baris cicilan 31/10/2026 · Tunai Rp 1.000; kartu Tunggakan Rp 11.199.000. CATATAN: pembayaran uji Rp 1.000 masih tersimpan; penghapusan memerlukan otorisasi eksplisit."
+    },
+    "mobile_bills": {
+      "status": "PARTIAL",
+      "evidence": "2026-10-31. Mobile `lapak_page.dart` kini memuat `retribution_bill_balances` + nama jenis, menampilkan kartu Tagihan Tahunan (tahun · jenis, status Lunas/Cicilan/Belum, tagihan/dibayar/sisa, jatuh tempo) dan tombol 'Bayar / Cicil Tagihan'. Dialog pembayaran: jumlah bebas, metode Tunai/QRIS, pembayar, catatan → RPC `pay_retribution_bills` (p_types_id null) → dialog hasil berisi alokasi per tahun + sisa tunggakan; error overpay ditampilkan dari PostgrestException. `flutter analyze` No issues; `flutter test` 5/5 lulus; CI 41205835011 success. BELUM dijalankan di perangkat/emulator dan APK belum dirilis — verifikasi visual mobile belum ada. RLS/RPC untuk role OFFICER belum diuji dengan akun petugas ber-auth (petugas seed tanpa auth_uid)."
     },
     "annual_bills_web": {
       "status": "PASS",
