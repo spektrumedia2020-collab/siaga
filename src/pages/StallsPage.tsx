@@ -700,13 +700,6 @@ export function StallsPage({ marketId, marketName, readOnly = false }: Props) {
                     <td>
                       <div className="action-buttons">
                         <QRCodeGenerator
-                          value={String(stall.code || stall.id)}
-                          heading={marketName}
-                          label={`${stall.code || stall.number}${stall.legacy_code ? ` | ${stall.legacy_code}` : ''}`}
-                          icon={<IconQr />}
-                          title="QR Petugas (scan aplikasi)"
-                        />
-                        <QRCodeGenerator
                           value={stall.public_token
                             ? `${getPublicBaseUrl()}/lapak/${stall.public_token}`
                             : `${getPublicBaseUrl()}/lapak/${stall.market_id}/${encodeURIComponent(stall.code)}`}
@@ -714,6 +707,14 @@ export function StallsPage({ marketId, marketName, readOnly = false }: Props) {
                           label={`QR Pemilik — ${stall.code || stall.number}${stall.legacy_code ? ` | ${stall.legacy_code}` : ''}`}
                           icon={<IconLink />}
                           title="QR Pemilik (kamera / Google Lens)"
+                        />
+                        <QRCodeGenerator
+                          value={String(stall.code || stall.id)}
+                          heading={marketName}
+                          label={`QR Petugas — ${stall.code || stall.number}${stall.legacy_code ? ` | ${stall.legacy_code}` : ''}`}
+                          hint="Berisi kode lapak untuk aplikasi petugas — bukan link."
+                          icon={<IconQr />}
+                          title="QR Petugas (scan aplikasi)"
                         />
                         {!readOnly && (
                           <>

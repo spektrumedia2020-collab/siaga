@@ -8,6 +8,7 @@ interface Props {
   value: string
   heading?: string
   label?: string
+  hint?: string
   size?: number
   icon?: ReactNode
   title?: string
@@ -22,7 +23,7 @@ const escapeXml = (text: string) =>
 
 const fileBase = (text: string) => (text || 'qr').replace(/[^A-Za-z0-9._-]+/g, '_')
 
-export function QRCodeGenerator({ value, heading, label, size = 220, icon, title }: Props) {
+export function QRCodeGenerator({ value, heading, label, hint, size = 260, icon, title }: Props) {
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement | null>(null)
 
@@ -147,7 +148,7 @@ export function QRCodeGenerator({ value, heading, label, size = 220, icon, title
               <QRCode value={value} size={size} level="M" bgColor="#ffffff" fgColor="#000000" />
             </div>
             {label && <h4 style={{ marginTop: 12, marginBottom: 0 }}>{label}</h4>}
-            <p className="qr-modal-hint">Pindai dengan kamera atau Google Lens.</p>
+            <p className="qr-modal-hint">{hint || 'Pindai dengan kamera atau Google Lens.'}</p>
             <div style={{ marginTop: 12, display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
               <button onClick={() => navigator.clipboard?.writeText(value)} className="btn-secondary">
                 Salin link
