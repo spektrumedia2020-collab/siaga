@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-10-31T15:20:00+07:00",
+  "updated_at": "2026-10-31T16:10:00+07:00",
   "checks": {
     "superadmin_market_access": {
       "status": "PASS",
@@ -204,7 +204,15 @@
     },
     "market_theme_applied_ngd": {
       "status": "PASS",
-      "evidence": "2026-10-31, permintaan \"terapkan tema navy ke pasar, kerjakan sekarang\". Dijalankan lewat pooler IPv4, transaksi tunggal: `update markets set theme_id='default' where id=39 and (theme_id is null or theme_id <> 'default');` -> 1 baris. Sebelum: markets = [{id:39, name:'Niaga Daya', theme_id:null}]. Sesudah: theme_id='default' (Navy (Default), is_active true). Pernyataan ini identik dengan yang dijalankan tombol \"Terapkan ke Pasar\" di `src/pages/ThemeManagement.tsx:126` (supabase.from(markets).update({theme_id}).eq(id, marketId)). PENTING: belum ada halaman yang membaca `markets.theme_id` — grep `theme` di `market_themes`/`theme_id` hanya menemukan ThemeManagement, jadi penerapan ini tersimpan di DB tetapi tidak mengubah satu pun warna tampilan. Tampilan web sudah navy dari palet global, sehingga hasil visualnya memang sama. Bila tema per pasar harus berpengaruh visual, langkah berikutnya adalah memetakan theme_id -> CSS variable di MarketLandingPage/MarketDashboard (belum dikerjakan, menunggu keputusan pemilik)."
+      "evidence": "2026-10-31, permintaan \"terapkan tema navy ke pasar, kerjakan sekarang\". Dijalankan lewat pooler IPv4, transaksi tunggal: `update markets set theme_id='default' where id=39 and (theme_id is null or theme_id <> 'default');` -> 1 baris. Sebelum: markets = [{id:39, name:'Niaga Daya', theme_id:null}]. Sesudah: theme_id='default' (Navy (Default), is_active true). Pernyataan ini identik dengan yang dijalankan tombol \"Terapkan ke Pasar\" di `src/pages/ThemeManagement.tsx:126` (supabase.from(markets).update({theme_id}).eq(id, marketId)). PENTING: belum ada halaman yang membaca `markets.theme_id` — grep `theme` di `market_themes`/`theme_id` hanya menemukan ThemeManagement, jadi penerapan ini tersimpan di DB tetapi tidak mengubah satu pun warna tampilan. Tampilan web sudah navy dari palet global, sehingga hasil visualnya memang sama. Bila tema per pasar harus berpengaruh visual, langkah berikutnya adalah memetakan theme_id -> CSS variable di MarketLandingPage/MarketDashboard (belum dikerjakan, menunggu keputusan pemilik). TINDAK LANJUT 2026-10-31 16:10: temuan \"belum ada pembaca theme_id\" sudah ditutup — `src/lib/marketTheme.ts` memetakan theme_id -> CSS variable dan dipakai MarketLandingPage + MarketDashboard."
+    },
+    "market_theme_wired_to_ui": {
+      "status": "PASS",
+      "evidence": "2026-10-31, permintaan pemilik: tema harus bisa diatur di `#superadmin/market-edit/39`. `src/lib/marketTheme.ts` (baru) menyimpan preset `DEFAULT_MARKET_THEMES`, menurunkan turunan warna (tint/shade), dan menulis token ke `document.documentElement`: `--siaga-primary`, `--siaga-primary-dark`, `--siaga-primary-light`, `--siaga-primary-rgb`, `--siaga-primary-shadow`, `--siaga-accent`, `--siaga-accent-light`, `--siaga-header-from/-to/-text/-border`, plus `--primary`, `--primary-dark`, `--primary-light` untuk landing. Pemakai: MarketLandingPage (setelah market dimuat, plus reset saat unmount) dan MarketDashboard (setelah pasar terpilih). Pemilih tema ditambahkan di MarketEditPage (`.theme-choice-grid`, radio aksesibel) dan ikut tersimpan pada payload `markets.update` (`theme_id`). CSS yang memakai token: `.dashboard-header` (Dashboard.css), `.navbar` + `.navbar-title` (MarketLandingPage.css), `.market-identity`/ikon (MarketDashboard.css). Verifikasi lokal dev :5200 — (a) `#superadmin/market-edit/39` menampilkan 4 tema dengan \"Navy (Default)\" terpilih sesuai DB; (b) pilih \"Biru Laut\" + Simpan -> `/@NGD` memberi `--siaga-primary=#0ea5e9`, navbar `linear-gradient(#e2f4fc,#c0e8f9)`, tombol `rgb(14,165,233)`; (c) dikembalikan ke Navy -> `--siaga-primary=#1e3a8a`, navbar `linear-gradient(#ecf4fe,#d2e6fe)`; (d) `#market/dashboard/overview` ikut navy dan `.market-identity` memakai token. Nilai DB akhir untuk markets.id=39: `theme_id=default` (dibaca ulang lewat pooler). `npm run typecheck` 0 error, `npm run build` PASS."
+    },
+    "market_theme_public_read_policy": {
+      "status": "PARTIAL",
+      "evidence": "`market_themes_select` hanya untuk role `authenticated`, sehingga halaman publik `/@<slug>` (anon) tidak bisa membaca tema kustom buatan admin. Frontend memakai preset lokal `DEFAULT_MARKET_THEMES` sebagai cadangan, jadi 4 tema bawaan tetap tampil. Disiapkan `migrations/019_market_themes_public_read.sql` (policy SELECT `TO anon USING (true)`; hanya warna, bukan data sensitif) — BELUM dijalankan di produksi, menunggu eksekusi pemilik di Supabase SQL Editor."
     }
   }
 }

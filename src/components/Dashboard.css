@@ -9,11 +9,11 @@
   position: sticky;
   top: 0;
   z-index: 20;
-  background: linear-gradient(135deg, #e3efff 0%, #bfdbfe 100%);
-  color: #0f2a52;
+  background: linear-gradient(135deg, var(--siaga-header-from) 0%, var(--siaga-header-to) 100%);
+  color: var(--siaga-header-text);
   padding: 1rem 1.5rem;
-  box-shadow: 0 6px 18px rgba(30, 58, 138, 0.16);
-  border-bottom: 1px solid #93c5fd;
+  box-shadow: 0 6px 18px var(--siaga-primary-shadow);
+  border-bottom: 1px solid var(--siaga-header-border);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
 }

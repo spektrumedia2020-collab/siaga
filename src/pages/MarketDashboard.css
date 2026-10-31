@@ -332,8 +332,8 @@
   gap: 0.65rem;
   padding: 0.7rem 0.75rem;
   border-radius: 10px;
-  background: linear-gradient(135deg, #e3efff 0%, #dbeafe 100%);
-  border: 1px solid #93c5fd;
+  background: linear-gradient(135deg, var(--siaga-header-from) 0%, var(--siaga-primary-light) 100%);
+  border: 1px solid var(--siaga-header-border);
 }
 
 .market-identity-icon {
@@ -341,7 +341,7 @@
   width: 2.4rem;
   height: 2.4rem;
   border-radius: 10px;
-  background: #152c5b;
+  background: var(--siaga-primary-dark);
   color: #fff;
   display: flex;
   align-items: center;

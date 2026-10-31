@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { getSupabaseClient, STORAGE_BUCKET, getStorageConfigurationMessage } from '../lib/supabase'
 import { getAllMarkets, getUserMarket, getUserRole } from '../lib/roleUtils'
 import { clearSelectedAdminMarketId, getSelectedAdminMarketId, setSelectedAdminMarketId } from '../lib/adminMarketSelection'
+import { applyMarketTheme, applyMarketThemeById } from '../lib/marketTheme'
 import { OfficersPage } from './OfficersPage'
 import { StallsPage } from './StallsPage'
 import { SectorsPage } from './SectorsPage'
@@ -122,6 +123,10 @@ export function MarketDashboard({ userId, onLogout }: Props) {
   useEffect(() => {
     loadMarketStats()
   }, [userId, overviewMonth])
+
+  useEffect(() => {
+    return () => applyMarketTheme(null)
+  }, [])
 
   useEffect(() => {
     loadUserProfile()
@@ -553,6 +558,8 @@ export function MarketDashboard({ userId, onLogout }: Props) {
         setLoading(false)
         return
       }
+
+      void applyMarketThemeById((market as { theme_id?: string | null }).theme_id)
 
       // Count stalls in this market (only active)
       const supabaseClient = getSupabaseClient()

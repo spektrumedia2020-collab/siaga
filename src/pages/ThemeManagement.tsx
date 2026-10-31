@@ -1,59 +1,10 @@
 import { useState, useEffect } from 'react'
 import { getSupabaseClient } from '../lib/supabase'
+import { DEFAULT_MARKET_THEMES, type MarketTheme } from '../lib/marketTheme'
 import '../pages/SuperAdminDashboardImproved.css'
 
-interface Theme {
-  id: string
-  name: string
-  primary_color: string
-  secondary_color: string
-  accent_color: string
-  description: string
-  is_active: boolean
-  created_at?: string
-}
-
-const DEFAULT_THEMES: Theme[] = [
-  {
-    id: 'default',
-    name: 'Navy (Default)',
-    primary_color: '#1e3a8a',
-    secondary_color: '#23406b',
-    accent_color: '#60a5fa',
-    description: 'Tema navy dengan aksen biru muda untuk semua pasar',
-    is_active: true
-  },
-  {
-    id: 'ocean',
-    name: 'Biru Laut',
-    primary_color: '#0ea5e9',
-    secondary_color: '#0284c7',
-    accent_color: '#06b6d4',
-    description: 'Tema biru yang menenangkan',
-    is_active: false
-  },
-  {
-    id: 'sunset',
-    name: 'Sunset Orange',
-    primary_color: '#ea580c',
-    secondary_color: '#c2410c',
-    accent_color: '#f97316',
-    description: 'Tema oranye cerah',
-    is_active: false
-  },
-  {
-    id: 'purple',
-    name: 'Ungu Royal',
-    primary_color: '#7c3aed',
-    secondary_color: '#6d28d9',
-    accent_color: '#a855f7',
-    description: 'Tema ungu elegan',
-    is_active: false
-  }
-]
-
 export function ThemeManagement() {
-  const [themes, setThemes] = useState<Theme[]>([])
+  const [themes, setThemes] = useState<MarketTheme[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [showForm, setShowForm] = useState(false)
@@ -81,11 +32,11 @@ export function ThemeManagement() {
         setThemes(data || [])
       } else {
         // Use default themes if no data
-        setThemes(DEFAULT_THEMES)
+        setThemes(DEFAULT_MARKET_THEMES)
       }
     } catch (err) {
       console.error('Error loading themes:', err)
-      setThemes(DEFAULT_THEMES)
+      setThemes(DEFAULT_MARKET_THEMES)
     } finally {
       setLoading(false)
     }

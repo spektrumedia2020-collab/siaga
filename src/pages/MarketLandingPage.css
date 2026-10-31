@@ -89,10 +89,10 @@ a:hover {
 .navbar {
   position: sticky;
   top: 0;
-  background: linear-gradient(135deg, #e3efff 0%, #bfdbfe 100%);
-  border-bottom: 1px solid #93c5fd;
+  background: linear-gradient(135deg, var(--siaga-header-from) 0%, var(--siaga-header-to) 100%);
+  border-bottom: 1px solid var(--siaga-header-border);
   z-index: 1000;
-  box-shadow: 0 6px 18px rgba(30, 58, 138, 0.14);
+  box-shadow: 0 6px 18px var(--siaga-primary-shadow);
 }
 
 .navbar-container {
@@ -121,7 +121,7 @@ a:hover {
 
 .navbar-title {
   font-weight: 600;
-  color: var(--dark);
+  color: var(--siaga-header-text);
   font-size: 1.1rem;
 }
 

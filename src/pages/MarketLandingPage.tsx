@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getSupabaseClient } from '../lib/supabase'
+import { applyMarketTheme, applyMarketThemeById } from '../lib/marketTheme'
 import './MarketLandingPage.css'
 
 interface MarketData {
@@ -12,6 +13,7 @@ interface MarketData {
   logo_url?: string | null
   head_photo_url?: string | null
   status: string
+  theme_id?: string | null
   description?: string
   street?: string
   street_number?: string
@@ -75,6 +77,10 @@ export function MarketLandingPage({ slug }: Props) {
   }, [slug])
 
   useEffect(() => {
+    return () => applyMarketTheme(null)
+  }, [])
+
+  useEffect(() => {
     if (!cms.heroSlides || cms.heroSlides.length <= 1) return
     const interval = window.setInterval(() => {
       setHeroIndex((current) => (current + 1) % cms.heroSlides.length)
@@ -112,6 +118,7 @@ export function MarketLandingPage({ slug }: Props) {
 
       setMarket(marketData)
       setCms(cmsContent)
+      void applyMarketThemeById(marketData.theme_id)
       await loadSectorsAndStalls(marketData.id)
     } catch (err) {
       console.error('Error loading market:', err)

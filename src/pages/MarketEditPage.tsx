@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { getSupabaseClient, STORAGE_BUCKET } from '../lib/supabase'
+import { DEFAULT_MARKET_THEMES, type MarketTheme } from '../lib/marketTheme'
 import '../styles/layout.css'
 
 interface Market {
@@ -16,6 +17,7 @@ interface Market {
   photo_url?: string
   head_photo_url?: string
   status: string
+  theme_id?: string | null
   head_user_id?: string
 }
 
@@ -33,6 +35,7 @@ interface Props {
 export function MarketEditPage({ marketId, onBack }: Props) {
   const [market, setMarket] = useState<Market | null>(null)
   const [users, setUsers] = useState<User[]>([])
+  const [themes, setThemes] = useState<MarketTheme[]>(DEFAULT_MARKET_THEMES)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -51,13 +54,14 @@ export function MarketEditPage({ marketId, onBack }: Props) {
     photo_url: '',
     head_photo_url: '',
     head_user_id: '',
+    theme_id: '',
     status: 'AKTIF'
   })
 
   useEffect(() => {
     if (marketId) {
       const init = async () => {
-        await loadUsers()
+        await Promise.all([loadUsers(), loadThemes()])
         await loadMarket()
         setLoading(false)
       }
@@ -72,7 +76,7 @@ export function MarketEditPage({ marketId, onBack }: Props) {
       const supabase = getSupabaseClient()
       const { data } = await supabase
         .from('markets')
-        .select('id, name, code, city, address, street, street_number, kecamatan, province, postal_code, photo_url, head_photo_url, id_head_market, status')
+        .select('id, name, code, city, address, street, street_number, kecamatan, province, postal_code, photo_url, head_photo_url, id_head_market, status, theme_id')
         .eq('id', marketId)
         .single()
       
@@ -112,6 +116,7 @@ export function MarketEditPage({ marketId, onBack }: Props) {
           photo_url: data.photo_url || '',
           head_photo_url: data.head_photo_url || '',
           head_user_id: headUserId,
+          theme_id: data.theme_id || '',
           status: data.status || 'AKTIF'
         })
       }
@@ -134,6 +139,21 @@ export function MarketEditPage({ marketId, onBack }: Props) {
       })))
     } catch (err) {
       console.error('Error loading users:', err)
+    }
+  }
+
+  const loadThemes = async () => {
+    try {
+      const { data, error } = await getSupabaseClient()
+        .from('market_themes')
+        .select('id, name, primary_color, secondary_color, accent_color, is_active')
+        .order('name')
+
+      if (!error && data && data.length > 0) {
+        setThemes(data as MarketTheme[])
+      }
+    } catch (err) {
+      console.error('Error loading themes:', err)
     }
   }
 
@@ -201,6 +221,7 @@ export function MarketEditPage({ marketId, onBack }: Props) {
           photo_url: formData.photo_url,
           head_photo_url: formData.head_photo_url,
           id_head_market: formData.head_user_id ? parseInt(formData.head_user_id, 10) : null,
+          theme_id: formData.theme_id || null,
           status: formData.status
         })
         .eq('id', marketId)
@@ -272,6 +293,35 @@ export function MarketEditPage({ marketId, onBack }: Props) {
                 <input type="file" ref={headPhotoInputRef} accept="image/*" onChange={(e) => handleFileChange(e, 'head')} style={{ display: 'none' }} />
                 <button type="button" className="siaga-btn siaga-btn-outline" onClick={() => headPhotoInputRef.current?.click()}>📎 {formData.head_photo_url ? 'Ganti Foto' : 'Upload Foto'}</button>
               </div>
+            </div>
+            <div className="form-group">
+              <label>Tema Tampilan Pasar</label>
+              <div className="theme-choice-grid" role="radiogroup" aria-label="Tema tampilan pasar">
+                {themes.map((theme) => {
+                  const selected = formData.theme_id === theme.id
+                  return (
+                    <button
+                      key={theme.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={selected}
+                      className={`theme-choice${selected ? ' active' : ''}`}
+                      onClick={() => setFormData({ ...formData, theme_id: theme.id })}
+                    >
+                      <span
+                        className="theme-choice-swatch"
+                        style={{ background: `linear-gradient(135deg, ${theme.primary_color} 0%, ${theme.secondary_color} 100%)` }}
+                      >
+                        <span className="theme-choice-accent" style={{ background: theme.accent_color }} />
+                      </span>
+                      <span className="theme-choice-name">{theme.name}</span>
+                    </button>
+                  )
+                })}
+              </div>
+              <p style={{ margin: '0.4rem 0 0', fontSize: '0.8rem', color: '#6b7280' }}>
+                Tema dipakai di halaman publik pasar dan dashboard pasar ini.
+              </p>
             </div>
           </div>
         </div>

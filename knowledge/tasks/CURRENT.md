@@ -47,6 +47,7 @@ menampilkan data.
 | 46 | Label QR di bawah kode, tanpa kata "Lapak" | **SELESAI** | Format `NGD-0150 \| 1`; PNG unduhan ikut mencetak label |
 | 47 | Seed 3 bulan transaksi simulasi (NGD) | **SELESAI** | 6.412 baris, Rp 63.531.000, source `SIMULASI`, status `paid`; Rollback: `delete from transactions where source='SIMULASI'` |
 | 48 | Verifikasi Analytics/Overview memuat data seed | **SELESAI** | Overview Rp 63.531.000 / 1396 lapak; Analytics: periode ini Rp 17.961.000 vs sebelumnya Rp 17.070.000 (+5,2%), 3 grafik SVG ter-render |
+| 53 | Tema per pasar benar-benar berlaku | **SELESAI** | Pemilih tema di `#superadmin/market-edit/<id>`; `src/lib/marketTheme.ts` memetakan theme_id -> token `--siaga-*`; landing + dashboard ikut tema; uji lokal Biru Laut lalu kembali Navy |
 | 52 | Palet biru muda + navy (header biru muda) | **SELESAI** | Web + mobile; header #e3efff->#bfdbfe teks navy; sisa amber/oranye diganti biru/merah; CI 41180125573, deploy `a543be7` |
 | 49 | 5 petugas untuk transaksi simulasi | **SELESAI** | `users` 31–35 role OFFICER di NGD; 6.412 transaksi ber-`officer_id`; Overview TOTAL PETUGAS 5, Top Petugas terisi |
 | 50 | Nama pasar di dashboard pasar | **SELESAI** | Blok `.market-identity` di atas sidebar: "Pasar dikelola · Niaga Daya · NGD · Makassar"; ikut Ganti Pasar |
