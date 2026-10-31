@@ -65,10 +65,11 @@ interface DbRetributionType {
 
 interface Props {
   marketId: number
+  marketName?: string
   readOnly?: boolean
 }
 
-export function StallsPage({ marketId, readOnly = false }: Props) {
+export function StallsPage({ marketId, marketName, readOnly = false }: Props) {
   const [stalls, setStalls] = useState<Stall[]>([])
   const [sectors, setSectors] = useState<Sector[]>([])
   const [categories, setCategories] = useState<Category[]>([])
@@ -673,6 +674,7 @@ export function StallsPage({ marketId, readOnly = false }: Props) {
                       <div className="action-buttons">
                         <QRCodeGenerator
                           value={String(stall.code || stall.id)}
+                          heading={marketName}
                           label={`${stall.code || stall.number}${stall.legacy_code ? ` | ${stall.legacy_code}` : ''}`}
                           icon={<IconQr />}
                           title="QR Petugas (scan aplikasi)"
@@ -681,6 +683,7 @@ export function StallsPage({ marketId, readOnly = false }: Props) {
                           value={stall.public_token
                             ? `${window.location.origin}/lapak/${stall.public_token}`
                             : `${window.location.origin}/lapak/${stall.market_id}/${encodeURIComponent(stall.code)}`}
+                          heading={marketName}
                           label={`QR Pemilik — ${stall.code || stall.number}${stall.legacy_code ? ` | ${stall.legacy_code}` : ''}`}
                           icon={<IconLink />}
                           title="QR Pemilik (kamera / Google Lens)"

@@ -6,66 +6,101 @@ import './QRCodeGenerator.css'
 
 interface Props {
   value: string
+  heading?: string
   label?: string
   size?: number
   icon?: ReactNode
   title?: string
 }
 
-export function QRCodeGenerator({ value, label, size = 220, icon, title }: Props) {
+const escapeXml = (text: string) =>
+  text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+
+const fileBase = (text: string) => (text || 'qr').replace(/[^A-Za-z0-9._-]+/g, '_')
+
+export function QRCodeGenerator({ value, heading, label, size = 220, icon, title }: Props) {
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement | null>(null)
 
-  const downloadPNG = () => {
-    try {
-      const svg = containerRef.current?.querySelector('svg') as SVGSVGElement | null
-      if (!svg) return
+  const buildExport = () => {
+    const svg = containerRef.current?.querySelector('svg') as SVGSVGElement | null
+    if (!svg) return null
 
-      // Render at a print-friendly resolution regardless of the on-screen size.
-      const exportSize = Math.max(size * 4, 800)
-      const clone = svg.cloneNode(true) as SVGSVGElement
-      clone.setAttribute('width', String(exportSize))
-      clone.setAttribute('height', String(exportSize))
-      clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    // Export at a print-friendly resolution regardless of the on-screen size.
+    const qrSize = Math.max(size * 4, 800)
+    const headingText = heading?.trim() || ''
+    const labelText = label?.trim() || ''
+    const headingHeight = headingText ? Math.round(qrSize * 0.11) : 0
+    const labelHeight = labelText ? Math.round(qrSize * 0.1) : 0
+    const totalHeight = headingHeight + qrSize + labelHeight
 
-      const serializer = new XMLSerializer()
-      const svgString = serializer.serializeToString(clone)
-      const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' })
-      const url = URL.createObjectURL(blob)
-      const img = new Image()
-      img.onload = () => {
-        const caption = label?.trim() || ''
-        const captionHeight = caption ? Math.round(exportSize * 0.1) : 0
-        const canvas = document.createElement('canvas')
-        canvas.width = exportSize
-        canvas.height = exportSize + captionHeight
-        const ctx = canvas.getContext('2d')
-        if (ctx) {
-          ctx.fillStyle = '#ffffff'
-          ctx.fillRect(0, 0, canvas.width, canvas.height)
-          ctx.drawImage(img, 0, 0, exportSize, exportSize)
-          if (caption) {
-            ctx.fillStyle = '#111111'
-            ctx.font = `bold ${Math.round(exportSize * 0.045)}px Arial, sans-serif`
-            ctx.textAlign = 'center'
-            ctx.textBaseline = 'middle'
-            ctx.fillText(caption, exportSize / 2, exportSize + captionHeight / 2, exportSize - exportSize * 0.04)
-          }
-          const pngUrl = canvas.toDataURL('image/png')
-          const link = document.createElement('a')
-          link.href = pngUrl
-          link.download = `${(label || 'qr').replace(/[^A-Za-z0-9._-]+/g, '_')}.png`
-          document.body.appendChild(link)
-          link.click()
-          link.remove()
-        }
-        URL.revokeObjectURL(url)
-      }
-      img.onerror = () => URL.revokeObjectURL(url)
-      img.src = url
-    } catch (e) {
-      // ignore
+    const qr = svg.cloneNode(true) as SVGSVGElement
+    qr.setAttribute('x', '0')
+    qr.setAttribute('y', String(headingHeight))
+    qr.setAttribute('width', String(qrSize))
+    qr.setAttribute('height', String(qrSize))
+
+    const parts = [
+      `<rect width="${qrSize}" height="${totalHeight}" fill="#ffffff"/>`,
+      headingText
+        ? `<text x="${qrSize / 2}" y="${Math.round(headingHeight * 0.66)}" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="${Math.round(qrSize * 0.05)}" fill="#111111">${escapeXml(headingText)}</text>`
+        : '',
+      new XMLSerializer().serializeToString(qr),
+      labelText
+        ? `<text x="${qrSize / 2}" y="${Math.round(headingHeight + qrSize + labelHeight * 0.58)}" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="${Math.round(qrSize * 0.045)}" fill="#111111">${escapeXml(labelText)}</text>`
+        : ''
+    ]
+
+    return {
+      markup: `<svg xmlns="http://www.w3.org/2000/svg" width="${qrSize}" height="${totalHeight}" viewBox="0 0 ${qrSize} ${totalHeight}">${parts.join('')}</svg>`,
+      width: qrSize,
+      height: totalHeight
     }
+  }
+
+  const triggerDownload = (href: string, filename: string) => {
+    const link = document.createElement('a')
+    link.href = href
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+  }
+
+  const downloadPNG = () => {
+    const built = buildExport()
+    if (!built) return
+    const blob = new Blob([built.markup], { type: 'image/svg+xml;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = built.width
+      canvas.height = built.height
+      const ctx = canvas.getContext('2d')
+      if (ctx) {
+        ctx.fillStyle = '#ffffff'
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+        triggerDownload(canvas.toDataURL('image/png'), `${fileBase(label || heading || 'qr')}.png`)
+      }
+      URL.revokeObjectURL(url)
+    }
+    img.onerror = () => URL.revokeObjectURL(url)
+    img.src = url
+  }
+
+  const downloadSVG = () => {
+    const built = buildExport()
+    if (!built) return
+    const blob = new Blob([built.markup], { type: 'image/svg+xml;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    triggerDownload(url, `${fileBase(label || heading || 'qr')}.svg`)
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
   }
 
   return (
@@ -103,16 +138,20 @@ export function QRCodeGenerator({ value, label, size = 220, icon, title }: Props
               boxShadow: '0 10px 30px rgba(0,0,0,0.2)'
             }}
           >
+            {heading && <h3 className="qr-modal-heading">{heading}</h3>}
             <div style={{ display: 'inline-block', padding: 8, background: '#fff' }} ref={containerRef}>
               <QRCode value={value} size={size} />
             </div>
             {label && <h4 style={{ marginTop: 12, marginBottom: 0 }}>{label}</h4>}
-            <div style={{ marginTop: 12, display: 'flex', gap: 8, justifyContent: 'center' }}>
+            <div style={{ marginTop: 12, display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
               <button onClick={() => navigator.clipboard?.writeText(value)} className="btn-secondary">
                 Salin link
               </button>
               <button onClick={downloadPNG} className="btn-primary">
                 Unduh PNG
+              </button>
+              <button onClick={downloadSVG} className="btn-secondary">
+                Unduh SVG
               </button>
               <button onClick={() => setOpen(false)} className="btn-secondary">
                 Tutup

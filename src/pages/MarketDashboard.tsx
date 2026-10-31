@@ -851,7 +851,7 @@ export function MarketDashboard({ userId, onLogout }: Props) {
   const renderCurrentPage = () => {
     switch (currentPage) {
       case 'stalls':
-        return <StallsPage marketId={stats.market.id} readOnly={isReadOnly} />
+        return <StallsPage marketId={stats.market.id} marketName={stats.market.name} readOnly={isReadOnly} />
       case 'officers':
         return <OfficersPage marketId={stats.market.id} readOnly={isReadOnly} />
       case 'sectors':
