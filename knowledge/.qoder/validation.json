@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-10-31T19:45:00+07:00",
+  "updated_at": "2026-10-31T20:05:00+07:00",
   "checks": {
     "superadmin_market_access": {
       "status": "PASS",
@@ -241,6 +241,10 @@
     "annual_bills_anon_execute_revoked": {
       "status": "PASS",
       "evidence": "Pemilik menjalankan migrations/021_revoke_anon_billing_rpcs.sql di Supabase SQL Editor 2026-10-31. Verifikasi read-only via pooler: has_function_privilege(generate_retribution_bills|pay_retribution_bills, anon, EXECUTE)=false, authenticated=true, service_role=true; information_schema.routine_privileges hanya memuat authenticated, postgres, service_role (tanpa anon/PUBLIC)."
+    },
+    "stalls_action_icons": {
+      "status": "PASS",
+      "evidence": "2026-10-31, permintaan pemilik: tombol aksi di #market/dashboard/stalls tampak putih/tidak kontras dan sebagian berupa kotak. Penyebab: aturan global `button { color:#fff }` (src/index.css) + `Markets.css .btn-edit/.btn-delete { color:#fff }`; icon-only buttons hanya menimpa background/border. Perbaikan: warna eksplisit di `.stalls-page` (navy #1e3a8a, hapus #b91c1c), hover tint #e6edf7/#fee2e2, focus-visible outline; emoji 🔳/🔗/♻️ diganti ikon SVG baru IconQr/IconLink/IconRefresh (18px default, 16px di tabel); QRCodeGenerator menerima ReactNode dan padding inline dihapus; gap 0.2rem + padding 0.2rem sehingga keenam tombol muat. Verifikasi dev 5200: 6/6 tombol memakai SVG, bg transparan, warna navy/merah, scrollWidth=clientWidth=1053 (tanpa scroll). Produksi setelah push 2cb48d4+4d818e3: CSS assets/index.Dc5QSfuZ.css memuat aturan `.stalls-page .btn-qr...` dan `.stalls-page .action-buttons svg`; computed style di https://siaga-pi.vercel.app/?cb=20261031c#market/dashboard/stalls menunjukkan 6 tombol, bg transparan, edit navy, hapus #b91c1c, overflow 0. CI run 41193919948 success (run sebelumnya 41193646876 gagal karena komentar `...` di migration 021, sudah diperbaiki)."
     },
     "annual_bills_web": {
       "status": "PASS",
