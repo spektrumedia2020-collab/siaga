@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "updated_at": "2026-10-31T13:15:00+07:00",
-  "commit": "247d507",
+  "updated_at": "2026-10-31T13:40:00+07:00",
+  "commit": "6506c31",
   "checks": {
     "superadmin_market_access": {
       "status": "PASS",
@@ -170,6 +170,14 @@
     "import_summary_market_counter": {
       "status": "PASS",
       "evidence": "Bug ditemukan saat impor NGD: runStallImport dan runCsvImport menyetel marketCreated tetapi tidak marketsCreated, sehingga ringkasan menampilkan \"0 pasar baru\" meski pasar dibuat (footer 'Pasar baru dibuat dari berkas ini' benar). Diperbaiki dengan summary.marketsCreated = created ? 1 : 0 di kedua runner; `npm run typecheck` 0 error dan `npm run build` sukses 3.39s."
+    },
+    "simulated_transactions_3_months": {
+      "status": "PASS",
+      "evidence": "2026-10-31 atas permintaan user ('buatkan transaksi 3 bulan terakhir agar bisa lihat simulasi dan analytic'): 6.412 transaksi simulasi dimasukkan lewat pooler ke pasar NGD (market_id 39) dalam satu transaksi DB, rentang 2026-08-01…2026-10-31, source 'SIMULASI', status 'paid', sync_status 'SYNCED', amount dari retribution_rates (HARI per hari, TAHUN untuk 30 pembayaran tahunan), metode Tunai 5.464 / QRIS 948. Total Rp 63.531.000; per bulan 2026-08 2.169/Rp 27.768.000, 2026-09 2.030/Rp 17.070.000, 2026-10 2.213/Rp 18.693.000. Verifikasi UI dev 5199: Overview TOTAL PASAR 1 / TOTAL LAPAK 1396 / TOTAL REVENUE Rp 63.531.000; tab Analytics menampilkan 'Revenue periode ini Rp 17.961.000' vs 'sebelumnya Rp 17.070.000' (+5,2%), Top Pasar 'Niaga Daya 2125 transaksi Rp 17.961.000', Top Lapak NGD-0313 dst (Rp 54.000), dua grafik 439x300 dengan 35 dan 64 elemen path/rect/line serta pie 4 path. Screenshot tidak tersedia (surface in-app browser tersembunyi) — bukti berupa DOM. Rollback: `delete from transactions where source='SIMULASI'` (6.412 baris)."
+    },
+    "analytics_seed_ui": {
+      "status": "PARTIAL",
+      "evidence": "Analytics & Overview diverifikasi lewat DOM di dev server (data ter-render: KPI, teks grafik, top pasar/lapak). Bukti visual (screenshot) tidak dapat diambil karena in-app browser tidak menyediakan surface terlihat; panel 'Top Petugas' kosong karena seed tidak mengisi officer_id (produksi 0 petugas)."
     }
   }
 }

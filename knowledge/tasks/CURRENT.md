@@ -1,10 +1,11 @@
 # CURRENT — Task Aktif
 
-**Sesi:** SESSION-2026-10-31-3 · **Update:** 2026-10-31T12:45:00+07:00 · **Branch:** `main` @ `9d066a4`
+**Sesi:** SESSION-2026-10-31-3 · **Update:** 2026-10-31T13:40:00+07:00 · **Branch:** `main` @ `6506c31`
 
 ## Status
 
-`WIP` — data operasional produksi kosong (pasar/lapak/tarif dihapus); menunggu seed data nyata oleh user.
+`WIP` — produksi berisi 1 pasar nyata (NGD, 1396 lapak) plus 6.412 transaksi simulasi 3 bulan
+(2026-08-01…2026-10-31, source `SIMULASI`); dashboard & Analytics menampilkan data.
 
 ## Task
 
@@ -43,6 +44,8 @@
 | 44 | Overview Superadmin: kolom salah + paginasi | **SELESAI** | `users(id_user, nama)`, `stalls(code, number)`; TOTAL LAPAK 1396; konsol tanpa 400 |
 | 45 | Landing pasar: hitungan lapak dari server | **SELESAI** | count exact total & AKTIF; "1396 lapak" tidak lagi terpotong 1000 |
 | 46 | Label QR di bawah kode, tanpa kata "Lapak" | **SELESAI** | Format `NGD-0150 \| 1`; PNG unduhan ikut mencetak label |
+| 47 | Seed 3 bulan transaksi simulasi (NGD) | **SELESAI** | 6.412 baris, Rp 63.531.000, source `SIMULASI`, status `paid`; Rollback: `delete from transactions where source='SIMULASI'` |
+| 48 | Verifikasi Analytics/Overview memuat data seed | **SELESAI** | Overview Rp 63.531.000 / 1396 lapak; Analytics: periode ini Rp 17.961.000 vs sebelumnya Rp 17.070.000 (+5,2%), 3 grafik SVG ter-render |
 | 14 | P0-03 — env PIN lapak + deploy | **DIGANTI** | PIN dihapus; digantikan token QR per lapak (migration 016) |
 | 15 | Role: MARKET_HEAD read-only + hapus impersonation | **SELESAI** | Migration 014; build PASS; deploy `86b62d6` |
 | 16 | P0-12 — kredensial admin di halaman publik | **SELESAI (kode)** | Bundle bersih; rotasi password dipilih tidak dilakukan user |
@@ -74,10 +77,9 @@
 - Tidak ada blocker teknis aktif; typecheck/build/simulasi impor lokal hijau.
 - Risiko diterima: password `admin@siaga.id` tidak dirotasi (keputusan user, S-18).
 - Produksi kini berisi 1 pasar nyata: NGD / Niaga Daya (1396 lapak, 24 sektor, 740 pemilik,
-  2 jenis sewa, 2792 tarif). SWH/PNK/TRG belum diimpor.
-- Ditemukan tapi belum diperbaiki: query Overview Superadmin memakai kolom yang tidak ada
-  (`stalls.name`, `users.display_name/full_name`) sehingga dua request 400 dan statistik 0
-  ([SuperAdminDashboardImproved.tsx:168](../../src/pages/SuperAdminDashboardImproved.tsx#L168)).
+  2 jenis sewa, 2792 tarif) + 6.412 transaksi simulasi 2026-08-01…2026-10-31. SWH/PNK/TRG belum diimpor.
+- Transaksi simulasi tidak punya `officer_id` (produksi 0 petugas), jadi panel "Top Petugas"
+  di Analytics menampilkan "Belum ada data petugas" — bukan bug.
 
 ## Team Waves
 
@@ -86,11 +88,10 @@ Tidak ada gelombang paralel. `open_wave = null`.
 ## Next Session Handoff
 
 1. Baca urutan resume: `state.json` → `index/index-state.json` → `context.md` → `memory.md` → `00_INDEX.md` → berkas ini.
-2. **Seed data produksi** (DB kini kosong). Dua jalur:
-   - Berkas terpisah: `contoh-pasar.csv` → `contoh-lapak.csv` → `contoh-tarif.csv`
-     (atau ekspor sendiri dengan header sama); urutan wajib, "Import semua" mengurutkan otomatis.
-   - Format gabungan: unggah 4 CSV root repo (`Sawah`, `Panakkukang`, `Terong`, `Niaga Daya`),
-     target pasar terdeteksi otomatis (SWH/PNK/TRG; NGD kini harus dibuat ulang).
+2. **Data produksi saat ini** sudah terisi: import ulang CSV tidak perlu. Bila ingin mengulang
+   simulasi transaksi: hapus dulu `delete from transactions where source='SIMULASI'` lewat pooler,
+   lalu jalankan seed ulang (skrip sekali pakai, tidak disimpan di repo).
+   Jalur import tetap tersedia: `contoh-pasar.csv` → `contoh-lapak.csv` → `contoh-tarif.csv`.
    Setelah itu uji `/@<slug>`, `/lapak/<token>`, dan alur petugas.
 3. **Fase 2 mobile**: `scan_page.dart` membaca URL/token QR (satu QR untuk petugas & pemilik)
    + tombol notifikasi `wa.me`.
