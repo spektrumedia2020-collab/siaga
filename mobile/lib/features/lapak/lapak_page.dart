@@ -34,17 +34,14 @@ class _LapakPageState extends ConsumerState<LapakPage> {
       final supabase = Supabase.instance.client;
       Map<String, dynamic>? row;
 
-      // Try by code first
       final stallByCode = await supabase
           .from('stalls')
           .select('id, code, number, status, sector_id, owner_id, market_id')
           .eq('code', widget.lapakId)
           .maybeSingle();
-      
       if (stallByCode != null) {
         row = Map<String, dynamic>.from(stallByCode as Map);
       } else {
-        // Try by ID
         final idNumeric = int.tryParse(widget.lapakId);
         if (idNumeric != null) {
           final stallById = await supabase
@@ -58,88 +55,97 @@ class _LapakPageState extends ConsumerState<LapakPage> {
         }
       }
 
-      String? ownerNIK;
-      String? ownerPhone;
-      String? ownerAddress;
-      String? sectorName;
-      
-      if (row != null) {
-        final ownerId = row['owner_id'];
-        final sectorId = row['sector_id'];
+      if (row == null) {
+        if (mounted) setState(() => loadingOwner = false);
+        return;
+      }
 
-        final user = supabase.auth.currentUser;
-        if (user == null) {
-          _accessDeniedMessage = 'Sesi petugas tidak ditemukan. Silakan login kembali.';
-        } else {
-          final officer = await supabase
-              .from('users')
-              .select('id_user, market_id')
-              .eq('auth_uid', user.id)
-              .maybeSingle();
-          final officerMarketId = officer?['market_id'] as int?;
-          final officerUserId = officer?['id_user'] as int?;
+      final ownerId = row['owner_id'];
+      final sectorId = row['sector_id'];
+      final marketId = row['market_id'];
+      final stallId = row['id'] as int;
+      final user = supabase.auth.currentUser;
 
-          if (officerMarketId == null || officerUserId == null) {
-            _accessDeniedMessage = 'Profil petugas atau penugasan pasar belum tersedia.';
-          } else if (officerMarketId != row['market_id']) {
-            _accessDeniedMessage = 'Lapak ini bukan wilayah tugas Anda.';
-          } else {
-            final assignedSector = await supabase
-                .from('market_sectors')
-                .select('id')
-                .eq('id', sectorId ?? -1)
-                .eq('market_id', officerMarketId)
-                .eq('officer_id', officerUserId)
-                .maybeSingle();
-            if (assignedSector == null) {
-              _accessDeniedMessage = 'Lapak ini berada di sektor yang bukan tugas Anda.';
-            }
-          }
-        }
-        
-        // Get owner details
-        if (ownerId != null) {
-          try {
-            debugPrint('DEBUG: Loading owner for ownerId=$ownerId');
-            final owner = await supabase
+      final now = DateTime.now().toUtc();
+      final startOfDay = DateTime.utc(now.year, now.month, now.day);
+      final startOfNextDay = startOfDay.add(const Duration(days: 1));
+
+      // Fetch everything that only needs the stall row in parallel.
+      final results = await Future.wait<dynamic>([
+        user == null
+            ? Future<dynamic>.value(null)
+            : supabase
+                .from('users')
+                .select('id_user, market_id')
+                .eq('auth_uid', user.id)
+                .maybeSingle(),
+        ownerId == null
+            ? Future<dynamic>.value(null)
+            : supabase
                 .from('stall_owners')
                 .select('name, nik, phone, address')
                 .eq('id', ownerId)
-                .maybeSingle();
-            debugPrint('DEBUG: Owner result=$owner');
-            if (owner != null) {
-              ownerName = owner['name']?.toString();
-              ownerNIK = owner['nik']?.toString();
-              ownerPhone = owner['phone']?.toString();
-              ownerAddress = owner['address']?.toString();
-              debugPrint('DEBUG: ownerName=$ownerName, ownerNIK=$ownerNIK');
-            }
-          } on Exception catch (e) {
-            debugPrint('Error loading owner: $e');
-          }
-        } else {
-          debugPrint('DEBUG: ownerId is null');
-        }
-        
-        // Get sector name
-        if (sectorId != null) {
-          try {
-            debugPrint('DEBUG: Loading sector for sectorId=$sectorId');
-            final sector = await supabase
+                .maybeSingle(),
+        sectorId == null
+            ? Future<dynamic>.value(null)
+            : supabase
                 .from('market_sectors')
                 .select('name')
                 .eq('id', sectorId)
-                .maybeSingle();
-            debugPrint('DEBUG: Sector result=$sector');
-            sectorName = sector?['name']?.toString();
-          } on Exception catch (e) {
-            debugPrint('Error loading sector: $e');
-          }
-        } else {
-          debugPrint('DEBUG: sectorId is null');
+                .maybeSingle(),
+        supabase
+            .from('retribution_rates')
+            .select('id, amount, types_id')
+            .eq('stall_id', stallId)
+            .eq('market_id', marketId),
+        supabase
+            .from('retribution_types')
+            .select('id, code, name, category, unit, notes')
+            .order('name'),
+        supabase
+            .from('transactions')
+            .select('id, rate_id, amount')
+            .eq('stall_id', stallId)
+            .eq('status', 'paid')
+            .gte('created_at', startOfDay.toIso8601String())
+            .lt('created_at', startOfNextDay.toIso8601String()),
+        supabase
+            .from('transactions')
+            .select('id, amount, payment_method, status, created_at')
+            .eq('stall_id', stallId)
+            .order('created_at', ascending: false)
+            .limit(20),
+        _loadBills(stallId),
+      ]);
+
+      final officerRow = results[0] == null ? null : Map<String, dynamic>.from(results[0] as Map);
+      final ownerRow = results[1] == null ? null : Map<String, dynamic>.from(results[1] as Map);
+      final sectorRow = results[2] == null ? null : Map<String, dynamic>.from(results[2] as Map);
+      final rateRows = (results[3] as List).cast<Map<String, dynamic>>();
+      final typeRows = (results[4] as List).cast<Map<String, dynamic>>();
+      final todayRows = (results[5] as List).cast<Map<String, dynamic>>();
+      final historyRows = (results[6] as List).cast<Map<String, dynamic>>();
+
+      _accessDeniedMessage = null;
+      final officerMarketId = officerRow?['market_id'] as int?;
+      final officerUserId = officerRow?['id_user'] as int?;
+      if (user == null) {
+        _accessDeniedMessage = 'Sesi petugas tidak ditemukan. Silakan login kembali.';
+      } else if (officerMarketId == null || officerUserId == null) {
+        _accessDeniedMessage = 'Profil petugas atau penugasan pasar belum tersedia.';
+      } else if (officerMarketId != marketId) {
+        _accessDeniedMessage = 'Lapak ini bukan wilayah tugas Anda.';
+      } else {
+        final assignedSector = await supabase
+            .from('market_sectors')
+            .select('id')
+            .eq('id', sectorId ?? -1)
+            .eq('market_id', officerMarketId)
+            .eq('officer_id', officerUserId)
+            .maybeSingle();
+        if (assignedSector == null) {
+          _accessDeniedMessage = 'Lapak ini berada di sektor yang bukan tugas Anda.';
         }
-        
-        stallData = row;
       }
 
       if (_accessDeniedMessage != null) {
@@ -152,137 +158,55 @@ class _LapakPageState extends ConsumerState<LapakPage> {
         return;
       }
 
-      final now = DateTime.now().toUtc();
-      final startOfDay = DateTime.utc(now.year, now.month, now.day);
-      final startOfNextDay = startOfDay.add(const Duration(days: 1));
-        final dailyRates = await supabase
-          .from('retribution_rates')
-          .select('id, amount, types_id')
-          .eq('stall_id', row!['id'])
-          .eq('market_id', row['market_id']);
-        final dailyRateRows = (dailyRates as List).cast<Map<String, dynamic>>();
-        final typeIds = dailyRateRows.map((rate) => rate['types_id']).whereType<int>().toList();
-        final dailyTypes = typeIds.isEmpty
-          ? <Map<String, dynamic>>[]
-          : ((await supabase.from('retribution_types').select('id, code, name, unit').inFilter('id', typeIds)) as List)
-            .cast<Map<String, dynamic>>();
-        final dailyTypeIds = dailyTypes.where((type) {
-        final text = '${type['code'] ?? ''} ${type['name'] ?? ''} ${type['unit'] ?? ''}'.toUpperCase();
-        return text.contains('HARIAN') || text.contains('HARI');
-        }).map((type) => type['id']).whereType<int>().toSet();
-        final dailyRateIds = dailyRateRows
-          .where((rate) => dailyTypeIds.contains(rate['types_id']))
-          .map((rate) => rate['id'])
-          .whereType<int>()
+      final dailyTypeIds = typeRows
+          .where((type) {
+            final text = '${type['code'] ?? ''} ${type['name'] ?? ''} ${type['unit'] ?? ''}'.toUpperCase();
+            return text.contains('HARIAN') || text.contains('HARI');
+          })
+          .map((type) => (type['id'] as num).toInt())
           .toSet();
-        final dailyAmounts = dailyRateRows
-          .where((rate) => dailyTypeIds.contains(rate['types_id']))
-          .map((rate) => (rate['amount'] as num?)?.toDouble())
-          .whereType<double>()
+
+      final dailyRateIds = rateRows
+          .where((rate) => dailyTypeIds.contains((rate['types_id'] as num).toInt()))
+          .map((rate) => (rate['id'] as num).toInt())
           .toSet();
-        final todayTransactions = await supabase
-          .from('transactions')
-          .select('id, rate_id, amount')
-          .eq('stall_id', row['id'])
-          .eq('status', 'paid')
-          .gte('created_at', startOfDay.toIso8601String())
-          .lt('created_at', startOfNextDay.toIso8601String());
-        _alreadyCollectedDailyToday = (todayTransactions as List).any((transaction) {
+      final dailyAmounts = rateRows
+          .where((rate) => dailyTypeIds.contains((rate['types_id'] as num).toInt()))
+          .map((rate) => (rate['amount'] as num).toDouble())
+          .toSet();
+
+      _alreadyCollectedDailyToday = todayRows.any((transaction) {
         final rateId = transaction['rate_id'];
         final amount = (transaction['amount'] as num?)?.toDouble();
-        return dailyRateIds.contains(rateId) || (rateId == null && amount != null && dailyAmounts.contains(amount));
+        return dailyRateIds.contains(rateId) ||
+            (rateId == null && amount != null && dailyAmounts.contains(amount));
+      });
+
+      final rateMap = <int, double>{};
+      for (final rate in rateRows) {
+        rateMap[(rate['types_id'] as num).toInt()] = (rate['amount'] as num).toDouble();
+      }
+      final loadedTypes = typeRows
+          .where((type) => rateMap.containsKey((type['id'] as num).toInt()))
+          .map((type) {
+            final copy = Map<String, dynamic>.from(type);
+            copy['rate'] = rateMap[(type['id'] as num).toInt()];
+            return copy;
+          })
+          .toList();
+
+      if (mounted) {
+        setState(() {
+          stallData = row;
+          loadingOwner = false;
+          ownerName = ownerRow?['name']?.toString();
+          _ownerNIK = ownerRow?['nik']?.toString();
+          _ownerPhone = ownerRow?['phone']?.toString();
+          _ownerAddress = ownerRow?['address']?.toString();
+          _sectorName = sectorRow?['name']?.toString();
+          retributionTypes = loadedTypes;
+          transactionHistory = historyRows;
         });
-
-      // Load retribution types with rates
-      try {
-        final typesResult = await supabase
-            .from('retribution_types')
-            .select('id, code, name, category, unit, notes')
-            .order('name');
-        
-        final List<dynamic> typesRaw = typesResult as List;
-        List<Map<String, dynamic>> loadedTypes = typesRaw
-            .map((e) => Map<String, dynamic>.from(e as Map))
-            .toList();
-        
-        // Load rates for this stall
-        if (row['market_id'] != null) {
-          final marketId = row['market_id'] as int;
-          final stallId = row['id'] as int;
-          
-            final ratesResult = await supabase
-              .from('retribution_rates')
-              .select('types_id, amount, stall_id, market_id')
-              .eq('stall_id', stallId)
-              .eq('market_id', marketId);
-          
-          final List<dynamic> ratesList = ratesResult as List;
-          
-          // Build rate map <typeId, amount>
-          final Map<int, double> rateMap = {};
-          for (final rate in ratesList) {
-            final rateTypeId = rate['types_id'] as int;
-            final rateStallId = rate['stall_id'];
-            final rateMarketId = rate['market_id'];
-            final rateAmount = (rate['amount'] as num).toDouble();
-            
-            if (rateStallId == stallId && rateMarketId == marketId) {
-              rateMap[rateTypeId] = rateAmount;
-            }
-          }
-          
-          // Attach rate to type and filter to only assigned types
-          loadedTypes = loadedTypes.where((type) {
-            final typeId = type['id'] as int;
-            if (rateMap.containsKey(typeId)) {
-              type['rate'] = rateMap[typeId];
-              return true;
-            }
-            return false;
-          }).toList();
-        }
-        
-        if (mounted) {
-          setState(() {
-            _ownerNIK = ownerNIK;
-            _ownerPhone = ownerPhone;
-            _ownerAddress = ownerAddress;
-            _sectorName = sectorName;
-            loadingOwner = false;
-            retributionTypes = loadedTypes;
-          });
-        }
-      } on Exception catch (e) {
-        debugPrint('Error loading types/rates: $e');
-        if (mounted) {
-          setState(() => loadingOwner = false);
-        }
-      }
-      
-      // Load transaction history
-      try {
-        final transactionsResult = await supabase
-            .from('transactions')
-            .select('id, amount, payment_method, status, created_at')
-            .eq('stall_id', row['id'])
-            .order('created_at', ascending: false)
-            .limit(20);
-        
-        if (mounted) {
-          setState(() {
-            transactionHistory = (transactionsResult as List)
-                .map((e) => Map<String, dynamic>.from(e as Map))
-                .toList();
-          });
-        }
-      } on Exception catch (e) {
-        debugPrint('Error loading transactions: $e');
-      }
-
-      try {
-        await _loadBills(row['id'] as int);
-      } on Exception catch (e) {
-        debugPrint('Error loading bills: $e');
       }
     } on Exception catch (e) {
       debugPrint('Error in _loadLapakData: $e');
@@ -291,7 +215,7 @@ class _LapakPageState extends ConsumerState<LapakPage> {
       }
     }
   }
-  
+
   Future<void> _loadBills(int stallId) async {
     final supabase = Supabase.instance.client;
     final data = await supabase
@@ -463,6 +387,7 @@ class _LapakPageState extends ConsumerState<LapakPage> {
               ),
             ),
             // Tab content
+            if (loadingOwner) const LinearProgressIndicator(minHeight: 2),
             Expanded(
               child: TabBarView(
                 children: [
