@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-10-31T19:25:00+07:00",
+  "updated_at": "2026-10-31T19:35:00+07:00",
   "checks": {
     "superadmin_market_access": {
       "status": "PASS",
@@ -277,6 +277,10 @@
     "qr_scanability": {
       "status": "PASS",
       "evidence": "2026-10-31 laporan: QR belum terbaca Google Lens. Isi QR sudah benar (https://siaga.app/lapak/<token>, diverifikasi lewat 'Salin link'). Perbaikan: ekspor PNG/SVG memakai quiet zone 4 modul (membaca viewBox 33 modul → margin 107 px pada QR 880), QR display diberi padding 16px, error-correction dinaikkan ke level M, dan modal menampilkan 'Pindai dengan kamera atau Google Lens.' Verifikasi dev & produksi (CSS index.DpKEJbnq.css): SVG ekspor 1094×1301, QR dalam mulai x=107; PNG 1094×1301; viewBox 0 0 33 33; hint tampil. Catatan: tombol QR pertama berisi kode lapak (teks, untuk aplikasi petugas) sehingga Google Lens tidak membuka halaman; QR pemilik adalah tombol ikon tautan kedua."
+    },
+    "contact_settings": {
+      "status": "PASS",
+      "evidence": "2026-10-31. Migration 024 dijalankan pemilik: `markets.contact_phone` ada; tabel `app_settings` ada dengan RLS aktif + 4 policy admin (`is_current_user_admin_full`), grant authenticated, tanpa akses anon, 0 baris. Admin: tab baru **⚙️ Pengaturan** (`#superadmin/settings`, ContactSettingsPage) berisi 'Nomor Kontak Admin'; field per pasar 'Nomor Kontak Pengelola' ada di Edit Pasar. API `/api/lapak?pin_status=1` mengembalikan `market_name` + `contact_phone` efektif (pasar dulu, lalu app_settings). UI panel Lupa PIN menampilkan tombol WhatsApp/Telepon bila nomor terisi; saat ini belum ada nomor sehingga tampil 'Nomor kontak pengelola belum diatur. Silakan hubungi petugas pasar.' Verifikasi produksi (CSS index.CJjvHASR.css, commit 26f848e, CI 41201324549): tab Pengaturan tampil dengan heading 'Kontak Bantuan', input 'Nomor Kontak Admin', tombol Simpan; pin_status contact_phone=null."
     },
     "annual_bills_web": {
       "status": "PASS",
