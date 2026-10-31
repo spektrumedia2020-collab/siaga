@@ -55,6 +55,7 @@ export function MarketEditPage({ marketId, onBack }: Props) {
     head_photo_url: '',
     head_user_id: '',
     theme_id: '',
+    contact_phone: '',
     status: 'AKTIF'
   })
 
@@ -76,7 +77,7 @@ export function MarketEditPage({ marketId, onBack }: Props) {
       const supabase = getSupabaseClient()
       const { data } = await supabase
         .from('markets')
-        .select('id, name, code, city, address, street, street_number, kecamatan, province, postal_code, photo_url, head_photo_url, id_head_market, status, theme_id')
+        .select('id, name, code, city, address, street, street_number, kecamatan, province, postal_code, photo_url, head_photo_url, id_head_market, status, theme_id, contact_phone')
         .eq('id', marketId)
         .single()
       
@@ -117,6 +118,7 @@ export function MarketEditPage({ marketId, onBack }: Props) {
           head_photo_url: data.head_photo_url || '',
           head_user_id: headUserId,
           theme_id: data.theme_id || '',
+          contact_phone: data.contact_phone || '',
           status: data.status || 'AKTIF'
         })
       }
@@ -222,6 +224,7 @@ export function MarketEditPage({ marketId, onBack }: Props) {
           head_photo_url: formData.head_photo_url,
           id_head_market: formData.head_user_id ? parseInt(formData.head_user_id, 10) : null,
           theme_id: formData.theme_id || null,
+          contact_phone: formData.contact_phone.trim() || null,
           status: formData.status
         })
         .eq('id', marketId)
@@ -273,6 +276,7 @@ export function MarketEditPage({ marketId, onBack }: Props) {
                 <div className="form-group"><label>Provinsi</label><input type="text" className="siaga-input" value={formData.province} onChange={(e) => setFormData({ ...formData, province: e.target.value })} placeholder="Sulawesi Selatan" /></div>
                 <div className="form-group"><label>Kode Pos</label><input type="text" inputMode="numeric" maxLength={10} className="siaga-input" value={formData.postal_code} onChange={(e) => setFormData({ ...formData, postal_code: e.target.value.replace(/\D/g, '') })} placeholder="90241" /></div>
             <div className="form-group"><label>Status</label><select className="siaga-input" value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })}><option value="AKTIF">Aktif</option><option value="NONAKTIF">Non-Aktif</option></select></div>
+            <div className="form-group"><label>Nomor Kontak Pengelola</label><input type="tel" className="siaga-input" value={formData.contact_phone} onChange={(e) => setFormData({ ...formData, contact_phone: e.target.value })} placeholder="08xxxxxxxxxx (WhatsApp/telepon)" /></div>
           </div>
 
           {/* Kolom kanan: foto & kepala pasar */}

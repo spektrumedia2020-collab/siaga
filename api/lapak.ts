@@ -245,7 +245,28 @@ export default async function handler(req: any, res: any) {
         p_pin: '7777'
       })
       if (statusError) return res.status(503).json({ error: 'Fitur PIN lapak belum aktif di server' })
-      return res.json({ pin_is_default: Boolean(isDefault) })
+
+      const { data: marketContact } = await supabaseAdmin
+        .from('markets')
+        .select('name, contact_phone')
+        .eq('id', stall.market_id)
+        .maybeSingle()
+
+      let contactPhone = String(marketContact?.contact_phone || '').trim()
+      if (!contactPhone) {
+        const { data: globalSetting } = await supabaseAdmin
+          .from('app_settings')
+          .select('value')
+          .eq('key', 'contact_phone')
+          .maybeSingle()
+        contactPhone = String(globalSetting?.value || '').trim()
+      }
+
+      return res.json({
+        pin_is_default: Boolean(isDefault),
+        market_name: marketContact?.name || null,
+        contact_phone: contactPhone || null
+      })
     }
 
     if (!pin) return res.status(401).json({ error: 'PIN lapak wajib diisi' })
@@ -266,7 +287,7 @@ export default async function handler(req: any, res: any) {
 
     const { data: market, error: marketError } = await supabaseAdmin
       .from('markets')
-      .select('id, name, code, city, address, street, street_number, kecamatan, province, postal_code, photo_url, status')
+      .select('id, name, code, city, address, street, street_number, kecamatan, province, postal_code, photo_url, status, contact_phone')
       .eq('id', stall.market_id)
       .maybeSingle()
 

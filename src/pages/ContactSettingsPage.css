@@ -1,0 +1,83 @@
+.contact-settings-page {
+  padding: 2rem;
+}
+
+.contact-settings-card {
+  max-width: 560px;
+  padding: 1.5rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.contact-settings-card h2 {
+  margin: 0 0 8px;
+  color: #1e3a8a;
+  font-size: 1.2rem;
+}
+
+.contact-settings-card > p {
+  margin: 0 0 16px;
+  color: #475569;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.contact-settings-form {
+  display: grid;
+  gap: 8px;
+}
+
+.contact-settings-form label {
+  color: #334155;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.contact-settings-form input {
+  padding: 11px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.contact-settings-form input:focus {
+  outline: none;
+  border-color: #1e3a8a;
+  box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.12);
+}
+
+.contact-settings-form button {
+  justify-self: start;
+  margin-top: 4px;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  background: #1e3a8a;
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.contact-settings-form button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.contact-settings-muted {
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.contact-settings-success {
+  margin: 4px 0 0;
+  color: #15803d;
+  font-size: 0.9rem;
+}
+
+.contact-settings-error {
+  margin: 4px 0 0;
+  color: #b91c1c;
+  font-size: 0.9rem;
+}

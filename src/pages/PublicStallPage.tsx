@@ -57,6 +57,8 @@ export function PublicStallPage({ token, marketId, stallCode }: Props) {
   const [unlockedPin, setUnlockedPin] = useState<string | null>(null)
   const [pinError, setPinError] = useState('')
   const [pinIsDefault, setPinIsDefault] = useState<boolean | null>(null)
+  const [marketContact, setMarketContact] = useState('')
+  const [marketContactName, setMarketContactName] = useState('')
   const [forgotOpen, setForgotOpen] = useState(false)
   const [resetPhone, setResetPhone] = useState('')
   const [resetPin, setResetPin] = useState('')
@@ -120,6 +122,8 @@ export function PublicStallPage({ token, marketId, stallCode }: Props) {
       .then((response) => (response.ok ? response.json() : null))
       .then((result) => {
         setPinIsDefault(typeof result?.pin_is_default === 'boolean' ? result.pin_is_default : null)
+        setMarketContact(String(result?.contact_phone || '').trim())
+        setMarketContactName(String(result?.market_name || '').trim())
       })
       .catch(() => {})
 
@@ -265,6 +269,9 @@ export function PublicStallPage({ token, marketId, stallCode }: Props) {
     }
   }
 
+  const contactDigits = marketContact.replace(/\D/g, '')
+  const contactNumber = contactDigits.startsWith('0') ? `62${contactDigits.slice(1)}` : contactDigits
+
   if (!unlockedPin) {
     return (
       <main className="public-stall-page public-stall-login-page">
@@ -343,6 +350,18 @@ export function PublicStallPage({ token, marketId, stallCode }: Props) {
                 <span className="public-stall-pin-forgot-note">
                   Jika nomor HP belum terdaftar, hubungi pengelola pasar.
                 </span>
+                {marketContact ? (
+                  <div className="public-stall-pin-contact">
+                    <span>Hubungi pengelola {marketContactName || 'pasar'}:</span>
+                    <a href={`https://wa.me/${contactNumber}`} target="_blank" rel="noreferrer">WhatsApp</a>
+                    <a href={`tel:+${contactNumber}`}>Telepon</a>
+                    <span className="public-stall-pin-contact-number">{marketContact}</span>
+                  </div>
+                ) : (
+                  <span className="public-stall-pin-forgot-note">
+                    Nomor kontak pengelola belum diatur. Silakan hubungi petugas pasar.
+                  </span>
+                )}
                 {resetMessage && <p className="public-stall-pin-error">{resetMessage}</p>}
               </form>
             )}

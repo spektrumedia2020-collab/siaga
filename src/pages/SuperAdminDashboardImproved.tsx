@@ -9,6 +9,7 @@ import { OwnersPage } from './OwnersPage'
 import { RetribusiPage } from './RetribusiPage'
 import { ThemeManagement } from './ThemeManagement'
 import { ImportDataPage } from './ImportDataPage'
+import { ContactSettingsPage } from './ContactSettingsPage'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, Legend
 } from 'recharts'
@@ -86,7 +87,7 @@ const addDays = (value: string, days: number) => {
   return formatDateInput(date)
 }
 
-const ADMIN_TABS = ['overview', 'analytics', 'markets', 'retribusi', 'setoran', 'users', 'pedagang', 'themes', 'import'] as const
+const ADMIN_TABS = ['overview', 'analytics', 'markets', 'retribusi', 'setoran', 'users', 'pedagang', 'themes', 'import', 'settings'] as const
 type AdminTab = (typeof ADMIN_TABS)[number]
 
 export function SuperAdminDashboardImproved() {
@@ -480,6 +481,9 @@ export function SuperAdminDashboardImproved() {
             <button className={`sidebar-item ${activeTab === 'themes' ? 'active' : ''}`} onClick={() => setActiveTab('themes')}>
               🎨 Tema Pasar
             </button>
+            <button className={`sidebar-item ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>
+              ⚙️ Pengaturan
+            </button>
           </div>
         </nav>
         
@@ -783,6 +787,10 @@ export function SuperAdminDashboardImproved() {
             </div>
             <ThemeManagement />
           </section>
+        )}
+
+        {activeTab === 'settings' && (
+          <ContactSettingsPage />
         )}
 
         {activeTab === 'import' && (

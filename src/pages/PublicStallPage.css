@@ -632,3 +632,30 @@
   opacity: 0.55;
   cursor: not-allowed;
 }
+
+.public-stall-pin-contact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  color: #475569;
+  font-size: 0.85rem;
+}
+
+.public-stall-pin-contact a {
+  padding: 7px 12px;
+  border-radius: 8px;
+  background: #e6edf7;
+  color: #1e3a8a;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.public-stall-pin-contact a:hover {
+  background: #dbe7f5;
+}
+
+.public-stall-pin-contact-number {
+  color: #64748b;
+}
