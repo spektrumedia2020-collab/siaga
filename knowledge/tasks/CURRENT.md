@@ -59,6 +59,7 @@ menampilkan data.
 | 62 | PIN gate halaman publik + ganti PIN + reset admin | **SELESAI (deploy)** | `/api/lapak` 401 tanpa/salah PIN, 200 dengan 7777 di `www.siaga.app`; gate + data tampil; field PIN di Edit Lapak; commit `f2f4449`; CI `41195888495` |
 | 63 | Domain publik `siaga.app` untuk QR/link | **SELESAI (deploy)** | `src/lib/publicUrl.ts`; QR pemilik tersalin `https://siaga.app/lapak/<token>`; commit `1e3339f` |
 | 64 | Konten halaman pemilik: total dibayar, status hari ini, tagihan Jaspro | **SELESAI (deploy)** | API agregat semua transaksi lunas (bukan 50), `summary` + `bills[]` + cicilan; kartu "Total dibayar / Hari ini (WITA) / Tunggakan / Terakhir bayar"; bagian Tagihan Tahunan dengan empty-state; commit `ab42633`; CI `41196824103` |
+| 65 | Banner status hari ini + nama retribusi | **SELESAI (deploy)** | Banner tersendiri di bawah header pasar (kuning BELUM / hijau SUDAH), menyertakan nama retribusi; riwayat transaksi menampilkan nama retribusi; commit `02ccc94`, `c45f7fa`, `68f6e05`; CI `41197512258` |
 | 52 | Palet biru muda + navy (header biru muda) | **SELESAI** | Web + mobile; header #e3efff->#bfdbfe teks navy; sisa amber/oranye diganti biru/merah; CI 41180125573, deploy `a543be7` |
 | 49 | 5 petugas untuk transaksi simulasi | **SELESAI** | `users` 31–35 role OFFICER di NGD; 6.412 transaksi ber-`officer_id`; Overview TOTAL PETUGAS 5, Top Petugas terisi |
 | 50 | Nama pasar di dashboard pasar | **SELESAI** | Blok `.market-identity` di atas sidebar: "Pasar dikelola · Niaga Daya · NGD · Makassar"; ikut Ganti Pasar |
