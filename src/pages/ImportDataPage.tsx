@@ -316,6 +316,17 @@ export function ImportDataPage() {
         </label>
       </div>
 
+      <p className="import-templates">
+        Belum punya berkas? Unduh template:{' '}
+        <a href="/templates/contoh-import-pasar.csv" download>
+          jastem + retribusi harian
+        </a>{' '}
+        ·{' '}
+        <a href="/templates/contoh-import-sewa.csv" download>
+          sewa tahunan + sewa harian
+        </a>
+      </p>
+
       {marketsLoading && <p className="import-muted">Memuat daftar pasar…</p>}
       {error && <div className="import-alert is-error" role="alert">{error}</div>}
       {notice && <div className="import-alert is-success" role="status">{notice}</div>}
