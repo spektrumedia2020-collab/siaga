@@ -4,6 +4,8 @@ logs
 # Knowledge session logs adalah artefak canonical (AGY-QODER §2.2)
 !knowledge/logs/
 !knowledge/logs/**
+# Snapshot runtime (§7.15) bersifat lokal, bukan artefak canonical
+knowledge/.qoder/index/snapshots/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
