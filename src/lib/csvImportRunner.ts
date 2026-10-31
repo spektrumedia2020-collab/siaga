@@ -331,13 +331,14 @@ async function upsertStalls(
     code: string | null
     number: string | null
     qr_code: string | null
+    legacy_code: string | null
     status: string | null
     sector_id: number | null
     owner_id: number | null
   }>((from, to) =>
     client
       .from('stalls')
-      .select('id, code, number, qr_code, status, sector_id, owner_id')
+      .select('id, code, number, qr_code, legacy_code, status, sector_id, owner_id')
       .eq('market_id', marketId)
       .order('id')
       .range(from, to)
@@ -371,6 +372,7 @@ async function upsertStalls(
           code: row.stallCode,
           number: row.stallNumber,
           qr_code: row.stallCode,
+          legacy_code: row.legacyCode || null,
           status: row.status
         }
       })
@@ -382,6 +384,7 @@ async function upsertStalls(
       !existing ||
       existing.number !== row.stallNumber ||
       existing.qr_code !== row.stallCode ||
+      (existing.legacy_code || '') !== row.legacyCode ||
       existing.status !== row.status ||
       existing.sector_id !== sectorId ||
       existing.owner_id !== ownerId
@@ -395,6 +398,7 @@ async function upsertStalls(
           owner_id: ownerId,
           number: row.stallNumber,
           qr_code: row.stallCode,
+          legacy_code: row.legacyCode || null,
           status: row.status
         }
       })

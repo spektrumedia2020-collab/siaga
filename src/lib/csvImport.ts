@@ -105,7 +105,7 @@ export const FIELD_LABELS: Array<{ key: CsvField; label: string; hint?: string; 
   { key: 'stallCode', label: 'Kode lapak', hint: 'wajib', kinds: ['stalls', 'rates', 'combined'] },
   { key: 'stallNumber', label: 'Nomor lapak', hint: 'opsional', kinds: ['stalls'] },
   { key: 'location', label: 'Lokasi / nomor lapak', hint: 'asal sektor', kinds: ['stalls', 'combined'] },
-  { key: 'legacyCode', label: 'Kode lama', kinds: ['combined'] },
+  { key: 'legacyCode', label: 'Kode lama', kinds: ['stalls', 'combined'] },
   { key: 'ownerName', label: 'Nama pedagang', hint: 'kosong → placeholder', kinds: ['stalls', 'combined'] },
   { key: 'annualAmount', label: 'Jastem / sewa tahunan', kinds: ['combined'] },
   { key: 'dailyAmount', label: 'Retribusi harian', kinds: ['combined'] },
@@ -415,6 +415,47 @@ const locateMarketNameColumn = (
   return mapped.marketName ?? -1
 }
 
+const CODE_LIKE = /^([A-Za-z]{2,}[.\-]|\d+$)/
+
+/**
+ * Header "KODE LAMA" pada CSV legacy menaungi dua sub-kolom: yang pertama
+ * berisi teks lokasi dan sub-kolom tanpa judul di sebelahnya berisi kode
+ * lama sebenarnya (SWH.L.A.0001, PNK.K2.D.0005, 1). Pilih kolom yang bukan
+ * kolom lokasi dan paling mirip kode.
+ */
+const locateLegacyCodeColumn = (
+  parsed: ParsedCsv,
+  locationIndex: number
+): number => {
+  const candidates = new Set<number>()
+  parsed.headers.forEach((header, index) => {
+    if (LEGACY_HEADERS.has(normalizeHeader(header))) candidates.add(index)
+  })
+  if (candidates.size === 0) return -1
+
+  for (const index of [...candidates]) {
+    const nextHeader = parsed.headers[index + 1]
+    if (nextHeader !== undefined && !normalizeHeader(nextHeader)) candidates.add(index + 1)
+  }
+
+  candidates.delete(locationIndex)
+  if (candidates.size === 0) return -1
+  if (candidates.size === 1) return [...candidates][0]
+
+  let bestIndex = -1
+  let bestScore = -1
+  for (const index of candidates) {
+    const values = sampleColumn(parsed, index)
+    const score = values.filter((value) => CODE_LIKE.test(value)).length
+    if (score > bestScore) {
+      bestIndex = index
+      bestScore = score
+    }
+  }
+
+  return bestIndex
+}
+
 export function deriveColumnMap(parsed: ParsedCsv): ColumnMap {
   const mapped = mapHeaderCells(parsed.headers)
   const mapping: ColumnMap = { ...EMPTY_COLUMN_MAP }
@@ -432,9 +473,7 @@ export function deriveColumnMap(parsed: ParsedCsv): ColumnMap {
   mapping.marketAddress = mapped.marketAddress ?? -1
   mapping.stallNumber = mapped.stallNumber ?? -1
   mapping.location = locationIndex
-  mapping.legacyCode = mapped.legacyCode !== undefined && mapped.legacyCode !== locationIndex
-    ? mapped.legacyCode
-    : -1
+  mapping.legacyCode = locateLegacyCodeColumn(parsed, locationIndex)
   mapping.typeCode = mapped.typeCode ?? -1
   mapping.typeName = mapped.typeName ?? -1
   mapping.period = mapped.period ?? -1

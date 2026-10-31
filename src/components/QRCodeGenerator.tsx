@@ -35,7 +35,7 @@ export function QRCodeGenerator({ value, label, size = 160, icon = '🔳', title
           const pngUrl = canvas.toDataURL('image/png')
           const link = document.createElement('a')
           link.href = pngUrl
-          link.download = `${(label || 'qr').replace(/\s+/g, '_')}.png`
+          link.download = `${(label || 'qr').replace(/[^A-Za-z0-9._-]+/g, '_')}.png`
           document.body.appendChild(link)
           link.click()
           link.remove()

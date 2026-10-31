@@ -15,6 +15,7 @@ interface Stall {
   code: string
   number: string
   qr_code: string | null
+  legacy_code: string | null
   public_token?: string | null
   status: string
   created_at: string
@@ -79,6 +80,7 @@ export function StallsPage({ marketId, readOnly = false }: Props) {
   const [formData, setFormData] = useState({
     code: '',
     number: '',
+    legacy_code: '',
     sector_id: '',
     category_id: '',
     owner_id: '',
@@ -218,6 +220,7 @@ export function StallsPage({ marketId, readOnly = false }: Props) {
       const payload = {
         code: formData.code,
         number: formData.number,
+        legacy_code: formData.legacy_code.trim() || null,
         sector_id: formData.sector_id ? parseInt(formData.sector_id) : null,
         category_id: formData.category_id ? parseInt(formData.category_id) : null,
         owner_id: formData.owner_id ? parseInt(formData.owner_id) : null,
@@ -248,6 +251,7 @@ export function StallsPage({ marketId, readOnly = false }: Props) {
       setFormData({
         code: '',
         number: '',
+        legacy_code: '',
         sector_id: '',
         category_id: '',
         owner_id: '',
@@ -266,6 +270,7 @@ export function StallsPage({ marketId, readOnly = false }: Props) {
     setFormData({
       code: stall.code,
       number: stall.number,
+      legacy_code: stall.legacy_code || '',
       sector_id: stall.sector_id?.toString() || '',
       category_id: (stall as any).category_id?.toString() || '',
       owner_id: stall.owner_id?.toString() || '',
@@ -298,6 +303,7 @@ export function StallsPage({ marketId, readOnly = false }: Props) {
     setFormData({
       code: '',
       number: '',
+      legacy_code: '',
       sector_id: '',
       category_id: '',
       owner_id: '',
@@ -508,6 +514,16 @@ export function StallsPage({ marketId, readOnly = false }: Props) {
                   required
                 />
               </div>
+
+              <div className="form-group">
+                <label>Kode Lama</label>
+                <input
+                  type="text"
+                  value={formData.legacy_code}
+                  onChange={(e) => setFormData({ ...formData, legacy_code: e.target.value })}
+                  placeholder="opsional, mis. SWH.L.A.0001"
+                />
+              </div>
             </div>
 
             <div className="form-row">
@@ -629,6 +645,7 @@ export function StallsPage({ marketId, readOnly = false }: Props) {
                 <tr>
                   <th>Kode</th>
                   <th>Nomor</th>
+                  <th>Kode Lama</th>
                   <th>Sektor</th>
                   <th>Kategori</th>
                   <th>Pemilik</th>
@@ -642,6 +659,7 @@ export function StallsPage({ marketId, readOnly = false }: Props) {
                   <tr key={stall.id}>
                     <td>{stall.code}</td>
                     <td>{stall.number}</td>
+                    <td>{stall.legacy_code || '-'}</td>
                     <td>{getSectorName(stall.sector_id)}</td>
                     <td>{getCategoryName((stall as any).category_id)}</td>
                     <td>{getOwnerName(stall.owner_id)}</td>
@@ -655,14 +673,14 @@ export function StallsPage({ marketId, readOnly = false }: Props) {
                       <div className="action-buttons">
                         <QRCodeGenerator
                           value={String(stall.code || stall.id)}
-                          label={`Lapak ${stall.code || stall.number}`}
+                          label={`Lapak ${stall.code || stall.number}${stall.legacy_code ? ` | ${stall.legacy_code}` : ''}`}
                           title="QR Petugas (scan aplikasi)"
                         />
                         <QRCodeGenerator
                           value={stall.public_token
                             ? `${window.location.origin}/lapak/${stall.public_token}`
                             : `${window.location.origin}/lapak/${stall.market_id}/${encodeURIComponent(stall.code)}`}
-                          label={`QR Pemilik — Lapak ${stall.code || stall.number}`}
+                          label={`QR Pemilik — Lapak ${stall.code || stall.number}${stall.legacy_code ? ` | ${stall.legacy_code}` : ''}`}
                           icon="🔗"
                           title="QR Pemilik (kamera / Google Lens)"
                         />
