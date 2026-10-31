@@ -1,15 +1,31 @@
 {
   "version": 1,
-  "updated_at": "2026-10-31T18:00:00+07:00",
-  "commit": "e7fc25b0cd15022ef54ed9d4e23c21b704894cfc",
+  "updated_at": "2026-10-31T21:30:00+07:00",
+  "commit": "ba4880c9b6edc4222a92592f0ba6d4caefac5ba0",
   "checks": {
     "typecheck": {
       "status": "PASS",
-      "evidence": "npm run typecheck (tsc --noEmit) pada 2026-10-31 setelah fitur import CSV: 0 error."
+      "evidence": "npm run typecheck (tsc --noEmit) 2026-10-31 setelah impor CSV terpisah (pasar/lapak/tarif): 0 error."
     },
     "build_web": {
       "status": "PASS",
-      "evidence": "npm run build (vite) 2026-10-31: sukses 1.38s; bundle 1,394 kB (gzip 398 kB), peringatan chunk >500 kB tanpa code-splitting."
+      "evidence": "npm run build (vite) 2026-10-31: sukses 3.04s; 684 modul; bundle index.BccvK6KE.js 1.407 kB (gzip 402 kB), CSS 74,87 kB; peringatan chunk >500 kB tanpa code-splitting."
+    },
+    "csv_split_parse": {
+      "status": "PASS",
+      "evidence": "detectImportKind 2026-10-31 (tsx): contoh-pasar.csv -> markets, contoh-lapak.csv -> stalls, contoh-tarif.csv -> rates; 4 CSV legacy tetap -> combined (262/626/1814/1396 baris, 0 dilewati)."
+    },
+    "csv_split_runner": {
+      "status": "PASS",
+      "evidence": "Simulasi klien Supabase palsu pasar->lapak->tarif: 2 pasar, 2 sektor, 5 pemilik, 5 lapak, 4 jenis (MKS-JASTEM, MKS-RETRIBUSI-HARIAN, MKS-SEWA-TEMPAT-TAHUNAN, MKS-SEWA-TEMPAT-HARIAN), 8 tarif; impor ulang 0 create/0 update; impor tarif ke pasar 'ZZZ' ditolak dengan pesan jelas."
+    },
+    "csv_split_templates": {
+      "status": "PASS",
+      "evidence": "Dev server Vite 2026-10-31: 5 berkas /templates/*.csv merespons 200 dengan header benar (contoh-pasar 161 B, contoh-lapak 326 B, contoh-tarif 376 B, dua template legacy 535/498 B)."
+    },
+    "csv_split_ui": {
+      "status": "PARTIAL",
+      "evidence": "Verifikasi UI baru berhenti di gate login (sesi browser tidak memiliki kredensial); tidak ada login paksa. Bukti tidak langsung: typecheck 0 error, build PASS, template 200. Render halaman import di browser belum diverifikasi pada sesi ini."
     },
     "csv_import_parse": {
       "status": "PASS",

@@ -1,10 +1,10 @@
 # CURRENT — Task Aktif
 
-**Sesi:** SESSION-2026-10-31-2 · **Update:** 2026-10-31T19:00:00+07:00 · **Branch:** `main` @ `ba4880c`
+**Sesi:** SESSION-2026-10-31-3 · **Update:** 2026-10-31T21:30:00+07:00 · **Branch:** `main` @ `ba4880c`
 
 ## Status
 
-`WIP` — fitur import CSV ter-deploy (`e7fc25b`, CI hijau); menunggu seed produksi oleh user.
+`WIP` — impor CSV terpisah (pasar / lapak / tarif) terverifikasi lokal; menunggu seed produksi oleh user.
 
 ## Task
 
@@ -31,6 +31,9 @@
 | 32 | Verifikasi import (typecheck/build/runner) | **SELESAI** | `tsc --noEmit` 0 error; `vite build` PASS; impor ulang idempoten (0 create/update) |
 | 33 | Commit + push import CSV | **SELESAI** | Push `4b8b87b..20f4ba7`; CI `41148221841` success; bundle produksi memuat UI importer |
 | 34 | Template CSV unduhan di dashboard | **SELESAI** | 2 template statis; terparse 0 error; tautan di halaman import; deploy `ba4880c` |
+| 35 | Import CSV terpisah: pasar, lapak, tarif | **SELESAI** | `detectImportKind`; `runMarketImport`/`runStallImport`/`runRateImport`; UI per jenis; 3 template baru |
+| 36 | Verifikasi split import | **SELESAI** | Simulasi pasar→lapak→tarif: 2 pasar, 5 lapak, 4 jenis, 8 tarif; impor ulang 0 create/update |
+| 37 | Build + sinkron knowledge split import | **SELESAI** | `npm run typecheck` 0 error; `npm run build` PASS; `modules/import-csv.md` diperbarui |
 | 14 | P0-03 — env PIN lapak + deploy | **DIGANTI** | PIN dihapus; digantikan token QR per lapak (migration 016) |
 | 15 | Role: MARKET_HEAD read-only + hapus impersonation | **SELESAI** | Migration 014; build PASS; deploy `86b62d6` |
 | 16 | P0-12 — kredensial admin di halaman publik | **SELESAI (kode)** | Bundle bersih; rotasi password dipilih tidak dilakukan user |
@@ -47,15 +50,19 @@
 
 ## Scope sesi ini
 
-- Fitur import CSV: parser 4 format legacy, mesin impor Supabase idempoten, halaman admin `#superadmin/import`.
-- Knowledge: modul baru `modules/import-csv.md`, sinkronisasi state/validation/log.
+- Impor CSV tiga jenis berkas: pasar (`contoh-pasar.csv`), lapak (`contoh-lapak.csv`),
+  tarif (`contoh-tarif.csv`), dengan deteksi jenis otomatis; format gabungan legacy tetap didukung.
+- Runner: `runMarketImport` (upsert pasar), `runStallImport` (pasar + sektor + pemilik + lapak),
+  `runRateImport` (pasar/lapak harus ada, jenis dibuat otomatis, tarif di-upsert).
+- Knowledge: `modules/import-csv.md` diperbarui, state/validation/log disinkronkan.
 - Tanpa perubahan skema DB (kolom & policy yang ada sudah cukup).
 
 ## Blocker
 
-- Tidak ada blocker teknis aktif; typecheck/build/impor lokal hijau.
+- Tidak ada blocker teknis aktif; typecheck/build/simulasi impor lokal hijau.
 - Risiko diterima: password `admin@siaga.id` tidak dirotasi (keputusan user, S-18).
-- Data produksi kosong (0 pasar/lapak/transaksi) — kini dapat diisi lewat tab Import Data (4 CSV di root repo).
+- Data produksi kosong (0 pasar/lapak/transaksi) — kini dapat diisi lewat tab Import Data
+  (4 CSV gabungan di root repo, atau 3 CSV terpisah).
 
 ## Team Waves
 
@@ -64,9 +71,12 @@ Tidak ada gelombang paralel. `open_wave = null`.
 ## Next Session Handoff
 
 1. Baca urutan resume: `state.json` → `index/index-state.json` → `context.md` → `memory.md` → `00_INDEX.md` → berkas ini.
-2. **Seed data produksi** lewat `#superadmin/import`: unggah 4 CSV root repo
-   (`Sawah`, `Panakkukang`, `Terong`, `Niaga Daya`), target pasar terdeteksi otomatis
-   (NGD/SWH/PNK/TRG), lalu "Import semua". Setelah itu uji `/lapak/<token>` dan alur petugas.
+2. **Seed data produksi** lewat `#superadmin/import`. Dua jalur:
+   - Berkas terpisah: `contoh-pasar.csv` → `contoh-lapak.csv` → `contoh-tarif.csv`
+     (atau ekspor sendiri dengan header sama); urutan wajib, "Import semua" mengurutkan otomatis.
+   - Format gabungan: unggah 4 CSV root repo (`Sawah`, `Panakkukang`, `Terong`, `Niaga Daya`),
+     target pasar terdeteksi otomatis (NGD/SWH/PNK/TRG).
+   Setelah itu uji `/lapak/<token>` dan alur petugas.
 3. **Fase 2 mobile**: `scan_page.dart` membaca URL/token QR (satu QR untuk petugas & pemilik)
    + tombol notifikasi `wa.me`.
 4. **Path-based URL** `/admin/*`, `/market/*` — ditunda; hash deep-link masih kanonik.

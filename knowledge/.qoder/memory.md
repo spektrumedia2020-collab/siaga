@@ -50,6 +50,9 @@
 
 ## Konstrain
 
+- Impor CSV mendukung tiga berkas terpisah (pasar → lapak → tarif) dengan deteksi jenis otomatis,
+  plus empat format gabungan legacy. Impor tarif hanya menempel ke pasar/lapak yang sudah ada;
+  jenis retribusi dibuat otomatis dengan kode `<KODE PASAR>-<SLUG JENIS>`. *(VERIFIED 2026-10-31)*
 - Tidak ada test otomatis di `src/` dan `api/`; `npm test` = `node --test` tanpa file test terverifikasi. *(VERIFIED untuk src/api; mobile = UNKNOWN)*
 - Tidak ada ESLint/Prettier. `npm run build` PASS; `npm run typecheck` **0 error** (2026-10-26).
 - SQL migrasi tersebar di 4 lokasi (root, `migrations/`, `mobile/migrations/`, `mobile/assets/sql/`) → drift risk.

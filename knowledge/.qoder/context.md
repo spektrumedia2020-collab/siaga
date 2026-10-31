@@ -1,13 +1,14 @@
 # Context Aktif (L0) — 2026-10-31
 
-**Sesi:** SESSION-2026-10-31-2 · **Commit terakhir:** `e7fc25b` · **Branch:** `main` · **Autonomy:** L1
+**Sesi:** SESSION-2026-10-31-3 · **Commit terakhir:** `ba4880c` · **Branch:** `main` · **Autonomy:** L1
 
 ## Task aktif
 
-**Impor CSV legacy + UI admin selesai di kode** (`e7fc25b`): tab `#superadmin/import`
-membaca 4 CSV root repo (Sawah, Panakkukang, Terong, Niaga Daya), pemetaan kolom otomatis,
-impor idempoten. Typecheck/build PASS; menunggu push + seed produksi oleh user.
-CI mobile sudah hijau (`8bf2dd0`). DB produksi masih kosong.
+**Impor CSV tiga jenis berkas selesai di kode:** pasar / lapak / tarif terpisah, terdeteksi otomatis
+(`detectImportKind`), dengan runner `runMarketImport`, `runStallImport`, `runRateImport`. Format gabungan
+legacy (Sawah, Panakkukang, Terong, Niaga Daya) tetap didukung. Template baru:
+`/templates/contoh-pasar.csv`, `contoh-lapak.csv`, `contoh-tarif.csv`.
+Typecheck/build PASS; simulasi pasar→lapak→tarif idempoten. DB produksi masih kosong.
 
 ## Status keamanan ringkas
 
@@ -29,8 +30,9 @@ dan `stall_categories` juga 0. Tersisa 1 admin + 4 `roles`; storage 0 objek.
 
 ## Next action (spesifik)
 
-1. Push `e7fc25b`; verifikasi CI dan tab "📥 Import Data" di produksi.
-2. Seed produksi: unggah 4 CSV root repo lewat `#superadmin/import`, lalu uji `/lapak/<token>`.
+1. Verifikasi CI + `/templates/contoh-pasar.csv` di produksi setelah push.
+2. Seed produksi lewat `#superadmin/import`: jalur terpisah pasar → lapak → tarif, atau 4 CSV gabungan
+   root repo; lalu uji `/lapak/<token>`.
 3. Fase 2: mobile membaca QR URL/token; tombol WA `wa.me`.
 4. Opsional: test otomatis (P1-04).
 

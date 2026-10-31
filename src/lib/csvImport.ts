@@ -3,22 +3,34 @@ import Papa from 'papaparse'
 /**
  * Import CSV transisi dari aplikasi sebelumnya.
  *
- * Empat format legacy yang harus didukung:
+ * Empat format legacy gabungan yang harus didukung:
  * - Sawah/Panakkukang/Terong: header di baris ke-3, nama pasar di kolom tanpa judul.
  * - Terong: satu kolom kosong di depan.
  * - Niaga Daya: lokasi ada di kolom tanpa judul, `KODE LAMA` berisi nomor lama.
+ *
+ * Selain itu ada tiga format terpisah yang dideteksi otomatis:
+ * pasar (markets), lapak (stalls), dan tarif retribusi (rates).
  */
 
 export type CsvField =
   | 'marketCode'
   | 'marketName'
+  | 'marketCity'
+  | 'marketAddress'
   | 'stallCode'
+  | 'stallNumber'
   | 'location'
   | 'legacyCode'
   | 'ownerName'
   | 'annualAmount'
   | 'dailyAmount'
   | 'status'
+  | 'typeCode'
+  | 'typeName'
+  | 'period'
+  | 'rateAmount'
+
+export type ImportKind = 'markets' | 'stalls' | 'rates' | 'combined'
 
 export type ColumnMap = Record<CsvField, number>
 
@@ -56,33 +68,71 @@ export interface RetributionTypeSpecs {
   daily: RetributionTypeSpec
 }
 
+export interface MarketInput {
+  line: number
+  code: string
+  name: string
+  city: string
+  address: string
+  status: string
+  errors: string[]
+  skip: boolean
+}
+
+export interface RateInput {
+  line: number
+  marketCode: string
+  stallCode: string
+  typeCode: string
+  typeName: string
+  unit: string
+  category: string
+  amount: number | null
+  errors: string[]
+  skip: boolean
+}
+
 export interface MarketHints {
   code: string
   name: string
 }
 
-export const FIELD_LABELS: Array<{ key: CsvField; label: string; hint?: string }> = [
-  { key: 'stallCode', label: 'Kode lapak', hint: 'wajib' },
-  { key: 'location', label: 'Lokasi / nomor lapak', hint: 'asal sektor' },
-  { key: 'legacyCode', label: 'Kode lama' },
-  { key: 'ownerName', label: 'Nama pedagang', hint: 'kosong → placeholder' },
-  { key: 'annualAmount', label: 'Jastem / sewa tahunan' },
-  { key: 'dailyAmount', label: 'Retribusi harian' },
-  { key: 'status', label: 'Status' },
-  { key: 'marketCode', label: 'Kode pasar' },
-  { key: 'marketName', label: 'Nama pasar' }
+export const FIELD_LABELS: Array<{ key: CsvField; label: string; hint?: string; kinds: ImportKind[] }> = [
+  { key: 'marketCode', label: 'Kode pasar', hint: 'penghubung antar berkas', kinds: ['markets', 'stalls', 'rates', 'combined'] },
+  { key: 'marketName', label: 'Nama pasar', kinds: ['markets', 'combined'] },
+  { key: 'marketCity', label: 'Kota', kinds: ['markets'] },
+  { key: 'marketAddress', label: 'Alamat pasar', kinds: ['markets'] },
+  { key: 'stallCode', label: 'Kode lapak', hint: 'wajib', kinds: ['stalls', 'rates', 'combined'] },
+  { key: 'stallNumber', label: 'Nomor lapak', hint: 'opsional', kinds: ['stalls'] },
+  { key: 'location', label: 'Lokasi / nomor lapak', hint: 'asal sektor', kinds: ['stalls', 'combined'] },
+  { key: 'legacyCode', label: 'Kode lama', kinds: ['combined'] },
+  { key: 'ownerName', label: 'Nama pedagang', hint: 'kosong → placeholder', kinds: ['stalls', 'combined'] },
+  { key: 'annualAmount', label: 'Jastem / sewa tahunan', kinds: ['combined'] },
+  { key: 'dailyAmount', label: 'Retribusi harian', kinds: ['combined'] },
+  { key: 'status', label: 'Status', kinds: ['markets', 'stalls', 'combined'] },
+  { key: 'typeName', label: 'Jenis retribusi', hint: 'wajib', kinds: ['rates'] },
+  { key: 'typeCode', label: 'Kode jenis', hint: 'otomatis bila kosong', kinds: ['rates'] },
+  { key: 'period', label: 'Periode / satuan', hint: 'tahun, hari, bulan', kinds: ['rates'] },
+  { key: 'rateAmount', label: 'Jumlah tarif', hint: 'wajib', kinds: ['rates'] }
 ]
 
 export const EMPTY_COLUMN_MAP: ColumnMap = {
   marketCode: -1,
   marketName: -1,
+  marketCity: -1,
+  marketAddress: -1,
   stallCode: -1,
+  stallNumber: -1,
   location: -1,
   legacyCode: -1,
   ownerName: -1,
   annualAmount: -1,
   dailyAmount: -1,
-  status: -1
+  status: -1,
+  typeCode: -1,
+  typeName: -1,
+  period: -1,
+  rateAmount: -1
 }
 
 const normalizeHeader = (value: string) =>
@@ -106,6 +156,13 @@ const LOCATION_HEADERS = new Set(['lokasi', 'lokasilapak', 'alamat', 'alamatlapa
 const LEGACY_HEADERS = new Set(['kodelama', 'kodeold', 'kodelapaklama'])
 const MARKET_CODE_HEADERS = new Set(['kodepasar'])
 const MARKET_NAME_HEADERS = new Set(['namapasar', 'pasarpasar'])
+const MARKET_CITY_HEADERS = new Set(['kota', 'kabupaten', 'kotamadya', 'kotaadministrasi'])
+const MARKET_ADDRESS_HEADERS = new Set(['alamatpasar', 'alamatkantor'])
+const STALL_NUMBER_HEADERS = new Set(['nomor', 'nomorlapak', 'nolapak', 'nomerlapak'])
+const TYPE_CODE_HEADERS = new Set(['kodejenis', 'kodejenisretribusi', 'koderetribusi', 'kodetipe', 'kodetype'])
+const TYPE_NAME_HEADERS = new Set(['jenisretribusi', 'namajenis', 'namajenisretribusi', 'jenis', 'namatipe', 'tiperetribusi'])
+const PERIOD_HEADERS = new Set(['periode', 'satuan', 'unit', 'rentang'])
+const RATE_AMOUNT_HEADERS = new Set(['jumlah', 'tarif', 'nominal', 'amount', 'besaran'])
 
 const HEADER_CONTINUATIONS = new Set([
   'harian',
@@ -154,6 +211,34 @@ const mapHeaderCells = (cells: string[]): Partial<Record<CsvField, number>> => {
     }
     if (MARKET_NAME_HEADERS.has(normalized)) {
       setIfUnset(mapping, 'marketName', index)
+      return
+    }
+    if (MARKET_CITY_HEADERS.has(normalized)) {
+      setIfUnset(mapping, 'marketCity', index)
+      return
+    }
+    if (MARKET_ADDRESS_HEADERS.has(normalized)) {
+      setIfUnset(mapping, 'marketAddress', index)
+      return
+    }
+    if (STALL_NUMBER_HEADERS.has(normalized)) {
+      setIfUnset(mapping, 'stallNumber', index)
+      return
+    }
+    if (TYPE_CODE_HEADERS.has(normalized)) {
+      setIfUnset(mapping, 'typeCode', index)
+      return
+    }
+    if (TYPE_NAME_HEADERS.has(normalized)) {
+      setIfUnset(mapping, 'typeName', index)
+      return
+    }
+    if (PERIOD_HEADERS.has(normalized)) {
+      setIfUnset(mapping, 'period', index)
+      return
+    }
+    if (RATE_AMOUNT_HEADERS.has(normalized)) {
+      setIfUnset(mapping, 'rateAmount', index)
       return
     }
     if (STALL_CODE_HEADERS.has(normalized)) {
@@ -285,6 +370,9 @@ const locateLocationColumn = (
     if (index === mapped.stallCode || index === mapped.ownerName) continue
     if (index === mapped.annualAmount || index === mapped.dailyAmount) continue
     if (index === mapped.marketCode || index === mapped.marketName) continue
+    if (index === mapped.marketCity || index === mapped.marketAddress) continue
+    if (index === mapped.stallNumber || index === mapped.rateAmount) continue
+    if (index === mapped.typeCode || index === mapped.typeName || index === mapped.period) continue
     if (index === mapped.status) continue
 
     const values = sampleColumn(parsed, index)
@@ -340,10 +428,17 @@ export function deriveColumnMap(parsed: ParsedCsv): ColumnMap {
   mapping.dailyAmount = mapped.dailyAmount ?? -1
   mapping.status = mapped.status ?? -1
   mapping.marketCode = mapped.marketCode ?? -1
+  mapping.marketCity = mapped.marketCity ?? -1
+  mapping.marketAddress = mapped.marketAddress ?? -1
+  mapping.stallNumber = mapped.stallNumber ?? -1
   mapping.location = locationIndex
   mapping.legacyCode = mapped.legacyCode !== undefined && mapped.legacyCode !== locationIndex
     ? mapped.legacyCode
     : -1
+  mapping.typeCode = mapped.typeCode ?? -1
+  mapping.typeName = mapped.typeName ?? -1
+  mapping.period = mapped.period ?? -1
+  mapping.rateAmount = mapped.rateAmount ?? -1
   mapping.marketName = locateMarketNameColumn(mapped)
 
   if (mapping.marketName < 0 && mapping.marketCode >= 0) {
@@ -396,7 +491,14 @@ export function deriveSector(location: string, legacyCode = ''): string {
   return stripped || trimmed || 'Tanpa Blok'
 }
 
-export function deriveStallNumber(location: string, legacyCode: string, fallback: string): string {
+export function deriveStallNumber(
+  location: string,
+  legacyCode: string,
+  fallback: string,
+  explicit = ''
+): string {
+  if (explicit.trim()) return explicit.trim()
+
   const trimmed = location.trim()
   const legacy = legacyCode.trim()
   const niagaStyle = /^NDY[.\s]/i.test(legacy) || /^Blok\s+/i.test(trimmed)
@@ -485,7 +587,7 @@ export function buildImportRows(parsed: ParsedCsv, mapping: ColumnMap): ImportRo
     rows.push({
       line,
       stallCode,
-      stallNumber: deriveStallNumber(location, legacyCode, stallCode),
+      stallNumber: deriveStallNumber(location, legacyCode, stallCode, cellAt(row, mapping.stallNumber)),
       location: displayLocation,
       legacyCode,
       ownerName: resolvedOwner,
@@ -495,6 +597,172 @@ export function buildImportRows(parsed: ParsedCsv, mapping: ColumnMap): ImportRo
       sectorName: deriveSector(location, legacyCode),
       errors,
       warnings,
+      skip: errors.length > 0
+    })
+  })
+
+  return rows
+}
+
+export function detectImportKind(_parsed: ParsedCsv, mapping: ColumnMap): ImportKind {
+  const hasCombinedRate = mapping.annualAmount >= 0 || mapping.dailyAmount >= 0
+  const hasSplitRate = mapping.typeName >= 0 || mapping.typeCode >= 0 || mapping.rateAmount >= 0
+
+  if (hasCombinedRate) return 'combined'
+  if (hasSplitRate) return 'rates'
+  if (mapping.stallCode >= 0) return 'stalls'
+  if (mapping.marketName >= 0 || mapping.marketCity >= 0 || mapping.marketCode >= 0) return 'markets'
+  return 'combined'
+}
+
+export function buildMarketRows(parsed: ParsedCsv, mapping: ColumnMap): MarketInput[] {
+  const rows: MarketInput[] = []
+  const seenCodes = new Map<string, number>()
+
+  parsed.rows.forEach((row, index) => {
+    if (isHeaderLikeRow(row)) return
+
+    const code = cellAt(row, mapping.marketCode)
+    const name = cellAt(row, mapping.marketName)
+    const city = cellAt(row, mapping.marketCity)
+    const address = cellAt(row, mapping.marketAddress)
+    const statusRaw = cellAt(row, mapping.status)
+
+    if (!code && !name) return
+    if (normalizeHeader(code) === 'kodepasar' || normalizeHeader(name) === 'namapasar') return
+
+    const line = parsed.headerRowIndex + index + 2
+    const errors: string[] = []
+
+    if (!code) errors.push('Kode pasar kosong')
+    if (!name) errors.push('Nama pasar kosong')
+
+    if (code) {
+      const key = code.toLowerCase()
+      const firstLine = seenCodes.get(key)
+      if (firstLine !== undefined) {
+        errors.push(`Kode pasar duplikat dalam file (sudah ada di baris ${firstLine})`)
+      } else {
+        seenCodes.set(key, line)
+      }
+    }
+
+    rows.push({
+      line,
+      code: code.toUpperCase(),
+      name,
+      city,
+      address,
+      status: normalizeStatus(statusRaw),
+      errors,
+      skip: errors.length > 0
+    })
+  })
+
+  return rows
+}
+
+const PERIOD_UNITS: Record<string, string> = {
+  tahun: 'TAHUN',
+  tahunan: 'TAHUN',
+  thn: 'TAHUN',
+  tahunnya: 'TAHUN',
+  bulan: 'BULAN',
+  bulanan: 'BULAN',
+  bln: 'BULAN',
+  hari: 'HARI',
+  harian: 'HARI',
+  hr: 'HARI',
+  perhari: 'HARI',
+  minggu: 'MINGGU',
+  mingguan: 'MINGGU'
+}
+
+const inferUnit = (raw: string, typeName: string): string => {
+  const key = normalizeHeader(raw)
+  if (PERIOD_UNITS[key]) return PERIOD_UNITS[key]
+
+  const name = normalizeHeader(typeName)
+  if (name.includes('tahun') || name.includes('jastem')) return 'TAHUN'
+  if (name.includes('bulan')) return 'BULAN'
+  if (name.includes('minggu')) return 'MINGGU'
+  return 'HARI'
+}
+
+const deriveCategory = (typeName: string, unit: string): string => {
+  const name = normalizeHeader(typeName)
+  if (name.includes('jastem') || name.includes('sewa')) return 'SEWA'
+  if (name.includes('retribusi')) return 'RETRIBUSI'
+  return unit === 'TAHUN' || unit === 'BULAN' ? 'SEWA' : 'RETRIBUSI'
+}
+
+export function deriveTypeCode(marketCode: string, typeName: string, unit: string): string {
+  const prefix = marketCode.trim().toUpperCase() || 'PASAR'
+  const slug = typeName
+    .trim()
+    .toUpperCase()
+    .normalize('NFKD')
+    .replace(/[^A-Z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  return `${prefix}-${slug || `TARIF-${unit || 'HARIAN'}`}`
+}
+
+export function buildRateRows(
+  parsed: ParsedCsv,
+  mapping: ColumnMap,
+  fallbackMarketCode = ''
+): RateInput[] {
+  const rows: RateInput[] = []
+  const seenKeys = new Map<string, number>()
+
+  parsed.rows.forEach((row, index) => {
+    if (isHeaderLikeRow(row)) return
+
+    const marketRaw = cellAt(row, mapping.marketCode) || fallbackMarketCode
+    const stallCode = cellAt(row, mapping.stallCode)
+    const typeNameRaw = cellAt(row, mapping.typeName)
+    const typeCodeRaw = cellAt(row, mapping.typeCode)
+    const periodRaw = cellAt(row, mapping.period)
+    const amountRaw = cellAt(row, mapping.rateAmount)
+
+    if (!stallCode && !typeNameRaw && !typeCodeRaw && !amountRaw) return
+    if (normalizeHeader(stallCode) === 'kodelapak' || normalizeHeader(typeNameRaw) === 'jenisretribusi') return
+
+    const marketCode = marketRaw.trim().toUpperCase()
+    const line = parsed.headerRowIndex + index + 2
+    const errors: string[] = []
+
+    if (!marketCode) errors.push('Kode pasar kosong')
+    if (!stallCode) errors.push('Kode lapak kosong')
+    if (!typeNameRaw && !typeCodeRaw) errors.push('Jenis retribusi kosong')
+
+    const amount = parseAmount(amountRaw)
+    if (amount === null) errors.push('Jumlah tarif kosong atau tidak valid')
+
+    const typeName = typeNameRaw || typeCodeRaw
+    const unit = inferUnit(periodRaw, typeName)
+    const typeCode = (typeCodeRaw || deriveTypeCode(marketCode, typeName, unit)).toUpperCase()
+
+    if (stallCode && typeCode) {
+      const key = `${stallCode.toLowerCase()}:${typeCode}`
+      const firstLine = seenKeys.get(key)
+      if (firstLine !== undefined) {
+        errors.push(`Tarif ganda untuk lapak dan jenis yang sama (sudah ada di baris ${firstLine})`)
+      } else {
+        seenKeys.set(key, line)
+      }
+    }
+
+    rows.push({
+      line,
+      marketCode,
+      stallCode,
+      typeCode,
+      typeName,
+      unit,
+      category: deriveCategory(typeName, unit),
+      amount,
+      errors,
       skip: errors.length > 0
     })
   })

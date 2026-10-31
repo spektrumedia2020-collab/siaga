@@ -186,6 +186,28 @@
   color: #a52323;
 }
 
+.import-kind {
+  display: inline-block;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  background: var(--siaga-primary-light);
+  color: var(--siaga-primary-dark);
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.import-kind.is-rates {
+  background: #eaf1fb;
+  color: #24486f;
+}
+
+.import-kind.is-markets {
+  background: #fdf3e3;
+  color: #7a5410;
+}
+
+
 .import-remove {
   border: none;
   background: transparent;
