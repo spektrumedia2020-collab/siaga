@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-11-01T00:35:00+07:00",
+  "updated_at": "2026-10-31T03:41:30+07:00",
   "commit": "713c79bcfc80af41eb95ce03dcda5ff3d437a8f9",
   "checks": {
     "typecheck": {
@@ -29,7 +29,7 @@
     },
     "csv_split_ui": {
       "status": "PASS",
-      "evidence": "Uji browser 2026-10-31 pada dev server terautentikasi admin (#superadmin/import). Pasar: unggah contoh-pasar.csv -> 'Data pasar', 2 baris siap, pratinjau MKS/NGD; impor -> '2 pasar baru, 0 diperbarui'; Manajemen Pasar menampilkan NGD dan MKS dengan kode/kota/alamat/status benar; impor ulang -> '0 pasar baru, 0 diperbarui'. Lapak: unggah contoh-lapak.csv -> 'Data lapak', 5 baris, 2 sektor, 5 pemilik, 0 peringatan, pasar tujuan otomatis 'MKS - Pasar Contoh'; impor -> '5 lapak baru, 0 diperbarui' (2 sektor baru, 5 pemilik baru); Manajemen Pasar menampilkan '5 lapak' pada MKS; impor ulang -> '0 lapak baru, 0 lapak diperbarui', 0 sektor/pemilik baru. Alur UI tarif belum diuji di browser."
+      "evidence": "Uji browser 2026-10-31 pada dev server terautentikasi admin (#superadmin/import). Pasar: unggah contoh-pasar.csv -> 'Data pasar', 2 baris siap, pratinjau MKS/NGD; impor -> '2 pasar baru, 0 diperbarui'; Manajemen Pasar menampilkan NGD dan MKS dengan kode/kota/alamat/status benar; impor ulang -> '0 pasar baru, 0 diperbarui'. Lapak: unggah contoh-lapak.csv -> 'Data lapak', 5 baris, 2 sektor, 5 pemilik, 0 peringatan, pasar tujuan otomatis 'MKS - Pasar Contoh'; impor -> '5 lapak baru, 0 diperbarui' (2 sektor baru, 5 pemilik baru); Manajemen Pasar menampilkan '5 lapak' pada MKS; impor ulang -> '0 lapak baru, 0 lapak diperbarui', 0 sektor/pemilik baru. Tarif: unggah contoh-tarif.csv -> 'Tarif retribusi', 8 baris, 4 jenis, 4 lapak, pasar tujuan 'MKS - Pasar Contoh' (tanpa opsi buat pasar baru); impor -> '8 tarif baru, 0 tarif diperbarui' (4 jenis baru, 0 masalah); halaman Retribusi menampilkan 4 jenis (Jastem, Retribusi Harian, Sewa Tempat Harian, Sewa Tempat Tahunan); impor ulang -> '0 tarif baru, 0 tarif diperbarui' (0 jenis baru). Verifikasi langsung DB: 8 baris retribution_rates untuk 5 lapak MKS dengan nilai sesuai template (mis. MC-0001 Jastem 1.200.000 TAHUN, Retribusi Harian 9.000 HARI; MC-0004 Sewa Tahunan 1.800.000, Sewa Harian 10.000)."
     },
     "csv_import_parse": {
       "status": "PASS",
