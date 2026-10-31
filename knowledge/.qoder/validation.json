@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-10-31T20:25:00+07:00",
+  "updated_at": "2026-10-31T20:35:00+07:00",
   "checks": {
     "superadmin_market_access": {
       "status": "PASS",
@@ -288,7 +288,7 @@
     },
     "owners_phone_guard": {
       "status": "PASS",
-      "evidence": "2026-10-31. Ditemukan nomor HP pemilik kembali kosong (0 dari 740); dua baris (M. Saleh id 3834, Rusdi id 3962) terakhir diubah 12:01/12:17 UTC dan phone NULL — diduga tertimpa saat edit Pemilik dari daftar yang dimuat sebelum nomor tersimpan. Perbaikan `OwnersPage.handleSubmit`: sebelum update, ambil `phone` terbaru dari DB; jika field form kosong dan DB berisi nomor, nomor DB dipertahankan (tidak bisa terhapus tak sengaja lewat form). Typecheck 0 error, build PASS; commit 63ea191, CI 41204219315 success. Catatan: nomor pemilik perlu diisi ulang (Rusdi 081234567890 demo; M. Saleh 081320118218) lewat halaman Pemilik atau modal halaman lapak."
+      "evidence": "2026-10-31. Ditemukan nomor HP pemilik kembali kosong (0 dari 740); dua baris (M. Saleh id 3834, Rusdi id 3962) terakhir diubah 12:01/12:17 UTC dan phone NULL — diduga tertimpa saat edit Pemilik dari daftar yang dimuat sebelum nomor tersimpan. Perbaikan `OwnersPage.handleSubmit`: sebelum update, ambil `phone` terbaru dari DB; jika field form kosong dan DB berisi nomor, nomor DB dipertahankan (tidak bisa terhapus tak sengaja lewat form). Typecheck 0 error, build PASS; commit 63ea191, CI 41204219315 success. Catatan: nomor pemilik perlu diisi ulang (Rusdi 081234567890 demo; M. Saleh 081320118218) lewat halaman Pemilik atau modal halaman lapak. TINDAK LANJUT 2026-10-31: kedua nomor diisi ulang lewat modal wajib di halaman lapak — NGD-0001 (M. Saleh) 081320118218 dan NGD-0159 (Rusdi) 081234567890 (demo). Verifikasi DB: 2/740 pemilik punya nomor (panjang 12, akhiran 8218/7890); API `owner_has_phone=true` untuk NGD-0001 dan NGD-0159."
     },
     "annual_bills_web": {
       "status": "PASS",
