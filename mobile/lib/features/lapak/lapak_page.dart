@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -115,7 +116,6 @@ class _LapakPageState extends ConsumerState<LapakPage> {
             .eq('stall_id', stallId)
             .order('created_at', ascending: false)
             .limit(20),
-        _loadBills(stallId),
       ]);
 
       final officerRow = results[0] == null ? null : Map<String, dynamic>.from(results[0] as Map);
@@ -208,6 +208,9 @@ class _LapakPageState extends ConsumerState<LapakPage> {
           transactionHistory = historyRows;
         });
       }
+
+      // Bills load after the main content so they never delay the page.
+      unawaited(_loadBills(stallId));
     } on Exception catch (e) {
       debugPrint('Error in _loadLapakData: $e');
       if (mounted) {
