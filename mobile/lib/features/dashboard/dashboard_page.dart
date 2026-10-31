@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -646,9 +647,7 @@ class _BottomScanPageState extends ConsumerState<BottomScanPage> {
                 final code = raw == null ? null : extractStallCode(raw);
                 if (code != null && code != scannedCode) {
                   setState(() => scannedCode = code);
-                  if (mounted) {
-                    showInfoSnackBar(context, 'QR terdeteksi: $code');
-                  }
+                  HapticFeedback.mediumImpact();
                 }
               },
             ),
