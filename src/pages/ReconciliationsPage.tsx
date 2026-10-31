@@ -191,9 +191,9 @@ export function ReconciliationsPage({ marketId }: ReconciliationsPageProps) {
           <div style={{ fontSize: 13, color: '#1e40af' }}>Total Realisasi</div>
           <div style={{ fontSize: 22, fontWeight: 700, color: '#1e40af' }}>Rp {totalActual.toLocaleString('id-ID')}</div>
         </div>
-        <div style={{ padding: 16, background: totalDiff === 0 ? '#eef3fa' : '#fff7ed', border: `1px solid ${totalDiff === 0 ? '#c9d9ef' : '#fed7aa'}`, borderRadius: 8 }}>
-          <div style={{ fontSize: 13, color: totalDiff === 0 ? '#1d4e89' : '#9a3412' }}>Selisih</div>
-          <div style={{ fontSize: 22, fontWeight: 700, color: totalDiff === 0 ? '#1d4e89' : '#9a3412' }}>
+        <div style={{ padding: 16, background: totalDiff === 0 ? '#eef3fa' : '#fdf0f0', border: `1px solid ${totalDiff === 0 ? '#c9d9ef' : '#f3c7c7'}`, borderRadius: 8 }}>
+          <div style={{ fontSize: 13, color: totalDiff === 0 ? '#1d4e89' : '#b91c1c' }}>Selisih</div>
+          <div style={{ fontSize: 22, fontWeight: 700, color: totalDiff === 0 ? '#1d4e89' : '#b91c1c' }}>
             {totalDiff === 0 ? '✓ LUNAS' : `Rp ${Math.abs(totalDiff).toLocaleString('id-ID')} (${totalDiff > 0 ? 'Kurang' : 'Lebih'})`}
           </div>
         </div>
@@ -273,11 +273,11 @@ export function ReconciliationsPage({ marketId }: ReconciliationsPageProps) {
             </thead>
             <tbody>
               {paginatedSummaries.map((s) => {
-                const diffColor = s.difference === 0 ? '#1d4e89' : s.difference > 0 ? '#9a3412' : '#1e40af'
-                const diffBg = s.difference === 0 ? '#eef3fa' : s.difference > 0 ? '#fff7ed' : '#f0f9ff'
+                const diffColor = s.difference === 0 ? '#1d4e89' : s.difference > 0 ? '#b91c1c' : '#1e40af'
+                const diffBg = s.difference === 0 ? '#eef3fa' : s.difference > 0 ? '#fdf0f0' : '#f0f9ff'
 
                 return (
-                  <tr key={s.stall_id} style={{ borderBottom: '1px solid #e5e7eb', background: s.difference !== 0 ? '#fffbeb' : undefined }}>
+                  <tr key={s.stall_id} style={{ borderBottom: '1px solid #e5e7eb', background: s.difference !== 0 ? '#fdf2f2' : undefined }}>
                     <td style={{ padding: 10, border: '1px solid #e5e7eb', fontWeight: 600 }}>
                       {s.stall_code || s.stall_number || `#${s.stall_id}`}
                     </td>
@@ -300,8 +300,8 @@ export function ReconciliationsPage({ marketId }: ReconciliationsPageProps) {
                         borderRadius: 4,
                         fontSize: '0.85rem',
                         fontWeight: 600,
-                        background: s.difference === 0 ? '#d6e2f2' : '#ffccbc',
-                        color: s.difference === 0 ? '#1e3a8a' : '#d84315'
+                        background: s.difference === 0 ? '#d6e2f2' : '#fee2e2',
+                        color: s.difference === 0 ? '#1e3a8a' : '#b91c1c'
                       }}>
                         {s.difference === 0 ? 'LUNAS' : 'SELISIH'}
                       </span>

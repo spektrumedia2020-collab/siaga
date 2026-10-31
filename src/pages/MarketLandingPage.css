@@ -89,10 +89,10 @@ a:hover {
 .navbar {
   position: sticky;
   top: 0;
-  background: var(--white);
-  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, #e3efff 0%, #bfdbfe 100%);
+  border-bottom: 1px solid #93c5fd;
   z-index: 1000;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 6px 18px rgba(30, 58, 138, 0.14);
 }
 
 .navbar-container {

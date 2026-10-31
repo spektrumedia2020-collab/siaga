@@ -452,12 +452,12 @@ class _SetoranPageState extends ConsumerState<SetoranPage> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [Color(0xFFE6EDF7), Color(0xFFD8E3F3)],
+            colors: [Color(0xFFE3EFFF), Color(0xFFDBEAFE)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFF9DB6D8)),
+          border: Border.all(color: const Color(0xFF93C5FD)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

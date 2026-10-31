@@ -134,13 +134,13 @@
 }
 
 .tx-status-batal {
-  background: #ffccbc;
-  color: #d84315;
+  background: #fee2e2;
+  color: #b91c1c;
 }
 
 .tx-status-pending {
-  background: #fff9c4;
-  color: #f57f17;
+  background: #e3efff;
+  color: #1d4e89;
 }
 
 .tx-actions {

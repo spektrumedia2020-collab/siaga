@@ -24,7 +24,7 @@
 .public-stall-login-overlay { background: linear-gradient(160deg, rgba(29, 78, 137, .25), rgba(8, 26, 48, .94) 90%); }
 .public-stall-login-copy { position: absolute; inset: auto 44px 44px; color: #fff; }
 .public-stall-login-copy > img { width: 42px; height: 42px; object-fit: cover; margin-bottom: 58px; border: 2px solid rgba(255,255,255,.8); border-radius: 50%; }
-.public-stall-login-copy p, .public-stall-pin-heading p { margin: 0; color: #d9b38b; font: 700 11px/1.4 Arial, sans-serif; letter-spacing: .13em; text-transform: uppercase; }
+.public-stall-login-copy p, .public-stall-pin-heading p { margin: 0; color: #93c5fd; font: 700 11px/1.4 Arial, sans-serif; letter-spacing: .13em; text-transform: uppercase; }
 .public-stall-login-copy h1 { max-width: 390px; margin: 10px 0 14px; color: #fff !important; font: 500 clamp(2.2rem, 3.4vw, 3.4rem)/1.04 Georgia, 'Times New Roman', serif; letter-spacing: 0; }
 .public-stall-login-copy span { display: block; max-width: 340px; color: rgba(255,255,255,.8); font: 14px/1.6 Arial, sans-serif; }
 

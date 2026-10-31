@@ -168,8 +168,8 @@ export function SetoranPage({ marketId }: SetoranPageProps) {
 
   const statusColor = (status: string) => {
     if (status === 'approved') return { bg: '#d6e2f2', color: '#1e3a8a' }
-    if (status === 'rejected') return { bg: '#ffccbc', color: '#d84315' }
-    return { bg: '#fff9c4', color: '#f57f17' }
+    if (status === 'rejected') return { bg: '#fee2e2', color: '#b91c1c' }
+    return { bg: '#e3efff', color: '#1d4e89' }
   }
 
   const formatDate = (dateStr: string) => {
@@ -212,7 +212,7 @@ export function SetoranPage({ marketId }: SetoranPageProps) {
             cursor: 'pointer',
             fontWeight: 600,
             background: viewMode === 'summary' ? '#1e3a8a' : '#e0e0e0',
-            color: viewMode === 'summary' ? '#ffd700' : '#333'
+            color: viewMode === 'summary' ? '#ffffff' : '#333'
           }}
         >
           Ringkasan Petugas
@@ -226,7 +226,7 @@ export function SetoranPage({ marketId }: SetoranPageProps) {
             cursor: 'pointer',
             fontWeight: 600,
             background: viewMode === 'detail' ? '#1e3a8a' : '#e0e0e0',
-            color: viewMode === 'detail' ? '#ffd700' : '#333'
+            color: viewMode === 'detail' ? '#ffffff' : '#333'
           }}
         >
           Detail Setoran
@@ -337,13 +337,13 @@ export function SetoranPage({ marketId }: SetoranPageProps) {
                       Rp {o.total_setoran.toLocaleString('id-ID')}
                     </td>
                     <td style={{ padding: 10, border: '1px solid #e5e7eb', textAlign: 'center' }}>
-                      <span style={{ color: '#f57f17', fontWeight: 600 }}>{o.pending_count}</span>
+                      <span style={{ color: '#1d4e89', fontWeight: 600 }}>{o.pending_count}</span>
                     </td>
                     <td style={{ padding: 10, border: '1px solid #e5e7eb', textAlign: 'center' }}>
                       <span style={{ color: '#1e3a8a', fontWeight: 600 }}>{o.approved_count}</span>
                     </td>
                     <td style={{ padding: 10, border: '1px solid #e5e7eb', textAlign: 'center' }}>
-                      <span style={{ color: '#d84315', fontWeight: 600 }}>{o.rejected_count}</span>
+                      <span style={{ color: '#b91c1c', fontWeight: 600 }}>{o.rejected_count}</span>
                     </td>
                     <td style={{ padding: 10, border: '1px solid #e5e7eb', textAlign: 'center' }}>
                       <button
@@ -402,7 +402,7 @@ export function SetoranPage({ marketId }: SetoranPageProps) {
                           {statusLabel(s.status)}
                         </span>
                         {s.status === 'rejected' && s.rejection_reason && (
-                          <div style={{ fontSize: 12, color: '#d84315', marginTop: 4 }}>
+                          <div style={{ fontSize: 12, color: '#b91c1c', marginTop: 4 }}>
                             {s.rejection_reason}
                           </div>
                         )}

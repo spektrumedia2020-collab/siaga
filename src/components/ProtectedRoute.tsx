@@ -49,7 +49,7 @@ export function ProtectedRoute({
         alignItems: 'center',
         minHeight: '100vh',
         background: 'linear-gradient(135deg, #1e3a8a 0%, #1a1a1a 100%)',
-        color: '#ffd700'
+        color: '#ffffff'
       }}>
         <div style={{ textAlign: 'center' }}>
           <h2>Memuat...</h2>
@@ -67,7 +67,7 @@ export function ProtectedRoute({
         alignItems: 'center',
         minHeight: '100vh',
         background: 'linear-gradient(135deg, #1e3a8a 0%, #1a1a1a 100%)',
-        color: '#ffd700'
+        color: '#ffffff'
       }}>
         <div style={{ textAlign: 'center' }}>
           <h2>❌ Akses Ditolak</h2>

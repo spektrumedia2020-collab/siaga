@@ -16,11 +16,11 @@ interface Theme {
 const DEFAULT_THEMES: Theme[] = [
   {
     id: 'default',
-    name: 'Hijau (Default)',
+    name: 'Navy (Default)',
     primary_color: '#1e3a8a',
     secondary_color: '#23406b',
-    accent_color: '#f4c300',
-    description: 'Tema hijau klasik untuk semua pasar',
+    accent_color: '#60a5fa',
+    description: 'Tema navy dengan aksen biru muda untuk semua pasar',
     is_active: true
   },
   {
@@ -61,7 +61,7 @@ export function ThemeManagement() {
     name: '',
     primary_color: '#1e3a8a',
     secondary_color: '#23406b',
-    accent_color: '#f4c300',
+    accent_color: '#60a5fa',
     description: ''
   })
 
@@ -107,7 +107,7 @@ export function ThemeManagement() {
         name: '',
         primary_color: '#1e3a8a',
         secondary_color: '#23406b',
-        accent_color: '#f4c300',
+        accent_color: '#60a5fa',
         description: ''
       })
       setShowForm(false)
@@ -230,7 +230,7 @@ export function ThemeManagement() {
                   className="siaga-input"
                   value={formData.accent_color}
                   onChange={(e) => setFormData({ ...formData, accent_color: e.target.value })}
-                  placeholder="#f4c300"
+                  placeholder="#60a5fa"
                 />
               </div>
             </div>

@@ -332,8 +332,8 @@
   gap: 0.65rem;
   padding: 0.7rem 0.75rem;
   border-radius: 10px;
-  background: rgba(21, 44, 91, 0.06);
-  border: 1px solid rgba(11, 31, 58, 0.1);
+  background: linear-gradient(135deg, #e3efff 0%, #dbeafe 100%);
+  border: 1px solid #93c5fd;
 }
 
 .market-identity-icon {
@@ -433,7 +433,7 @@
 }
 
 .sidebar-profile:hover {
-  background: rgba(255, 250, 204, 1);
+  background: rgba(227, 239, 255, 1);
 }
 
 .sidebar-profile-avatar {
@@ -837,7 +837,7 @@
 }
 
 .sidebar-item:hover {
-  background: rgba(255, 250, 204, 1);
+  background: rgba(227, 239, 255, 1);
 }
 
 .sidebar-item.active {
@@ -875,14 +875,14 @@
 }
 
 .stat-card {
-  background: linear-gradient(135deg, #fff4a0 0%, #ffd500 55%, #cbb100 100%);
+  background: linear-gradient(135deg, #eef5ff 0%, #dbeafe 55%, #bfdbfe 100%);
   color: #0b1f3a;
   padding: 1.75rem;
   border-radius: 20px;
   display: flex;
   align-items: center;
   gap: 1rem;
-  box-shadow: 0 14px 30px rgba(132, 105, 9, 0.16);
+  box-shadow: 0 14px 30px rgba(30, 58, 138, 0.14);
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
@@ -913,10 +913,10 @@
 }
 
 .quick-actions-section {
-  background: linear-gradient(180deg, #fff7d1 0%, #fff1a5 45%, #ffec79 100%);
+  background: linear-gradient(180deg, #eef5ff 0%, #dbeafe 45%, #bfdbfe 100%);
   border-radius: 20px;
   padding: 2rem;
-  box-shadow: 0 10px 28px rgba(107, 96, 17, 0.13);
+  box-shadow: 0 10px 28px rgba(30, 58, 138, 0.12);
 }
 
 .quick-actions-section h3 {
@@ -1009,7 +1009,7 @@
   padding: 1.2rem 1.25rem;
   border-radius: 20px;
   box-shadow: 0 10px 24px rgba(16, 45, 84, 0.08);
-  border: 1px solid rgba(255, 214, 0, 0.15);
+  border: 1px solid rgba(147, 197, 253, 0.15);
   min-height: 126px;
 }
 
@@ -1094,12 +1094,12 @@
   border-radius: 999px;
 }
 
-.legend-dot.green {
+.legend-dot.navy {
   background: #152c5b;
 }
 
-.legend-dot.yellow {
-  background: #f4c300; /* keep as accent but used sparingly */
+.legend-dot.accent {
+  background: #60a5fa; /* keep as accent but used sparingly */
 }
 
 .chart-wrapper {
@@ -1154,7 +1154,7 @@
   border-radius: 24px;
   padding: 1.5rem;
   box-shadow: 0 14px 30px rgba(16, 45, 84, 0.1);
-  border: 1px solid rgba(255, 214, 0, 0.16);
+  border: 1px solid rgba(147, 197, 253, 0.16);
 }
 
 .side-card-header {
@@ -1205,9 +1205,9 @@
   display: grid;
   gap: 0.75rem;
   padding: 1rem;
-  background: rgba(255, 244, 179, 0.95);
+  background: rgba(219, 234, 254, 0.95);
   border-radius: 18px;
-  border: 1px solid rgba(189, 148, 0, 0.2);
+  border: 1px solid rgba(147, 197, 253, 0.5);
 }
 
 .asset-percent {
@@ -1276,8 +1276,8 @@
 }
 
 .status-nonaktif {
-  background-color: #ffe7a5;
-  color: #8b4f05;
+  background-color: #dbeafe;
+  color: #152c5b;
 }
 
 .loading {
@@ -1291,7 +1291,7 @@
 }
 
 .error-message {
-  background: #fff0dd;
+  background: #f2f7ff;
   border-radius: 18px;
   padding: 2rem;
   text-align: center;
@@ -1387,7 +1387,7 @@
   border-radius: 24px;
   padding: 1.5rem;
   box-shadow: 0 16px 32px rgba(16, 45, 84, 0.1);
-  border: 1px solid rgba(255, 214, 0, 0.18);
+  border: 1px solid rgba(147, 197, 253, 0.18);
   margin-bottom: 1.75rem;
 }
 
@@ -1417,7 +1417,7 @@
 }
 
 .data-table thead {
-  background: rgba(255, 240, 126, 0.95);
+  background: rgba(191, 219, 254, 0.95);
 }
 
 .data-table th,
@@ -1434,7 +1434,7 @@
 }
 
 .data-table tbody tr:hover {
-  background: rgba(255, 246, 189, 0.6);
+  background: rgba(219, 234, 254, 0.6);
 }
 
 .no-data {
@@ -1448,7 +1448,7 @@
   border-radius: 22px;
   padding: 1.75rem;
   box-shadow: 0 14px 30px rgba(16, 45, 84, 0.08);
-  border: 1px solid rgba(255, 214, 0, 0.16);
+  border: 1px solid rgba(147, 197, 253, 0.16);
   margin-bottom: 1.75rem;
 }
 
@@ -1510,7 +1510,7 @@
 }
 
 .btn-secondary {
-  background: rgba(255, 244, 179, 0.95);
+  background: rgba(219, 234, 254, 0.95);
   color: #0b1f3a;
   border: 1px solid rgba(11, 31, 58, 0.16);
 }

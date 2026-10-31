@@ -5,7 +5,9 @@ class AppTheme {
   static const Color primaryLight = Color(0xFF3B6FB5);
   static const Color primaryDark = Color(0xFF152C5B);
   static const Color navyInk = Color(0xFF0B1F3A);
-  static const Color navyTint = Color(0xFFE6EDF7);
+  static const Color navyTint = Color(0xFFDBEAFE);
+  static const Color headerLight = Color(0xFFE3EFFF);
+  static const Color headerLightTo = Color(0xFFBFDBFE);
 
   static ThemeData get lightTheme {
     final colorScheme = ColorScheme.fromSeed(
@@ -32,9 +34,12 @@ class AppTheme {
           TargetPlatform.windows: ZoomPageTransitionsBuilder(),
         },
       ),
-      appBarTheme: AppBarTheme(
-        backgroundColor: colorScheme.primary,
-        foregroundColor: colorScheme.onPrimary,
+      appBarTheme: const AppBarTheme(
+        backgroundColor: headerLight,
+        foregroundColor: navyInk,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 2,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(

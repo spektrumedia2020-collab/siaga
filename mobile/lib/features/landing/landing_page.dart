@@ -98,8 +98,8 @@ class _LandingPageState extends State<LandingPage> {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      AppTheme.primaryNavy,
-                      AppTheme.primaryDark,
+                      AppTheme.headerLight,
+                      AppTheme.headerLightTo,
                     ],
                   ),
                   borderRadius: BorderRadius.only(
@@ -118,7 +118,7 @@ class _LandingPageState extends State<LandingPage> {
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.15),
+                            color: AppTheme.primaryNavy.withValues(alpha: 0.18),
                             blurRadius: 20,
                             offset: const Offset(0, 8),
                           ),
@@ -141,7 +141,7 @@ class _LandingPageState extends State<LandingPage> {
                     const Text(
                       'SiAga Officer',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: AppTheme.navyInk,
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1,
@@ -151,7 +151,7 @@ class _LandingPageState extends State<LandingPage> {
                     Text(
                       'Aplikasi Petugas Retribusi Pasar',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.85),
+                        color: AppTheme.navyInk.withValues(alpha: 0.75),
                         fontSize: 14,
                       ),
                     ),
@@ -168,10 +168,10 @@ class _LandingPageState extends State<LandingPage> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: _isOnlineMode ? const Color(0xFFE6EDF7) : Colors.orange[50],
+                    color: _isOnlineMode ? AppTheme.headerLight : Colors.orange[50],
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: _isOnlineMode ? const Color(0xFF9DB6D8) : Colors.orange[200]!,
+                      color: _isOnlineMode ? const Color(0xFF93C5FD) : Colors.orange[200]!,
                       width: 2,
                     ),
                   ),

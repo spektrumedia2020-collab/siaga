@@ -1008,19 +1008,19 @@ export function MarketDashboard({ userId, onLogout }: Props) {
             label: 'Total Revenue',
             value: `Rp ${totalRevenue.toLocaleString('id-ID')}`,
             detail: 'Total pendapatan semua transaksi',
-            color: '#fff3b0'
+            color: '#dbeafe'
           },
           {
             label: 'Transaksi',
             value: transactionCount.toLocaleString('id-ID'),
             detail: 'Jumlah transaksi hari ini',
-            color: '#fff0a2'
+            color: '#dbeafe'
           },
           {
             label: 'Lapak',
             value: stallCount.toLocaleString('id-ID'),
             detail: 'Lapak aktif di pasar',
-            color: '#fff6c1'
+            color: '#e3efff'
           }
         ]
 
@@ -1087,8 +1087,8 @@ export function MarketDashboard({ userId, onLogout }: Props) {
                 </div>
                 <div className="chart-display">
                   <div className="chart-legend">
-                    <span className="legend-dot green" /> Pendapatan
-                    <span className="legend-dot yellow" /> Transaksi
+                    <span className="legend-dot navy" /> Pendapatan
+                    <span className="legend-dot accent" /> Transaksi
                   </div>
                   <div className="chart-wrapper">
                     <ResponsiveContainer width="100%" height={260}>
@@ -1096,7 +1096,7 @@ export function MarketDashboard({ userId, onLogout }: Props) {
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(11, 31, 58, 0.12)" />
                         <XAxis dataKey="name" stroke="#23406b" tickLine={false} axisLine={false} />
                         <YAxis yAxisId="revenue" stroke="#23406b" tickLine={false} axisLine={false} tickFormatter={(value) => `${Math.round(Number(value) / 1000)}k`} />
-                        <YAxis yAxisId="transactions" orientation="right" stroke="#b58b00" tickLine={false} axisLine={false} allowDecimals={false} />
+                        <YAxis yAxisId="transactions" orientation="right" stroke="#2f5b92" tickLine={false} axisLine={false} allowDecimals={false} />
                         <Tooltip
                           formatter={(value: number | string | readonly (number | string)[] | undefined) => {
                             if (typeof value === 'number') {
@@ -1112,7 +1112,7 @@ export function MarketDashboard({ userId, onLogout }: Props) {
                         />
                         <Legend verticalAlign="top" height={36} />
                         <Line yAxisId="revenue" type="monotone" dataKey="revenue" stroke="#152c5b" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                        <Line yAxisId="transactions" type="monotone" dataKey="transactions" stroke="#f4c300" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                        <Line yAxisId="transactions" type="monotone" dataKey="transactions" stroke="#60a5fa" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
                       </LineChart>
                     </ResponsiveContainer>
                   </div>

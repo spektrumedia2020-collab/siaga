@@ -146,7 +146,7 @@ export function Dashboard({ user, onLogout, isDashboardHeader, children, activeR
     return (
       <div className="dashboard">
         {isMarketAdmin && (
-          <div style={{background:'#fff3cd',padding:'8px 12px',textAlign:'center'}}>
+          <div style={{background:'#e3efff',padding:'8px 12px',textAlign:'center'}}>
             <strong>Mode baca-saja</strong> — pengelolaan pasar kini hanya dapat dilakukan oleh Admin.
           </div>
         )}
@@ -188,7 +188,7 @@ export function Dashboard({ user, onLogout, isDashboardHeader, children, activeR
   return (
     <div className="dashboard">
       {isMarketAdmin && (
-        <div style={{background:'#fff3cd',padding:'8px 12px',textAlign:'center'}}>
+        <div style={{background:'#e3efff',padding:'8px 12px',textAlign:'center'}}>
           <strong>Mode baca-saja</strong> — pengelolaan pasar kini hanya dapat dilakukan oleh Admin.
         </div>
       )}

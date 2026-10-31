@@ -172,8 +172,8 @@
 }
 
 .import-badge.is-running {
-  background: #fff4d1;
-  color: #8a6400;
+  background: #e8f1ff;
+  color: #1d4e89;
 }
 
 .import-badge.is-done {
@@ -203,8 +203,8 @@
 }
 
 .import-kind.is-markets {
-  background: #fdf3e3;
-  color: #7a5410;
+  background: #f4f8ff;
+  color: #152c5b;
 }
 
 
@@ -256,7 +256,7 @@
 }
 
 .import-stat.is-warn span {
-  color: #a86400;
+  color: #1d4e89;
 }
 
 .import-controls {
@@ -326,10 +326,10 @@
 .import-errors {
   padding: 0.75rem 1rem;
   border-radius: var(--siaga-radius-md);
-  background: #fff8e6;
-  border: 1px solid #f0d492;
+  background: #f2f7ff;
+  border: 1px solid #bfdbfe;
   font-size: 0.86rem;
-  color: #6b4f00;
+  color: #0b1f3a;
 }
 
 .import-errors ul {
@@ -400,7 +400,7 @@
   gap: 0.75rem;
   flex-wrap: wrap;
   font-size: 0.86rem;
-  color: #8a6400;
+  color: #1d4e89;
 }
 
 .import-ok {

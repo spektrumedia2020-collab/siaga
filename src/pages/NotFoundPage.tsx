@@ -2,7 +2,7 @@ export function NotFoundPage() {
   return (
     <main style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: '#f7f9fc', padding: 24 }}>
       <div style={{ textAlign: 'center', maxWidth: 420 }}>
-        <p style={{ margin: 0, color: '#a26035', fontWeight: 700, letterSpacing: '0.12em', fontSize: 12 }}>SIAGA</p>
+        <p style={{ margin: 0, color: '#3b6fb5', fontWeight: 700, letterSpacing: '0.12em', fontSize: 12 }}>SIAGA</p>
         <h1 style={{ margin: '8px 0 12px', fontSize: 56, color: '#0b1f3a' }}>404</h1>
         <p style={{ margin: '0 0 24px', color: '#626a7d' }}>Halaman yang Anda cari tidak ditemukan.</p>
         <a

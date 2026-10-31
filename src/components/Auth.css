@@ -36,11 +36,11 @@
 .auth-visual-overlay { background: linear-gradient(160deg, rgba(12, 40, 78, .28), rgba(8, 24, 44, .94) 86%); }
 .auth-visual-copy { position: absolute; inset: auto 52px 52px; color: #f7f9fc; }
 .auth-visual-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 74px; font: 700 18px Georgia, serif; }
-.auth-visual-brand img { width: 34px; height: 34px; object-fit: cover; border-radius: 50%; border: 2px solid rgba(255, 253, 248, .8); }
-.auth-visual-kicker, .auth-eyebrow { color: #bb7a4a; font: 700 11px/1.4 Arial, sans-serif; letter-spacing: .13em; text-transform: uppercase; }
-.auth-visual-kicker { color: #d6b18b; }
+.auth-visual-brand img { width: 34px; height: 34px; object-fit: cover; border-radius: 50%; border: 2px solid rgba(219, 234, 254, .8); }
+.auth-visual-kicker, .auth-eyebrow { color: #3b6fb5; font: 700 11px/1.4 Arial, sans-serif; letter-spacing: .13em; text-transform: uppercase; }
+.auth-visual-kicker { color: #93c5fd; }
 .auth-visual-copy h1 { max-width: 430px; margin: 10px 0 16px; color: #f7f9fc; font: 500 clamp(2.35rem, 3.4vw, 3.7rem)/1.02 Georgia, serif; letter-spacing: 0; }
-.auth-visual-copy > p:last-child { max-width: 390px; color: rgba(255, 253, 248, .78); font: 15px/1.65 Arial, sans-serif; }
+.auth-visual-copy > p:last-child { max-width: 390px; color: rgba(219, 234, 254, .78); font: 15px/1.65 Arial, sans-serif; }
 .auth-form-intro { margin-bottom: 24px; }
 .auth-eyebrow { margin-bottom: 8px; }
 
@@ -226,5 +226,5 @@
 }
 
 .link-button:hover {
-  color: #ffd700;
+  color: #1d4e89;
 }

@@ -4,9 +4,12 @@
   /* Colors */
   --siaga-primary: #1e3a8a;
   --siaga-primary-dark: #0b1f3a;
-  --siaga-primary-light: #dbe6f4;
-  --siaga-accent: #f4c300;
-  --siaga-accent-light: #fff3b0;
+  --siaga-primary-light: #dbeafe;
+  --siaga-accent: #60a5fa;
+  --siaga-accent-light: #dbeafe;
+  --siaga-header-from: #e3efff;
+  --siaga-header-to: #bfdbfe;
+  --siaga-header-text: #0f2a52;
   
   /* Background */
   --siaga-bg-primary: #f4f7fc;
@@ -181,8 +184,8 @@ body {
 }
 
 .siaga-badge-inactive {
-  background: #ffccbc;
-  color: #d84315;
+  background: #fee2e2;
+  color: #b91c1c;
 }
 
 /* Table Components */

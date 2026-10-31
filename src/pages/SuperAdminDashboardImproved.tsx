@@ -13,7 +13,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, Legend
 } from 'recharts'
 
-const CHART_COLORS = ['#1e3a8a', '#f4c300', '#23406b', '#ff6b6b', '#4b73d0', '#45b7d1']
+const CHART_COLORS = ['#1e3a8a', '#60a5fa', '#23406b', '#ff6b6b', '#4b73d0', '#45b7d1']
 
 const PAGE_SIZE = 1000
 
@@ -635,7 +635,7 @@ export function SuperAdminDashboardImproved() {
                     <XAxis dataKey="day" />
                     <YAxis />
                     <Tooltip />
-                    <Bar dataKey="count" fill="#f4c300" name="Jumlah Transaksi" />
+                    <Bar dataKey="count" fill="#60a5fa" name="Jumlah Transaksi" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
