@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-10-31T15:05:00+07:00",
+  "updated_at": "2026-10-31T15:20:00+07:00",
   "checks": {
     "superadmin_market_access": {
       "status": "PASS",
@@ -201,6 +201,10 @@
     "green_hardcode_removed": {
       "status": "PASS",
       "evidence": "2026-10-31, permintaan \"ganti semua sisa hijau itu ke navy, langsung kerjakan\" setelah audit warna. Pemindai Node menghitung hue/saturasi setiap token warna di src/, public/, index.html, dan mobile/lib (105 file, 1.171 token) — 10 temuan hijau sebelum perbaikan, 0 setelah. Perbaikan: index.html theme-color #1f7a1f -> #1e3a8a; public/manifest.webmanifest theme_color #1f7a1f -> #1e3a8a dan background_color #eef4e9 -> #e3efff; src/components/Auth.css rgba(24,50,42,.1/.18) -> rgba(11,31,58,.1/.18); src/pages/MarketDashboard.css 4x rgba(16,24,18,…) -> rgba(11,31,58,…); mobile Colors.teal -> const Color(0xFF1D4E89) di lapak_page.dart:727, reconciliation_page.dart:167, summary_page.dart:205. Verifikasi: `npm run typecheck` 0 error; `npm run build` sukses (dist/assets/index.Ti3O8gts.css); grep build output untuk rgba(16,24,18)/rgba(24,50,42)/#1f7a1f/#eef4e9 = 0; `flutter analyze` \"No issues found!\"; `flutter test` \"All tests passed!\". Deploy: commit `48621e7` di-push ke main, CI run `41181269280` hijau (Web + Mobile + SQL). Produksi: https://siaga-pi.vercel.app index.html memuat theme-color #1e3a8a; /manifest.webmanifest menyajikan background #e3efff + theme #1e3a8a; assets/index.Ti3O8gts.css 0 kemunculan rgba hijau. Warna hangat yang memang dipertahankan (bukan hijau): merah error #b91c1c, `Colors.orange` untuk status belum-bayar/offline di mobile, dan preset tema pasar \"Sunset Orange\"."
+    },
+    "market_theme_applied_ngd": {
+      "status": "PASS",
+      "evidence": "2026-10-31, permintaan \"terapkan tema navy ke pasar, kerjakan sekarang\". Dijalankan lewat pooler IPv4, transaksi tunggal: `update markets set theme_id='default' where id=39 and (theme_id is null or theme_id <> 'default');` -> 1 baris. Sebelum: markets = [{id:39, name:'Niaga Daya', theme_id:null}]. Sesudah: theme_id='default' (Navy (Default), is_active true). Pernyataan ini identik dengan yang dijalankan tombol \"Terapkan ke Pasar\" di `src/pages/ThemeManagement.tsx:126` (supabase.from(markets).update({theme_id}).eq(id, marketId)). PENTING: belum ada halaman yang membaca `markets.theme_id` — grep `theme` di `market_themes`/`theme_id` hanya menemukan ThemeManagement, jadi penerapan ini tersimpan di DB tetapi tidak mengubah satu pun warna tampilan. Tampilan web sudah navy dari palet global, sehingga hasil visualnya memang sama. Bila tema per pasar harus berpengaruh visual, langkah berikutnya adalah memetakan theme_id -> CSS variable di MarketLandingPage/MarketDashboard (belum dikerjakan, menunggu keputusan pemilik)."
     }
   }
 }

@@ -32,18 +32,18 @@
   "memory_version": 1,
   "context_version": 1,
   "skill_registry_version": 1,
-  "current_task": "Selesai: sisa hardcode hijau (HTML/manifest/shadow/teal mobile) diganti navy, deploy 48621e7",
+  "current_task": "Selesai: tema 'default' (Navy) diterapkan ke Pasar Niaga Daya (markets.id=39)",
   "last_task": "Audit + hapus seluruh sisa warna hijau di frontend",
   "last_session_id": "SESSION-2026-10-31-3",
   "last_scan": "2026-10-25T20:05:00+07:00",
   "last_index": "",
-  "last_updated": "2026-10-31T15:05:00+07:00",
-  "last_validation": "2026-10-31T15:05:00+07:00",
+  "last_updated": "2026-10-31T15:20:00+07:00",
+  "last_validation": "2026-10-31T15:20:00+07:00",
   "last_test_status": "pass",
   "last_command": "IMPLEMENT",
   "last_command_status": "COMPLETED",
   "open_wave": null,
   "dirty": false,
   "drift_detected": false,
-  "next_step": "Frontend bebas warna hijau (pemindai hue: 0 temuan; produksi sudah menyajikan manifest + CSS baru). Sisa pekerjaan: (1) uji alur petugas (login petugas belum punya auth_uid), (2) mobile belum dijalankan di emulator sejak perubahan warna, (3) tawaran opsional: ganti `Colors.orange` status belum-bayar/offline bila ingin benar-benar hanya biru+merah."
+  "next_step": "Tema navy tersimpan di markets.theme_id=default untuk id 39, tetapi belum ada pembaca theme_id di frontend — tema belum memengaruhi warna. Kandidat berikutnya: (1) sambungkan theme_id ke CSS variable landing/dashboard bila pemilik ingin tema per pasar benar-benar berlaku, (2) uji alur petugas (belum punya auth_uid), (3) opsional `Colors.orange` status belum-bayar/offline."
 }
