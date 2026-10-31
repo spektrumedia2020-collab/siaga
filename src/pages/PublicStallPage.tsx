@@ -217,6 +217,7 @@ export function PublicStallPage({ token, marketId, stallCode }: Props) {
     : summary.today.status === 'BELUM'
       ? 'Belum ditarik'
       : 'Tanpa tarif harian'
+  const todayTone = summary.today.status === 'SUDAH' ? 'paid' : summary.today.status === 'BELUM' ? 'unpaid' : 'none'
   const billStatusLabel = (status: string) => (
     status === 'LUNAS' ? 'Lunas' : status === 'CICILAN' ? 'Cicilan' : status === 'DIBATALKAN' ? 'Dibatalkan' : 'Belum lunas'
   )
@@ -227,6 +228,22 @@ export function PublicStallPage({ token, marketId, stallCode }: Props) {
   return (
     <main className="public-stall-page">
       <div className="public-stall-panel">
+        <section className={`public-stall-today public-stall-today--${todayTone}`} aria-live="polite">
+          <div>
+            <span className="public-stall-today-label">Hari ini · {formatDate(summary.today.date)}</span>
+            <strong className="public-stall-today-status">{todayLabel}</strong>
+          </div>
+          <div className="public-stall-today-meta">
+            {summary.today.amount > 0 ? (
+              <>Dibayar <strong>{formatRupiah(summary.today.amount)}</strong></>
+            ) : summary.today.daily_due > 0 ? (
+              <>Tarif <strong>{formatRupiah(summary.today.daily_due)}</strong></>
+            ) : (
+              'Tidak ada tarif harian'
+            )}
+          </div>
+        </section>
+
         <div className="public-stall-brand">
           <img src={market.photo_url || '/logo.jpeg'} alt={`Logo Pasar ${market.name}`} />
           <div>
@@ -250,21 +267,10 @@ export function PublicStallPage({ token, marketId, stallCode }: Props) {
           <div><dt>Kota</dt><dd>{market.city || '-'}</dd></div>
         </dl>
 
-        <div className="public-stall-summary-row">
+        <div className="public-stall-summary-row public-stall-summary-row--three">
           <div className="public-stall-summary-card">
             <span>Total dibayar</span>
             <strong>{formatRupiah(summary.total_paid)}</strong>
-          </div>
-          <div className="public-stall-summary-card">
-            <span>Hari ini</span>
-            <strong>{todayLabel}</strong>
-            <small className="public-stall-card-note">
-              {summary.today.amount > 0
-                ? formatRupiah(summary.today.amount)
-                : summary.today.daily_due > 0
-                  ? `Tarif ${formatRupiah(summary.today.daily_due)}`
-                  : '-'}
-            </small>
           </div>
           <div className="public-stall-summary-card">
             <span>Tunggakan</span>
