@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-10-31T18:50:00+07:00",
+  "updated_at": "2026-10-31T19:05:00+07:00",
   "checks": {
     "superadmin_market_access": {
       "status": "PASS",
@@ -265,6 +265,10 @@
     "multi_retribution_and_pin_ux": {
       "status": "PASS",
       "evidence": "2026-10-31. Retribusi ganda per lapak didukung DB: `retribution_rates` ber-UNIQUE (stall_id, types_id) sehingga satu lapak boleh punya banyak jenis (mis. NGD-0150: 102 Sewa Tahunan + 103 Sewa Harian), dan `retribution_bills` ber-UNIQUE (stall_id, types_id, period_year) untuk banyak tagihan tahunan. API menambah `summary.today.daily_items[]` ({name, amount, paid}) untuk semua tarif unit HARI; UI banner menampilkan daftar per jenis dengan badge LUNAS/BELUM bila lebih dari satu. PIN: `/api/lapak?...&pin_status=1` mengembalikan { pin_is_default } tanpa PIN (memakai verify_stall_pin dengan '7777' via service role); summary terautorisasi juga memuat pin_is_default. Gate hanya menampilkan 'PIN awal 7777' bila pin_is_default=true; bagian PIN menampilkan 'PIN sudah diganti' setelah berubah; tombol 'Lupa PIN?' membuka instruksi reset lewat pengelola/admin. Verifikasi handler: pin_status true untuk PIN default, daily_items [{Sewa Tempat Harian,5000,false}]. Produksi www.siaga.app (commit c4cf1c7, CI 41197888919 success): pin_status true + hint 7777 tampil; dengan initScript memaksa pin_is_default=false, hint berubah menjadi 'Masukkan PIN pemilik lapak Anda.' Uji UI dev dengan 2 tarif harian (Sewa Tempat Harian LUNAS, Kebersihan BELUM) menampilkan daftar di banner; catatan PIN menjadi 'PIN sudah diganti.'"
+    },
+    "pin_reset_phone_flow": {
+      "status": "PASS",
+      "evidence": "2026-10-31. Migration 023 dijalankan pemilik: `reset_stall_pin_with_phone(text,text,text)` SECURITY DEFINER, EXECUTE hanya service_role (anon/authenticated false). Nomor HP demo 081234567890 dipasang pada pemilik NGD-0150 (placeholder; pemilik lain 0 dari 1396). Uji rollback dengan nomor tersimpan: reset berhasil, PIN 4321 berlaku dan 7777 tidak lagi; nomor salah ditolak 'Nomor HP tidak cocok'; format 62… diterima; residu stall_access_pins 0. API `action=reset_pin` divalidasi (wajib POST, PIN 4 angka, nomor >= 8 digit), rate limit 5 percobaan/10 menit per lapak + pg_sleep 0,5 dtk, dan 503 bila fungsi belum ada; sebelum nomor diisi API mengembalikan 'Nomor HP pemilik belum terdaftar'. Form Lupa PIN (nomor HP + PIN baru + konfirmasi) live di https://www.siaga.app/lapak/<token>. Commit kode 82f5d16, CI 41198494812 success."
     },
     "annual_bills_web": {
       "status": "PASS",
