@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "updated_at": "2026-10-31T12:45:00+07:00",
-  "commit": "9d066a4",
+  "updated_at": "2026-10-31T13:15:00+07:00",
+  "commit": "247d507",
   "checks": {
     "superadmin_market_access": {
       "status": "PASS",
@@ -150,6 +150,14 @@
     "delete_sample_market_mks": {
       "status": "PASS",
       "evidence": "2026-10-31, atas instruksi \"contoh pasar hapus juga\": pasa contoh MKS (id 34) di-snapshot lebih dulu ke knowledge/.qoder/index/snapshots/2026-10-31T12-30-00/ (mks-backup.json + manifest.json dengan sha256; 1 market, 5 stalls, 2 sector, 5 owner, 4 types, 8 rates), lalu dihapus dalam satu transaksi pooler dengan urutan rates 8 -> stalls 5 -> sectors 2 -> types 4 -> owners yatim 5 -> market 1, COMMIT hanya setelah guard pasca-delete lolos: markets=0, stalls=0, stall_owners=0, market_sectors=0, retribution_types=0, retribution_rates=0, transactions=0, users=1, market_themes=4. Verifikasi: PostgREST anon /rest/v1/markets dan /rest/v1/stalls HTTP 200 []. Landing produksi /@MKS -> \"Pasar tidak ditemukan\". UI admin tidak diverifikasi ulang: sesi browser dalam keadaan keluar (halaman login) dan kredensial tidak dimasukkan."
+    },
+    "ngd_import": {
+      "status": "PASS",
+      "evidence": "2026-10-31, impor 1 pasar lewat UI Import di dev lokal (http://localhost:5199/#superadmin/import, sesi admin): berkas \"NIAGA DAYA - NIAGA DAYA.csv\" -> format gabungan, 1396 baris/0 dilewati, 24 sektor, 37 peringatan duplikat kode lama; pasar baru NGD / Niaga Daya dibuat dari berkas. Ringkasan UI: 1396 baris diimpor, 0 dilewati, 24 sektor baru, 740 pemilik baru, 1396 lapak baru, 2 jenis baru, 2792 tarif baru, 0 gagal. Verifikasi pooler: markets id 39 NGD/Niaga Daya/Makassar/AKTIF; stalls 1396 (semua AKTIF, legacy_code terisi 1396/1396), market_sectors 24, stall_owners 740, retribution_types 2 (NGD-SEWA-HARIAN, NGD-SEWA-TAHUNAN), retribution_rates 2792 (min Rp 5.000, maks Rp 12.750.000, semua > 0). Manajemen Pasar menampilkan 1 kartu NGD '1396 lapak'; halaman Retribusi menampilkan 2 jenis. Contoh baris: NGD-0001 / No. 01 / kode lama 1 / Blok I / M. Saleh."
+    },
+    "import_summary_market_counter": {
+      "status": "PASS",
+      "evidence": "Bug ditemukan saat impor NGD: runStallImport dan runCsvImport menyetel marketCreated tetapi tidak marketsCreated, sehingga ringkasan menampilkan \"0 pasar baru\" meski pasar dibuat (footer 'Pasar baru dibuat dari berkas ini' benar). Diperbaiki dengan summary.marketsCreated = created ? 1 : 0 di kedua runner; `npm run typecheck` 0 error dan `npm run build` sukses 3.39s."
     }
   }
 }

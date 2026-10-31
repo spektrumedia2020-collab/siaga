@@ -38,6 +38,8 @@
 | 39 | Kode lama lapak (migration 018 + UI/QR) | **SELESAI** | Kolom `legacy_code` di prod; kolom/field/QR label; deploy `d180591` |
 | 40 | Impor 4 CSV legacy lalu rollback penuh | **SELESAI** | 4098 lapak / 7196 tarif / 3 pasar; typed "HAPUS DATA IMPOR" → semua dihapus satu transaksi |
 | 41 | Hapus pasar NGD & pasar contoh MKS | **SELESAI** | Typed "HAPUS NGD" + "contoh pasar hapus juga"; markets=0, stalls=0; snapshot MKS tersimpan |
+| 42 | Impor 1 pasar nyata (NGD) lewat UI lokal | **SELESAI** | 1396 lapak, 24 sektor, 740 pemilik, 2 jenis, 2792 tarif; 0 gagal; terverifikasi via pooler |
+| 43 | Perbaiki penghitung "pasar baru" di ringkasan impor | **SELESAI** | `summary.marketsCreated` diisi di runner gabungan & lapak; typecheck/build PASS |
 | 14 | P0-03 — env PIN lapak + deploy | **DIGANTI** | PIN dihapus; digantikan token QR per lapak (migration 016) |
 | 15 | Role: MARKET_HEAD read-only + hapus impersonation | **SELESAI** | Migration 014; build PASS; deploy `86b62d6` |
 | 16 | P0-12 — kredensial admin di halaman publik | **SELESAI (kode)** | Bundle bersih; rotasi password dipilih tidak dilakukan user |
@@ -68,9 +70,11 @@
 
 - Tidak ada blocker teknis aktif; typecheck/build/simulasi impor lokal hijau.
 - Risiko diterima: password `admin@siaga.id` tidak dirotasi (keputusan user, S-18).
-- Data operasional produksi kosong (0 pasar/lapak/tarif/transaksi) — diisi lewat Manajemen Pasar,
-  tab Import Data (4 CSV gabungan di root repo, atau 3 CSV terpisah), atau pulihkan snapshot
-  `knowledge/.qoder/index/snapshots/2026-10-31T12-30-00/`.
+- Produksi kini berisi 1 pasar nyata: NGD / Niaga Daya (1396 lapak, 24 sektor, 740 pemilik,
+  2 jenis sewa, 2792 tarif). SWH/PNK/TRG belum diimpor.
+- Ditemukan tapi belum diperbaiki: query Overview Superadmin memakai kolom yang tidak ada
+  (`stalls.name`, `users.display_name/full_name`) sehingga dua request 400 dan statistik 0
+  ([SuperAdminDashboardImproved.tsx:168](../../src/pages/SuperAdminDashboardImproved.tsx#L168)).
 
 ## Team Waves
 

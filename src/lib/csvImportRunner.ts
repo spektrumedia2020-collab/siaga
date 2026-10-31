@@ -690,6 +690,7 @@ export async function runStallImport(
   progress('Menyiapkan pasar tujuan…')
   const { market, created } = await resolveMarket(client, options)
   summary.marketCreated = created
+  summary.marketsCreated = created ? 1 : 0
 
   progress('Menyiapkan sektor…')
   const sectorMap = await ensureSectors(client, market.id, readyRows, summary)
@@ -833,6 +834,7 @@ export async function runCsvImport(
   progress('Menyiapkan pasar tujuan…')
   const { market, created } = await resolveMarket(client, options)
   summary.marketCreated = created
+  summary.marketsCreated = created ? 1 : 0
 
   progress('Menyiapkan sektor…')
   const sectorMap = await ensureSectors(client, market.id, readyRows, summary)
