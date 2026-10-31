@@ -255,3 +255,65 @@
     margin-left: 0;
   }
 }
+
+.public-stall-pin-manage {
+  margin-top: 26px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.public-stall-pin-toggle {
+  padding: 8px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+  color: #1e3a8a;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.public-stall-pin-toggle:hover {
+  background: #e6edf7;
+}
+
+.public-stall-pin-manage-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+  max-width: 320px;
+}
+
+.public-stall-pin-manage-form input {
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 1rem;
+  letter-spacing: 4px;
+}
+
+.public-stall-pin-manage-form input:focus {
+  outline: none;
+  border-color: #1e3a8a;
+  box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.12);
+}
+
+.public-stall-pin-manage-form button {
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: #1e3a8a;
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.public-stall-pin-manage-form button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.public-stall-pin-manage-message {
+  margin: 10px 0 0;
+  font-size: 0.9rem;
+  color: #1e3a8a;
+}

@@ -38,6 +38,7 @@ export default async function handler(req: any, res: any) {
   const token = String(req.query?.token || req.body?.token || '').trim()
   const marketId = Number(req.query?.marketId ?? req.body?.marketId)
   const stallCode = String(req.query?.code || req.body?.code || '').trim()
+  const pin = String(req.query?.pin ?? req.body?.pin ?? '').trim()
 
   const usingToken = Boolean(token)
   if (usingToken && !/^[a-f0-9]{32}$/i.test(token)) {
@@ -65,6 +66,22 @@ export default async function handler(req: any, res: any) {
 
     if (stallError) throw stallError
     if (!stall) return res.status(404).json({ error: 'Lapak tidak ditemukan' })
+
+    if (!pin) return res.status(401).json({ error: 'PIN lapak wajib diisi' })
+
+    const { data: pinOk, error: pinError } = await supabaseAdmin.rpc('verify_stall_pin', {
+      p_stall_id: stall.id,
+      p_pin: pin
+    })
+
+    if (pinError) {
+      const message = String(pinError.message || '')
+      if (/does not exist|could not find the function|schema cache/i.test(message)) {
+        return res.status(503).json({ error: 'Fitur PIN lapak belum aktif di server' })
+      }
+      throw pinError
+    }
+    if (!pinOk) return res.status(401).json({ error: 'PIN salah' })
 
     const { data: market, error: marketError } = await supabaseAdmin
       .from('markets')

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { getSupabaseClient } from '../lib/supabase'
 import './PublicStallPage.css'
 
 interface Props {
@@ -28,23 +29,41 @@ interface StallResponse {
 
 export function PublicStallPage({ token, marketId, stallCode }: Props) {
   const [data, setData] = useState<StallResponse | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [activeTab, setActiveTab] = useState<'rates' | 'transactions'>('rates')
+  const [pinInput, setPinInput] = useState('')
+  const [unlockedPin, setUnlockedPin] = useState<string | null>(null)
+  const [pinError, setPinError] = useState('')
+  const [changeOpen, setChangeOpen] = useState(false)
+  const [newPin, setNewPin] = useState('')
+  const [confirmPin, setConfirmPin] = useState('')
+  const [pinMessage, setPinMessage] = useState('')
+  const [pinSaving, setPinSaving] = useState(false)
 
   useEffect(() => {
+    if (!unlockedPin) return
     const controller = new AbortController()
 
     const loadStall = async () => {
-      const query = token
-        ? `token=${encodeURIComponent(token)}`
-        : `marketId=${encodeURIComponent(String(marketId || ''))}&code=${encodeURIComponent(String(stallCode || ''))}`
+      setLoading(true)
+      setError('')
 
       try {
-        setLoading(true)
-        setError('')
-        const response = await fetch(`/api/lapak?${query}`, { signal: controller.signal })
+        const response = await fetch('/api/lapak', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, marketId, code: stallCode, pin: unlockedPin }),
+          signal: controller.signal
+        })
         const result = await response.json().catch(() => ({}))
+
+        if (response.status === 401 || response.status === 503) {
+          setUnlockedPin(null)
+          setPinError(result.error || (response.status === 401 ? 'PIN salah' : 'Fitur PIN lapak belum aktif di server'))
+          return
+        }
+
         if (!response.ok) throw new Error(result.error || 'Lapak tidak ditemukan')
         setData(result)
       } catch (err: any) {
@@ -57,7 +76,98 @@ export function PublicStallPage({ token, marketId, stallCode }: Props) {
 
     loadStall()
     return () => controller.abort()
-  }, [token, marketId, stallCode])
+  }, [token, marketId, stallCode, unlockedPin])
+
+  const handleUnlock = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!/^\d{4}$/.test(pinInput)) {
+      setPinError('PIN harus 4 angka')
+      return
+    }
+    setPinError('')
+    setUnlockedPin(pinInput)
+  }
+
+  const handleChangePin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setPinMessage('')
+
+    if (!/^\d{4}$/.test(newPin)) {
+      setPinMessage('PIN baru harus 4 angka')
+      return
+    }
+    if (newPin !== confirmPin) {
+      setPinMessage('Konfirmasi PIN tidak sama')
+      return
+    }
+    if (!token || !unlockedPin) {
+      setPinMessage('Ganti PIN hanya bisa lewat tautan QR pemilik')
+      return
+    }
+
+    setPinSaving(true)
+    try {
+      const supabase = getSupabaseClient()
+      const { error: rpcError } = await supabase.rpc('set_stall_pin', {
+        p_token: token,
+        p_old_pin: unlockedPin,
+        p_new_pin: newPin
+      })
+      if (rpcError) throw rpcError
+
+      setUnlockedPin(newPin)
+      setPinInput(newPin)
+      setNewPin('')
+      setConfirmPin('')
+      setChangeOpen(false)
+      setPinMessage('PIN berhasil diganti.')
+    } catch (err: any) {
+      setPinMessage(err?.message || 'Gagal mengganti PIN')
+    } finally {
+      setPinSaving(false)
+    }
+  }
+
+  if (!unlockedPin) {
+    return (
+      <main className="public-stall-page public-stall-login-page">
+        <div className="public-stall-login-shell">
+          <div className="public-stall-login-visual">
+            <img src="/logo.jpeg" alt="" />
+            <div className="public-stall-login-overlay" />
+            <div className="public-stall-login-copy">
+              <p>Portal Pemilik Lapak</p>
+              <h1>Informasi lapak, tarif, dan riwayat pembayaran.</h1>
+              <span>Masukkan PIN untuk membuka data lapak Anda.</span>
+            </div>
+          </div>
+          <div className="public-stall-panel public-stall-pin-panel">
+            <div className="public-stall-pin-heading">
+              <p>Akses pemilik</p>
+              <h2>Masukkan PIN</h2>
+              <span>PIN awal 7777. Segera ganti setelah berhasil masuk.</span>
+            </div>
+            <form className="public-stall-pin-form" onSubmit={handleUnlock}>
+              <label htmlFor="stall-pin">PIN 4 angka</label>
+              <input
+                id="stall-pin"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={4}
+                value={pinInput}
+                onChange={(e) => setPinInput(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                autoFocus
+              />
+              <button type="submit" disabled={pinInput.length !== 4}>
+                Buka data lapak
+              </button>
+            </form>
+            {pinError && <p className="public-stall-pin-error">{pinError}</p>}
+          </div>
+        </div>
+      </main>
+    )
+  }
 
   if (loading) {
     return <main className="public-stall-page"><div className="public-stall-panel">Memuat data lapak...</div></main>
@@ -157,6 +267,40 @@ export function PublicStallPage({ token, marketId, stallCode }: Props) {
             )}
           </section>
         )}
+
+        <section className="public-stall-pin-manage">
+          <div className="public-stall-section-heading">
+            <h2>PIN Pemilik</h2>
+            <button type="button" className="public-stall-pin-toggle" onClick={() => setChangeOpen((value) => !value)}>
+              {changeOpen ? 'Batal' : 'Ganti PIN'}
+            </button>
+          </div>
+          {changeOpen ? (
+            <form className="public-stall-pin-manage-form" onSubmit={handleChangePin}>
+              <input
+                inputMode="numeric"
+                maxLength={4}
+                placeholder="PIN baru (4 angka)"
+                value={newPin}
+                onChange={(e) => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+              />
+              <input
+                inputMode="numeric"
+                maxLength={4}
+                placeholder="Ulangi PIN baru"
+                value={confirmPin}
+                onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+              />
+              <button type="submit" disabled={pinSaving || !token}>
+                {pinSaving ? 'Menyimpan...' : 'Simpan PIN baru'}
+              </button>
+              {!token && <span className="public-stall-muted">Ganti PIN hanya lewat tautan QR pemilik.</span>}
+            </form>
+          ) : (
+            <p className="public-stall-muted">Gunakan PIN untuk membuka halaman ini. PIN awal 7777.</p>
+          )}
+          {pinMessage && <p className="public-stall-pin-manage-message">{pinMessage}</p>}
+        </section>
 
         <footer>Data resmi SiAga • {market.code || market.name}</footer>
       </div>

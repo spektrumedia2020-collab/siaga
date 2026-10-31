@@ -87,6 +87,7 @@ export function StallsPage({ marketId, marketName, readOnly = false }: Props) {
     owner_id: '',
     status: 'AKTIF'
   })
+  const [pinValue, setPinValue] = useState('')
   const [sectorFilter, setSectorFilter] = useState('')
   // rate dialog state
   const [rateDialogOpen, setRateDialogOpen] = useState(false)
@@ -236,6 +237,15 @@ export function StallsPage({ marketId, marketName, readOnly = false }: Props) {
           .eq('id', editingId)
 
         if (err) throw err
+
+        if (pinValue) {
+          if (!/^\d{4}$/.test(pinValue)) throw new Error('PIN pemilik harus 4 angka')
+          const { error: pinError } = await supabase.rpc('admin_set_stall_pin', {
+            p_stall_id: editingId,
+            p_pin: pinValue
+          })
+          if (pinError) throw pinError
+        }
       } else {
         const { error: err } = await supabase
           .from('stalls')
@@ -260,6 +270,7 @@ export function StallsPage({ marketId, marketName, readOnly = false }: Props) {
       })
       setEditingId(null)
       setShowForm(false)
+      setPinValue('')
       loadData()
     } catch (err: any) {
       const msg = err?.message || 'Error saving stall'
@@ -278,6 +289,7 @@ export function StallsPage({ marketId, marketName, readOnly = false }: Props) {
       status: stall.status
     })
     setEditingId(stall.id)
+    setPinValue('')
     setShowForm(true)
   }
 
@@ -312,6 +324,7 @@ export function StallsPage({ marketId, marketName, readOnly = false }: Props) {
     })
     setEditingId(null)
     setShowForm(false)
+    setPinValue('')
   }
 
   const getSectorName = (id: number | null) => {
@@ -586,6 +599,19 @@ export function StallsPage({ marketId, marketName, readOnly = false }: Props) {
                 <option value="NONAKTIF">NONAKTIF</option>
               </select>
             </div>
+
+            {editingId && (
+              <div className="form-group">
+                <label>PIN Pemilik (4 angka)</label>
+                <input
+                  inputMode="numeric"
+                  maxLength={4}
+                  placeholder="Kosongkan bila tidak diganti (awal 7777)"
+                  value={pinValue}
+                  onChange={(e) => setPinValue(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                />
+              </div>
+            )}
 
             <div className="form-actions">
               <button type="submit" className="btn-primary">
