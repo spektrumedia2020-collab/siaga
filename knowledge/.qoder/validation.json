@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-10-31T21:15:00+07:00",
+  "updated_at": "2026-10-31T21:35:00+07:00",
   "checks": {
     "superadmin_market_access": {
       "status": "PASS",
@@ -300,7 +300,7 @@
     },
     "mobile_bills": {
       "status": "PARTIAL",
-      "evidence": "2026-10-31. Mobile `lapak_page.dart` kini memuat `retribution_bill_balances` + nama jenis, menampilkan kartu Tagihan Tahunan (tahun · jenis, status Lunas/Cicilan/Belum, tagihan/dibayar/sisa, jatuh tempo) dan tombol 'Bayar / Cicil Tagihan'. Dialog pembayaran: jumlah bebas, metode Tunai/QRIS, pembayar, catatan → RPC `pay_retribution_bills` (p_types_id null) → dialog hasil berisi alokasi per tahun + sisa tunggakan; error overpay ditampilkan dari PostgrestException. `flutter analyze` No issues; `flutter test` 5/5 lulus; CI 41205835011 success. BELUM dijalankan di perangkat/emulator dan APK belum dirilis — verifikasi visual mobile belum ada. RLS/RPC untuk role OFFICER belum diuji dengan akun petugas ber-auth (petugas seed tanpa auth_uid)."
+      "evidence": "2026-10-31. Mobile `lapak_page.dart` kini memuat `retribution_bill_balances` + nama jenis, menampilkan kartu Tagihan Tahunan (tahun · jenis, status Lunas/Cicilan/Belum, tagihan/dibayar/sisa, jatuh tempo) dan tombol 'Bayar / Cicil Tagihan'. Dialog pembayaran: jumlah bebas, metode Tunai/QRIS, pembayar, catatan → RPC `pay_retribution_bills` (p_types_id null) → dialog hasil berisi alokasi per tahun + sisa tunggakan; error overpay ditampilkan dari PostgrestException. `flutter analyze` No issues; `flutter test` 5/5 lulus; CI 41205835011 success. BELUM dijalankan di perangkat/emulator dan APK belum dirilis — verifikasi visual mobile belum ada. RLS/RPC untuk role OFFICER belum diuji dengan akun petugas ber-auth (petugas seed tanpa auth_uid). DEPLOY PERANGKAT 2026-10-31: `flutter build apk --release` gagal karena 'Could not close incremental caches' (Kotlin, Windows) meski sudah `flutter clean`; berhasil dengan `./gradlew assembleRelease -Pkotlin.incremental=false` → `build/app/outputs/flutter-apk/app-release.apk` 76,7 MB. Install ke perangkat 23124RA7EO (90fcdb0b, Android 15) gagal `INSTALL_FAILED_UPDATE_INCOMPATIBLE`; setelah pemilik menyetujui hapus aplikasi lama, uninstall + install sukses. Aplikasi terbuka di layar Login; kredensial tidak dimasukkan (aturan), jadi kartu tagihan/cicilan di perangkat belum diuji. Catatan keamanan: layar login masih menampilkan kredensial demo default (isi diredaksi)."
     },
     "annual_bills_web": {
       "status": "PASS",
