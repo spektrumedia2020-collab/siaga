@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "updated_at": "2026-10-31T23:10:00+07:00",
-  "commit": "4494cc8e911dcb394c649068635189922ef442e3",
+  "updated_at": "2026-11-01T00:05:00+07:00",
+  "commit": "713c79bcfc80af41eb95ce03dcda5ff3d437a8f9",
   "checks": {
     "typecheck": {
       "status": "PASS",
@@ -28,8 +28,8 @@
       "evidence": "Push 7fa05b0..19f8647 ke origin/main; CI run 41150618429 success (Web, Mobile, SQL sanity). Produksi siaga-pi.vercel.app: 3 template terpisah 200 (161/326/376 B) dengan header benar; bundle assets/index.274sg4z5.js (1.407.541 B) memuat 'contoh-tarif.csv', 'Tarif retribusi', 'KODE-JENIS', 'Pasar dengan kode', 'Data lapak'."
     },
     "csv_split_ui": {
-      "status": "PARTIAL",
-      "evidence": "Verifikasi UI baru berhenti di gate login (sesi browser tidak memiliki kredensial); tidak ada login paksa. Bukti tidak langsung: typecheck 0 error, build PASS, template 200. Render halaman import di browser belum diverifikasi pada sesi ini."
+      "status": "PASS",
+      "evidence": "Uji browser 2026-10-31 pada dev server terautentikasi admin (#superadmin/import): unggah contoh-pasar.csv -> terdeteksi 'Data pasar', header baris 1, 6 kolom, 2 baris siap, pratinjau MKS/NGD benar; klik 'Import ke database' -> '2 pasar baru, 0 pasar diperbarui', ringkasan 2 diimpor/0 dilewati/0 masalah; Manajemen Pasar menampilkan NGD dan MKS dengan kode, kota, alamat, status benar. Unggah ulang berkas yang sama -> '0 pasar baru, 0 pasar diperbarui' (idempoten). Alur UI lapak & tarif belum diuji di browser."
     },
     "csv_import_parse": {
       "status": "PASS",
