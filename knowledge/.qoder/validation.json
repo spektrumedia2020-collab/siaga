@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "updated_at": "2026-10-31T21:30:00+07:00",
-  "commit": "ba4880c9b6edc4222a92592f0ba6d4caefac5ba0",
+  "updated_at": "2026-10-31T22:05:00+07:00",
+  "commit": "19f8647deb456c8b3e96312307d9135dcb6de4fa",
   "checks": {
     "typecheck": {
       "status": "PASS",
@@ -22,6 +22,10 @@
     "csv_split_templates": {
       "status": "PASS",
       "evidence": "Dev server Vite 2026-10-31: 5 berkas /templates/*.csv merespons 200 dengan header benar (contoh-pasar 161 B, contoh-lapak 326 B, contoh-tarif 376 B, dua template legacy 535/498 B)."
+    },
+    "deploy_split_import": {
+      "status": "PASS",
+      "evidence": "Push 7fa05b0..19f8647 ke origin/main; CI run 41150618429 success (Web, Mobile, SQL sanity). Produksi siaga-pi.vercel.app: 3 template terpisah 200 (161/326/376 B) dengan header benar; bundle assets/index.274sg4z5.js (1.407.541 B) memuat 'contoh-tarif.csv', 'Tarif retribusi', 'KODE-JENIS', 'Pasar dengan kode', 'Data lapak'."
     },
     "csv_split_ui": {
       "status": "PARTIAL",

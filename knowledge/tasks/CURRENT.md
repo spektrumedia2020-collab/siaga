@@ -1,10 +1,10 @@
 # CURRENT — Task Aktif
 
-**Sesi:** SESSION-2026-10-31-3 · **Update:** 2026-10-31T21:30:00+07:00 · **Branch:** `main` @ `ba4880c`
+**Sesi:** SESSION-2026-10-31-3 · **Update:** 2026-10-31T22:05:00+07:00 · **Branch:** `main` @ `19f8647`
 
 ## Status
 
-`WIP` — impor CSV terpisah (pasar / lapak / tarif) terverifikasi lokal; menunggu seed produksi oleh user.
+`WIP` — impor CSV terpisah (pasar / lapak / tarif) ter-deploy hijau; menunggu seed produksi oleh user.
 
 ## Task
 
@@ -34,6 +34,7 @@
 | 35 | Import CSV terpisah: pasar, lapak, tarif | **SELESAI** | `detectImportKind`; `runMarketImport`/`runStallImport`/`runRateImport`; UI per jenis; 3 template baru |
 | 36 | Verifikasi split import | **SELESAI** | Simulasi pasar→lapak→tarif: 2 pasar, 5 lapak, 4 jenis, 8 tarif; impor ulang 0 create/update |
 | 37 | Build + sinkron knowledge split import | **SELESAI** | `npm run typecheck` 0 error; `npm run build` PASS; `modules/import-csv.md` diperbarui |
+| 38 | Deploy split import | **SELESAI** | Push `7fa05b0..19f8647`; CI `41150618429` success; 3 template produksi 200; bundle memuat UI impor baru |
 | 14 | P0-03 — env PIN lapak + deploy | **DIGANTI** | PIN dihapus; digantikan token QR per lapak (migration 016) |
 | 15 | Role: MARKET_HEAD read-only + hapus impersonation | **SELESAI** | Migration 014; build PASS; deploy `86b62d6` |
 | 16 | P0-12 — kredensial admin di halaman publik | **SELESAI (kode)** | Bundle bersih; rotasi password dipilih tidak dilakukan user |
