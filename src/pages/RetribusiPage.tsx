@@ -14,6 +14,8 @@ interface RetribusiItem {
   name: string
   amount: number
   description?: string
+  billingPeriod: 'HARIAN' | 'BULANAN' | 'TAHUNAN'
+  allowInstallment: boolean
   created_at?: string
 }
 
@@ -22,6 +24,8 @@ export function RetribusiPage({ marketId, readOnly = false }: RetribusiPageProps
   const [name, setName] = useState('')
   const [amount, setAmount] = useState('')
   const [description, setDescription] = useState('')
+  const [billingPeriod, setBillingPeriod] = useState<'HARIAN' | 'BULANAN' | 'TAHUNAN'>('HARIAN')
+  const [allowInstallment, setAllowInstallment] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -43,6 +47,8 @@ export function RetribusiPage({ marketId, readOnly = false }: RetribusiPageProps
         name: item.name || item.jenis_retribusi || '-',
         amount: Number(item.amount || item.tarif || 0),
         description: item.description || item.keterangan || '',
+        billingPeriod: (item.billing_period || 'HARIAN') as 'HARIAN' | 'BULANAN' | 'TAHUNAN',
+        allowInstallment: Boolean(item.allow_installment),
         created_at: item.created_at || ''
       })))
     } catch (err: any) {
@@ -85,6 +91,8 @@ export function RetribusiPage({ marketId, readOnly = false }: RetribusiPageProps
     setName('')
     setAmount('')
     setDescription('')
+    setBillingPeriod('HARIAN')
+    setAllowInstallment(false)
     setEditingId(null)
   }
 
@@ -102,7 +110,9 @@ export function RetribusiPage({ marketId, readOnly = false }: RetribusiPageProps
       const payload = {
         name: name.trim(),
         amount: Number(amount) || 0,
-        description: description.trim() || null
+        description: description.trim() || null,
+        billing_period: billingPeriod,
+        allow_installment: billingPeriod === 'TAHUNAN' ? allowInstallment : false
       }
 
       if (editingId) {
@@ -127,6 +137,8 @@ export function RetribusiPage({ marketId, readOnly = false }: RetribusiPageProps
     setName(item.name)
     setAmount(String(item.amount))
     setDescription(item.description || '')
+    setBillingPeriod(item.billingPeriod)
+    setAllowInstallment(item.allowInstallment)
   }
 
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null)
@@ -190,6 +202,32 @@ export function RetribusiPage({ marketId, readOnly = false }: RetribusiPageProps
             style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #d1d5db' }}
           />
         </div>
+        <div>
+          <label style={{ display: 'block', marginBottom: 6 }}>Periode Tagihan</label>
+          <select
+            value={billingPeriod}
+            onChange={(e) => {
+              const next = e.target.value as 'HARIAN' | 'BULANAN' | 'TAHUNAN'
+              setBillingPeriod(next)
+              if (next !== 'TAHUNAN') setAllowInstallment(false)
+            }}
+            style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #d1d5db' }}
+          >
+            <option value="HARIAN">Harian</option>
+            <option value="BULANAN">Bulanan</option>
+            <option value="TAHUNAN">Tahunan</option>
+          </select>
+        </div>
+        {billingPeriod === 'TAHUNAN' && (
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14 }}>
+            <input
+              type="checkbox"
+              checked={allowInstallment}
+              onChange={(e) => setAllowInstallment(e.target.checked)}
+            />
+            Boleh dibayar mencicil (sisa tahun lalu menjadi tunggakan)
+          </label>
+        )}
         <div style={{ display: 'flex', gap: 8 }}>
           <button type="submit" disabled={saving} className="btn-primary" style={{ width: 'fit-content' }}>
             {saving ? 'Menyimpan...' : editingId ? 'Simpan Perubahan' : 'Tambah Retribusi'}
@@ -221,6 +259,8 @@ export function RetribusiPage({ marketId, readOnly = false }: RetribusiPageProps
                   <strong>{item.name}</strong>
                   <div style={{ color: '#6b7280', fontSize: 13 }}>
                     Tarif: Rp {item.amount.toLocaleString('id-ID')}
+                    {` • ${item.billingPeriod === 'TAHUNAN' ? 'Tahunan' : item.billingPeriod === 'BULANAN' ? 'Bulanan' : 'Harian'}`}
+                    {item.billingPeriod === 'TAHUNAN' && item.allowInstallment ? ' • boleh dicicil' : ''}
                     {item.description ? ` • ${item.description}` : ''}
                   </div>
                 </div>

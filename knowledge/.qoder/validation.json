@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-10-31T17:10:00+07:00",
+  "updated_at": "2026-10-31T18:05:00+07:00",
   "checks": {
     "superadmin_market_access": {
       "status": "PASS",
@@ -225,6 +225,18 @@
     "deploy_theme_dashboard_and_presets": {
       "status": "PASS",
       "evidence": "Push `8e772af..7fab51a` ke origin/main; CI run `41188749207` success (Web build+typecheck, Mobile analyze+test, SQL sanity). Produksi `https://siaga-pi.vercel.app` menyajikan `assets/index.BnUk6V0g.css` + `assets/index.wd2XygLO.js`; bundle memuat teks \"Kuning Keemasan\", \"Grafit Batu\", \"Olive Zaitun\", \"Tema Pasar\". Verifikasi runtime produksi (sesi admin, tanpa memasukkan kredensial): `/@NGD` -> 'Pasar Niaga Daya', `--siaga-primary=#ea580c`, navbar `linear-gradient(#feeee3,#fdd8be)`; memilih pasar Niaga Daya pada `#market/dashboard/theme` menampilkan 12 pilihan (Biru Laut, Grafit Batu, Indigo Malam, Kopi Tanah, Kuning Keemasan, Merah Marun, Navy (Default), Olive Zaitun, Rose Anggrek, Sunset Orange, Teal Tosca, Ungu Royal) dengan 'Sunset Orange' aktif dan `--siaga-primary=#ea580c`. Catatan: simpan tema di produksi tidak diuji ulang (data sudah terverifikasi di dev dan nilai DB `markets.id=39` tetap `theme_id=sunset`)."
+    },
+    "annual_bills_migration_prepared": {
+      "status": "PENDING_OWNER",
+      "evidence": "migrations/020_retribution_annual_bills.sql ditulis 2026-10-31: retribution_types.billing_period+allow_installment (backfill dari unit/name), tabel retribution_bills (UNIQUE stall_id,types_id,period_year), transactions.bill_id+period_year, view retribution_bill_balances (security_invoker), RPC generate_retribution_bills (dari retribution_rates per lapak) + pay_retribution_bills (alokasi FIFO tahun terlama, tolak lebih bayar), trigger guard_transaction_bill, RLS admin/market-member, seed NGD-JASPRO tanpa tarif untuk market 39. STATUS: belum dijalankan di Supabase (aturan: DDL produksi dijalankan pemilik)."
+    },
+    "annual_bills_prod_schema_absent": {
+      "status": "PASS",
+      "evidence": "Inspeksi read-only via pooler 2026-10-31: information_schema menunjukkan tabel retribution_bills=0 dan view retribution_bill_balances=0; retribution_types berisi 2 baris untuk market 39 (NGD-SEWA-TAHUNAN unit TAHUN, NGD-SEWA-HARIAN unit HARI) tanpa kolom billing_period; transactions.transaction_date timestamptz default now(), source default MOBILE, sync_status default PENDING; trigger trg_validate_transaction_market ada; fungsi is_current_user_admin_full/is_current_user_market_member ada. retribution_types.code unik global."
+    },
+    "annual_bills_web": {
+      "status": "PASS",
+      "evidence": "2026-10-31: npm run typecheck 0 error; npm run build sukses 0,92s — dist/assets/index.IuQth65h.js 1.433,29 kB (gzip 408,28 kB), CSS 82,32 kB. Halaman MarketBillsPage merender pesan setup bila kolom/view belum ada (tidak crash). Runtime end-to-end belum diuji: menunggu migration 020 dijalankan."
     }
   }
 }

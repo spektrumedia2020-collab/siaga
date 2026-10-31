@@ -18,6 +18,8 @@ interface Transaction {
   stall_id: number
   amount: number
   rate_id?: number | null
+  bill_id?: number | null
+  period_year?: number | null
   payment_method: string
   status: string
   payer_name?: string
@@ -42,6 +44,8 @@ interface Stall {
 }
 
 const getTodayDate = () => new Date().toISOString().split('T')[0]
+
+const isPaidStatus = (status: string | null | undefined) => ['LUNAS', 'PAID'].includes(String(status || '').toUpperCase())
 
 export function TransactionsPage({ marketId, readOnly = false }: TransactionsPageProps) {
   const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -319,6 +323,7 @@ export function TransactionsPage({ marketId, readOnly = false }: TransactionsPag
             'Lapak': t.stalls?.code || t.stalls?.number || `ID #${t.stall_id}`,
             'Pembayar': t.payer_name || '-',
                         'Jenis Retribusi': t.retribution_rates?.retribution_types?.name || '-',
+            'Tahun Tagihan': t.period_year || '-',
             'Jumlah': t.amount,
             'Metode': t.payment_method,
             'Status': t.status,
@@ -346,6 +351,7 @@ export function TransactionsPage({ marketId, readOnly = false }: TransactionsPag
               <tr>
                 <th>Lapak</th>
                 <th>Jenis Retribusi</th>
+                <th>Tahun</th>
                 <th>Pembayar</th>
                 <th className="tx-amount">Jumlah</th>
                 <th>Metode</th>
@@ -357,15 +363,17 @@ export function TransactionsPage({ marketId, readOnly = false }: TransactionsPag
             </thead>
             <tbody>
               {paginatedTransactions.map((t) => {
-                const statusCls = t.status === 'LUNAS' ? 'tx-status-lunas' : t.status === 'BATAL' ? 'tx-status-batal' : 'tx-status-pending'
+                const paid = isPaidStatus(t.status)
+                const statusCls = paid ? 'tx-status-lunas' : t.status === 'BATAL' ? 'tx-status-batal' : 'tx-status-pending'
                 return (
                   <tr key={t.id}>
                     <td>{t.stalls?.code || t.stalls?.number || `ID #${t.stall_id}`}</td>
                     <td>{t.retribution_rates?.retribution_types?.name || '-'}</td>
+                    <td>{t.period_year || '-'}</td>
                     <td>{t.payer_name || '-'}</td>
                     <td className="tx-amount">Rp {Number(t.amount || 0).toLocaleString('id-ID')}</td>
                     <td>{t.payment_method || '-'}</td>
-                    <td><span className={`tx-status-badge ${statusCls}`}>{t.status || '-'}</span></td>
+                    <td><span className={`tx-status-badge ${statusCls}`}>{paid ? 'LUNAS' : (t.status || '-')}</span></td>
                     <td className="tx-note">{t.note || '-'}</td>
                     <td className="tx-date">{formatDate(t.created_at)}</td>
                     {!readOnly && (

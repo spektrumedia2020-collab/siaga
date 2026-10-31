@@ -93,8 +93,34 @@ Sumber: query langsung `pg_class` + `pg_policies` di Supabase SQL Editor
 
 Implikasi: fallback mobile ke tabel legacy akan gagal; halaman Theme Management akan error.
 
+## Tagihan tahunan & cicilan (migration 020)
+
+`migrations/020_retribution_annual_bills.sql` — **status 2026-10-31: file siap, menunggu dijalankan pemilik
+di SQL Editor Supabase**. Halaman `#market/dashboard/bills` menampilkan pesan "belum aktif" selama ini.
+
+- `retribution_types.billing_period` (`HARIAN|BULANAN|TAHUNAN`, backfill dari `unit` + `name`) dan
+  `allow_installment` (default true untuk TAHUNAN).
+- `retribution_bills(id, market_id, stall_id, types_id, period_year, amount_due, due_date, status,
+  note, created_at, updated_at)`, UNIQUE `(stall_id, types_id, period_year)`, status `AKTIF|DIBATALKAN`.
+- `transactions.bill_id` → `retribution_bills` (`ON DELETE SET NULL`) dan `transactions.period_year`.
+- View `retribution_bill_balances` (`security_invoker = true`): `amount_paid` = jumlah transaksi
+  ber-`bill_id` dengan status `paid`/`LUNAS`; `outstanding`; `status` (`LUNAS`/`CICILAN`/`BELUM_LUNAS`/
+  `DIBATALKAN`); `is_open`.
+- `generate_retribution_bills(p_market_id, p_year, p_types_id, p_due_date)` — terbitkan tagihan dari
+  `retribution_rates` **per lapak** (harga boleh beda tiap lapak); idempoten `ON CONFLICT DO NOTHING`.
+- `pay_retribution_bills(p_stall_id, p_amount, p_types_id, p_payment_method, p_payer_name, p_note)` —
+  alokasi FIFO tahun terlama lebih dulu, satu pembayaran bisa menutup beberapa tahun; bila uang melebihi
+  total tunggakan seluruh insert dibatalkan (`RAISE EXCEPTION`).
+- Trigger `guard_transaction_bill` (transactions): tolak pembayaran melebihi sisa, paksa `period_year`
+  dari tagihan, pastikan lapak & pasar sama.
+- RLS `retribution_bills`: SELECT `authenticated`; INSERT/UPDATE/DELETE admin penuh atau anggota pasar.
+
+Tunggakan tidak digabung ke tagihan tahun baru: tagihan tiap tahun tetap terpisah, dan pembayaran
+melunasi tahun terdahulu lebih dulu (FIFO). Ringkasan "Tunggakan tahun lalu" dihitung dari sisa
+tagihan dengan `period_year` < tahun yang dipilih.
+
 ## Ringkasan RLS
 
 | Status | Tabel |
 |---|---|
-| Memadai | `markets`, `market_sectors`, `market_config`, `announcements`, `roles`, `user_roles` (007), `retribution_rates` (008), `users` (009), `transactions`/`stalls`/`stall_owners` (010 + 013), `stall_categories` (011), `attendance`/`officers`/`retribution_types`/`setoran` (012) |
+| Memadai | `markets`, `market_sectors`, `market_config`, `announcements`, `roles`, `user_roles` (007), `retribution_rates` (008), `users` (009), `transactions`/`stalls`/`stall_owners` (010 + 013), `stall_categories` (011), `attendance`/`officers`/`retribution_types`/`setoran` (012), `retribution_bills` (020) |

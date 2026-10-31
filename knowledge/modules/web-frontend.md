@@ -13,7 +13,7 @@ UI untuk superadmin, admin pasar, bendahara, petugas (web), plus halaman publik
 |---|---|
 | `src/App.tsx` | Router manual (hash + pathname), auth state, impersonation, redirect per role |
 | `src/components/` | `Auth`, `Dashboard` (shell), `Navigation`, `ProtectedRoute`, `ConfirmDialog`, `EmptyState`, `Loading`, `ErrorBoundary`, `ExportButtons`, `QRCodeGenerator`, `DateRangePicker`, `Icons` |
-| `src/pages/` | `SuperAdminDashboardImproved`, `MarketDashboard`, `MarketEditPage`, `MarketLandingPage`, `PublicStallPage`, `MarketsManagement`, `MarketsPage`, `MarketDetailPage`, `StallsPage`, `OwnersPage`, `OfficersPage`, `CategoriesPage`, `SectorsPage`, `RetribusiPage`, `TransactionsPage`, `SetoranPage`, `ReconciliationsPage`, `UserManagement`, `ThemeManagement`, `ImportDataPage` |
+| `src/pages/` | `SuperAdminDashboardImproved`, `MarketDashboard`, `MarketEditPage`, `MarketLandingPage`, `PublicStallPage`, `MarketsManagement`, `MarketsPage`, `MarketDetailPage`, `StallsPage`, `OwnersPage`, `OfficersPage`, `CategoriesPage`, `SectorsPage`, `RetribusiPage`, `MarketBillsPage`, `TransactionsPage`, `SetoranPage`, `ReconciliationsPage`, `UserManagement`, `ThemeManagement`, `ImportDataPage` |
 | `src/lib/` | `supabase`, `api` (ApiClient), `roleUtils`, `store` (zustand), `exportUtils`, `googleSheetsAuth`, `imageUtils`, `userProfile`, `csvImport`, `csvImportRunner` |
 | `src/styles/`, `src/*.css` | Layout & tema |
 | `src/server.ts`, `src/routes/`, `src/middleware/` | Backend Express (bukan bagian SPA build) |
@@ -23,6 +23,18 @@ UI untuk superadmin, admin pasar, bendahara, petugas (web), plus halaman publik
 - Render awal: `Auth` bila belum ada user; setelah login → role → `#superadmin/dashboard` atau `#market/dashboard`.
 - Halaman publik dicek **sebelum** auth: `/@slug`, `/lapak/:id/:kode`, `/juri`, `/perumda`.
 - Admin pasar yang membuka hash `superadmin*` dipaksa kembali ke `#market/dashboard`.
+
+## Tagihan tahunan (2026-10-31)
+
+- `MarketBillsPage` di `#market/dashboard/bills` (sidebar Keuangan → "Tagihan Tahunan").
+- Memuat `retribution_bill_balances` + lapak + pemilik, menampilkan tagihan tahun terpilih, tunggakan
+  tahun lama, serta total sisa per lapak; filter tahun/jenis/status + pencarian.
+- Tombol "Terbitkan Tagihan" memanggil RPC `generate_retribution_bills` (tarif per lapak).
+- Dialog "Bayar" memanggil RPC `pay_retribution_bills` (nominal bebas = cicilan, alokasi FIFO).
+- `RetribusiPage` kini menyimpan `billing_period` + `allow_installment` agar jenis baru bisa ditandai
+  tahunan/dicicil (sebelumnya selalu HARIAN karena default kolom).
+- `TransactionsPage` menampilkan kolom "Tahun" dari `transactions.period_year` dan menormalkan status
+  `paid` sebagai LUNAS.
 
 ## Ketergantungan
 
