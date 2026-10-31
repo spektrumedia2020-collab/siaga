@@ -23,8 +23,27 @@ interface StallResponse {
     sector_name: string | null
     owner_name: string | null
     rates: { amount: number; name: string | null; unit: string | null }[]
-    transactions: { amount: number; payment_method: string | null; created_at: string; transaction_date: string | null; status: string }[]
+    transactions: { amount: number; payment_method: string | null; created_at: string; transaction_date: string | null; status: string; bill_id?: number | null; period_year?: number | null }[]
   }
+  summary: {
+    total_paid: number
+    paid_count: number
+    last_paid_at: string | null
+    today: { date: string; amount: number; count: number; daily_due: number; status: 'SUDAH' | 'BELUM' | 'TIDAK_ADA_TARIF' }
+    bills_outstanding: number
+    bills_count: number
+  }
+  bills: Array<{
+    bill_id: number
+    period_year: number
+    type_name: string
+    amount_due: number
+    amount_paid: number
+    outstanding: number
+    status: string
+    due_date: string | null
+    installments: Array<{ amount: number; payment_method: string | null; date: string }>
+  }>
 }
 
 export function PublicStallPage({ token, marketId, stallCode }: Props) {
@@ -185,14 +204,25 @@ export function PublicStallPage({ token, marketId, stallCode }: Props) {
     )
   }
 
-  const { market, stall } = data
+  const { market, stall, summary, bills } = data
   const sortedTransactions = [...stall.transactions].sort((a, b) => {
     const aTime = new Date(a.transaction_date || a.created_at).getTime()
     const bTime = new Date(b.transaction_date || b.created_at).getTime()
     return bTime - aTime
   })
-  const totalRevenue = sortedTransactions.reduce((sum, tx) => sum + Number(tx.amount || 0), 0)
-  const latestTransaction = sortedTransactions[0]
+  const formatRupiah = (value: number) => `Rp ${Number(value || 0).toLocaleString('id-ID')}`
+  const formatDate = (value: string | null) => (value ? new Date(value).toLocaleDateString('id-ID') : '-')
+  const todayLabel = summary.today.status === 'SUDAH'
+    ? 'Sudah ditarik'
+    : summary.today.status === 'BELUM'
+      ? 'Belum ditarik'
+      : 'Tanpa tarif harian'
+  const billStatusLabel = (status: string) => (
+    status === 'LUNAS' ? 'Lunas' : status === 'CICILAN' ? 'Cicilan' : status === 'DIBATALKAN' ? 'Dibatalkan' : 'Belum lunas'
+  )
+  const billStatusClass = (status: string) => (
+    status === 'LUNAS' ? 'lunas' : status === 'CICILAN' ? 'cicilan' : 'belum'
+  )
 
   return (
     <main className="public-stall-page">
@@ -222,29 +252,72 @@ export function PublicStallPage({ token, marketId, stallCode }: Props) {
 
         <div className="public-stall-summary-row">
           <div className="public-stall-summary-card">
-            <span>Total pendapatan</span>
-            <strong>Rp {totalRevenue.toLocaleString('id-ID')}</strong>
+            <span>Total dibayar</span>
+            <strong>{formatRupiah(summary.total_paid)}</strong>
           </div>
           <div className="public-stall-summary-card">
-            <span>Transaksi</span>
-            <strong>{sortedTransactions.length}</strong>
+            <span>Hari ini</span>
+            <strong>{todayLabel}</strong>
+            <small className="public-stall-card-note">
+              {summary.today.amount > 0
+                ? formatRupiah(summary.today.amount)
+                : summary.today.daily_due > 0
+                  ? `Tarif ${formatRupiah(summary.today.daily_due)}`
+                  : '-'}
+            </small>
           </div>
           <div className="public-stall-summary-card">
-            <span>Tarif aktif</span>
-            <strong>{stall.rates.length}</strong>
+            <span>Tunggakan</span>
+            <strong>{summary.bills_count === 0 ? 'Belum ada' : formatRupiah(summary.bills_outstanding)}</strong>
           </div>
           <div className="public-stall-summary-card">
-            <span>Terakhir</span>
-            <strong>{latestTransaction ? new Date(latestTransaction.transaction_date || latestTransaction.created_at).toLocaleDateString('id-ID') : '-'}</strong>
+            <span>Terakhir bayar</span>
+            <strong>{summary.last_paid_at ? formatDate(summary.last_paid_at) : '-'}</strong>
           </div>
         </div>
+
+        <section className="public-stall-bills">
+          <div className="public-stall-section-heading">
+            <h2>Tagihan Tahunan (Jaspro)</h2>
+            <span>{bills.length} tagihan</span>
+          </div>
+          {bills.length === 0 ? (
+            <p className="public-stall-muted">Belum ada tagihan tahunan yang diterbitkan.</p>
+          ) : (
+            bills.map((bill) => (
+              <article className="public-stall-bill" key={bill.bill_id}>
+                <div className="public-stall-bill-head">
+                  <span className="public-stall-bill-title">{bill.period_year} · {bill.type_name}</span>
+                  <span className={`public-stall-bill-status ${billStatusClass(bill.status)}`}>{billStatusLabel(bill.status)}</span>
+                </div>
+                <div className="public-stall-bill-meta">
+                  <div><span>Tagihan</span><strong>{formatRupiah(bill.amount_due)}</strong></div>
+                  <div><span>Dibayar</span><strong>{formatRupiah(bill.amount_paid)}</strong></div>
+                  <div><span>Sisa</span><strong>{formatRupiah(bill.outstanding)}</strong></div>
+                </div>
+                <p className="public-stall-muted">Jatuh tempo: {formatDate(bill.due_date)}</p>
+                {bill.installments.length > 0 && (
+                  <div className="public-stall-installments">
+                    {bill.installments.map((installment, index) => (
+                      <div className="public-stall-installment" key={`${bill.bill_id}-${index}`}>
+                        <span>{formatDate(installment.date)} · {installment.payment_method || 'Pembayaran'}</span>
+                        <strong>{formatRupiah(installment.amount)}</strong>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </article>
+            ))
+          )}
+        </section>
 
         <div className="public-stall-tabs" role="tablist" aria-label="Informasi lapak">
           <button type="button" className={activeTab === 'rates' ? 'active' : ''} onClick={() => setActiveTab('rates')} role="tab" aria-selected={activeTab === 'rates'}>
             Tarif <span>{stall.rates.length}</span>
           </button>
           <button type="button" className={activeTab === 'transactions' ? 'active' : ''} onClick={() => setActiveTab('transactions')} role="tab" aria-selected={activeTab === 'transactions'}>
-            Riwayat Transaksi <span>{stall.transactions.length}</span>
+            Riwayat Transaksi{' '}
+            <span>{summary.paid_count > 50 ? `50 dari ${summary.paid_count}` : summary.paid_count}</span>
           </button>
         </div>
 
@@ -262,7 +335,7 @@ export function PublicStallPage({ token, marketId, stallCode }: Props) {
             <div className="public-stall-section-heading"><h2>Riwayat Transaksi</h2><span>{stall.transactions.length} transaksi</span></div>
             {stall.transactions.length === 0 ? <p className="public-stall-muted">Belum ada transaksi pembayaran.</p> : (
               <div className="public-stall-list">
-                {stall.transactions.map((transaction, index) => <div className="public-stall-list-row" key={`${transaction.created_at}-${index}`}><span>{new Date(transaction.transaction_date || transaction.created_at).toLocaleDateString('id-ID')}<small>{transaction.payment_method || 'Pembayaran'}</small></span><strong>Rp {Number(transaction.amount).toLocaleString('id-ID')}</strong></div>)}
+                {sortedTransactions.map((transaction, index) => <div className="public-stall-list-row" key={`${transaction.created_at}-${index}`}><span>{new Date(transaction.transaction_date || transaction.created_at).toLocaleDateString('id-ID')}<small>{transaction.payment_method || 'Pembayaran'}{transaction.period_year ? ` • ${transaction.period_year}` : ''}</small></span><strong>Rp {Number(transaction.amount).toLocaleString('id-ID')}</strong></div>)}
               </div>
             )}
           </section>

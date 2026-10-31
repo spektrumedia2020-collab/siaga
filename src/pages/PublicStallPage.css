@@ -317,3 +317,92 @@
   font-size: 0.9rem;
   color: #1e3a8a;
 }
+
+.public-stall-card-note {
+  display: block;
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 0.72rem;
+}
+
+.public-stall-bills {
+  margin-top: 26px;
+}
+
+.public-stall-bill {
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.public-stall-bill-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.public-stall-bill-title {
+  color: #1d4e89;
+  font-weight: 700;
+}
+
+.public-stall-bill-status {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.public-stall-bill-status.lunas { background: #dcfce7; color: #15803d; }
+.public-stall-bill-status.cicilan { background: #fef3c7; color: #92400e; }
+.public-stall-bill-status.belum { background: #fee2e2; color: #b91c1c; }
+
+.public-stall-bill-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.public-stall-bill-meta div {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.public-stall-bill-meta span {
+  display: block;
+  color: #64748b;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.public-stall-bill-meta strong {
+  color: #1d4e89;
+  font-size: 0.92rem;
+}
+
+.public-stall-installments {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed #e5e7eb;
+}
+
+.public-stall-installment {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: #475569;
+  font-size: 0.82rem;
+}
+
+.public-stall-installment strong {
+  color: #1d4e89;
+  white-space: nowrap;
+}
