@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "updated_at": "2026-10-31T12:20:00+07:00",
-  "commit": "3bb00fc",
+  "updated_at": "2026-10-31T12:45:00+07:00",
+  "commit": "9d066a4",
   "checks": {
     "superadmin_market_access": {
       "status": "PASS",
@@ -146,6 +146,10 @@
     "delete_ngd": {
       "status": "PASS",
       "evidence": "2026-10-31, atas konfirmasi \"HAPUS NGD\": pasar NGD (id 35) dihapus dari markets dalam satu transaksi pooler. Guard sebelum delete: 0 baris untuk stalls/market_sectors/retribution_types/retribution_rates/transactions/setoran/attendance/announcements/market_config/officers/user_roles/users pada market_id=35, dan 0 markets.id_head_market. Setelah COMMIT terverifikasi: markets=1 (34:MKS), stalls=5, stall_owners=5. PostgREST markets mengembalikan hanya MKS. Produksi: /@NGD menampilkan \"Pasar tidak ditemukan\", /@MKS tetap normal (Pasar Contoh, 5 lapak)."
+    },
+    "delete_sample_market_mks": {
+      "status": "PASS",
+      "evidence": "2026-10-31, atas instruksi \"contoh pasar hapus juga\": pasa contoh MKS (id 34) di-snapshot lebih dulu ke knowledge/.qoder/index/snapshots/2026-10-31T12-30-00/ (mks-backup.json + manifest.json dengan sha256; 1 market, 5 stalls, 2 sector, 5 owner, 4 types, 8 rates), lalu dihapus dalam satu transaksi pooler dengan urutan rates 8 -> stalls 5 -> sectors 2 -> types 4 -> owners yatim 5 -> market 1, COMMIT hanya setelah guard pasca-delete lolos: markets=0, stalls=0, stall_owners=0, market_sectors=0, retribution_types=0, retribution_rates=0, transactions=0, users=1, market_themes=4. Verifikasi: PostgREST anon /rest/v1/markets dan /rest/v1/stalls HTTP 200 []. Landing produksi /@MKS -> \"Pasar tidak ditemukan\". UI admin tidak diverifikasi ulang: sesi browser dalam keadaan keluar (halaman login) dan kredensial tidak dimasukkan."
     }
   }
 }

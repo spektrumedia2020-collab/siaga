@@ -1,10 +1,10 @@
 # CURRENT — Task Aktif
 
-**Sesi:** SESSION-2026-10-31-3 · **Update:** 2026-10-31T22:05:00+07:00 · **Branch:** `main` @ `19f8647`
+**Sesi:** SESSION-2026-10-31-3 · **Update:** 2026-10-31T12:45:00+07:00 · **Branch:** `main` @ `9d066a4`
 
 ## Status
 
-`WIP` — impor CSV terpisah (pasar / lapak / tarif) ter-deploy hijau; menunggu seed produksi oleh user.
+`WIP` — data operasional produksi kosong (pasar/lapak/tarif dihapus); menunggu seed data nyata oleh user.
 
 ## Task
 
@@ -35,6 +35,9 @@
 | 36 | Verifikasi split import | **SELESAI** | Simulasi pasar→lapak→tarif: 2 pasar, 5 lapak, 4 jenis, 8 tarif; impor ulang 0 create/update |
 | 37 | Build + sinkron knowledge split import | **SELESAI** | `npm run typecheck` 0 error; `npm run build` PASS; `modules/import-csv.md` diperbarui |
 | 38 | Deploy split import | **SELESAI** | Push `7fa05b0..19f8647`; CI `41150618429` success; 3 template produksi 200; bundle memuat UI impor baru |
+| 39 | Kode lama lapak (migration 018 + UI/QR) | **SELESAI** | Kolom `legacy_code` di prod; kolom/field/QR label; deploy `d180591` |
+| 40 | Impor 4 CSV legacy lalu rollback penuh | **SELESAI** | 4098 lapak / 7196 tarif / 3 pasar; typed "HAPUS DATA IMPOR" → semua dihapus satu transaksi |
+| 41 | Hapus pasar NGD & pasar contoh MKS | **SELESAI** | Typed "HAPUS NGD" + "contoh pasar hapus juga"; markets=0, stalls=0; snapshot MKS tersimpan |
 | 14 | P0-03 — env PIN lapak + deploy | **DIGANTI** | PIN dihapus; digantikan token QR per lapak (migration 016) |
 | 15 | Role: MARKET_HEAD read-only + hapus impersonation | **SELESAI** | Migration 014; build PASS; deploy `86b62d6` |
 | 16 | P0-12 — kredensial admin di halaman publik | **SELESAI (kode)** | Bundle bersih; rotasi password dipilih tidak dilakukan user |
@@ -55,15 +58,19 @@
   tarif (`contoh-tarif.csv`), dengan deteksi jenis otomatis; format gabungan legacy tetap didukung.
 - Runner: `runMarketImport` (upsert pasar), `runStallImport` (pasar + sektor + pemilik + lapak),
   `runRateImport` (pasar/lapak harus ada, jenis dibuat otomatis, tarif di-upsert).
-- Knowledge: `modules/import-csv.md` diperbarui, state/validation/log disinkronkan.
-- Tanpa perubahan skema DB (kolom & policy yang ada sudah cukup).
+- `legacy_code`: migration 018, parser memilih kolom kode lama yang benar (bukan kolom kosong
+  pengganti), kolom tabel + field form + label QR.
+- Pembersihan produksi atas instruksi user: rollback seluruh data impor legacy, hapus NGD,
+  hapus pasar contoh MKS.
+- DDL/delete dijalankan lewat pooler IPv4 karena host DB langsung IPv6-only.
 
 ## Blocker
 
 - Tidak ada blocker teknis aktif; typecheck/build/simulasi impor lokal hijau.
 - Risiko diterima: password `admin@siaga.id` tidak dirotasi (keputusan user, S-18).
-- Data produksi kosong (0 pasar/lapak/transaksi) — kini dapat diisi lewat tab Import Data
-  (4 CSV gabungan di root repo, atau 3 CSV terpisah).
+- Data operasional produksi kosong (0 pasar/lapak/tarif/transaksi) — diisi lewat Manajemen Pasar,
+  tab Import Data (4 CSV gabungan di root repo, atau 3 CSV terpisah), atau pulihkan snapshot
+  `knowledge/.qoder/index/snapshots/2026-10-31T12-30-00/`.
 
 ## Team Waves
 
@@ -72,12 +79,12 @@ Tidak ada gelombang paralel. `open_wave = null`.
 ## Next Session Handoff
 
 1. Baca urutan resume: `state.json` → `index/index-state.json` → `context.md` → `memory.md` → `00_INDEX.md` → berkas ini.
-2. **Seed data produksi** lewat `#superadmin/import`. Dua jalur:
+2. **Seed data produksi** (DB kini kosong). Dua jalur:
    - Berkas terpisah: `contoh-pasar.csv` → `contoh-lapak.csv` → `contoh-tarif.csv`
      (atau ekspor sendiri dengan header sama); urutan wajib, "Import semua" mengurutkan otomatis.
    - Format gabungan: unggah 4 CSV root repo (`Sawah`, `Panakkukang`, `Terong`, `Niaga Daya`),
-     target pasar terdeteksi otomatis (NGD/SWH/PNK/TRG).
-   Setelah itu uji `/lapak/<token>` dan alur petugas.
+     target pasar terdeteksi otomatis (SWH/PNK/TRG; NGD kini harus dibuat ulang).
+   Setelah itu uji `/@<slug>`, `/lapak/<token>`, dan alur petugas.
 3. **Fase 2 mobile**: `scan_page.dart` membaca URL/token QR (satu QR untuk petugas & pemilik)
    + tombol notifikasi `wa.me`.
 4. **Path-based URL** `/admin/*`, `/market/*` — ditunda; hash deep-link masih kanonik.
