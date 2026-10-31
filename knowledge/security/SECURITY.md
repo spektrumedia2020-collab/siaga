@@ -122,6 +122,21 @@ rate limit 60 req/menit/IP, dan tombol **Regenerate token** (QR lama mati).
 
 ---
 
+## S-03b · Owner access PIN (2026-10-31)
+
+**Perubahan:** halaman `/lapak/<token>` kembali meminta **PIN pemilik** (permintaan pemilik).
+Default `7777`, disimpan sebagai hash bcrypt di `stall_access_pins` (RLS tanpa policy; hash tidak dapat
+dibaca anon/authenticated). Pemilik mengganti lewat `set_stall_pin` (PIN lama wajib benar); admin
+mereset lewat `admin_set_stall_pin` dari form Edit Lapak. `/api/lapak` memverifikasi dengan service role
+(`verify_stall_pin`) → 401 tanpa/salah PIN, 503 bila migration belum diterapkan.
+
+**Model risiko (diterima):** PIN 4 digit dengan default publik `7777` adalah gerbang lemah; halaman hanya
+menampilkan data lapak yang sudah semi-publik. Mitigasi: hash bcrypt, rate limit API 60 req/menit/IP,
+`pg_sleep(0.3)` saat PIN lama salah, dan token 32 hex tetap menjadi faktor pada URL. Belum ada lockout
+per lapak — ditingkatkan bila diperlukan.
+
+---
+
 ## S-04 · REMOVED (2026-10-26) — Fitur Perumda dihapus
 
 Halaman `/perumda`, `api/perumda.ts`, route Vercel, dan `PERUMDA_SETUP.md` dihapus karena peran

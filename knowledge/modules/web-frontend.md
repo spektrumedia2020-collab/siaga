@@ -40,7 +40,17 @@ UI untuk superadmin, admin pasar, bendahara, petugas (web), plus halaman publik
 
 - Supabase (anon key) untuk semua CRUD; RLS menentukan izin baris.
 - `/api/users` untuk pembuatan user (saat ini tanpa auth — lihat SECURITY S-01).
-- `/api/perumda` untuk dashboard agregat; `/api/lapak` untuk halaman lapak.
+- `/api/perumda` untuk dashboard agregat; `/api/lapak` untuk halaman lapak (wajib PIN pemilik).
+
+## PIN pemilik & domain publik (2026-10-31)
+
+- `/lapak/<token>` (`PublicStallPage`) menampilkan gate PIN (default `7777`) sebelum memuat data.
+  Setelah terbuka ada bagian **PIN Pemilik** untuk mengganti PIN (butuh token di URL).
+- Admin dapat mereset PIN dari form **Edit Lapak** (field "PIN Pemilik (4 angka)"); kosong = tidak diubah.
+- Tautan publik (QR pemilik/petugas, salin link pasar) memakai `src/lib/publicUrl.ts` →
+  `https://siaga.app` di produksi, `localhost` saat dev, dapat dioverride `VITE_PUBLIC_APP_URL`.
+- QR pemilik berisi `https://siaga.app/lapak/<token>`; modal QR menampilkan nama pasar di atas QR dan
+  menyediakan unduhan PNG 880px + SVG (keduanya memuat nama pasar dan label lapak).
 
 ## Known issues
 

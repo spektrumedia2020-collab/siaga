@@ -25,7 +25,7 @@ untuk pengembangan lokal/self-host.
 | Fungsi | Ringkas | Risiko |
 |---|---|---|
 | `users.ts` | create/list/delete user (service role) | auth + role `ADMIN` + CORS allowlist (S-01 FIXED di kode, menunggu deploy) |
-| `lapak.ts` | info lapak publik via PIN | fallback `1234` (S-03) |
+| `lapak.ts` | info lapak publik; wajib PIN pemilik (default `7777`, hash bcrypt) | 401 tanpa/salah PIN; 503 bila migration 022 belum ada; rate limit 60/menit |
 | `perumda.ts` | login PIN 6 → JWT; agregat laporan | secret fallback (S-04) |
 
 ## Aturan perubahan

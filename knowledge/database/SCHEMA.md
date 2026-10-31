@@ -95,8 +95,8 @@ Implikasi: fallback mobile ke tabel legacy akan gagal; halaman Theme Management 
 
 ## Tagihan tahunan & cicilan (migration 020)
 
-`migrations/020_retribution_annual_bills.sql` — **status 2026-10-31: file siap, menunggu dijalankan pemilik
-di SQL Editor Supabase**. Halaman `#market/dashboard/bills` menampilkan pesan "belum aktif" selama ini.
+`migrations/020_retribution_annual_bills.sql` — **status 2026-10-31: dijalankan pemilik dan terverifikasi**
+(tabel, view, RPC, trigger, RLS ada; uji FIFO rollback PASS). Halaman `#market/dashboard/bills` aktif.
 
 - `retribution_types.billing_period` (`HARIAN|BULANAN|TAHUNAN`, backfill dari `unit` + `name`) dan
   `allow_installment` (default true untuk TAHUNAN).
@@ -119,8 +119,24 @@ Tunggakan tidak digabung ke tagihan tahun baru: tagihan tiap tahun tetap terpisa
 melunasi tahun terdahulu lebih dulu (FIFO). Ringkasan "Tunggakan tahun lalu" dihitung dari sisa
 tagihan dengan `period_year` < tahun yang dipilih.
 
+## PIN pemilik lapak (migration 022)
+
+`migrations/022_stall_owner_pin.sql` — **dijalankan pemilik 2026-10-31 dan terverifikasi**.
+
+- Tabel `stall_access_pins(stall_id PK → stalls ON DELETE CASCADE, pin_hash text, updated_at)`.
+  Hash bcrypt (`pgcrypto` via schema `extensions`). **Tidak ada baris default**: "belum ada baris"
+  berarti PIN `7777`. Baris dibuat saat PIN diganti/direset.
+- RLS aktif **tanpa policy**; grant tabel hanya `postgres` & `service_role` → anon/authenticated tidak
+  bisa membaca hash lewat PostgREST.
+- `verify_stall_pin(p_stall_id, p_pin)` — SECURITY DEFINER, EXECUTE hanya `service_role`
+  (dipakai `/api/lapak`).
+- `set_stall_pin(p_token, p_old_pin, p_new_pin)` — SECURITY DEFINER, EXECUTE `anon` + `authenticated`
+  (pemilik mengganti PIN; PIN lama wajib benar, `pg_sleep(0.3)` saat gagal).
+- `admin_set_stall_pin(p_stall_id, p_pin)` — SECURITY DEFINER, EXECUTE `authenticated`; internal cek
+  `is_current_user_admin_full() OR is_current_user_market_member(market)`.
+
 ## Ringkasan RLS
 
 | Status | Tabel |
 |---|---|
-| Memadai | `markets`, `market_sectors`, `market_config`, `announcements`, `roles`, `user_roles` (007), `retribution_rates` (008), `users` (009), `transactions`/`stalls`/`stall_owners` (010 + 013), `stall_categories` (011), `attendance`/`officers`/`retribution_types`/`setoran` (012), `retribution_bills` (020) |
+| Memadai | `markets`, `market_sectors`, `market_config`, `announcements`, `roles`, `user_roles` (007), `retribution_rates` (008), `users` (009), `transactions`/`stalls`/`stall_owners` (010 + 013), `stall_categories` (011), `attendance`/`officers`/`retribution_types`/`setoran` (012), `retribution_bills` (020), `stall_access_pins` (022 — RLS tanpa policy, hanya definer/service) |

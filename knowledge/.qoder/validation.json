@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-10-31T20:05:00+07:00",
+  "updated_at": "2026-10-31T18:20:00+07:00",
   "checks": {
     "superadmin_market_access": {
       "status": "PASS",
@@ -245,6 +245,18 @@
     "stalls_action_icons": {
       "status": "PASS",
       "evidence": "2026-10-31, permintaan pemilik: tombol aksi di #market/dashboard/stalls tampak putih/tidak kontras dan sebagian berupa kotak. Penyebab: aturan global `button { color:#fff }` (src/index.css) + `Markets.css .btn-edit/.btn-delete { color:#fff }`; icon-only buttons hanya menimpa background/border. Perbaikan: warna eksplisit di `.stalls-page` (navy #1e3a8a, hapus #b91c1c), hover tint #e6edf7/#fee2e2, focus-visible outline; emoji 🔳/🔗/♻️ diganti ikon SVG baru IconQr/IconLink/IconRefresh (18px default, 16px di tabel); QRCodeGenerator menerima ReactNode dan padding inline dihapus; gap 0.2rem + padding 0.2rem sehingga keenam tombol muat. Verifikasi dev 5200: 6/6 tombol memakai SVG, bg transparan, warna navy/merah, scrollWidth=clientWidth=1053 (tanpa scroll). Produksi setelah push 2cb48d4+4d818e3: CSS assets/index.Dc5QSfuZ.css memuat aturan `.stalls-page .btn-qr...` dan `.stalls-page .action-buttons svg`; computed style di https://siaga-pi.vercel.app/?cb=20261031c#market/dashboard/stalls menunjukkan 6 tombol, bg transparan, edit navy, hapus #b91c1c, overflow 0. CI run 41193919948 success (run sebelumnya 41193646876 gagal karena komentar `...` di migration 021, sudah diperbaiki)."
+    },
+    "migration_022_owner_pin": {
+      "status": "PASS",
+      "evidence": "Pemilik menjalankan migrations/022_stall_owner_pin.sql 2026-10-31 (\"sudah migrasi\"). Verifikasi read-only via pooler: tabel stall_access_pins ada, RLS aktif, 0 policy, grant tabel hanya postgres+service_role; 3 fungsi SECURITY DEFINER dengan grant sesuai (verify_stall_pin service_role saja; set_stall_pin anon+authenticated; admin_set_stall_pin authenticated, anon false). Uji fungsional dalam transaksi ROLLBACK (residu 0): default 7777 valid, PIN salah false, anon ganti 7777->1234 berhasil, PIN lama ditolak, PIN lama salah -> 'PIN lama salah', admin reset -> 9999, anon admin_set ditolak 'permission denied'."
+    },
+    "pin_gate_production": {
+      "status": "PASS",
+      "evidence": "2026-10-31 setelah deploy f2f4449+1e3339f (CI 41195888495 success): https://www.siaga.app/api/lapak?token=<NGD-0150> -> 401 'PIN lapak wajib diisi'; pin=0000 -> 401 'PIN salah'; pin=7777 -> 200 data pasar/lapak. Browser produksi: gate menampilkan 'Masukkan PIN' + hint 7777; setelah PIN 7777 data 'Pasar Niaga Daya', kode NGD-0150, pemilik Rusdi tampil; bagian 'PIN Pemilik' dengan tombol 'Ganti PIN' ada. Form Edit Lapak produksi memuat field 'PIN Pemilik (4 angka)' (maxlength 4, placeholder 'Kosongkan bila tidak diganti (awal 7777)'); penyimpanan PIN lewat UI tidak dijalankan di produksi agar data tidak berubah — jalur RPC-nya sudah diuji di rollback."
+    },
+    "public_links_domain": {
+      "status": "PASS",
+      "evidence": "https://siaga.app -> 308 -> https://www.siaga.app (200, judul SIAGA). Modul src/lib/publicUrl.ts mengembalikan https://siaga.app di host non-localhost (localhost memakai origin; override VITE_PUBLIC_APP_URL). Verifikasi produksi: tombol 'Salin link' pada modal QR Pemilik NGD-0150 menghasilkan 'https://siaga.app/lapak/7c3b09f92e3f4147a2801e78f00bc7d6'; modal menampilkan heading 'Niaga Daya' dan label 'QR Pemilik — NGD-0150 | 1'."
     },
     "annual_bills_web": {
       "status": "PASS",

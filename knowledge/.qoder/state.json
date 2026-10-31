@@ -3,7 +3,7 @@
   "project": "SIAGA",
   "project_root": "D:/_siaga",
   "branch": "main",
-  "commit": "4ac4c1d",
+  "commit": "1e3339f",
   "status": "WIP",
   "autonomy": "L1",
   "runtime": {
@@ -32,18 +32,18 @@
   "memory_version": 1,
   "context_version": 1,
   "skill_registry_version": 1,
-  "current_task": "Tagihan Jaspro tahunan live di produksi (migration 020 dijalankan pemilik) dan logika FIFO terverifikasi lewat uji rollback; menunggu tarif Jaspro per lapak diisi",
-  "last_task": "Migration 020 diterapkan + uji fungsional tagihan tahunan (generate, cicil, FIFO, tolak lebih bayar, pelunasan)",
+  "current_task": "PIN pemilik lapak live (migration 022) + halaman publik ber-PIN + domain publik siaga.app; menunggu tarif Jaspro per lapak",
+  "last_task": "Migration 022 (PIN pemilik), gate PIN halaman publik, reset PIN admin, domain publik siaga.app untuk QR/link",
   "last_session_id": "SESSION-2026-10-31-3",
   "last_scan": "2026-10-25T20:05:00+07:00",
   "last_index": "",
-  "last_updated": "2026-10-31T20:05:00+07:00",
-  "last_validation": "2026-10-31T20:05:00+07:00",
+  "last_updated": "2026-10-31T18:20:00+07:00",
+  "last_validation": "2026-10-31T18:20:00+07:00",
   "last_test_status": "pass",
   "last_command": "IMPLEMENT",
   "last_command_status": "COMPLETED",
   "open_wave": null,
   "dirty": false,
   "drift_detected": false,
-  "next_step": "1) Isi tarif Jaspro per lapak: dialog Tarif di halaman Lapak atau impor CSV tarif dengan KODE-JENIS=NGD-JASPRO (jenis NGD-JASPRO id 104 sudah ada, tanpa tarif). 2) Buka #market/dashboard/bills -> pilih tahun -> Terbitkan Tagihan. 3) Uji bayar sebagian di UI dan lihat kolom Tahun di #market/dashboard/transactions. 4) Fase mobile: kartu tagihan + cicilan (mobile belum menulis bill_id) + sisa di struk. 5) Laporan realisasi vs target + tunggakan per umur (belum dibuat)."
+  "next_step": "1) Isi tarif Jaspro per lapak (dialog Tarif atau impor CSV KODE-JENIS=NGD-JASPRO) lalu Terbitkan Tagihan di #market/dashboard/bills. 2) Sosialisasikan PIN pemilik: default 7777, ganti dari halaman /lapak/<token>; admin bisa reset di Edit Lapak. 3) Fase mobile: kartu tagihan + cicilan (mobile belum menulis bill_id) + sisa di struk. 4) Laporan realisasi vs target + tunggakan per umur. 5) Pertimbangkan lockout PIN per lapak bila perlu."
 }
