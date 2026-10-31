@@ -164,7 +164,7 @@ class _ReconciliationPageState extends ConsumerState<ReconciliationPage> {
       Row(children: [
         Expanded(child: _StatCard(title: 'Expected', value: currency.format(expectedRevenue), color: Colors.orange)),
         const SizedBox(width: 12),
-        Expanded(child: _StatCard(title: 'Actual', value: currency.format(actualRevenue), color: Colors.teal)),
+        Expanded(child: _StatCard(title: 'Actual', value: currency.format(actualRevenue), color: const Color(0xFF1D4E89))),
       ]),
       const SizedBox(height: 12),
       _StatCard(title: 'Variance', value: currency.format(variance), color: variance >= 0 ? const Color(0xFF1D4E89) : Colors.red),

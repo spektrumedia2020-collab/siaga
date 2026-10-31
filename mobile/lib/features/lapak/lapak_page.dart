@@ -724,7 +724,7 @@ class _LapakPageState extends ConsumerState<LapakPage> {
                     if (_ownerAddress != null && _ownerAddress!.isNotEmpty)
                       _buildInfoRow(
                         icon: Icons.home_outlined,
-                        iconColor: Colors.teal,
+                        iconColor: const Color(0xFF1D4E89),
                         label: 'Alamat',
                         value: _ownerAddress!,
                       ),

@@ -202,7 +202,7 @@ class _SummaryPageBodyState extends State<SummaryPageBody> {
           Row(children: [
             Expanded(child: _SummaryCard(title: 'Transaksi', value: _period == 'today' ? _todayTxCount : _periodTxCount, isAmount: false, icon: Icons.receipt_long, color: Colors.orange)),
             const SizedBox(width: 12),
-            Expanded(child: _SummaryCard(title: 'Pendapatan Hari Ini', value: _todayRevenue, icon: Icons.today, color: Colors.teal)),
+            Expanded(child: _SummaryCard(title: 'Pendapatan Hari Ini', value: _todayRevenue, icon: Icons.today, color: const Color(0xFF1D4E89))),
           ]),
           const SizedBox(height: 24),
           if (_daily.isNotEmpty) ...[

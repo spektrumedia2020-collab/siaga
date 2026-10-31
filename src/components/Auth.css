@@ -14,8 +14,8 @@
   min-height: 680px;
   overflow: hidden;
   background: #f7f9fc;
-  border: 1px solid rgba(24, 50, 42, .1);
-  box-shadow: 0 28px 70px rgba(24, 50, 42, .18);
+  border: 1px solid rgba(11, 31, 58, .1);
+  box-shadow: 0 28px 70px rgba(11, 31, 58, .18);
 }
 
 .auth-visual {
