@@ -19,6 +19,10 @@
       "status": "PASS",
       "evidence": "Uji runner dengan klien Supabase palsu: impor pertama membuat 1.658 lapak + 3.310 rate; impor ulang 0 create/0 update (idempoten). NGD-01395 -> nomor 'No. 24', sektor 'Ruko VB'; public_token tidak dikirim (default DB)."
     },
+    "csv_import_templates": {
+      "status": "PASS",
+      "evidence": "Kedua template di public/templates diparse dengan parser aktual (tsx): header baris 0, 5 baris, 0 dilewati; peta kolom benar; tipe MKS-JASTEM/RETRIBUSI-HARIAN dan MKS-SEWA-TAHUNAN/HARIAN. dist/templates berisi kedua berkas setelah build."
+    },
     "csv_import_ui": {
       "status": "PARTIAL",
       "evidence": "Verifikasi struktural via browser-use (DOM/snapshot): 4 berkas terunggah & terpetakan, target NGD terdeteksi 'new', catatan tipe NGD-SEWA-TAHUNAN/HARIAN tampil, tombol import terkunci sebelum target dipilih, tanpa error konsol. Screenshot tidak tersedia (surface browser tersembunyi)."

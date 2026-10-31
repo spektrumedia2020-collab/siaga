@@ -13,6 +13,11 @@ Dipasang sebagai tab admin `#superadmin/import` ("📥 Import Data").
 | `src/lib/csvImportRunner.ts` | Eksekutor Supabase: paginated read, chunked insert, pool update, idempotensi |
 | `src/pages/ImportDataPage.tsx` | UI unggah multi-berkas, target pasar per berkas, preview, progres, ringkasan, unduh CSV gagal |
 | `src/pages/ImportDataPage.css` | Gaya kartu unggah, tabel preview, badge status |
+| `public/templates/contoh-import-pasar.csv` | Template format jastem + retribusi harian |
+| `public/templates/contoh-import-sewa.csv` | Template format sewa tahunan + sewa harian |
+
+Kedua template ditautkan di halaman import ("Belum punya berkas? Unduh template…")
+dan disajikan sebagai berkas statis `/templates/*.csv`.
 
 ## Format CSV yang didukung
 

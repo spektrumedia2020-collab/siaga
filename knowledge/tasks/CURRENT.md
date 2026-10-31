@@ -1,6 +1,6 @@
 # CURRENT — Task Aktif
 
-**Sesi:** SESSION-2026-10-31-2 · **Update:** 2026-10-31T18:30:00+07:00 · **Branch:** `main` @ `20f4ba7`
+**Sesi:** SESSION-2026-10-31-2 · **Update:** 2026-10-31T19:00:00+07:00 · **Branch:** `main` @ `ba4880c`
 
 ## Status
 
@@ -30,6 +30,7 @@
 | 31 | Import CSV legacy + UI admin | **SELESAI** | `csvImport`/`csvImportRunner`/`ImportDataPage`; tab `#superadmin/import`; 4 CSV nyata 0 error |
 | 32 | Verifikasi import (typecheck/build/runner) | **SELESAI** | `tsc --noEmit` 0 error; `vite build` PASS; impor ulang idempoten (0 create/update) |
 | 33 | Commit + push import CSV | **SELESAI** | Push `4b8b87b..20f4ba7`; CI `41148221841` success; bundle produksi memuat UI importer |
+| 34 | Template CSV unduhan di dashboard | **SELESAI** | 2 template statis; terparse 0 error; tautan di halaman import; deploy `ba4880c` |
 | 14 | P0-03 — env PIN lapak + deploy | **DIGANTI** | PIN dihapus; digantikan token QR per lapak (migration 016) |
 | 15 | Role: MARKET_HEAD read-only + hapus impersonation | **SELESAI** | Migration 014; build PASS; deploy `86b62d6` |
 | 16 | P0-12 — kredensial admin di halaman publik | **SELESAI (kode)** | Bundle bersih; rotasi password dipilih tidak dilakukan user |
