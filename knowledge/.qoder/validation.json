@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-10-31T19:15:00+07:00",
+  "updated_at": "2026-10-31T19:25:00+07:00",
   "checks": {
     "superadmin_market_access": {
       "status": "PASS",
@@ -273,6 +273,10 @@
     "owner_phone_required": {
       "status": "PASS",
       "evidence": "2026-10-31. `/api/lapak` mengembalikan `summary.owner_has_phone`; jika false, halaman pemilik menampilkan modal wajib 'Lengkapi Nomor HP Pemilik' setelah PIN benar. Aksi `set_phone` (POST) memverifikasi PIN, menormalkan 62→0, memvalidasi 9–15 digit, menolak bila nomor sudah ada (409), lalu memperbarui `stall_owners.phone` via service role (tanpa migration baru). Admin tetap bisa mengisi lewat halaman Pemilik (field Telepon + kolom tabel sudah ada). Verifikasi produksi: NGD-0001 (pemilik tanpa nomor) menampilkan modal; saat diisi dan disimpan, modal tertutup dan DB berubah (owner 3834, nomor berakhiran 8218 — data pengguna, tidak dicetak penuh). Uji API produksi: nomor tidak valid → 400; PIN salah → 401. Catatan: NGD-0150 kini `pin_is_default=false` (PIN sudah diganti lewat alur Lupa PIN), sehingga hint 'PIN awal 7777' tidak tampil. Commit kode 3ccac87, CI 41199073539 success."
+    },
+    "qr_scanability": {
+      "status": "PASS",
+      "evidence": "2026-10-31 laporan: QR belum terbaca Google Lens. Isi QR sudah benar (https://siaga.app/lapak/<token>, diverifikasi lewat 'Salin link'). Perbaikan: ekspor PNG/SVG memakai quiet zone 4 modul (membaca viewBox 33 modul → margin 107 px pada QR 880), QR display diberi padding 16px, error-correction dinaikkan ke level M, dan modal menampilkan 'Pindai dengan kamera atau Google Lens.' Verifikasi dev & produksi (CSS index.DpKEJbnq.css): SVG ekspor 1094×1301, QR dalam mulai x=107; PNG 1094×1301; viewBox 0 0 33 33; hint tampil. Catatan: tombol QR pertama berisi kode lapak (teks, untuk aplikasi petugas) sehingga Google Lens tidak membuka halaman; QR pemilik adalah tombol ikon tautan kedua."
     },
     "annual_bills_web": {
       "status": "PASS",
