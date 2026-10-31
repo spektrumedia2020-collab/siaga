@@ -265,7 +265,8 @@ export default async function handler(req: any, res: any) {
       return res.json({
         pin_is_default: Boolean(isDefault),
         market_name: marketContact?.name || null,
-        contact_phone: contactPhone || null
+        contact_phone: contactPhone || null,
+        stall_code: stall.code || null
       })
     }
 

@@ -59,6 +59,7 @@ export function PublicStallPage({ token, marketId, stallCode }: Props) {
   const [pinIsDefault, setPinIsDefault] = useState<boolean | null>(null)
   const [marketContact, setMarketContact] = useState('')
   const [marketContactName, setMarketContactName] = useState('')
+  const [marketStallCode, setMarketStallCode] = useState('')
   const [forgotOpen, setForgotOpen] = useState(false)
   const [resetPhone, setResetPhone] = useState('')
   const [resetPin, setResetPin] = useState('')
@@ -124,6 +125,7 @@ export function PublicStallPage({ token, marketId, stallCode }: Props) {
         setPinIsDefault(typeof result?.pin_is_default === 'boolean' ? result.pin_is_default : null)
         setMarketContact(String(result?.contact_phone || '').trim())
         setMarketContactName(String(result?.market_name || '').trim())
+        setMarketStallCode(String(result?.stall_code || '').trim())
       })
       .catch(() => {})
 
@@ -271,6 +273,8 @@ export function PublicStallPage({ token, marketId, stallCode }: Props) {
 
   const contactDigits = marketContact.replace(/\D/g, '')
   const contactNumber = contactDigits.startsWith('0') ? `62${contactDigits.slice(1)}` : contactDigits
+  const contactMessage = `Halo pengelola ${marketContactName || 'pasar'}, saya ingin menambahkan nomor HP pemilik untuk lapak ${marketStallCode || '(kode lapak)'} dengan nomor HP: `
+  const contactWhatsApp = `https://wa.me/${contactNumber}?text=${encodeURIComponent(contactMessage)}`
 
   if (!unlockedPin) {
     return (
@@ -353,7 +357,7 @@ export function PublicStallPage({ token, marketId, stallCode }: Props) {
                 {marketContact ? (
                   <div className="public-stall-pin-contact">
                     <span>Hubungi pengelola {marketContactName || 'pasar'}:</span>
-                    <a href={`https://wa.me/${contactNumber}`} target="_blank" rel="noreferrer">WhatsApp</a>
+                    <a href={contactWhatsApp} target="_blank" rel="noreferrer">WhatsApp</a>
                     <a href={`tel:+${contactNumber}`}>Telepon</a>
                     <span className="public-stall-pin-contact-number">{marketContact}</span>
                   </div>
