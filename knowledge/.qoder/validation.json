@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-10-31T22:15:00+07:00",
+  "updated_at": "2026-10-31T22:25:00+07:00",
   "checks": {
     "superadmin_market_access": {
       "status": "PASS",
@@ -305,6 +305,10 @@
     "stall_qr_icon_restored": {
       "status": "PASS",
       "evidence": "2026-10-31 laporan 'qrnya hilang' di halaman Lapak. Penyebab: setelah QR disatukan, tombol memakai ikon tautan (IconLink) sehingga tidak dikenali sebagai QR. Perbaikan: kembali ke IconQr; satu tombol QR per baris dengan nilai `https://siaga.app/lapak/<token>?code=<kode>`. Verifikasi produksi (commit 27a29dc, CI 41210272481): tombol title 'QR Lapak (petugas & pemilik)', SVG berisi 3 rect + 4 path (ikon QR), modal label 'QR Lapak — NGD-0150 | 1' dan hint dua peran. Catatan: halaman lapak di aplikasi mobile memang tidak menampilkan QR (hanya memindai)."
+    },
+    "receipt_back_button": {
+      "status": "PARTIAL",
+      "evidence": "2026-10-31. `receipt_page.dart` mendapat tombol **'Kembali ke Lapak'** (gaya outline) yang memanggil `context.go('/lapak/${lapakId ?? stallId}')`; tombol lama Bagikan/Print/Transaksi Baru tetap. `flutter analyze` No issues; `flutter test` 5/5; APK dibangun (1m28) dan di-install ulang. Commit 9954fd4, CI 41212519692 success. BELUM diverifikasi visual karena halaman Bukti hanya muncul setelah pembayaran; tidak dibuat pembayaran uji baru untuk menghindari transaksi tambahan."
     },
     "annual_bills_web": {
       "status": "PASS",
