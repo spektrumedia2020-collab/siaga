@@ -46,6 +46,78 @@ export const DEFAULT_MARKET_THEMES: MarketTheme[] = [
     accent_color: '#a855f7',
     description: 'Tema ungu elegan',
     is_active: false
+  },
+  {
+    id: 'amber',
+    name: 'Kuning Keemasan',
+    primary_color: '#a16207',
+    secondary_color: '#854d0e',
+    accent_color: '#facc15',
+    description: 'Tema kuning keemasan yang hangat',
+    is_active: false
+  },
+  {
+    id: 'red',
+    name: 'Merah Marun',
+    primary_color: '#b91c1c',
+    secondary_color: '#7f1d1d',
+    accent_color: '#ef4444',
+    description: 'Tema merah marun yang tegas',
+    is_active: false
+  },
+  {
+    id: 'teal',
+    name: 'Teal Tosca',
+    primary_color: '#0f766e',
+    secondary_color: '#115e59',
+    accent_color: '#2dd4bf',
+    description: 'Tema teal tosca yang segar',
+    is_active: false
+  },
+  {
+    id: 'olive',
+    name: 'Olive Zaitun',
+    primary_color: '#556b2f',
+    secondary_color: '#3f4f21',
+    accent_color: '#9caa63',
+    description: 'Tema olive zaitun yang natural',
+    is_active: false
+  },
+  {
+    id: 'rose',
+    name: 'Rose Anggrek',
+    primary_color: '#be185d',
+    secondary_color: '#9d174d',
+    accent_color: '#f472b6',
+    description: 'Tema rose anggrek yang lembut',
+    is_active: false
+  },
+  {
+    id: 'indigo',
+    name: 'Indigo Malam',
+    primary_color: '#4338ca',
+    secondary_color: '#3730a3',
+    accent_color: '#818cf8',
+    description: 'Tema indigo malam yang kalem',
+    is_active: false
+  },
+  {
+    id: 'coffee',
+    name: 'Kopi Tanah',
+    primary_color: '#6f4e37',
+    secondary_color: '#55392a',
+    accent_color: '#c19a6b',
+    description: 'Tema kopi tanah yang membumi',
+    is_active: false
+  },
+  {
+    id: 'graphite',
+    name: 'Grafit Batu',
+    primary_color: '#334155',
+    secondary_color: '#1e293b',
+    accent_color: '#94a3b8',
+    description: 'Tema grafit netral tanpa warna mencolok',
+    is_active: false
   }
 ]
 
@@ -109,8 +181,8 @@ export function applyMarketTheme(theme: MarketTheme | null): void {
   Object.entries(variables).forEach(([name, value]) => root.style.setProperty(name, value))
 }
 
-// Anon tidak punya policy SELECT pada market_themes, jadi preset lokal dipakai
-// sebagai cadangan agar tema bawaan tetap tampil di halaman publik.
+// Preset lokal dipakai sebagai cadangan bila baris market_themes tidak terbaca
+// (mis. saat offline atau baris tema kustom belum ada di DB).
 export async function resolveMarketTheme(themeId: string | null | undefined): Promise<MarketTheme | null> {
   if (!themeId) return null
   const preset = DEFAULT_MARKET_THEMES.find((theme) => theme.id === themeId) || null
