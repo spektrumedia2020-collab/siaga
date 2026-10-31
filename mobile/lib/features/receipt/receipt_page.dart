@@ -123,6 +123,20 @@ Tanggal: ${widget.receipt['createdAt']}
             const SizedBox(height: 12),
             ElevatedButton(
               onPressed: () {
+                final lapakId = widget.receipt['lapakId'] ?? widget.receipt['stallId'];
+                if (lapakId != null) context.go('/lapak/$lapakId');
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.surface,
+                foregroundColor: Theme.of(context).colorScheme.primary,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                side: BorderSide(color: Theme.of(context).colorScheme.primary),
+              ),
+              child: const Text('Kembali ke Lapak', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            ),
+            const SizedBox(height: 12),
+            ElevatedButton(
+              onPressed: () {
                 // Navigate to shop page (lapak list) with dashboard index 2
                 context.go('/shop');
               },
