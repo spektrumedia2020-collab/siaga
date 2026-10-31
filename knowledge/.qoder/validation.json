@@ -29,7 +29,7 @@
     },
     "deploy_production": {
       "status": "PASS",
-      "evidence": "Push 73c7267..4a0e766 ke origin/main via deploy key; Vercel siaga-pi.vercel.app melayani kode baru."
+      "evidence": "Push 4b8b87b..20f4ba7 ke origin/main; CI run 41148221841 success (web build+typecheck, mobile analyze+test, SQL sanity). Vercel siaga-pi.vercel.app menyajikan bundle index.Tl5KUERX.js (1.394.274 byte) yang memuat 'Import Data', 'SEWA-TAHUNAN', 'Belum diisi', 'Niaga Daya'."
     },
     "prod_api_users_auth": {
       "status": "PASS",

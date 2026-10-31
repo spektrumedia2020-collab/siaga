@@ -1,10 +1,10 @@
 # CURRENT — Task Aktif
 
-**Sesi:** SESSION-2026-10-31-2 · **Update:** 2026-10-31T18:00:00+07:00 · **Branch:** `main`
+**Sesi:** SESSION-2026-10-31-2 · **Update:** 2026-10-31T18:30:00+07:00 · **Branch:** `main` @ `20f4ba7`
 
 ## Status
 
-`WIP` — fitur import CSV selesai diverifikasi lokal; menunggu commit/push dan seed produksi oleh user.
+`WIP` — fitur import CSV ter-deploy (`e7fc25b`, CI hijau); menunggu seed produksi oleh user.
 
 ## Task
 
@@ -27,9 +27,9 @@
 | 28 | P2 polish (typo, QR, dialog, pagination) | **SELESAI** | Build/typecheck PASS |
 | 29 | CI mobile — analyzer + widget test hijau | **SELESAI** | `flutter analyze` 0 issue; `flutter test` PASS; CI `.env` step |
 | 30 | Sync knowledge sesi mobile CI | **SELESAI** | log, state, CURRENT, validation diperbarui |
-| 31 | Import CSV legacy + UI admin | **SELESAI (kode)** | `csvImport`/`csvImportRunner`/`ImportDataPage`; tab `#superadmin/import`; 4 CSV nyata 0 error |
+| 31 | Import CSV legacy + UI admin | **SELESAI** | `csvImport`/`csvImportRunner`/`ImportDataPage`; tab `#superadmin/import`; 4 CSV nyata 0 error |
 | 32 | Verifikasi import (typecheck/build/runner) | **SELESAI** | `tsc --noEmit` 0 error; `vite build` PASS; impor ulang idempoten (0 create/update) |
-| 33 | Commit + push import CSV | **BERJALAN** | Commit + push `main`; CI hijau; tab tampil di produksi |
+| 33 | Commit + push import CSV | **SELESAI** | Push `4b8b87b..20f4ba7`; CI `41148221841` success; bundle produksi memuat UI importer |
 | 14 | P0-03 — env PIN lapak + deploy | **DIGANTI** | PIN dihapus; digantikan token QR per lapak (migration 016) |
 | 15 | Role: MARKET_HEAD read-only + hapus impersonation | **SELESAI** | Migration 014; build PASS; deploy `86b62d6` |
 | 16 | P0-12 — kredensial admin di halaman publik | **SELESAI (kode)** | Bundle bersih; rotasi password dipilih tidak dilakukan user |
