@@ -1243,6 +1243,61 @@
   margin: 0.5rem 0;
 }
 
+.market-picker {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.market-picker-panel {
+  width: 100%;
+  max-width: 720px;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 12px 32px rgba(15, 61, 46, 0.12);
+}
+
+.market-picker-panel h2 {
+  margin: 0 0 0.5rem;
+}
+
+.market-picker-panel p {
+  margin: 0 0 1.5rem;
+  color: #4b5563;
+}
+
+.market-picker-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.market-picker-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid #d1d5db;
+  border-radius: 14px;
+  background: #f8fafc;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+
+.market-picker-item:hover {
+  border-color: #0f3d2e;
+  background: #ecfdf5;
+}
+
+.market-picker-item span {
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
 .page-header {
   display: flex;
   align-items: center;

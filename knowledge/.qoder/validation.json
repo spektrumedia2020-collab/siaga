@@ -1,8 +1,12 @@
 {
   "version": 1,
-  "updated_at": "2026-10-31T03:41:30+07:00",
+  "updated_at": "2026-10-31T23:20:00+07:00",
   "commit": "713c79bcfc80af41eb95ce03dcda5ff3d437a8f9",
   "checks": {
+    "superadmin_market_access": {
+      "status": "PASS",
+      "evidence": "2026-10-31 dev 5199: #superadmin/markets -> tombol '🚀 Kelola Pasar' (MKS) membuka #market/dashboard langsung untuk Pasar Contoh (5 lapak, kode MKS); sidebar admin memuat 'Ganti Pasar' + 'Kembali ke Superadmin'; reload pada #market/dashboard tetap di dashboard (tidak dilempar ke superadmin, kunci localStorage siaga_admin_market_id=34); 'Ganti Pasar' menampilkan picker NGD/MKS dan memilih NGD menampilkan dashboard Niaga Daya (localStorage=35). typecheck 0 error; build sukses (index.0G1znyBM.js 1.409,72 kB)."
+    },
     "typecheck": {
       "status": "PASS",
       "evidence": "npm run typecheck (tsc --noEmit) 2026-10-31 setelah impor CSV terpisah (pasar/lapak/tarif): 0 error."

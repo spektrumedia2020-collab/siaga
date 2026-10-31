@@ -19,6 +19,7 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [activeRoleName, setActiveRoleName] = useState<string | null>(null)
   const [editingMarketId, setEditingMarketId] = useState<number | null>(null)
+  const [, forceRoute] = useState(0)
 
   useEffect(() => {
     // Check URL hash for route
@@ -32,6 +33,7 @@ function App() {
       } else {
         setEditingMarketId(null)
       }
+      forceRoute((version) => version + 1)
     }
     
     handleHashChange()
@@ -67,9 +69,14 @@ function App() {
           setActiveRoleName(roleName || null)
           
           if (roleName === 'ADMIN') {
-            window.location.hash = 'superadmin/dashboard'
+            const hash = window.location.hash.slice(1)
+            if (!hash || hash.startsWith('login')) {
+              window.location.hash = 'superadmin/dashboard'
+            }
           } else if (['MARKET_HEAD', 'MARKET_ADMIN', 'ADMIN_PASAR', 'PASAR_ADMIN', 'OFFICER'].includes(roleName)) {
-            window.location.hash = 'market/dashboard'
+            if (!window.location.hash.slice(1).startsWith('market')) {
+              window.location.hash = 'market/dashboard'
+            }
           }
         }
       })

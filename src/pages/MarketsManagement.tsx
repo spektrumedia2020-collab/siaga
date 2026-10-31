@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { getSupabaseClient, STORAGE_BUCKET } from '../lib/supabase'
+import { setSelectedAdminMarketId } from '../lib/adminMarketSelection'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import '../styles/layout.css'
 import './SuperAdminDashboardImproved.css'
@@ -169,6 +170,10 @@ export function MarketsManagement() {
   }
 
   const handleEdit = (marketId: number) => { window.location.hash = `superadmin/market-edit/${marketId}` }
+  const handleManage = (marketId: number) => {
+    setSelectedAdminMarketId(marketId)
+    window.location.hash = 'market/dashboard'
+  }
   const handleDelete = async (id: number) => {
     try {
       setDeleting(true)
@@ -245,6 +250,7 @@ export function MarketsManagement() {
                   </div>
                 </div>
                 <div style={{ marginTop: 'auto', paddingTop: '1rem' }}>
+                  <button className="siaga-btn siaga-btn-primary" onClick={() => handleManage(market.id)} style={{ width: '100%', marginBottom: '0.5rem' }}>🚀 Kelola Pasar</button>
                   <div className="market-actions-row">
                     <button className="siaga-btn siaga-btn-outline" onClick={() => handleEdit(market.id)} style={{ flex: 1 }}>✏️ Edit</button>
                     <button className="siaga-btn siaga-btn-accent" onClick={() => setDeleteTarget(market)} style={{ flex: 1 }}>🗑️ Hapus</button>

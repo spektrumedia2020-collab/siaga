@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { getSupabaseClient, STORAGE_BUCKET, getStorageConfigurationMessage } from '../lib/supabase'
-import { getUserMarket, getUserRole } from '../lib/roleUtils'
+import { getAllMarkets, getUserMarket, getUserRole } from '../lib/roleUtils'
+import { clearSelectedAdminMarketId, getSelectedAdminMarketId, setSelectedAdminMarketId } from '../lib/adminMarketSelection'
 import { OfficersPage } from './OfficersPage'
 import { StallsPage } from './StallsPage'
 import { SectorsPage } from './SectorsPage'
@@ -89,6 +90,8 @@ function toLocalDateKey(date: Date) {
 export function MarketDashboard({ userId, onLogout }: Props) {
   const [stats, setStats] = useState<MarketStats | null>(null)
   const [analytics, setAnalytics] = useState<MarketAnalytics>({ sectors: [], stalls: [], officers: [] })
+  const [marketOptions, setMarketOptions] = useState<Array<{ id: number; code: string | null; name: string; city: string | null }>>([])
+  const [isAdminViewer, setIsAdminViewer] = useState(false)
   const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState<PageType>('overview')
   const [chartData, setChartData] = useState<any[]>([])
@@ -521,7 +524,30 @@ export function MarketDashboard({ userId, onLogout }: Props) {
 
   const loadMarketStats = async () => {
     try {
-      const market = await getUserMarket(userId)
+      let market = await getUserMarket(userId)
+      const role = await getUserRole(userId)
+      const adminViewer = (role?.role_name || '').toUpperCase() === 'ADMIN'
+      setIsAdminViewer(adminViewer)
+
+      if (adminViewer) {
+        const markets = await getAllMarkets()
+        setMarketOptions(markets.map((item: any) => ({
+          id: item.id,
+          code: item.code ?? null,
+          name: item.name,
+          city: item.city ?? null
+        })))
+        const savedId = getSelectedAdminMarketId()
+        const selected = markets.find((item: any) => item.id === savedId) || market || null
+        if (!selected) {
+          setLoading(false)
+          return
+        }
+        market = selected
+      } else {
+        setMarketOptions([])
+      }
+
       if (!market) {
         console.error('No market assigned')
         setLoading(false)
@@ -695,6 +721,22 @@ export function MarketDashboard({ userId, onLogout }: Props) {
     }
   }
 
+  const chooseMarket = (marketId: number) => {
+    setSelectedAdminMarketId(marketId)
+    setStats(null)
+    setLoading(true)
+    loadMarketStats()
+  }
+
+  const switchMarket = () => {
+    clearSelectedAdminMarketId()
+    setStats(null)
+    setMarketOptions([])
+    setCurrentPage('overview')
+    setLoading(true)
+    loadMarketStats()
+  }
+
   const getPageFromHash = (): PageType | null => {
     const hash = window.location.hash.slice(1)
     const pageSegment = hash.replace(/^market\/dashboard\/?/, '').replace(/^\//, '')
@@ -746,6 +788,32 @@ export function MarketDashboard({ userId, onLogout }: Props) {
   }
 
   if (!stats) {
+    if (marketOptions.length > 0) {
+      return (
+        <div className="market-picker">
+          <div className="market-picker-panel">
+            <h2>Pilih Pasar</h2>
+            <p>Anda masuk sebagai Superadmin. Pilih pasar yang ingin dikelola.</p>
+            <div className="market-picker-list">
+              {marketOptions.map((market) => (
+                <button
+                  key={market.id}
+                  type="button"
+                  className="market-picker-item"
+                  onClick={() => chooseMarket(market.id)}
+                >
+                  <strong>{market.name}</strong>
+                  <span>
+                    {market.code || 'Tanpa kode'}{market.city ? ` · ${market.city}` : ''}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )
+    }
+
     return (
       <div className="error-message">
         <h2>❌ Tidak Ada Pasar</h2>
@@ -1279,6 +1347,18 @@ export function MarketDashboard({ userId, onLogout }: Props) {
                       <span className="sidebar-icon"><IconOverview /></span>
                       <span>Overview</span>
                     </button>
+                    {isAdminViewer && (
+                      <>
+                        <button className="sidebar-item" onClick={switchMarket}>
+                          <span className="sidebar-icon">🔁</span>
+                          <span>Ganti Pasar</span>
+                        </button>
+                        <button className="sidebar-item" onClick={() => { window.location.hash = 'superadmin/dashboard' }}>
+                          <span className="sidebar-icon">🔐</span>
+                          <span>Kembali ke Superadmin</span>
+                        </button>
+                      </>
+                    )}
                   </div>
                   <div className="sidebar-group">
                     <div className="sidebar-group-title">Data Pasar</div>
