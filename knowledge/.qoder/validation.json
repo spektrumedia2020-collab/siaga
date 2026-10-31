@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-10-31T20:15:00+07:00",
+  "updated_at": "2026-10-31T20:25:00+07:00",
   "checks": {
     "superadmin_market_access": {
       "status": "PASS",
@@ -285,6 +285,10 @@
     "qr_unified": {
       "status": "PASS",
       "evidence": "2026-10-31. Satu QR per lapak: nilai `https://siaga.app/lapak/<token>?code=<kode>` (fallback legacy `/lapak/<marketId>/<kode>`); hanya satu tombol QR di tabel. Owner membuka halaman (query diabaikan); petugas memakai parser baru `mobile/lib/core/qr_payload.dart` (`extractStallCode`) di `scan_page.dart` dan `dashboard_page.dart` — menerima kode mentah, `?code=`, dan path legacy; token-only mengembalikan null. Verifikasi: `flutter analyze` No issues; `flutter test` 5 test lulus (termasuk 4 test parser); web typecheck/build PASS; produksi menyalin link `https://siaga.app/lapak/7c3b09f92e3f4147a2801e78f00bc7d6?code=NGD-0150`, label 'QR Lapak — NGD-0150 | 1', hint 'Bisa dipindai petugas (aplikasi) maupun pemilik (kamera/Google Lens).'; halaman dengan ?code tetap menampilkan gate PIN. Commit 8c86252 + 3460f37; CI 41203460029 success. Catatan: layout dua ikon (Pemilik/Petugas) pada check sebelumnya sudah digantikan."
+    },
+    "owners_phone_guard": {
+      "status": "PASS",
+      "evidence": "2026-10-31. Ditemukan nomor HP pemilik kembali kosong (0 dari 740); dua baris (M. Saleh id 3834, Rusdi id 3962) terakhir diubah 12:01/12:17 UTC dan phone NULL — diduga tertimpa saat edit Pemilik dari daftar yang dimuat sebelum nomor tersimpan. Perbaikan `OwnersPage.handleSubmit`: sebelum update, ambil `phone` terbaru dari DB; jika field form kosong dan DB berisi nomor, nomor DB dipertahankan (tidak bisa terhapus tak sengaja lewat form). Typecheck 0 error, build PASS; commit 63ea191, CI 41204219315 success. Catatan: nomor pemilik perlu diisi ulang (Rusdi 081234567890 demo; M. Saleh 081320118218) lewat halaman Pemilik atau modal halaman lapak."
     },
     "annual_bills_web": {
       "status": "PASS",
