@@ -51,6 +51,11 @@ UI untuk superadmin, admin pasar, bendahara, petugas (web), plus halaman publik
   `https://siaga.app` di produksi, `localhost` saat dev, dapat dioverride `VITE_PUBLIC_APP_URL`.
 - QR pemilik berisi `https://siaga.app/lapak/<token>`; modal QR menampilkan nama pasar di atas QR dan
   menyediakan unduhan PNG 880px + SVG (keduanya memuat nama pasar dan label lapak).
+- Kartu ringkasan pemilik: **Total dibayar** (agregat semua transaksi lunas), **Hari ini** (Sudah/Belum
+  ditarik + nominal, batas hari Asia/Makassar), **Tunggakan** (total sisa tagihan tahunan), **Terakhir bayar**.
+- Bagian **Tagihan Tahunan (Jaspro)**: per tahun → tagihan/dibayar/sisa, badge Lunas/Cicilan/Belum lunas,
+  jatuh tempo, dan daftar cicilan; empty-state "Belum ada tagihan tahunan yang diterbitkan."
+- Daftar transaksi tetap menampilkan maksimal 50 baris terbaru; label tab menunjukkan "50 dari N" bila total lebih.
 
 ## Known issues
 

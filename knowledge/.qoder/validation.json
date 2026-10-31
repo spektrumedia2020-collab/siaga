@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-10-31T18:20:00+07:00",
+  "updated_at": "2026-10-31T18:30:00+07:00",
   "checks": {
     "superadmin_market_access": {
       "status": "PASS",
@@ -257,6 +257,10 @@
     "public_links_domain": {
       "status": "PASS",
       "evidence": "https://siaga.app -> 308 -> https://www.siaga.app (200, judul SIAGA). Modul src/lib/publicUrl.ts mengembalikan https://siaga.app di host non-localhost (localhost memakai origin; override VITE_PUBLIC_APP_URL). Verifikasi produksi: tombol 'Salin link' pada modal QR Pemilik NGD-0150 menghasilkan 'https://siaga.app/lapak/7c3b09f92e3f4147a2801e78f00bc7d6'; modal menampilkan heading 'Niaga Daya' dan label 'QR Pemilik — NGD-0150 | 1'."
+    },
+    "owner_page_totals": {
+      "status": "PASS",
+      "evidence": "2026-10-31 permintaan pemilik (3 item inti). /api/lapak kini mengambil SEMUA transaksi berstatus paid/PAID/LUNAS/lunas dengan paginasi 1000 (bukan 50 terakhir) dan mengembalikan summary: total_paid, paid_count, last_paid_at, today{date,amount,count,daily_due,status}, bills_outstanding, bills_count; plus bills[] dari retribution_bill_balances dengan installments dari transactions.bill_id. Hari ini dihitung memakai batas hari Asia/Makassar (UTC+8); status harian memakai rate unit HARI. Verifikasi handler langsung (tsx, data produksi): summary {total_paid:20000, paid_count:4, today:{date:2026-10-31, amount:0, daily_due:5000, status:BELUM}, bills_count:0}; PIN salah/tanpa PIN tetap 401. Produksi www.siaga.app setelah deploy ab42633 (CI 41196824103 success): kartu 'TOTAL DIBAYAR Rp 20.000', 'HARI INI Belum ditarik / Tarif Rp 5.000', 'TUNGGAKAN Belum ada', 'TERAKHIR BAYAR 24/10/2026', bagian 'Tagihan Tahunan (Jaspro)' dengan empty-state. Tampilan tagihan/cicilan diuji di dev dengan respons tiruan (2 tagihan: 2025 Lunas + cicilan Rp 350.000; 2026 Cicilan sisa Rp 250.000) — kartu, badge status, meta tagihan, dan baris cicilan ter-render."
     },
     "annual_bills_web": {
       "status": "PASS",
