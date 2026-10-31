@@ -1,10 +1,10 @@
 # CURRENT — Task Aktif
 
-**Sesi:** SESSION-2026-10-31-1 · **Update:** 2026-10-31T10:00:00+07:00 · **Branch:** `main` @ `8bf2dd0`
+**Sesi:** SESSION-2026-10-31-2 · **Update:** 2026-10-31T18:00:00+07:00 · **Branch:** `main`
 
 ## Status
 
-`WIP` — knowledge root selesai diinisialisasi; pekerjaan berikutnya menunggu keputusan user.
+`WIP` — fitur import CSV selesai diverifikasi lokal; menunggu commit/push dan seed produksi oleh user.
 
 ## Task
 
@@ -27,6 +27,9 @@
 | 28 | P2 polish (typo, QR, dialog, pagination) | **SELESAI** | Build/typecheck PASS |
 | 29 | CI mobile — analyzer + widget test hijau | **SELESAI** | `flutter analyze` 0 issue; `flutter test` PASS; CI `.env` step |
 | 30 | Sync knowledge sesi mobile CI | **SELESAI** | log, state, CURRENT, validation diperbarui |
+| 31 | Import CSV legacy + UI admin | **SELESAI (kode)** | `csvImport`/`csvImportRunner`/`ImportDataPage`; tab `#superadmin/import`; 4 CSV nyata 0 error |
+| 32 | Verifikasi import (typecheck/build/runner) | **SELESAI** | `tsc --noEmit` 0 error; `vite build` PASS; impor ulang idempoten (0 create/update) |
+| 33 | Commit + push import CSV | **BERJALAN** | Commit + push `main`; CI hijau; tab tampil di produksi |
 | 14 | P0-03 — env PIN lapak + deploy | **DIGANTI** | PIN dihapus; digantikan token QR per lapak (migration 016) |
 | 15 | Role: MARKET_HEAD read-only + hapus impersonation | **SELESAI** | Migration 014; build PASS; deploy `86b62d6` |
 | 16 | P0-12 — kredensial admin di halaman publik | **SELESAI (kode)** | Bundle bersih; rotasi password dipilih tidak dilakukan user |
@@ -43,13 +46,15 @@
 
 ## Scope sesi ini
 
-- Kode mobile (analyzer/test/CI), knowledge, dan sinkronisasi state. Tanpa perubahan web/DB.
+- Fitur import CSV: parser 4 format legacy, mesin impor Supabase idempoten, halaman admin `#superadmin/import`.
+- Knowledge: modul baru `modules/import-csv.md`, sinkronisasi state/validation/log.
+- Tanpa perubahan skema DB (kolom & policy yang ada sudah cukup).
 
 ## Blocker
 
-- Tidak ada blocker teknis aktif; CI web/SQL/mobile hijau setelah `8bf2dd0` di-push.
+- Tidak ada blocker teknis aktif; typecheck/build/impor lokal hijau.
 - Risiko diterima: password `admin@siaga.id` tidak dirotasi (keputusan user, S-18).
-- Data produksi kosong (0 pasar/lapak/transaksi) — operasional belum bisa diuji end-to-end.
+- Data produksi kosong (0 pasar/lapak/transaksi) — kini dapat diisi lewat tab Import Data (4 CSV di root repo).
 
 ## Team Waves
 
@@ -58,8 +63,9 @@ Tidak ada gelombang paralel. `open_wave = null`.
 ## Next Session Handoff
 
 1. Baca urutan resume: `state.json` → `index/index-state.json` → `context.md` → `memory.md` → `00_INDEX.md` → berkas ini.
-2. **Seed data awal** (pasar, lapak, kategori, jenis/tarif retribusi) lewat dashboard admin
-   agar `/lapak/<token>` dan alur petugas bisa diuji end-to-end.
+2. **Seed data produksi** lewat `#superadmin/import`: unggah 4 CSV root repo
+   (`Sawah`, `Panakkukang`, `Terong`, `Niaga Daya`), target pasar terdeteksi otomatis
+   (NGD/SWH/PNK/TRG), lalu "Import semua". Setelah itu uji `/lapak/<token>` dan alur petugas.
 3. **Fase 2 mobile**: `scan_page.dart` membaca URL/token QR (satu QR untuk petugas & pemilik)
    + tombol notifikasi `wa.me`.
 4. **Path-based URL** `/admin/*`, `/market/*` — ditunda; hash deep-link masih kanonik.

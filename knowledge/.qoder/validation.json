@@ -1,15 +1,27 @@
 {
   "version": 1,
-  "updated_at": "2026-10-31T10:00:00+07:00",
-  "commit": "8bf2dd076452590171ee3bf8f6417bb32092c1ec",
+  "updated_at": "2026-10-31T18:00:00+07:00",
+  "commit": "e7fc25b0cd15022ef54ed9d4e23c21b704894cfc",
   "checks": {
     "typecheck": {
       "status": "PASS",
-      "evidence": "npm run typecheck (tsc --noEmit) pada 2026-10-26: 0 error. Project reference dist-server dihapus dari tsconfig.json; tsconfig.node.json jadi noEmit."
+      "evidence": "npm run typecheck (tsc --noEmit) pada 2026-10-31 setelah fitur import CSV: 0 error."
     },
     "build_web": {
       "status": "PASS",
-      "evidence": "npm run build sukses (vite, ~1s). Peringatan: chunk utama 1.42 MB (>500 kB), tanpa code-splitting."
+      "evidence": "npm run build (vite) 2026-10-31: sukses 1.38s; bundle 1,394 kB (gzip 398 kB), peringatan chunk >500 kB tanpa code-splitting."
+    },
+    "csv_import_parse": {
+      "status": "PASS",
+      "evidence": "Parser diuji ke 4 CSV root repo (2026-10-31): Sawah 262 baris/9 sektor/168 pemilik; Panakkukang 626/37/460; Terong 1814/21/574; Niaga Daya 1396/24/763; total 0 baris dilewati."
+    },
+    "csv_import_runner": {
+      "status": "PASS",
+      "evidence": "Uji runner dengan klien Supabase palsu: impor pertama membuat 1.658 lapak + 3.310 rate; impor ulang 0 create/0 update (idempoten). NGD-01395 -> nomor 'No. 24', sektor 'Ruko VB'; public_token tidak dikirim (default DB)."
+    },
+    "csv_import_ui": {
+      "status": "PARTIAL",
+      "evidence": "Verifikasi struktural via browser-use (DOM/snapshot): 4 berkas terunggah & terpetakan, target NGD terdeteksi 'new', catatan tipe NGD-SEWA-TAHUNAN/HARIAN tampil, tombol import terkunci sebelum target dipilih, tanpa error konsol. Screenshot tidak tersedia (surface browser tersembunyi)."
     },
     "api_users_auth_smoke": {
       "status": "PASS",

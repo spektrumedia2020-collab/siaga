@@ -13,8 +13,8 @@ UI untuk superadmin, admin pasar, bendahara, petugas (web), plus halaman publik
 |---|---|
 | `src/App.tsx` | Router manual (hash + pathname), auth state, impersonation, redirect per role |
 | `src/components/` | `Auth`, `Dashboard` (shell), `Navigation`, `ProtectedRoute`, `ConfirmDialog`, `EmptyState`, `Loading`, `ErrorBoundary`, `ExportButtons`, `QRCodeGenerator`, `DateRangePicker`, `Icons` |
-| `src/pages/` | `SuperAdminDashboardImproved`, `MarketDashboard`, `MarketEditPage`, `MarketLandingPage`, `PublicStallPage`, `JuriDocumentationPage`, `PerumdaPage`, `MarketsManagement`, `MarketsPage`, `MarketDetailPage`, `StallsPage`, `OwnersPage`, `OfficersPage`, `CategoriesPage`, `SectorsPage`, `RetribusiPage`, `TransactionsPage`, `SetoranPage`, `ReconciliationsPage`, `UserManagement`, `ThemeManagement` |
-| `src/lib/` | `supabase`, `api` (ApiClient), `roleUtils`, `store` (zustand), `exportUtils`, `googleSheetsAuth`, `imageUtils`, `retributionMasterData`, `userProfile` |
+| `src/pages/` | `SuperAdminDashboardImproved`, `MarketDashboard`, `MarketEditPage`, `MarketLandingPage`, `PublicStallPage`, `MarketsManagement`, `MarketsPage`, `MarketDetailPage`, `StallsPage`, `OwnersPage`, `OfficersPage`, `CategoriesPage`, `SectorsPage`, `RetribusiPage`, `TransactionsPage`, `SetoranPage`, `ReconciliationsPage`, `UserManagement`, `ThemeManagement`, `ImportDataPage` |
+| `src/lib/` | `supabase`, `api` (ApiClient), `roleUtils`, `store` (zustand), `exportUtils`, `googleSheetsAuth`, `imageUtils`, `userProfile`, `csvImport`, `csvImportRunner` |
 | `src/styles/`, `src/*.css` | Layout & tema |
 | `src/server.ts`, `src/routes/`, `src/middleware/` | Backend Express (bukan bagian SPA build) |
 

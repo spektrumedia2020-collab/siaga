@@ -2,7 +2,7 @@
 
 > Satu root canonical: `knowledge/` (AGY-QODER OS §2.1). `AGENTS.md` dan dokumen di root repo
 > berstatus **SUMBER LAMA / RUJUKAN**, bukan knowledge aktif kedua.
-> Terakhir diperbarui: 2026-10-25 (SESSION-2026-10-25-1)
+> Terakhir diperbarui: 2026-10-31 (SESSION-2026-10-31-2)
 
 ## Mulai dari sini (urutan boot §11.14)
 
@@ -40,6 +40,7 @@
 ## Modul
 
 - [modules/web-frontend.md](./modules/web-frontend.md) — React admin/petugas + halaman publik
+- [modules/import-csv.md](./modules/import-csv.md) — impor CSV legacy (4 format) + UI admin `#superadmin/import`
 - [modules/mobile-officer.md](./modules/mobile-officer.md) — Flutter petugas lapangan (offline-first)
 - [modules/backend-api.md](./modules/backend-api.md) — Express `src/server.ts` + Vercel `api/*.ts`
 
@@ -47,6 +48,7 @@
 
 - [decisions/ADR-001-supabase-first.md](./decisions/ADR-001-supabase-first.md)
 - [logs/2026-10-25.md](./logs/2026-10-25.md)
+- [logs/2026-10-31.md](./logs/2026-10-31.md)
 
 ## Rujukan root repo (bukan canonical)
 

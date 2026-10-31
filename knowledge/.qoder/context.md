@@ -1,12 +1,13 @@
-# Context Aktif (L0) — 2026-10-26
+# Context Aktif (L0) — 2026-10-31
 
-**Sesi:** SESSION-2026-10-25-1 · **Commit terakhir:** `d6e9f7a` · **Branch:** `main` · **Autonomy:** L1
+**Sesi:** SESSION-2026-10-31-2 · **Commit terakhir:** `e7fc25b` · **Branch:** `main` · **Autonomy:** L1
 
 ## Task aktif
 
-**Batch UI/UX P0–P2 sudah ter-deploy** (`c0eaf81`, bundle `index.BGZ91ZmD.js`): tema, read-only,
-deep-link tab admin, `/login`, 404, typo/QR/pagination aktif di produksi.
-CI web & SQL hijau; mobile analyze masih merah. DB masih kosong.
+**Impor CSV legacy + UI admin selesai di kode** (`e7fc25b`): tab `#superadmin/import`
+membaca 4 CSV root repo (Sawah, Panakkukang, Terong, Niaga Daya), pemetaan kolom otomatis,
+impor idempoten. Typecheck/build PASS; menunggu push + seed produksi oleh user.
+CI mobile sudah hijau (`8bf2dd0`). DB produksi masih kosong.
 
 ## Status keamanan ringkas
 
@@ -23,13 +24,14 @@ dan `stall_categories` juga 0. Tersisa 1 admin + 4 `roles`; storage 0 objek.
 ## Berkas kunci
 
 `api/users.ts`, `api/lapak.ts`, `src/App.tsx`, `src/lib/roleUtils.ts`,
-`src/pages/SuperAdminDashboardImproved.tsx` (tab Setoran), `migrations/007–015`.
+`src/lib/csvImport.ts`, `src/lib/csvImportRunner.ts`, `src/pages/ImportDataPage.tsx`,
+`src/pages/SuperAdminDashboardImproved.tsx`, `migrations/007–017`.
 
 ## Next action (spesifik)
 
-1. Buat pasar + lapak (DB kosong) agar `/lapak/<token>` bisa diuji.
-2. Fase 2: mobile membaca QR URL/token; tombol WA `wa.me`.
-3. Perbaiki mobile CI (`flutter analyze` gagal karena warning/info lama).
+1. Push `e7fc25b`; verifikasi CI dan tab "📥 Import Data" di produksi.
+2. Seed produksi: unggah 4 CSV root repo lewat `#superadmin/import`, lalu uji `/lapak/<token>`.
+3. Fase 2: mobile membaca QR URL/token; tombol WA `wa.me`.
 4. Opsional: test otomatis (P1-04).
 
 ## Catatan akses DB
