@@ -1336,6 +1336,22 @@ export function MarketDashboard({ userId, onLogout }: Props) {
       <div className="market-dashboard">
         <div className="dashboard-layout">
           <aside className="sidebar">
+            <div className="market-identity">
+              <div className="market-identity-icon" aria-hidden="true">
+                {market.logo_url ? (
+                  <img src={market.logo_url} alt="" onError={(event) => { (event.currentTarget as HTMLImageElement).style.display = 'none' }} />
+                ) : (
+                  <span>🏪</span>
+                )}
+              </div>
+              <div className="market-identity-text">
+                <span className="market-identity-kicker">Pasar dikelola</span>
+                <strong className="market-identity-name" title={market.name}>{market.name}</strong>
+                <span className="market-identity-meta">
+                  {[market.code, market.city].filter(Boolean).join(' · ') || 'Tanpa kode'}
+                </span>
+              </div>
+            </div>
             <div className="sidebar-nav">
               <>
                 <div className="sidebar-group">

@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "updated_at": "2026-10-31T13:40:00+07:00",
-  "commit": "6506c31",
+  "updated_at": "2026-10-31T14:10:00+07:00",
+  "commit": "99d4061",
   "checks": {
     "superadmin_market_access": {
       "status": "PASS",
@@ -177,11 +177,15 @@
     },
     "analytics_seed_ui": {
       "status": "PARTIAL",
-      "evidence": "Analytics & Overview diverifikasi lewat DOM di dev server (data ter-render: KPI, teks grafik, top pasar/lapak). Bukti visual (screenshot) tidak dapat diambil karena in-app browser tidak menyediakan surface terlihat; panel 'Top Petugas' kosong karena seed tidak mengisi officer_id (produksi 0 petugas)."
+      "evidence": "Analytics & Overview diverifikasi lewat DOM di dev server (data ter-render: KPI, teks grafik, top pasar/lapak). Bukti visual (screenshot) tidak dapat diambil karena in-app browser tidak menyediakan surface terlihat. Panel 'Top Petugas' awalnya kosong karena seed belum mengisi officer_id; sudah terisi setelah check `simulated_officers`."
     },
     "simulated_officers": {
       "status": "PASS",
       "evidence": "2026-10-31 atas permintaan 'tambahkan 5 petugas untuk yang melakukan transaksi': 5 baris `users` dibuat lewat pooler untuk market 39 (id_user 31–35, id_role 3 = OFFICER, status AKTIF, akses_global false, auth_uid null): Andi Saputra, Rahmat Hidayat, Sitti Aminah, Muhammad Yusuf, Nurul Fadhilah (username petugas.andi/rahmat/sitti/yusuf/nurul). Guard: skrip berhenti bila sudah ada user OFFICER di pasar itu. 6.412 transaksi `source='SIMULASI'` di-assign `officer_id` berdasarkan sektor lapak (round-robin 24 sektor -> 5 petugas) dalam satu transaksi DB. Distribusi (pooler): Rahmat 1.717/Rp 17.294.000; Sitti 1.485/Rp 14.332.000; Muhammad 1.220/Rp 12.874.000; Andi 1.107/Rp 9.969.000; Nurul 883/Rp 9.062.000 — total tetap 6.412/Rp 63.531.000, with_officer 6.412. UI dev 5199 setelah reload: Overview TOTAL PETUGAS 5; Analytics 'Top Petugas' menampilkan kelima nama dengan transaksi periode ini (Rahmat 542/Rp 4.450.000, Sitti 476, Muhammad 414, Andi 375, Nurul 318). Catatan: akun ini tanpa `auth_uid` sehingga belum bisa login di aplikasi; tabel `officers` tetap 0."
+    },
+    "market_identity_sidebar": {
+      "status": "PASS",
+      "evidence": "2026-10-31 atas permintaan 'tambahkan nama pasar di pasar yang sedang dikelola': blok `.market-identity` ditambahkan di atas menu sidebar `MarketDashboard` (kicker 'Pasar dikelola', nama pasar, `kode · kota`, ikon/logo bila `logo_url` ada). Data dari `stats.market` sehingga ikut berubah saat Ganti Pasar. Verifikasi dev 5199 (DOM, sesi admin): `#market/dashboard` dan `#market/dashboard/stalls` menampilkan 'Niaga Daya' + 'NGD · Makassar'; setelah Ganti Pasar (selection localStorage kosong) muncul picker, memilih Niaga Daya memulihkan identitas dan `siaga_admin_market_id=39`. `npm run typecheck` 0 error; `npm run build` sukses 2.53s. Screenshot tidak tersedia (surface in-app browser tersembunyi)."
     }
   }
 }

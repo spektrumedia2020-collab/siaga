@@ -326,6 +326,70 @@
   align-self: stretch;
 }
 
+.market-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.7rem 0.75rem;
+  border-radius: 10px;
+  background: rgba(31, 78, 18, 0.06);
+  border: 1px solid rgba(29, 61, 7, 0.1);
+}
+
+.market-identity-icon {
+  flex: 0 0 auto;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 10px;
+  background: #1f4e12;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  overflow: hidden;
+}
+
+.market-identity-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.market-identity-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.market-identity-kicker {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #4d7c0f;
+}
+
+.market-identity-name {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #17380d;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.market-identity-meta {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #64748b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .sidebar-nav {
   display: flex;
   flex-direction: column;
