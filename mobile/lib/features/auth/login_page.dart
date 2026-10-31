@@ -95,12 +95,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'User: petugas@siaga.id\nPassword: DemiSiaga2026!',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
                     const SizedBox(height: 24),
                     TextFormField(
                       controller: _emailController,
