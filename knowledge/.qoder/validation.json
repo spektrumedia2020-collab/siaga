@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-10-31T16:40:00+07:00",
+  "updated_at": "2026-10-31T17:10:00+07:00",
   "checks": {
     "superadmin_market_access": {
       "status": "PASS",
@@ -213,6 +213,14 @@
     "market_theme_public_read_policy": {
       "status": "PASS",
       "evidence": "Pemilik menjalankan `migrations/019_market_themes_public_read.sql` (\"sudah saya jalankan\"). Verifikasi 16:40 — `pg_policies` memuat `market_themes_select_anon` roles `{anon}` cmd SELECT; policy lama `market_themes_select` ({authenticated}) tetap ada. Uji REST dengan anon key: `GET /rest/v1/market_themes?select=id,name,primary_color` -> HTTP 200, 4 baris (default, ocean, purple, sunset). Produksi `https://siaga-pi.vercel.app/@NGD`: halaman publik kini memanggil `.../rest/v1/market_themes?select=...&id=eq.sunset` dan menerapkan `--siaga-primary=#ea580c`, jadi tema dibaca dari DB, bukan lagi preset lokal — jalur tema kustom buatan admin sudah terbuka."
+    },
+    "market_theme_dashboard_page": {
+      "status": "PASS",
+      "evidence": "2026-10-31, permintaan \"tambahkan di sini juga /#market/dashboard\". Halaman baru `src/pages/MarketThemePage.tsx` dipasang sebagai tab Operasional \"🎨 Tema\" di `MarketDashboard`: membaca `markets.theme_id` + daftar `market_themes`, menyimpan lewat `markets.update({theme_id})`, lalu menerapkan token tema tanpa reload. Bug ikutan diperbaiki: `getUserMarket` di `src/lib/roleUtils.ts` memakai daftar kolom eksplisit tanpa `theme_id`, sehingga pengguna yang ter-assign ke pasar menerima `undefined` dan dashboard memakai navy default; kedua select (jalur `user_roles` dan jalur `users`) kini menyertakan `theme_id`. Verifikasi dev :5200 — `#market/dashboard/theme` menampilkan 'Tema Pasar' + 'Simpan Tema' dan grid tema dengan 'Sunset Orange' aktif sesuai DB (`markets.id=39`); pilih 'Biru Laut' + Simpan -> `--siaga-primary=#0ea5e9`, header dashboard `linear-gradient(#e1f6fa,#b9ebf3)`, pesan 'Tema pasar tersimpan'; reload penuh tetap Biru Laut (nilai dari DB, membuktikan perbaikan roleUtils); dikembalikan ke 'Sunset Orange' -> `--siaga-primary=#ea580c`, header `linear-gradient(#feeee3,#fdd8be)`, dan reload tetap Sunset. `#superadmin/market-edit/39` tetap menampilkan pemilih dengan Sunset aktif dan chrome superadmin kembali navy (`--siaga-primary=#1e3a8a`) karena token di-reset saat unmount. Konsol tanpa error. `npm run typecheck` 0 error; `npm run build` sukses (CSS 78,06 kB). Commit `4c31822`."
+    },
+    "market_theme_presets_expanded": {
+      "status": "PASS",
+      "evidence": "2026-10-31, permintaan \"tambah beberapa color schema lagi, kuning, merah, teal, olive dll total 10-15\". Delapan preset baru ditambahkan selain 4 yang ada (Navy, Biru Laut, Sunset Orange, Ungu Royal): amber `#a16207/#854d0e/#facc15` (Kuning Keemasan), red `#b91c1c/#7f1d1d/#ef4444` (Merah Marun), teal `#0f766e/#115e59/#2dd4bf` (Teal Tosca), olive `#556b2f/#3f4f21/#9caa63` (Olive Zaitun), rose `#be185d/#9d174d/#f472b6` (Rose Anggrek), indigo `#4338ca/#3730a3/#818cf8` (Indigo Malam), coffee `#6f4e37/#55392a/#c19a6b` (Kopi Tanah), graphite `#334155/#1e293b/#94a3b8` (Grafit Batu) — total 12 tema. Penyimpanan: `INSERT ... ON CONFLICT (id) DO NOTHING` lewat pooler IPv4 dalam satu transaksi, 8 baris baru, `is_active=false` mengikuti pola 3 preset lama (hanya `default` yang aktif); tabel kini 12 baris. `DEFAULT_MARKET_THEMES` di `src/lib/marketTheme.ts` disamakan sebagai cadangan offline. Kontras dihitung untuk teks putih di atas `primary`: amber 4,92; teal 5,47; olive 5,95; red 6,47; rose 6,04; indigo 7,90; coffee 7,44; graphite 10,35 (dua preset lama ocean 2,77 dan sunset 3,56 memang sudah rendah, tidak diubah). Verifikasi dev :5200 — `#market/dashboard/theme` 12 pilihan, `#superadmin/themes` 12 kartu, `#superadmin/market-edit/39` 12 pilihan dengan Sunset aktif; uji terapkan 'Teal Tosca' -> `--siaga-primary=#0f766e`, header `linear-gradient(#e6faf7,#c4f3ed)` dengan teks `#062d2a`, lalu dikembalikan ke Sunset (`theme_id=sunset`, `--siaga-primary=#ea580c`); `/@NGD` tetap Sunset. `npm run typecheck` 0 error; `npm run build` sukses. Commit `1d1bf71`."
     }
   }
 }

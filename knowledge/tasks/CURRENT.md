@@ -1,6 +1,6 @@
 # CURRENT — Task Aktif
 
-**Sesi:** SESSION-2026-10-31-3 · **Update:** 2026-10-31T15:20:00+07:00 · **Branch:** `main` @ `8587396`
+**Sesi:** SESSION-2026-10-31-3 · **Update:** 2026-10-31T17:10:00+07:00 · **Branch:** `main` @ `1d1bf71`
 
 ## Status
 
@@ -48,6 +48,8 @@ menampilkan data.
 | 47 | Seed 3 bulan transaksi simulasi (NGD) | **SELESAI** | 6.412 baris, Rp 63.531.000, source `SIMULASI`, status `paid`; Rollback: `delete from transactions where source='SIMULASI'` |
 | 48 | Verifikasi Analytics/Overview memuat data seed | **SELESAI** | Overview Rp 63.531.000 / 1396 lapak; Analytics: periode ini Rp 17.961.000 vs sebelumnya Rp 17.070.000 (+5,2%), 3 grafik SVG ter-render |
 | 53 | Tema per pasar benar-benar berlaku | **SELESAI** | Pemilih tema di `#superadmin/market-edit/<id>`; `src/lib/marketTheme.ts` memetakan theme_id -> token `--siaga-*`; landing + dashboard ikut tema; uji lokal Biru Laut lalu kembali Navy |
+| 54 | Halaman Tema di dashboard pasar (`#market/dashboard`) | **SELESAI** | Tab Operasional "🎨 Tema" (`MarketThemePage`); `theme_id` ditambahkan ke select `getUserMarket`; uji Biru Laut -> reload tetap -> kembali Sunset; commit `4c31822` |
+| 55 | 12 color schema tema pasar | **SELESAI** | 8 preset baru (Kuning Keemasan, Merah Marun, Teal Tosca, Olive Zaitun, Rose Anggrek, Indigo Malam, Kopi Tanah, Grafit Batu) + 4 lama; 12 baris `market_themes`; 3 halaman tema menampilkan 12; commit `1d1bf71` |
 | 52 | Palet biru muda + navy (header biru muda) | **SELESAI** | Web + mobile; header #e3efff->#bfdbfe teks navy; sisa amber/oranye diganti biru/merah; CI 41180125573, deploy `a543be7` |
 | 49 | 5 petugas untuk transaksi simulasi | **SELESAI** | `users` 31–35 role OFFICER di NGD; 6.412 transaksi ber-`officer_id`; Overview TOTAL PETUGAS 5, Top Petugas terisi |
 | 50 | Nama pasar di dashboard pasar | **SELESAI** | Blok `.market-identity` di atas sidebar: "Pasar dikelola · Niaga Daya · NGD · Makassar"; ikut Ganti Pasar |
