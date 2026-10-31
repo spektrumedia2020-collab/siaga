@@ -155,6 +155,18 @@
       "status": "PASS",
       "evidence": "2026-10-31, impor 1 pasar lewat UI Import di dev lokal (http://localhost:5199/#superadmin/import, sesi admin): berkas \"NIAGA DAYA - NIAGA DAYA.csv\" -> format gabungan, 1396 baris/0 dilewati, 24 sektor, 37 peringatan duplikat kode lama; pasar baru NGD / Niaga Daya dibuat dari berkas. Ringkasan UI: 1396 baris diimpor, 0 dilewati, 24 sektor baru, 740 pemilik baru, 1396 lapak baru, 2 jenis baru, 2792 tarif baru, 0 gagal. Verifikasi pooler: markets id 39 NGD/Niaga Daya/Makassar/AKTIF; stalls 1396 (semua AKTIF, legacy_code terisi 1396/1396), market_sectors 24, stall_owners 740, retribution_types 2 (NGD-SEWA-HARIAN, NGD-SEWA-TAHUNAN), retribution_rates 2792 (min Rp 5.000, maks Rp 12.750.000, semua > 0). Manajemen Pasar menampilkan 1 kartu NGD '1396 lapak'; halaman Retribusi menampilkan 2 jenis. Contoh baris: NGD-0001 / No. 01 / kode lama 1 / Blok I / M. Saleh."
     },
+    "dashboard_overview_columns": {
+      "status": "PASS",
+      "evidence": "2026-10-31: Overview Superadmin memakai kolom yang tidak ada (`stalls.name`, `users.id/display_name/full_name`) sehingga dua request 400 dan TOTAL LAPAK 0. Diperbaiki: select `stalls(id, market_id, code, number)` dan `users(id_user, market_id, email, nama)`; lookup petugas memakai `id_user`/`nama`; ketiga query sumber (stalls/users/transactions) dipaginasi lewat helper `fetchAllRows` (1000/permintaan) agar tidak terpotong batas PostgREST. Verifikasi dev 5199: konsol tanpa 400, kartu Overview menampilkan TOTAL LAPAK 1396, TOTAL PASAR 1. Typecheck 0 error, build PASS (index.DtirPgmX.js)."
+    },
+    "landing_stall_count": {
+      "status": "PASS",
+      "evidence": "2026-10-31: landing `/@NGD` menampilkan '1000 lapak' padahal 1396 karena menghitung panjang array lapak yang terpotong batas 1000 PostgREST. Diganti dua count server (`count: exact, head: true` untuk total dan untuk status AKTIF), fetch daftar lapak/pemilik dihapus. Verifikasi dev: /@NGD menampilkan '1396 lapak siap melayani', '1396 lapak aktif beroperasi', footer Sektor 24 / Lapak 1396 / Aktif 1396."
+    },
+    "qr_label_layout": {
+      "status": "PASS",
+      "evidence": "2026-10-31 atas permintaan user: label QR dipindah ke bawah kode QR dan kata 'Lapak' dihapus. Dialog QR petugas NGD-0150: urutan anak modal = QR, lalu h4 'NGD-0150 | 1', lalu tombol; QR pemilik: 'QR Pemilik — NGD-0150 | 1'. PNG unduhan kini menyertakan teks label di bawah QR (canvas 160x196; strip caption 36 px berisi 801 piksel gelap, terverifikasi lewat getImageData dengan unduhan dicegah saat uji)."
+    },
     "import_summary_market_counter": {
       "status": "PASS",
       "evidence": "Bug ditemukan saat impor NGD: runStallImport dan runCsvImport menyetel marketCreated tetapi tidak marketsCreated, sehingga ringkasan menampilkan \"0 pasar baru\" meski pasar dibuat (footer 'Pasar baru dibuat dari berkas ini' benar). Diperbaiki dengan summary.marketsCreated = created ? 1 : 0 di kedua runner; `npm run typecheck` 0 error dan `npm run build` sukses 3.39s."

@@ -24,14 +24,23 @@ export function QRCodeGenerator({ value, label, size = 160, icon = '🔳', title
       const url = URL.createObjectURL(blob)
       const img = new Image()
       img.onload = () => {
+        const caption = label?.trim() || ''
+        const captionHeight = caption ? 36 : 0
         const canvas = document.createElement('canvas')
         canvas.width = size
-        canvas.height = size
+        canvas.height = size + captionHeight
         const ctx = canvas.getContext('2d')
         if (ctx) {
           ctx.fillStyle = '#ffffff'
           ctx.fillRect(0, 0, canvas.width, canvas.height)
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+          ctx.drawImage(img, 0, 0, size, size)
+          if (caption) {
+            ctx.fillStyle = '#111111'
+            ctx.font = 'bold 16px Arial, sans-serif'
+            ctx.textAlign = 'center'
+            ctx.textBaseline = 'middle'
+            ctx.fillText(caption, size / 2, size + captionHeight / 2, size - 16)
+          }
           const pngUrl = canvas.toDataURL('image/png')
           const link = document.createElement('a')
           link.href = pngUrl
@@ -85,10 +94,10 @@ export function QRCodeGenerator({ value, label, size = 160, icon = '🔳', title
               boxShadow: '0 10px 30px rgba(0,0,0,0.2)'
             }}
           >
-            {label && <h4 style={{ marginTop: 0 }}>{label}</h4>}
             <div style={{ display: 'inline-block', padding: 8, background: '#fff' }} ref={containerRef}>
               <QRCode value={value} size={size} />
             </div>
+            {label && <h4 style={{ marginTop: 12, marginBottom: 0 }}>{label}</h4>}
             <div style={{ marginTop: 12, display: 'flex', gap: 8, justifyContent: 'center' }}>
               <button onClick={() => navigator.clipboard?.writeText(value)} className="btn-secondary">
                 Salin link

@@ -40,6 +40,9 @@
 | 41 | Hapus pasar NGD & pasar contoh MKS | **SELESAI** | Typed "HAPUS NGD" + "contoh pasar hapus juga"; markets=0, stalls=0; snapshot MKS tersimpan |
 | 42 | Impor 1 pasar nyata (NGD) lewat UI lokal | **SELESAI** | 1396 lapak, 24 sektor, 740 pemilik, 2 jenis, 2792 tarif; 0 gagal; terverifikasi via pooler |
 | 43 | Perbaiki penghitung "pasar baru" di ringkasan impor | **SELESAI** | `summary.marketsCreated` diisi di runner gabungan & lapak; typecheck/build PASS |
+| 44 | Overview Superadmin: kolom salah + paginasi | **SELESAI** | `users(id_user, nama)`, `stalls(code, number)`; TOTAL LAPAK 1396; konsol tanpa 400 |
+| 45 | Landing pasar: hitungan lapak dari server | **SELESAI** | count exact total & AKTIF; "1396 lapak" tidak lagi terpotong 1000 |
+| 46 | Label QR di bawah kode, tanpa kata "Lapak" | **SELESAI** | Format `NGD-0150 \| 1`; PNG unduhan ikut mencetak label |
 | 14 | P0-03 — env PIN lapak + deploy | **DIGANTI** | PIN dihapus; digantikan token QR per lapak (migration 016) |
 | 15 | Role: MARKET_HEAD read-only + hapus impersonation | **SELESAI** | Migration 014; build PASS; deploy `86b62d6` |
 | 16 | P0-12 — kredensial admin di halaman publik | **SELESAI (kode)** | Bundle bersih; rotasi password dipilih tidak dilakukan user |

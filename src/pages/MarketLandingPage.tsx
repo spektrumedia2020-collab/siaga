@@ -26,13 +26,9 @@ interface SectorData {
   description?: string
 }
 
-interface StallData {
-  id: number
-  code: string
-  name: string
-  sector_name: string
-  owner_name: string
-  status: string
+interface StallTotals {
+  total: number
+  active: number
 }
 
 interface PublicNewsItem {
@@ -67,7 +63,7 @@ function parseJsonArray<T>(value: unknown): T[] {
 export function MarketLandingPage({ slug }: Props) {
   const [market, setMarket] = useState<MarketData | null>(null)
   const [sectors, setSectors] = useState<SectorData[]>([])
-  const [stalls, setStalls] = useState<StallData[]>([])
+  const [stallTotals, setStallTotals] = useState<StallTotals>({ total: 0, active: 0 })
   const [cms, setCms] = useState<CmsContent>({ logoUrl: '', heroSlides: [], announcement: '', aboutMarket: '', news: [] })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -137,31 +133,21 @@ export function MarketLandingPage({ slug }: Props) {
 
     setSectors(sectorsData || [])
 
-    const { data: stallsData, error: stallsError } = await supabase
-      .from('stalls')
-      .select('id, code, number, status, sector_id, owner_id')
-      .eq('market_id', marketId)
-      .order('code')
-    if (stallsError) throw stallsError
+    const [stallsCount, activeCount] = await Promise.all([
+      supabase
+        .from('stalls')
+        .select('id', { count: 'exact', head: true })
+        .eq('market_id', marketId),
+      supabase
+        .from('stalls')
+        .select('id', { count: 'exact', head: true })
+        .eq('market_id', marketId)
+        .eq('status', 'AKTIF')
+    ])
+    if (stallsCount.error) throw stallsCount.error
+    if (activeCount.error) throw activeCount.error
 
-    const { data: ownersData, error: ownersError } = await supabase
-      .from('stall_owners')
-      .select('id, name')
-    if (ownersError) throw ownersError
-
-    const sectorMap = new Map((sectorsData || []).map((sector: any) => [sector.id, sector.name]))
-    const ownerMap = new Map((ownersData || []).map((owner: any) => [owner.id, owner.name]))
-
-    setStalls(
-      (stallsData || []).map((s: any) => ({
-        id: s.id,
-        code: s.code || '',
-        name: s.number || '',
-        sector_name: sectorMap.get(s.sector_id) || '-',
-        owner_name: ownerMap.get(s.owner_id) || '-',
-        status: s.status || 'AKTIF'
-      }))
-    )
+    setStallTotals({ total: stallsCount.count || 0, active: activeCount.count || 0 })
   }
 
   if (loading) {
@@ -203,7 +189,7 @@ export function MarketLandingPage({ slug }: Props) {
   const heroSlides = cms.heroSlides.length > 0 ? cms.heroSlides.filter(Boolean) : [market.photo_url || '/pasar.jpeg']
   const heroImage = heroSlides[Math.min(heroIndex, heroSlides.length - 1)] || '/pasar.jpeg'
   const newsItems = cms.news.filter((item) => item.title || item.summary || item.image).slice(0, 3)
-  const activeStallCount = stalls.filter((stall) => (stall.status || '').toUpperCase() === 'AKTIF').length
+  const activeStallCount = stallTotals.active
   const galleryImages = heroSlides.slice(0, 9) // Use hero images for gallery
 
   return (
@@ -275,7 +261,7 @@ export function MarketLandingPage({ slug }: Props) {
             <div className="highlight-card">
               <div className="highlight-icon">👥</div>
               <h3>Pedagang Aktif</h3>
-              <p>{stalls.length} lapak siap melayani</p>
+              <p>{stallTotals.total} lapak siap melayani</p>
             </div>
             <div className="highlight-card">
               <div className="highlight-icon">📂</div>
@@ -433,7 +419,7 @@ export function MarketLandingPage({ slug }: Props) {
               <h4>Statistik</h4>
               <ul>
                 <li>Sektor: {sectors.length}</li>
-                <li>Lapak: {stalls.length}</li>
+                <li>Lapak: {stallTotals.total}</li>
                 <li>Aktif: {activeStallCount}</li>
               </ul>
             </div>

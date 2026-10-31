@@ -15,6 +15,22 @@ import {
 
 const CHART_COLORS = ['#1f7a1f', '#f4c300', '#3d5224', '#ff6b6b', '#4ecdc4', '#45b7d1']
 
+const PAGE_SIZE = 1000
+
+const fetchAllRows = async (
+  build: (from: number, to: number) => PromiseLike<{ data: any[] | null; error: unknown }>
+) => {
+  const rows: any[] = []
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await build(from, from + PAGE_SIZE - 1)
+    if (error) break
+    const page = data || []
+    rows.push(...page)
+    if (page.length < PAGE_SIZE) break
+  }
+  return rows
+}
+
 const formatDateInput = (date: Date) => date.toISOString().slice(0, 10)
 
 const getDefaultRange = () => {
@@ -158,29 +174,36 @@ export function SuperAdminDashboardImproved() {
       const supabase = getSupabaseClient()
       const normalizedRange = normalizeRange(range)
 
-      const [marketsResult, stallsResult, usersResult, transactionsResult] = await Promise.all([
+      const [marketsResult, stallsData, usersData, transactionsData] = await Promise.all([
         supabase
           .from('markets')
           .select('id, name, code, city, address, status')
           .order('name'),
-        supabase
-          .from('stalls')
-          .select('id, market_id, name, code, number')
-          .order('id'),
-        supabase
-          .from('users')
-          .select('id, market_id, email, display_name, full_name')
-          .order('id'),
-        supabase
-          .from('transactions')
-          .select('id, amount, stall_id, officer_id, created_at, transaction_date')
-          .order('created_at', { ascending: false })
+        fetchAllRows((from, to) =>
+          supabase
+            .from('stalls')
+            .select('id, market_id, code, number')
+            .order('id')
+            .range(from, to)
+        ),
+        fetchAllRows((from, to) =>
+          supabase
+            .from('users')
+            .select('id_user, market_id, email, nama')
+            .order('id_user')
+            .range(from, to)
+        ),
+        fetchAllRows((from, to) =>
+          supabase
+            .from('transactions')
+            .select('id, amount, stall_id, officer_id, created_at, transaction_date')
+            .order('created_at', { ascending: false })
+            .order('id', { ascending: false })
+            .range(from, to)
+        )
       ])
 
       const marketsData = marketsResult.data || []
-      const stallsData = stallsResult.data || []
-      const usersData = usersResult.data || []
-      const transactionsData = transactionsResult.data || []
 
       const stallsByMarket = new Map<number, any[]>()
       const usersByMarket = new Map<number, any[]>()
@@ -195,7 +218,7 @@ export function SuperAdminDashboardImproved() {
       })
 
       usersData.forEach((user: any) => {
-        officerLookup.set(String(user.id), user)
+        officerLookup.set(String(user.id_user), user)
         const existing = usersByMarket.get(user.market_id) || []
         existing.push(user)
         usersByMarket.set(user.market_id, existing)
@@ -309,7 +332,7 @@ export function SuperAdminDashboardImproved() {
       const stallRevenueMap = new Map<number, { name: string; revenue: number; transactions: number }>()
       stallsData.forEach((stall: any) => {
         stallRevenueMap.set(stall.id, {
-          name: stall.name || stall.code || `Lapak ${stall.number || stall.id}`,
+          name: stall.code || stall.number || `Lapak ${stall.id}`,
           revenue: 0,
           transactions: 0
         })
@@ -336,7 +359,7 @@ export function SuperAdminDashboardImproved() {
         if (!officerId) return
 
         const officer = officerLookup.get(String(officerId))
-        const officerName = officer?.display_name || officer?.full_name || officer?.email || `Petugas ${officerId}`
+        const officerName = officer?.nama || officer?.email || `Petugas ${officerId}`
         const current = officerRevenueMap.get(String(officerId)) || {
           name: officerName,
           revenue: 0,
