@@ -8,6 +8,7 @@ import { SetoranPage } from './SetoranPage'
 import { OwnersPage } from './OwnersPage'
 import { RetribusiPage } from './RetribusiPage'
 import { ThemeManagement } from './ThemeManagement'
+import { ImportDataPage } from './ImportDataPage'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, Legend
 } from 'recharts'
@@ -69,7 +70,7 @@ const addDays = (value: string, days: number) => {
   return formatDateInput(date)
 }
 
-const ADMIN_TABS = ['overview', 'analytics', 'markets', 'retribusi', 'setoran', 'users', 'pedagang', 'themes'] as const
+const ADMIN_TABS = ['overview', 'analytics', 'markets', 'retribusi', 'setoran', 'users', 'pedagang', 'themes', 'import'] as const
 type AdminTab = (typeof ADMIN_TABS)[number]
 
 export function SuperAdminDashboardImproved() {
@@ -450,6 +451,9 @@ export function SuperAdminDashboardImproved() {
           {/* Group 3: Sistem */}
           <div className="sidebar-group">
             <div className="sidebar-group-label">SISTEM</div>
+            <button className={`sidebar-item ${activeTab === 'import' ? 'active' : ''}`} onClick={() => setActiveTab('import')}>
+              📥 Import Data
+            </button>
             <button className={`sidebar-item ${activeTab === 'themes' ? 'active' : ''}`} onClick={() => setActiveTab('themes')}>
               🎨 Tema Pasar
             </button>
@@ -755,6 +759,12 @@ export function SuperAdminDashboardImproved() {
               <p>Buat dan kelola tema untuk setiap pasar</p>
             </div>
             <ThemeManagement />
+          </section>
+        )}
+
+        {activeTab === 'import' && (
+          <section className="import-section">
+            <ImportDataPage />
           </section>
         )}
       </main>
