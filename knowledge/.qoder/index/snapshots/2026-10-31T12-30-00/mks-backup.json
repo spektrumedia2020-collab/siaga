@@ -1,0 +1,294 @@
+{
+  "captured_at": "2026-10-31T05:42:53.270Z",
+  "market": {
+    "id": "34",
+    "code": "MKS",
+    "name": "Pasar Contoh",
+    "address": "Jl. Contoh Raya No. 10",
+    "city": "Makassar",
+    "timezone": "Asia/Makassar",
+    "status": "AKTIF",
+    "created_at": "2026-10-31T03:30:19.183Z",
+    "updated_at": "2026-10-31T03:30:19.183Z",
+    "photo_url": null,
+    "head_photo_url": null,
+    "id_head_market": null,
+    "description": null,
+    "theme_color": "#1f7a1f",
+    "logo_url": null,
+    "street": null,
+    "street_number": null,
+    "kecamatan": null,
+    "province": null,
+    "postal_code": null,
+    "theme_id": null
+  },
+  "market_sectors": [
+    {
+      "id": "267",
+      "market_id": "34",
+      "name": "Blok A",
+      "created_at": "2026-10-31T03:34:16.248Z",
+      "officer_id": null
+    },
+    {
+      "id": "268",
+      "market_id": "34",
+      "name": "Kios B",
+      "created_at": "2026-10-31T03:34:16.406Z",
+      "officer_id": null
+    }
+  ],
+  "retribution_types": [
+    {
+      "id": "90",
+      "code": "MKS-JASTEM",
+      "name": "Jastem",
+      "description": null,
+      "created_at": "2026-10-31T03:38:28.048Z",
+      "category": "SEWA",
+      "unit": "TAHUN",
+      "notes": null,
+      "updated_at": "2026-10-31T03:38:28.048Z",
+      "amount": "0",
+      "market_id": "34"
+    },
+    {
+      "id": "91",
+      "code": "MKS-RETRIBUSI-HARIAN",
+      "name": "Retribusi Harian",
+      "description": null,
+      "created_at": "2026-10-31T03:38:28.205Z",
+      "category": "RETRIBUSI",
+      "unit": "HARI",
+      "notes": null,
+      "updated_at": "2026-10-31T03:38:28.205Z",
+      "amount": "0",
+      "market_id": "34"
+    },
+    {
+      "id": "92",
+      "code": "MKS-SEWA-TEMPAT-TAHUNAN",
+      "name": "Sewa Tempat Tahunan",
+      "description": null,
+      "created_at": "2026-10-31T03:38:28.323Z",
+      "category": "SEWA",
+      "unit": "TAHUN",
+      "notes": null,
+      "updated_at": "2026-10-31T03:38:28.323Z",
+      "amount": "0",
+      "market_id": "34"
+    },
+    {
+      "id": "93",
+      "code": "MKS-SEWA-TEMPAT-HARIAN",
+      "name": "Sewa Tempat Harian",
+      "description": null,
+      "created_at": "2026-10-31T03:38:28.469Z",
+      "category": "SEWA",
+      "unit": "HARI",
+      "notes": null,
+      "updated_at": "2026-10-31T03:38:28.469Z",
+      "amount": "0",
+      "market_id": "34"
+    }
+  ],
+  "stall_owners": [
+    {
+      "id": "2005",
+      "nik": null,
+      "name": "Budi Santoso",
+      "address": null,
+      "phone": null,
+      "created_at": "2026-10-31T03:34:18.006Z",
+      "updated_at": "2026-10-31T03:34:18.006Z"
+    },
+    {
+      "id": "2006",
+      "nik": null,
+      "name": "Siti Aminah",
+      "address": null,
+      "phone": null,
+      "created_at": "2026-10-31T03:34:18.006Z",
+      "updated_at": "2026-10-31T03:34:18.006Z"
+    },
+    {
+      "id": "2007",
+      "nik": null,
+      "name": "Andi Wijaya",
+      "address": null,
+      "phone": null,
+      "created_at": "2026-10-31T03:34:18.006Z",
+      "updated_at": "2026-10-31T03:34:18.006Z"
+    },
+    {
+      "id": "2008",
+      "nik": null,
+      "name": "Rina Kusuma",
+      "address": null,
+      "phone": null,
+      "created_at": "2026-10-31T03:34:18.006Z",
+      "updated_at": "2026-10-31T03:34:18.006Z"
+    },
+    {
+      "id": "2009",
+      "nik": null,
+      "name": "Hasan Basri",
+      "address": null,
+      "phone": null,
+      "created_at": "2026-10-31T03:34:18.006Z",
+      "updated_at": "2026-10-31T03:34:18.006Z"
+    }
+  ],
+  "stalls": [
+    {
+      "id": "4261",
+      "market_id": "34",
+      "sector_id": "267",
+      "owner_id": "2005",
+      "code": "MC-0001",
+      "number": "No. 01",
+      "qr_code": "MC-0001",
+      "status": "AKTIF",
+      "created_at": "2026-10-31T03:34:18.492Z",
+      "updated_at": "2026-10-31T03:34:18.492Z",
+      "category_id": null,
+      "public_token": "3159a80ce54c4ec0a9b20edb58b3763e",
+      "legacy_code": null
+    },
+    {
+      "id": "4262",
+      "market_id": "34",
+      "sector_id": "267",
+      "owner_id": "2006",
+      "code": "MC-0002",
+      "number": "No. 02",
+      "qr_code": "MC-0002",
+      "status": "AKTIF",
+      "created_at": "2026-10-31T03:34:18.492Z",
+      "updated_at": "2026-10-31T03:34:18.492Z",
+      "category_id": null,
+      "public_token": "b64c2c1debca4a388349ae3853784959",
+      "legacy_code": null
+    },
+    {
+      "id": "4263",
+      "market_id": "34",
+      "sector_id": "267",
+      "owner_id": "2007",
+      "code": "MC-0003",
+      "number": "No. 03",
+      "qr_code": "MC-0003",
+      "status": "AKTIF",
+      "created_at": "2026-10-31T03:34:18.492Z",
+      "updated_at": "2026-10-31T03:34:18.492Z",
+      "category_id": null,
+      "public_token": "09665743251f4edea7a9bdc44b92066f",
+      "legacy_code": null
+    },
+    {
+      "id": "4264",
+      "market_id": "34",
+      "sector_id": "268",
+      "owner_id": "2008",
+      "code": "MC-0004",
+      "number": "No. 05",
+      "qr_code": "MC-0004",
+      "status": "AKTIF",
+      "created_at": "2026-10-31T03:34:18.492Z",
+      "updated_at": "2026-10-31T03:34:18.492Z",
+      "category_id": null,
+      "public_token": "31b327913314435e95984628993b7e9d",
+      "legacy_code": null
+    },
+    {
+      "id": "4265",
+      "market_id": "34",
+      "sector_id": "268",
+      "owner_id": "2009",
+      "code": "MC-0005",
+      "number": "No. 06",
+      "qr_code": "MC-0005",
+      "status": "AKTIF",
+      "created_at": "2026-10-31T03:34:18.492Z",
+      "updated_at": "2026-10-31T03:34:18.492Z",
+      "category_id": null,
+      "public_token": "1f8e5403da534346a74432ab7c85ba3c",
+      "legacy_code": null
+    }
+  ],
+  "retribution_rates": [
+    {
+      "id": "11904",
+      "amount": "1200000",
+      "stall_id": "4261",
+      "market_id": "34",
+      "types_id": "90",
+      "created_at": "2026-10-31T03:38:29.071Z",
+      "updated_at": "2026-10-31T03:38:29.071Z"
+    },
+    {
+      "id": "11905",
+      "amount": "9000",
+      "stall_id": "4261",
+      "market_id": "34",
+      "types_id": "91",
+      "created_at": "2026-10-31T03:38:29.071Z",
+      "updated_at": "2026-10-31T03:38:29.071Z"
+    },
+    {
+      "id": "11906",
+      "amount": "1200000",
+      "stall_id": "4262",
+      "market_id": "34",
+      "types_id": "90",
+      "created_at": "2026-10-31T03:38:29.071Z",
+      "updated_at": "2026-10-31T03:38:29.071Z"
+    },
+    {
+      "id": "11907",
+      "amount": "9000",
+      "stall_id": "4262",
+      "market_id": "34",
+      "types_id": "91",
+      "created_at": "2026-10-31T03:38:29.071Z",
+      "updated_at": "2026-10-31T03:38:29.071Z"
+    },
+    {
+      "id": "11908",
+      "amount": "900000",
+      "stall_id": "4263",
+      "market_id": "34",
+      "types_id": "90",
+      "created_at": "2026-10-31T03:38:29.071Z",
+      "updated_at": "2026-10-31T03:38:29.071Z"
+    },
+    {
+      "id": "11909",
+      "amount": "5000",
+      "stall_id": "4263",
+      "market_id": "34",
+      "types_id": "91",
+      "created_at": "2026-10-31T03:38:29.071Z",
+      "updated_at": "2026-10-31T03:38:29.071Z"
+    },
+    {
+      "id": "11910",
+      "amount": "1800000",
+      "stall_id": "4264",
+      "market_id": "34",
+      "types_id": "92",
+      "created_at": "2026-10-31T03:38:29.071Z",
+      "updated_at": "2026-10-31T03:38:29.071Z"
+    },
+    {
+      "id": "11911",
+      "amount": "10000",
+      "stall_id": "4264",
+      "market_id": "34",
+      "types_id": "93",
+      "created_at": "2026-10-31T03:38:29.071Z",
+      "updated_at": "2026-10-31T03:38:29.071Z"
+    }
+  ]
+}

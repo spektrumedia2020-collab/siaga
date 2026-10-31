@@ -1,6 +1,6 @@
 # CURRENT — Task Aktif
 
-**Sesi:** SESSION-2026-10-31-3 · **Update:** 2026-10-31T14:10:00+07:00 · **Branch:** `main` @ `99d4061`
+**Sesi:** SESSION-2026-10-31-3 · **Update:** 2026-10-31T15:20:00+07:00 · **Branch:** `main` @ `8587396`
 
 ## Status
 
@@ -49,6 +49,7 @@ menampilkan data.
 | 48 | Verifikasi Analytics/Overview memuat data seed | **SELESAI** | Overview Rp 63.531.000 / 1396 lapak; Analytics: periode ini Rp 17.961.000 vs sebelumnya Rp 17.070.000 (+5,2%), 3 grafik SVG ter-render |
 | 49 | 5 petugas untuk transaksi simulasi | **SELESAI** | `users` 31–35 role OFFICER di NGD; 6.412 transaksi ber-`officer_id`; Overview TOTAL PETUGAS 5, Top Petugas terisi |
 | 50 | Nama pasar di dashboard pasar | **SELESAI** | Blok `.market-identity` di atas sidebar: "Pasar dikelola · Niaga Daya · NGD · Makassar"; ikut Ganti Pasar |
+| 51 | Tema navy untuk web + mobile | **SELESAI** | Palet navy `#1e3a8a`/`#152c5b`/`#0b1f3a`; `src/` 0 warna dominan hijau; `AppTheme.primaryNavy`; typecheck/build/analyze/test hijau |
 | 14 | P0-03 — env PIN lapak + deploy | **DIGANTI** | PIN dihapus; digantikan token QR per lapak (migration 016) |
 | 15 | Role: MARKET_HEAD read-only + hapus impersonation | **SELESAI** | Migration 014; build PASS; deploy `86b62d6` |
 | 16 | P0-12 — kredensial admin di halaman publik | **SELESAI (kode)** | Bundle bersih; rotasi password dipilih tidak dilakukan user |
@@ -74,6 +75,9 @@ menampilkan data.
 - Pembersihan produksi atas instruksi user: rollback seluruh data impor legacy, hapus NGD,
   hapus pasar contoh MKS.
 - DDL/delete dijalankan lewat pooler IPv4 karena host DB langsung IPv6-only.
+- Tema navy: palet web dikonversi penuh (token + 32 berkas CSS/TSX), aplikasi mobile memakai
+  `AppTheme.primaryNavy` (`#1E3A8A`) dengan tint `#E6EDF7`; emas `#ffd700` dan warna semantik
+  merah/amber dipertahankan. `market_themes` di DB belum dikonsumsi landing.
 
 ## Blocker
 

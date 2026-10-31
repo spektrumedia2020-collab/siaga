@@ -3,7 +3,7 @@
   "project": "SIAGA",
   "project_root": "D:/_siaga",
   "branch": "main",
-  "commit": "99d4061",
+  "commit": "8587396",
   "status": "WIP",
   "autonomy": "L1",
   "runtime": {
@@ -32,18 +32,18 @@
   "memory_version": 1,
   "context_version": 1,
   "skill_registry_version": 1,
-  "current_task": "Selesai: nama pasar aktif di header sidebar MarketDashboard",
-  "last_task": "Tambah blok identitas pasar (nama, kode, kota) di sidebar dashboard pasar",
+  "current_task": "Selesai: tema navy untuk web (src/) dan mobile (Flutter)",
+  "last_task": "Konversi palet hijau ke navy di web + mobile, verifikasi typecheck/build/analyze/test",
   "last_session_id": "SESSION-2026-10-31-3",
   "last_scan": "2026-10-25T20:05:00+07:00",
   "last_index": "",
-  "last_updated": "2026-10-31T14:10:00+07:00",
-  "last_validation": "2026-10-31T14:10:00+07:00",
+  "last_updated": "2026-10-31T15:20:00+07:00",
+  "last_validation": "2026-10-31T15:20:00+07:00",
   "last_test_status": "pass",
   "last_command": "IMPLEMENT",
   "last_command_status": "COMPLETED",
   "open_wave": null,
   "dirty": false,
   "drift_detected": false,
-  "next_step": "Produksi: 1 pasar NGD (1396 lapak) + 5 petugas (users 31–35, role OFFICER) + 6.412 transaksi simulasi Rp 63.531.000 (source 'SIMULASI', officer_id terisi). Petugas belum punya auth_uid sehingga belum bisa login. Uji /@NGD, /lapak/<token>, alur petugas; hapus simulasi: delete from transactions where source='SIMULASI' (petugas: delete from users where username like 'petugas.%')."
+  "next_step": "Tema navy aktif di web (token --siaga-primary #1e3a8a) dan mobile (AppTheme.primaryNavy). Produksi: 1 pasar NGD (1396 lapak) + 5 petugas (users 31–35, role OFFICER, tanpa auth_uid) + 6.412 transaksi simulasi Rp 63.531.000 (source 'SIMULASI'). Uji /@NGD, /lapak/<token>, alur petugas; hapus simulasi: delete from transactions where source='SIMULASI' (petugas: delete from users where username like 'petugas.%')."
 }
