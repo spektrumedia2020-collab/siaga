@@ -4,7 +4,7 @@ import { getSupabaseClient } from '../lib/supabase'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { Loading } from '../components/Loading'
 import { EmptyState } from '../components/EmptyState'
-import { IconEdit, IconTrash, IconMoney } from '../components/Icons'
+import { IconEdit, IconTrash, IconMoney, IconQr, IconLink, IconRefresh } from '../components/Icons'
 import '../pages/StallsPage.css'
 
 interface Stall {
@@ -674,6 +674,7 @@ export function StallsPage({ marketId, readOnly = false }: Props) {
                         <QRCodeGenerator
                           value={String(stall.code || stall.id)}
                           label={`${stall.code || stall.number}${stall.legacy_code ? ` | ${stall.legacy_code}` : ''}`}
+                          icon={<IconQr />}
                           title="QR Petugas (scan aplikasi)"
                         />
                         <QRCodeGenerator
@@ -681,7 +682,7 @@ export function StallsPage({ marketId, readOnly = false }: Props) {
                             ? `${window.location.origin}/lapak/${stall.public_token}`
                             : `${window.location.origin}/lapak/${stall.market_id}/${encodeURIComponent(stall.code)}`}
                           label={`QR Pemilik — ${stall.code || stall.number}${stall.legacy_code ? ` | ${stall.legacy_code}` : ''}`}
-                          icon="🔗"
+                          icon={<IconLink />}
                           title="QR Pemilik (kamera / Google Lens)"
                         />
                         {!readOnly && (
@@ -692,7 +693,7 @@ export function StallsPage({ marketId, readOnly = false }: Props) {
                               title="Regenerate token publik"
                               aria-label={`Regenerate token publik lapak ${stall.code || stall.number}`}
                             >
-                              ♻️
+                              <IconRefresh />
                             </button>
                             <button
                               onClick={() => handleOpenRateDialog(stall)}

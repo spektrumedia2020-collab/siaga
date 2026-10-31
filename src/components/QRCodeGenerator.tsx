@@ -1,15 +1,17 @@
 import { useState, useRef } from 'react'
+import type { ReactNode } from 'react'
 import QRCode from 'react-qr-code'
+import { IconQr } from './Icons'
 
 interface Props {
   value: string
   label?: string
   size?: number
-  icon?: string
+  icon?: ReactNode
   title?: string
 }
 
-export function QRCodeGenerator({ value, label, size = 160, icon = '🔳', title }: Props) {
+export function QRCodeGenerator({ value, label, size = 160, icon, title }: Props) {
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement | null>(null)
 
@@ -65,9 +67,8 @@ export function QRCodeGenerator({ value, label, size = 160, icon = '🔳', title
         onClick={() => setOpen(true)}
         title={title || 'Tampilkan QR'}
         aria-label={title || 'Tampilkan QR'}
-        style={{ padding: 6, borderRadius: 6 }}
       >
-        {icon}
+        {icon ?? <IconQr />}
       </button>
       {open && (
         <div
