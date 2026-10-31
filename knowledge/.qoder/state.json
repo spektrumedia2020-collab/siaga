@@ -3,7 +3,7 @@
   "project": "SIAGA",
   "project_root": "D:/_siaga",
   "branch": "main",
-  "commit": "a543be7",
+  "commit": "48621e7",
   "status": "WIP",
   "autonomy": "L1",
   "runtime": {
@@ -32,18 +32,18 @@
   "memory_version": 1,
   "context_version": 1,
   "skill_registry_version": 1,
-  "current_task": "Selesai: preset tema default diganti \"Navy (Default)\" di tabel market_themes",
-  "last_task": "Palet biru muda + navy: header biru muda, seluruh aksen biru",
+  "current_task": "Selesai: sisa hardcode hijau (HTML/manifest/shadow/teal mobile) diganti navy, deploy 48621e7",
+  "last_task": "Audit + hapus seluruh sisa warna hijau di frontend",
   "last_session_id": "SESSION-2026-10-31-3",
   "last_scan": "2026-10-25T20:05:00+07:00",
   "last_index": "",
-  "last_updated": "2026-10-31T14:55:00+07:00",
-  "last_validation": "2026-10-31T14:55:00+07:00",
+  "last_updated": "2026-10-31T15:05:00+07:00",
+  "last_validation": "2026-10-31T15:05:00+07:00",
   "last_test_status": "pass",
   "last_command": "IMPLEMENT",
   "last_command_status": "COMPLETED",
   "open_wave": null,
   "dirty": false,
   "drift_detected": false,
-  "next_step": "Produksi sudah memakai palet biru muda + navy (a543be7). Sisa: (1) opsional ubah nama preset tema default di tabel market_themes dari \"Hijau (Default)\" ke \"Navy (Default)\" lewat SQL manual; (2) uji alur petugas di /@NGD, /lapak/<token>; (3) 5 petugas simulasi belum punya auth_uid; (4) mobile belum dijalankan di emulator sejak perubahan warna (analyze+test hijau)."
+  "next_step": "Frontend bebas warna hijau (pemindai hue: 0 temuan; produksi sudah menyajikan manifest + CSS baru). Sisa pekerjaan: (1) uji alur petugas (login petugas belum punya auth_uid), (2) mobile belum dijalankan di emulator sejak perubahan warna, (3) tawaran opsional: ganti `Colors.orange` status belum-bayar/offline bila ingin benar-benar hanya biru+merah."
 }
