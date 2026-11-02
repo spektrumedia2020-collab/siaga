@@ -72,7 +72,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
       final officerResponse = await Supabase.instance.client
           .from('users')
-          .select('id_user, market_id, markets!users_market_id_fkey(name, address)')
+          .select('id_user, market_id, nama, markets!users_market_id_fkey(name, address)')
           .eq('auth_uid', user.id)
           .maybeSingle();
 
@@ -80,6 +80,10 @@ class _DashboardPageState extends State<DashboardPage> {
       final officerUserId = (officerResponse?['id_user'] as num?)?.toInt();
       if (officerMarketId != null) {
         await _coordinator.configure(marketId: officerMarketId, officerId: officerUserId);
+        final officerName = officerResponse?['nama']?.toString();
+        if (officerName != null && officerName.isNotEmpty) {
+          await DatabaseService().setMeta('officer_name', officerName);
+        }
       }
 
       if (mounted) {

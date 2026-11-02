@@ -115,31 +115,53 @@ class SyncService {
     var synced = 0;
 
     for (final row in rows) {
+      final clientUuid = row['id'] as String;
+      final payload = <String, dynamic>{
+        'client_uuid': clientUuid,
+        'officer_id': row['officer_id'],
+        'officer_name': row['officer_name'],
+        'market_id': row['market_id'],
+        'check_in': _toUtc(row['check_in']),
+        'check_out': _toUtc(row['check_out']),
+        'check_in_lat': row['check_in_lat'],
+        'check_in_lng': row['check_in_lng'],
+        'check_out_lat': row['check_out_lat'],
+        'check_out_lng': row['check_out_lng'],
+        'status': row['status'],
+      };
+
       try {
         final response = await _client
             .from('attendance')
-            .upsert(
-              {
-                'client_uuid': row['id'],
-                'officer_id': row['officer_id'],
-                'officer_name': row['officer_name'],
-                'market_id': row['market_id'],
-                'check_in': row['check_in'],
-                'check_out': row['check_out'],
-                'check_in_lat': row['check_in_lat'],
-                'check_in_lng': row['check_in_lng'],
-                'check_out_lat': row['check_out_lat'],
-                'check_out_lng': row['check_out_lng'],
-                'status': row['status'],
-              },
-              onConflict: 'client_uuid',
-              ignoreDuplicates: false,
-            )
+            .insert(payload)
             .select('id')
-            .maybeSingle();
-        final serverId = (response?['id'] as num?)?.toInt();
-        await _database.markAttendanceSynced(row['id'] as String, serverId: serverId);
+            .single();
+        await _database.markAttendanceSynced(
+          clientUuid,
+          serverId: (response['id'] as num?)?.toInt(),
+        );
         synced++;
+      } on PostgrestException catch (e) {
+        // The unique index on client_uuid is partial, so ON CONFLICT is not
+        // usable from PostgREST; a retried check-in arrives as a duplicate.
+        if (e.code != '23505') continue;
+        try {
+          final response = await _client
+              .from('attendance')
+              .update(payload..remove('client_uuid'))
+              .eq('client_uuid', clientUuid)
+              .select('id')
+              .maybeSingle();
+          if (response != null) {
+            await _database.markAttendanceSynced(
+              clientUuid,
+              serverId: (response['id'] as num?)?.toInt(),
+            );
+            synced++;
+          }
+        } on Exception {
+          // Keep the local row; the next sync retries it.
+        }
       } on Exception {
         // Keep the local row; the next sync retries it.
       }
@@ -152,6 +174,16 @@ class SyncService {
     final exponent = attempts <= 1 ? 0 : (attempts - 1).clamp(0, 6);
     final seconds = 30 * (1 << exponent);
     return DateTime.now().add(Duration(seconds: seconds.clamp(30, 1800)));
+  }
+
+  /// Local timestamps are stored without an offset; the server expects the
+  /// real instant, otherwise attendance times shift by the device offset.
+  String? _toUtc(Object? value) {
+    final text = value?.toString();
+    if (text == null || text.isEmpty) return null;
+    final parsed = DateTime.tryParse(text);
+    if (parsed == null) return text;
+    return parsed.toUtc().toIso8601String();
   }
 
   Future<Map<String, int>> syncAll() async {

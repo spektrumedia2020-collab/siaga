@@ -99,7 +99,7 @@ class _AttendancePageState extends ConsumerState<AttendancePage> {
       'officer_id': client.auth.currentUser?.id,
       'officer_name': officerName,
       'market_id': marketId,
-      'check_in': at.toIso8601String(),
+      'check_in': at.toUtc().toIso8601String(),
       'check_in_lat': lat,
       'check_in_lng': lng,
       'status': 'present',
@@ -113,7 +113,27 @@ class _AttendancePageState extends ConsumerState<AttendancePage> {
           .single();
       await database.markAttendanceSynced(clientUuid, serverId: (response['id'] as num?)?.toInt());
       return;
-    } on PostgrestException {
+    } on PostgrestException catch (e) {
+      if (e.code == '23505') {
+        // Retried check-in: the row already exists for this client_uuid.
+        try {
+          final response = await client
+              .from('attendance')
+              .update(base)
+              .eq('client_uuid', clientUuid)
+              .select('id')
+              .maybeSingle();
+          if (response != null) {
+            await database.markAttendanceSynced(
+              clientUuid,
+              serverId: (response['id'] as num?)?.toInt(),
+            );
+          }
+        } on Exception {
+          // Offline or transient; the coordinator syncs later.
+        }
+        return;
+      }
       // Older database without attendance.client_uuid (migration 027).
     } on Exception {
       return; // offline; the coordinator syncs it later
@@ -159,24 +179,42 @@ class _AttendancePageState extends ConsumerState<AttendancePage> {
       final user = Supabase.instance.client.auth.currentUser;
       if (user == null) throw Exception('User tidak terautentikasi');
 
-      Map<String, dynamic>? officerProfile = await Supabase.instance.client
-          .from('officers')
-          .select('market_id, name')
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-      // Fallback to users table if officers profile not found
-      if (officerProfile == null) {
-        final userProfile = await Supabase.instance.client
-            .from('users')
-            .select('market_id, nama as name')
-            .eq('auth_uid', user.id)
+      Map<String, dynamic>? officerProfile;
+      try {
+        officerProfile = await Supabase.instance.client
+            .from('officers')
+            .select('market_id, name')
+            .eq('user_id', user.id)
             .maybeSingle();
 
-        if (userProfile != null) {
+        // Fallback to users table if officers profile not found
+        if (officerProfile == null) {
+          final userProfile = await Supabase.instance.client
+              .from('users')
+              .select('market_id, nama as name')
+              .eq('auth_uid', user.id)
+              .maybeSingle();
+
+          if (userProfile != null) {
+            officerProfile = {
+              'market_id': userProfile['market_id'],
+              'name': userProfile['name'] ?? 'Petugas',
+            };
+          }
+        }
+      } on Exception {
+        officerProfile = null;
+      }
+
+      if (officerProfile == null) {
+        // Offline: use the profile cached at the last successful dashboard load.
+        final database = DatabaseService();
+        final cachedMarketId = int.tryParse(await database.getMeta('officer_market_id') ?? '');
+        final cachedName = await database.getMeta('officer_name');
+        if (cachedMarketId != null) {
           officerProfile = {
-            'market_id': userProfile['market_id'],
-            'name': userProfile['name'] ?? 'Petugas',
+            'market_id': cachedMarketId,
+            'name': cachedName ?? 'Petugas',
           };
         }
       }
@@ -291,7 +329,7 @@ class _AttendancePageState extends ConsumerState<AttendancePage> {
 
         if (attendance != null) {
           await Supabase.instance.client.from('attendance').update({
-            'check_out': checkOutAt.toIso8601String(),
+            'check_out': checkOutAt.toUtc().toIso8601String(),
             'check_out_lat': position.latitude,
             'check_out_lng': position.longitude,
           }).eq('id', attendance['id']);
