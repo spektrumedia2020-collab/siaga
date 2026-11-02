@@ -33,11 +33,11 @@
   "context_version": 1,
   "skill_registry_version": 1,
   "current_task": "Absensi 1×/hari: migration 028 disiapkan; menunggu hapus baris uji id 6 & 7 lalu SQL dijalankan pemilik",
-  "last_task": "Guard absensi satu kali sehari (aplikasi) + migration 028 unique per hari",
+  "last_task": "Baris absensi uji 6 & 7 dihapus; migration 028 menunggu dijalankan pemilik",
   "last_session_id": "SESSION-2026-11-02-3",
   "last_scan": "2026-10-25T20:05:00+07:00",
   "last_index": "",
-  "last_updated": "2026-11-03T00:10:00+07:00",
+  "last_updated": "2026-11-03T00:20:00+07:00",
   "last_validation": "2026-11-03T00:10:00+07:00",
   "last_test_status": "pass",
   "last_command": "TEST",
@@ -45,5 +45,5 @@
   "open_wave": null,
   "dirty": false,
   "drift_detected": false,
-  "next_step": "1) Hapus baris absensi uji id 6 & 7 (izin tertulis), lalu pemilik menjalankan migrations/028_attendance_one_per_day.sql. 2) Pasang APK guard absensi. 3) Setoran tetap online-only. 4) Set irama MINGGUAN/BULANAN per lapak (ditunda). 5) api/lapak.ts period_* + halaman pemilik. 6) Pembayaran uji 287693/287696/287722 tersimpan."
+  "next_step": "1) Pemilik menjalankan migrations/028_attendance_one_per_day.sql (duplikat sudah bersih). 2) Pasang APK guard absensi. 3) Setoran tetap online-only. 4) Set irama MINGGUAN/BULANAN per lapak (ditunda). 5) api/lapak.ts period_* + halaman pemilik."
 }
