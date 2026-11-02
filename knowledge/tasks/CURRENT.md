@@ -136,6 +136,11 @@ Tidak ada gelombang paralel. `open_wave = null`.
 
 ## Next Session Handoff
 
+**Prioritas sesi berikutnya (rekomendasi):** (1) putuskan cara set irama massal lalu isi
+`collection_period` — tanpa itu tagihan periode selalu 0; (2) sambungkan `api/lapak.ts` +
+halaman pemilik ke `period_*` (read-only); (3) kartu tagihan periode di mobile; (4) laporan
+realisasi vs target + tunggakan per umur. Semua commit hingga `74f5d0f` sudah di-push, CI hijau.
+
 1. Baca urutan resume: `state.json` → `index/index-state.json` → `context.md` → `memory.md` → `00_INDEX.md` → berkas ini.
 2. **Tagihan tahunan (Jaspro) live.** 1.396 tarif Rp 5.600.000/lapak dan tagihan 2025 + 2026 sudah
    terbit (masing-masing 1.396 baris); tipe 102 sudah dihapus. FIFO terbukti lewat uji rollback.
@@ -155,18 +160,20 @@ Tidak ada gelombang paralel. `open_wave = null`.
    `HARIAN`; irama hanya bisa diubah per lapak lewat dialog Retribusi. Tiga opsi yang diajukan:
    (1) dialog "set massal" per sektor/jenis di web (rekomendasi), (2) kolom `IRAMA`/`ANCHOR` di
    CSV tarif + impor ulang, (3) tetap per lapak bila hanya segelintir. Belum ada yang dikerjakan.
-3. **Mobile offline Fase 1 & 2 SELESAI di kode (2026-11-02); migration 027 sudah dijalankan dan
-   terverifikasi.** Fase 1: outbox idempoten harian, cache master pasar, sinkron otomatis,
-   pembayaran harian offline, lapak & riwayat offline (termasuk tab Lapak; bug "Gagal memuat data"
-   diperbaiki `b89949d`). Fase 2: cicilan tagihan lewat outbox `BILL_PAYMENT` (RPC idempoten
-   `p_client_uuid`) dan presensi lokal (`attendance.client_uuid`). **Berikutnya**: uji end-to-end
-   antrean nyata (cicilan kecil saat offline lalu sinkron), pasang APK terbaru di perangkat lain,
-   setoran tetap online-only, pertimbangkan penegakan sektor offline dan UNIQUE harian server.
+3. **Mobile offline Fase 1 & 2 SELESAI dan teruji E2E (2026-11-02/03).** Fase 1: outbox
+   idempoten harian, cache master pasar, sinkron otomatis, pembayaran harian offline, lapak &
+   riwayat offline (termasuk tab Lapak; bug "Gagal memuat data" diperbaiki `b89949d`). Fase 2:
+   cicilan tagihan lewat outbox `BILL_PAYMENT` (RPC idempoten `p_client_uuid`, migration 027) dan
+   presensi lokal (`attendance.client_uuid`, migration 028 = 1×/hari). E2E terverifikasi: cicilan
+   Rp 1.000 offline tersinkron (lalu dihapus atas izin), check-in offline 22:43 WIB tersinkron
+   satu baris UTC (lalu dihapus), cache lokal kini mengikuti server saat absensi dihapus.
+   **Sisa**: APK terpasang baru di 23124RA7EO (distribusikan ke petugas lain), setoran tetap
+   online-only, pertimbangkan penegakan sektor offline + UNIQUE harian server untuk pembayaran.
 3b. **Tagihan periode di mobile** (belum): kartu tagihan mingguan/bulanan per lapak belum
    ditampilkan; cicilan tagihan tahunan sudah bisa lewat RPC/antrean offline. `api/lapak.ts`
    juga belum membaca `period_*` untuk halaman pemilik.
 4. **Laporan tagihan**: realisasi vs target per tahun + daftar tunggakan per umur (belum dibuat).
-5. **Fase 2 mobile**: `scan_page.dart` membaca URL/token QR (satu QR untuk petugas & pemilik)
-   + tombol notifikasi `wa.me`.
+5. **Mobile fase lanjutan**: tombol notifikasi `wa.me` ke pengelola (scan QR & satu QR sudah
+   selesai pada task 72).
 6. **Path-based URL** `/admin/*`, `/market/*` — ditunda; hash deep-link masih kanonik.
 7. Opsional: toast menggantikan sebagian `alert`, focus-trap modal, pembersihan inline style.
