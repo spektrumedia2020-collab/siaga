@@ -26,6 +26,21 @@
 BEGIN;
 
 -- ---------------------------------------------------------------------------
+-- 0) Prasyarat: tabel tagihan dibuat oleh migrasi 020. Gagal cepat dengan
+--    pesan jelas bila SQL Editor terhubung ke database lain.
+-- ---------------------------------------------------------------------------
+DO $$
+BEGIN
+  IF to_regclass('public.retribution_bills') IS NULL
+     OR to_regclass('public.retribution_rates') IS NULL
+     OR to_regclass('public.retribution_types') IS NULL
+     OR to_regclass('public.transactions') IS NULL
+     OR to_regclass('public.stalls') IS NULL THEN
+    RAISE EXCEPTION 'Tabel retribusi tidak ditemukan. Database ini belum menerima migrasi 020_retribution_annual_bills.sql — pastikan SQL Editor terhubung ke proyek siaga.app (ref hlvsbmxpkqvniemunygh, branch main PRODUCTION).';
+  END IF;
+END $$;
+
+-- ---------------------------------------------------------------------------
 -- 1) Tagihan: periode tanggal
 -- ---------------------------------------------------------------------------
 ALTER TABLE public.retribution_bills
