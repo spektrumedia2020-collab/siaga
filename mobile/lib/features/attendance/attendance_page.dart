@@ -19,6 +19,7 @@ class _AttendancePageState extends ConsumerState<AttendancePage> {
   bool _isLoading = false;
   String? _errorMessage;
   bool _isCheckedIn = false;
+  bool _hasAttendedToday = false;
   DateTime? _checkInTime;
 
   @override
@@ -65,6 +66,7 @@ class _AttendancePageState extends ConsumerState<AttendancePage> {
 
         setState(() {
           _isCheckedIn = checkIn != null && !checkOut;
+          _hasAttendedToday = checkIn != null;
           _checkInTime = checkIn;
         });
       } else if (response == null) {
@@ -81,6 +83,7 @@ class _AttendancePageState extends ConsumerState<AttendancePage> {
     final checkIn = row['check_in'] != null ? DateTime.tryParse(row['check_in'] as String) : null;
     setState(() {
       _isCheckedIn = checkIn != null && row['check_out'] == null;
+      _hasAttendedToday = checkIn != null;
       _checkInTime = checkIn;
     });
   }
@@ -147,6 +150,25 @@ class _AttendancePageState extends ConsumerState<AttendancePage> {
     }
   }
 
+  Future<bool> _serverAttendanceExists(String officerId) async {
+    try {
+      final now = DateTime.now();
+      final start = DateTime(now.year, now.month, now.day).toUtc();
+      final end = start.add(const Duration(days: 1));
+      final row = await Supabase.instance.client
+          .from('attendance')
+          .select('id')
+          .eq('officer_id', officerId)
+          .gte('check_in', start.toIso8601String())
+          .lt('check_in', end.toIso8601String())
+          .limit(1)
+          .maybeSingle();
+      return row != null;
+    } on Exception {
+      return false;
+    }
+  }
+
   Future<void> _handleCheckIn() async {
     setState(() {
       _isLoading = true;
@@ -154,6 +176,23 @@ class _AttendancePageState extends ConsumerState<AttendancePage> {
     });
 
     try {
+      final sessionUser = Supabase.instance.client.auth.currentUser;
+      if (sessionUser == null) throw Exception('User tidak terautentikasi');
+
+      final guardDb = DatabaseService();
+      final localToday = await guardDb.localAttendanceForOfficer(sessionUser.id, DateTime.now());
+      final alreadyOnServer = await _serverAttendanceExists(sessionUser.id);
+      if (_hasAttendedToday || localToday != null || alreadyOnServer) {
+        if (mounted) {
+          setState(() {
+            _hasAttendedToday = true;
+            _isLoading = false;
+            _errorMessage = 'Anda sudah absen hari ini. Absensi hanya satu kali per hari.';
+          });
+        }
+        return;
+      }
+
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         setState(() {
@@ -431,11 +470,18 @@ class _AttendancePageState extends ConsumerState<AttendancePage> {
               ),
             ],
             ElevatedButton(
-              onPressed: _isLoading ? null : (_isCheckedIn ? _handleCheckOut : _handleCheckIn),
+              onPressed: _isLoading
+                  ? null
+                  : (_hasAttendedToday && !_isCheckedIn)
+                      ? null
+                      : (_isCheckedIn ? _handleCheckOut : _handleCheckIn),
               style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
               child: _isLoading
                   ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                  : Text(_isCheckedIn ? 'Check-out' : 'Check-in', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  : Text(
+                      _hasAttendedToday && !_isCheckedIn ? 'Absensi hari ini selesai' : (_isCheckedIn ? 'Check-out' : 'Check-in'),
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
             ),
             const SizedBox(height: 12),
             const Text('Pastikan GPS sudah aktif untuk melakukan absensi.', style: TextStyle(fontSize: 12, color: Colors.grey), textAlign: TextAlign.center),

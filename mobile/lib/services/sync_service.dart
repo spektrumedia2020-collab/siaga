@@ -157,8 +157,12 @@ class SyncService {
               clientUuid,
               serverId: (response['id'] as num?)?.toInt(),
             );
-            synced++;
+          } else {
+            // Another device already recorded attendance for this day; the
+            // database rejected this duplicate, so stop retrying it.
+            await _database.markAttendanceSynced(clientUuid);
           }
+          synced++;
         } on Exception {
           // Keep the local row; the next sync retries it.
         }

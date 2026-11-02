@@ -32,18 +32,18 @@
   "memory_version": 1,
   "context_version": 1,
   "skill_registry_version": 1,
-  "current_task": "Mobile offline Fase 1–2 lengkap; E2E cicilan & presensi terverifikasi; 2 baris absensi uji menunggu izin hapus",
-  "last_task": "E2E presensi offline + perbaikan UTC dan upsert index parsial",
+  "current_task": "Absensi 1×/hari: migration 028 disiapkan; menunggu hapus baris uji id 6 & 7 lalu SQL dijalankan pemilik",
+  "last_task": "Guard absensi satu kali sehari (aplikasi) + migration 028 unique per hari",
   "last_session_id": "SESSION-2026-11-02-3",
   "last_scan": "2026-10-25T20:05:00+07:00",
   "last_index": "",
-  "last_updated": "2026-11-02T23:55:00+07:00",
-  "last_validation": "2026-11-02T23:55:00+07:00",
+  "last_updated": "2026-11-03T00:10:00+07:00",
+  "last_validation": "2026-11-03T00:10:00+07:00",
   "last_test_status": "pass",
   "last_command": "TEST",
   "last_command_status": "COMPLETED",
   "open_wave": null,
   "dirty": false,
   "drift_detected": false,
-  "next_step": "1) Hapus baris absensi uji id 6 & 7 (butuh izin tertulis). 2) Pasang APK di perangkat petugas lain. 3) Setoran tetap online-only. 4) Pertimbangkan penegakan sektor offline + UNIQUE harian server. 5) Set irama MINGGUAN/BULANAN per lapak (ditunda). 6) api/lapak.ts membaca period_* + halaman pemilik. 7) Pembayaran uji 287693/287696/287722 masih tersimpan."
+  "next_step": "1) Hapus baris absensi uji id 6 & 7 (izin tertulis), lalu pemilik menjalankan migrations/028_attendance_one_per_day.sql. 2) Pasang APK guard absensi. 3) Setoran tetap online-only. 4) Set irama MINGGUAN/BULANAN per lapak (ditunda). 5) api/lapak.ts period_* + halaman pemilik. 6) Pembayaran uji 287693/287696/287722 tersimpan."
 }

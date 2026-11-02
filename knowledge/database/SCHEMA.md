@@ -157,6 +157,22 @@ Catatan operasional: tarif harian yang dibayar mingguan **belum** otomatis jadi 
 `collection_period`/`collection_anchor` per tarif lapak (bawah ini: dialog tarif sudah menyediakannya).
 Lapak tutup tidak diprorata otomatis.
 
+## Satu absensi per petugas per hari (migration 028)
+
+`migrations/028_attendance_one_per_day.sql` — **disiapkan 2026-11-02, BELUM dijalankan**.
+
+- `attendance.attendance_date date` diisi otomatis trigger `trg_set_attendance_date`
+  dari `check_in` pada zona `Asia/Makassar` (kolom terpisah karena expression index dengan
+  `AT TIME ZONE` bukan IMMUTABLE).
+- `UNIQUE (officer_id, attendance_date)` (`attendance_one_per_day`) menolak check-in kedua
+  pada hari yang sama.
+- Migrasi **gagal cepat** bila sudah ada absensi ganda untuk petugas+tanggal yang sama, dan
+  menyebutkan id yang harus dihapus lebih dulu. Per 2026-11-02 baris uji `attendance` id 6 dan 7
+  masih ada sehingga migrasi belum bisa dijalankan.
+- Aplikasi: tombol absensi menjadi nonaktif "Absensi hari ini selesai" setelah check-out, dan
+  check-in dicek ke lokal + server sebelum GPS/antrean; konflik `23505` saat sinkron dianggap
+  "sudah tercatat di perangkat lain" agar tidak mengulang tanpa henti.
+
 ## Antrean offline mobile (migration 027)
 
 `migrations/027_offline_payment_and_attendance.sql` — **dijalankan pemilik 2026-11-02 dan terverifikasi**
