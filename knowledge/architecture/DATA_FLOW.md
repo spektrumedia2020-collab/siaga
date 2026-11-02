@@ -34,16 +34,30 @@ UserManagement.tsx → POST /api/users {email, password, fullName, roleId, marke
 
 Tanpa header Authorization; server tidak memeriksa siapa pemanggil. Lihat SECURITY S-01.
 
-## 4. Transaksi retribusi (mobile, offline-first)
+## 4. Transaksi retribusi (mobile, offline-first — Fase 1, 2026-11-02)
 
 ```
-scan QR lapak → transaction_page
-  → cek konektivitas
-     ├─ offline → simpan ke sqflite (database_service)
-     │            → sync_service mengirim saat online
-     └─ online  → insert supabase.from('transactions')
-  → trigger validasi market (klaim) → payment_page → receipt (PDF/print)
+login (butuh sinyal sekali) → offline_sync_coordinator.start()
+  → cache master pasar (market_cache_service): lapak, pemilik, tarif+irama, jenis, tagihan,
+    pembayaran hari ini → tabel cache_* di siaga_offline.db
+  → sinkron otomatis: onConnectivityChanged · app resume · timer 2 menit · setelah simpan
+
+scan QR / buka lapak
+  → baca cache dulu; bila tidak ada & online → Supabase (lalu tetap bisa jatuh ke cache)
+  → transaction_page: nominal & nama pemilik dari cache
+  → cek dobel harian: cache_paid_today + outbox lokal (server dicek bila online)
+  → simpan ke outbox {client_uuid, stall, rate, nominal, metode, occurred_at}
+  → struk: ID perangkat + banner "Menunggu sinkron" (bila belum terkirim)
+
+sync_service (saat online)
+  → upsert transactions on conflict uuid_transaction (ignore duplicates)
+      → terkirim → outbox.status='done' + server_id
+      → error jaringan → retry backoff 30 dtk…30 mnt
+      → error validasi/RLS → outbox.status='failed' (dicoba ulang saat Sinkron manual)
 ```
+
+Batas Fase 1: cicilan tagihan (`pay_retribution_bills`), absensi, dan setoran masih
+online-only. Lihat [modules/mobile-officer.md](../modules/mobile-officer.md).
 
 ## 5. Setoran petugas & approval
 
