@@ -485,6 +485,41 @@ class DatabaseService {
     return rows.isEmpty ? null : Map<String, dynamic>.from(rows.first);
   }
 
+  Future<List<Map<String, dynamic>>> cachedStalls() async {
+    final db = await database;
+    final rows = await db.query('cache_stalls', orderBy: 'number ASC, code ASC');
+    return rows.map((row) {
+      final map = Map<String, dynamic>.from(row);
+      return <String, dynamic>{
+        'id': map['id'],
+        'code': map['code'],
+        'number': map['number'],
+        'status': map['status'],
+        'sector_id': map['sector_id'],
+        'owner_id': map['owner_id'],
+        'stall_owners': {
+          'id': map['owner_id'],
+          'name': map['owner_name'],
+          'nik': map['owner_nik'],
+          'phone': map['owner_phone'],
+        },
+      };
+    }).toList();
+  }
+
+  Future<List<Map<String, dynamic>>> cachedSectors() async {
+    final db = await database;
+    final rows = await db.rawQuery('''
+      SELECT DISTINCT sector_id, sector_name
+      FROM cache_stalls
+      WHERE sector_id IS NOT NULL
+      ORDER BY sector_name
+    ''');
+    return rows
+        .map((row) => <String, dynamic>{'id': row['sector_id'], 'name': row['sector_name']})
+        .toList();
+  }
+
   Future<List<Map<String, dynamic>>> ratesForStall(int stallId) async {
     final db = await database;
     final rows = await db.query('cache_rates', where: 'stall_id = ?', whereArgs: [stallId]);

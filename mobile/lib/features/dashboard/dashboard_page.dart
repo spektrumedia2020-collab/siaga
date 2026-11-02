@@ -111,6 +111,10 @@ class _DashboardPageState extends State<DashboardPage> {
       final startOfDay = DateTime(now.year, now.month, now.day).toUtc().toIso8601String();
       final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59).toUtc().toIso8601String();
 
+      if (_marketName.isNotEmpty) {
+        await DatabaseService().setMeta('market_name', _marketName);
+      }
+
       final marketId = officerResponse?['market_id'];
       dynamic response;
       try {

@@ -44,6 +44,15 @@ class _LapakPageState extends ConsumerState<LapakPage> {
   }
 
   Future<bool> _loadLapakFromCache() async {
+    try {
+      return await _loadLapakFromCacheInner();
+    } on Object catch (e) {
+      debugPrint('Cache lapak gagal dimuat: $e');
+      return false;
+    }
+  }
+
+  Future<bool> _loadLapakFromCacheInner() async {
     final database = DatabaseService();
     final stall = await database.findStall(lapakId: widget.lapakId);
     if (stall == null) return false;
@@ -335,6 +344,12 @@ class _LapakPageState extends ConsumerState<LapakPage> {
       if (mounted) {
         setState(() => loadingOwner = false);
       }
+    } on Object catch (e) {
+      debugPrint('Unexpected error in _loadLapakData: $e');
+      if (await _loadLapakFromCache()) return;
+      if (mounted) {
+        setState(() => loadingOwner = false);
+      }
     }
   }
 
@@ -376,6 +391,13 @@ class _LapakPageState extends ConsumerState<LapakPage> {
         });
       }
     } on Exception {
+      final cached = await DatabaseService().billsForStall(stallId);
+      if (cached.isNotEmpty && mounted) {
+        setState(() {
+          billRows = cached;
+        });
+      }
+    } on Object {
       final cached = await DatabaseService().billsForStall(stallId);
       if (cached.isNotEmpty && mounted) {
         setState(() {

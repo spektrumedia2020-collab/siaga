@@ -1,7 +1,10 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../../services/local/database_service.dart';
 
 /// Full page with Scaffold + AppBar for standalone route
 class ShopPage extends ConsumerStatefulWidget {
@@ -46,6 +49,7 @@ class _ShopPageBodyState extends State<ShopPageBody> {
   String marketName = '';
   int? selectedSectorId;
   DateTime _selectedDate = DateTime.now();
+  bool _offlineData = false;
 
   List<Map<String, dynamic>> get _filteredStalls {
     if (selectedSectorId == null) return stalls;
@@ -58,7 +62,56 @@ class _ShopPageBodyState extends State<ShopPageBody> {
     _loadData();
   }
 
+  Future<bool> _isOffline() async {
+    final results = await Connectivity().checkConnectivity();
+    return results.contains(ConnectivityResult.none);
+  }
+
+  Future<bool> _loadFromCache() async {
+    final database = DatabaseService();
+    final cached = await database.cachedStalls();
+    if (cached.isEmpty) return false;
+
+    final cachedSectors = await database.cachedSectors();
+    final cachedMarketName = await database.getMeta('market_name');
+    final sectors = cachedSectors.isNotEmpty ? cachedSectors : _deriveSectors(cached);
+
+    if (!mounted) return true;
+    setState(() {
+      stalls = cached;
+      this.sectors = sectors;
+      marketName = (cachedMarketName == null || cachedMarketName.isEmpty) ? 'tersimpan' : cachedMarketName;
+      if (sectors.isNotEmpty && selectedSectorId == null) {
+        selectedSectorId = sectors.first['id'] as int;
+      }
+      loading = false;
+      errorMessage = null;
+      _offlineData = true;
+    });
+    return true;
+  }
+
+  List<Map<String, dynamic>> _deriveSectors(List<Map<String, dynamic>> rows) {
+    final unique = <int, String>{};
+    for (final row in rows) {
+      final sectorId = row['sector_id'];
+      if (sectorId is int) unique[sectorId] = 'Sektor $sectorId';
+    }
+    return unique.entries.map((entry) => {'id': entry.key, 'name': entry.value}).toList();
+  }
+
   Future<void> _loadData() async {
+    if (await _isOffline()) {
+      if (await _loadFromCache()) return;
+      if (mounted) {
+        setState(() {
+          loading = false;
+          errorMessage = 'Belum ada data lapak di perangkat. Sinkronkan data saat ada sinyal.';
+        });
+      }
+      return;
+    }
+
     try {
       final user = Supabase.instance.client.auth.currentUser;
       if (user == null) {
@@ -116,6 +169,7 @@ class _ShopPageBodyState extends State<ShopPageBody> {
         if (mounted) {
           setState(() {
             stalls = rawStalls.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+            _offlineData = false;
             if (loadedSectors.isNotEmpty) {
               sectors = loadedSectors;
             } else {
@@ -131,11 +185,18 @@ class _ShopPageBodyState extends State<ShopPageBody> {
             }
             loading = false;
           });
+          if (marketName.isNotEmpty) {
+            await DatabaseService().setMeta('market_name', marketName);
+          }
         }
       } else {
         setState(() { loading = false; errorMessage = 'Petugas tidak memiliki penugasan pasar'; });
       }
     } on Exception catch (e) {
+      if (await _loadFromCache()) return;
+      if (mounted) setState(() { loading = false; errorMessage = 'Gagal memuat data: $e'; });
+    } on Object catch (e) {
+      if (await _loadFromCache()) return;
       if (mounted) setState(() { loading = false; errorMessage = 'Gagal memuat data: $e'; });
     }
   }
@@ -218,6 +279,29 @@ class _ShopPageBodyState extends State<ShopPageBody> {
           ),
         ),
         const SizedBox(height: 8),
+        if (_offlineData)
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF3E0),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFFFFCC80)),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.cloud_off, size: 16, color: Color(0xFFE65100)),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Data lapak tersimpan di perangkat. Sinkronkan saat ada sinyal untuk memperbarui.',
+                    style: TextStyle(fontSize: 12, color: Color(0xFF8C4A00)),
+                  ),
+                ),
+              ],
+            ),
+          ),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8),
           color: Theme.of(context).colorScheme.surface,
