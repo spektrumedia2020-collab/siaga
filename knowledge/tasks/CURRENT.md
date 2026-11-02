@@ -1,6 +1,6 @@
 # CURRENT — Task Aktif
 
-**Sesi:** SESSION-2026-10-31-3 · **Update:** 2026-10-31T19:20:00+07:00 · **Branch:** `main` @ `4ac4c1d`
+**Sesi:** SESSION-2026-11-02-1 · **Update:** 2026-11-02T14:00:00+07:00 · **Branch:** `main` @ `e7fcc2d`
 
 ## Status
 
@@ -145,6 +145,10 @@ Tidak ada gelombang paralel. `open_wave = null`.
    residu rollback 0. **Masih kurang**: `api/lapak.ts` belum membaca `period_*`, mobile belum memanggil
    `ensure_current_period_bill`. Semua tarif produksi masih `collection_period = 'HARIAN'`, jadi
    terbitkan periode berjalan akan menghasilkan 0 sampai irama diubah per lapak.
+2c. **Pengaturan irama massal ditunda pemilik 2026-11-02 (lanjut besok).** Semua tarif masih
+   `HARIAN`; irama hanya bisa diubah per lapak lewat dialog Retribusi. Tiga opsi yang diajukan:
+   (1) dialog "set massal" per sektor/jenis di web (rekomendasi), (2) kolom `IRAMA`/`ANCHOR` di
+   CSV tarif + impor ulang, (3) tetap per lapak bila hanya segelintir. Belum ada yang dikerjakan.
 3. **Fase mobile tagihan** (belum mulai): kartu tagihan per lapak, input cicilan, tampilkan sisa
    setelah bayar; mobile belum menulis `bill_id`, sehingga pembayaran cicilan harus lewat web/RPC.
 4. **Laporan tagihan**: realisasi vs target per tahun + daftar tunggakan per umur (belum dibuat).
