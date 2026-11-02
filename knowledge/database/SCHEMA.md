@@ -159,7 +159,8 @@ Lapak tutup tidak diprorata otomatis.
 
 ## Satu absensi per petugas per hari (migration 028)
 
-`migrations/028_attendance_one_per_day.sql` — **disiapkan 2026-11-02, BELUM dijalankan**.
+`migrations/028_attendance_one_per_day.sql` — **dijalankan pemilik 2026-11-03 dan terverifikasi**
+(uji rollback: insert pertama mengisi `attendance_date`, insert kedua ditolak `23505`; residu 0).
 
 - `attendance.attendance_date date` diisi otomatis trigger `trg_set_attendance_date`
   dari `check_in` pada zona `Asia/Makassar` (kolom terpisah karena expression index dengan
