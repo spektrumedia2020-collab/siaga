@@ -33,11 +33,11 @@
   "context_version": 1,
   "skill_registry_version": 1,
   "current_task": "Mobile offline lengkap & data uji bersih (absensi 0 baris; transaksi uji dihapus)",
-  "last_task": "Hapus transaksi uji 287693, 287696, 287722 dan verifikasi saldo tagihan",
+  "last_task": "Rekonsiliasi absensi: server kosong membersihkan cache lokal tersinkron",
   "last_session_id": "SESSION-2026-11-02-3",
   "last_scan": "2026-10-25T20:05:00+07:00",
   "last_index": "",
-  "last_updated": "2026-11-03T01:05:00+07:00",
+  "last_updated": "2026-11-03T01:20:00+07:00",
   "last_validation": "2026-11-03T01:05:00+07:00",
   "last_test_status": "pass",
   "last_command": "TEST",
@@ -45,5 +45,5 @@
   "open_wave": null,
   "dirty": false,
   "drift_detected": false,
-  "next_step": "1) Paksa Sinkron di HP agar cache tagihan memperbarui saldo setelah penghapusan. 2) Setoran tetap online-only. 3) Set irama MINGGUAN/BULANAN per lapak (ditunda). 4) api/lapak.ts period_* + halaman pemilik. 5) APK guard absensi sudah terpasang."
+  "next_step": "1) Setoran tetap online-only. 2) Set irama MINGGUAN/BULANAN per lapak (ditunda). 3) api/lapak.ts period_* + halaman pemilik. 4) Uji UI absensi 1×/hari bila diinginkan."
 }

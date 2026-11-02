@@ -665,6 +665,19 @@ class DatabaseService {
     return rows.isEmpty ? null : Map<String, dynamic>.from(rows.first);
   }
 
+  /// Removes cached attendance that the server no longer has (e.g. an admin
+  /// deleted it). Rows still waiting to sync are kept.
+  Future<int> deleteSyncedAttendanceForDay(String officerId, DateTime day) async {
+    final db = await database;
+    final start = DateTime(day.year, day.month, day.day).toIso8601String();
+    final end = DateTime(day.year, day.month, day.day, 23, 59, 59).toIso8601String();
+    return db.delete(
+      'attendance',
+      where: 'officer_id = ? AND is_synced = 1 AND check_in >= ? AND check_in <= ?',
+      whereArgs: [officerId, start, end],
+    );
+  }
+
   // ---------------------------------------------------------------- legacy
   Future<void> clearAll() async {
     final db = await database;

@@ -70,7 +70,27 @@ class _AttendancePageState extends ConsumerState<AttendancePage> {
           _checkInTime = checkIn;
         });
       } else if (response == null) {
-        await _loadLocalAttendance(user.id);
+        // The server is authoritative while online: drop cached rows that no
+        // longer exist there (e.g. an admin deleted the test entry), but keep
+        // check-ins that are still waiting to sync.
+        final database = DatabaseService();
+        await database.deleteSyncedAttendanceForDay(user.id, DateTime.now());
+        final pending = await database.localAttendanceForOfficer(user.id, DateTime.now());
+        if (!mounted) return;
+        if (pending == null) {
+          setState(() {
+            _isCheckedIn = false;
+            _hasAttendedToday = false;
+            _checkInTime = null;
+          });
+        } else {
+          final checkIn = DateTime.tryParse(pending['check_in']?.toString() ?? '');
+          setState(() {
+            _isCheckedIn = checkIn != null && pending['check_out'] == null;
+            _hasAttendedToday = checkIn != null;
+            _checkInTime = checkIn;
+          });
+        }
       }
     } on Exception {
       await _loadLocalAttendance(user.id);
