@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import QRCodeGenerator from '../components/QRCodeGenerator'
 import { getSupabaseClient } from '../lib/supabase'
 import { getPublicBaseUrl } from '../lib/publicUrl'
@@ -68,6 +68,18 @@ interface DbRetributionType {
   is_active?: boolean
 }
 
+interface CadenceRow {
+  rateId: number
+  stallId: number
+  code: string
+  number: string
+  ownerName: string
+  sectorName: string
+  amount: number
+  period: string | null
+  anchor: number | null
+}
+
 interface Props {
   marketId: number
   marketName?: string
@@ -132,6 +144,21 @@ export function StallsPage({ marketId, marketName, readOnly = false }: Props) {
   const [rateDeleting, setRateDeleting] = useState(false)
   const [searchText, setSearchText] = useState('')
 
+  // cadence (irama penagihan) multi-select state
+  const [cadenceOpen, setCadenceOpen] = useState(false)
+  const [cadenceTypeId, setCadenceTypeId] = useState('')
+  const [cadencePeriod, setCadencePeriod] = useState('MINGGUAN')
+  const [cadenceAnchor, setCadenceAnchor] = useState('1')
+  const [cadenceSector, setCadenceSector] = useState('')
+  const [cadenceSearch, setCadenceSearch] = useState('')
+  const [cadenceRows, setCadenceRows] = useState<CadenceRow[]>([])
+  const [cadenceLoading, setCadenceLoading] = useState(false)
+  const [cadenceSaving, setCadenceSaving] = useState(false)
+  const [cadenceSelected, setCadenceSelected] = useState<Set<number>>(new Set())
+  const [cadencePage, setCadencePage] = useState(1)
+  const [cadenceError, setCadenceError] = useState('')
+  const [cadenceNotice, setCadenceNotice] = useState('')
+
   const filteredStalls = stalls.filter(s => {
     // Filter by sector if selected
     const matchesSector = !sectorFilter || s.sector_id === parseInt(sectorFilter)
@@ -149,6 +176,198 @@ export function StallsPage({ marketId, marketName, readOnly = false }: Props) {
     return matchesSector && (matchesCode || matchesOwner)
   })
   // sector management removed from UI; keep sectors list only
+
+  const cadenceTypes = useMemo(
+    () => retributionTypes.filter((type) => type.billing_period !== 'TAHUNAN' && type.is_active !== false),
+    [retributionTypes]
+  )
+
+  const loadCadenceRows = async (typesId: string) => {
+    setCadenceLoading(true)
+    setCadenceError('')
+    try {
+      const supabase = getSupabaseClient()
+      const rows: Array<{ id: number; stall_id: number | null; amount: number; collection_period: string | null; collection_anchor: number | null }> = []
+      for (let from = 0; ; from += 1000) {
+        const { data, error: rateError } = await supabase
+          .from('retribution_rates')
+          .select('id, stall_id, amount, collection_period, collection_anchor')
+          .eq('market_id', marketId)
+          .eq('types_id', Number(typesId))
+          .order('id')
+          .range(from, from + 999)
+        if (rateError) throw rateError
+        const page = (data || []) as typeof rows
+        rows.push(...page)
+        if (page.length < 1000) break
+      }
+
+      const stallIds = [...new Set(
+        rows.map((row) => row.stall_id).filter((id): id is number => id != null)
+      )]
+      const stallInfo = new Map<number, { code: string; number: string; sector_id: number | null; owner_id: number | null }>()
+      for (let index = 0; index < stallIds.length; index += 500) {
+        const { data, error: stallError } = await supabase
+          .from('stalls')
+          .select('id, code, number, sector_id, owner_id')
+          .in('id', stallIds.slice(index, index + 500))
+        if (stallError) throw stallError
+        for (const stall of (data || []) as Array<{ id: number; code: string; number: string; sector_id: number | null; owner_id: number | null }>) {
+          stallInfo.set(stall.id, stall)
+        }
+      }
+
+      const ownerIds = [...new Set(
+        [...stallInfo.values()]
+          .map((stall) => stall.owner_id)
+          .filter((id): id is number => id != null)
+      )]
+      const ownerNames = new Map<number, string>()
+      for (let index = 0; index < ownerIds.length; index += 500) {
+        const { data, error: ownerError } = await supabase
+          .from('stall_owners')
+          .select('id, name')
+          .in('id', ownerIds.slice(index, index + 500))
+        if (ownerError) throw ownerError
+        for (const owner of (data || []) as Array<{ id: number; name: string | null }>) {
+          ownerNames.set(owner.id, owner.name || '-')
+        }
+      }
+
+      const sectorById = new Map(sectors.map((sector) => [sector.id, sector.name]))
+      const mapped: CadenceRow[] = rows
+        .filter((row) => row.stall_id != null)
+        .map((row) => {
+          const stall = row.stall_id != null ? stallInfo.get(row.stall_id) : undefined
+          return {
+            rateId: row.id,
+            stallId: row.stall_id as number,
+            code: stall?.code || '',
+            number: stall?.number || '',
+            ownerName: stall?.owner_id ? ownerNames.get(stall.owner_id) || '-' : '-',
+            sectorName: stall?.sector_id ? sectorById.get(stall.sector_id) || `Sektor ${stall.sector_id}` : 'Tanpa sektor',
+            amount: Number(row.amount || 0),
+            period: row.collection_period,
+            anchor: row.collection_anchor
+          }
+        })
+        .sort((a, b) => a.code.localeCompare(b.code, 'id', { numeric: true }))
+      setCadenceRows(mapped)
+    } catch (err: any) {
+      setCadenceRows([])
+      setCadenceError(err.message || 'Gagal memuat tarif lapak')
+    } finally {
+      setCadenceLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (cadenceOpen && cadenceTypeId) {
+      loadCadenceRows(cadenceTypeId)
+    }
+  }, [cadenceOpen, cadenceTypeId])
+
+  const cadenceFiltered = useMemo(() => {
+    const keyword = cadenceSearch.trim().toLowerCase()
+    return cadenceRows.filter((row) => {
+      if (cadenceSector && row.sectorName !== cadenceSector) return false
+      if (!keyword) return true
+      return `${row.code} ${row.number} ${row.ownerName}`.toLowerCase().includes(keyword)
+    })
+  }, [cadenceRows, cadenceSector, cadenceSearch])
+
+  const cadenceSectors = useMemo(
+    () => [...new Set(cadenceRows.map((row) => row.sectorName))].sort((a, b) => a.localeCompare(b, 'id')),
+    [cadenceRows]
+  )
+
+  const cadencePageSize = 50
+  const cadenceTotalPages = Math.max(1, Math.ceil(cadenceFiltered.length / cadencePageSize))
+  const cadenceSafePage = Math.min(cadencePage, cadenceTotalPages)
+  const cadencePageRows = cadenceFiltered.slice(
+    (cadenceSafePage - 1) * cadencePageSize,
+    cadenceSafePage * cadencePageSize
+  )
+  const allFilteredSelected =
+    cadenceFiltered.length > 0 && cadenceFiltered.every((row) => cadenceSelected.has(row.rateId))
+
+  const openCadenceDialog = async () => {
+    const loadedTypes = await loadRetributionTypes()
+    const firstType = loadedTypes.filter(
+      (type) => type.billing_period !== 'TAHUNAN' && type.is_active !== false
+    )[0]
+    setCadenceTypeId(firstType ? String(firstType.id) : '')
+    setCadencePeriod('MINGGUAN')
+    setCadenceAnchor('1')
+    setCadenceSector('')
+    setCadenceSearch('')
+    setCadenceSelected(new Set())
+    setCadencePage(1)
+    setCadenceError('')
+    setCadenceNotice('')
+    setCadenceOpen(true)
+  }
+
+  const toggleCadenceRow = (rateId: number) => {
+    setCadenceSelected((prev) => {
+      const next = new Set(prev)
+      if (next.has(rateId)) next.delete(rateId)
+      else next.add(rateId)
+      return next
+    })
+  }
+
+  const toggleAllCadenceRows = () => {
+    setCadenceSelected((prev) => {
+      const next = new Set(prev)
+      if (allFilteredSelected) {
+        cadenceFiltered.forEach((row) => next.delete(row.rateId))
+      } else {
+        cadenceFiltered.forEach((row) => next.add(row.rateId))
+      }
+      return next
+    })
+  }
+
+  const handleApplyCadence = async () => {
+    if (cadenceSelected.size === 0) {
+      setCadenceError('Pilih minimal satu lapak')
+      return
+    }
+    const needsAnchor = cadencePeriod === 'MINGGUAN' || cadencePeriod === 'BULANAN'
+    const anchor = needsAnchor ? parseInt(cadenceAnchor) || 1 : null
+    if (cadencePeriod === 'MINGGUAN' && (anchor === null || anchor < 1 || anchor > 7)) {
+      setCadenceError('Hari mulai harus Senin–Minggu')
+      return
+    }
+    if (cadencePeriod === 'BULANAN' && (anchor === null || anchor < 1 || anchor > 31)) {
+      setCadenceError('Tanggal mulai harus 1–31')
+      return
+    }
+
+    try {
+      setCadenceSaving(true)
+      setCadenceError('')
+      setCadenceNotice('')
+      const supabase = getSupabaseClient()
+      const ids = [...cadenceSelected]
+      for (let index = 0; index < ids.length; index += 200) {
+        const { error: updateError } = await supabase
+          .from('retribution_rates')
+          .update({ collection_period: cadencePeriod, collection_anchor: anchor })
+          .in('id', ids.slice(index, index + 200))
+        if (updateError) throw updateError
+      }
+      setCadenceNotice(`${ids.length} lapak diperbarui ke ${cadenceLabel(cadencePeriod, anchor)}.`)
+      setCadenceSelected(new Set())
+      await loadCadenceRows(cadenceTypeId)
+    } catch (err: any) {
+      setCadenceError(err.message || 'Gagal menyimpan irama penagihan')
+    } finally {
+      setCadenceSaving(false)
+    }
+  }
+
 
   useEffect(() => {
     loadData()
@@ -392,11 +611,18 @@ export function StallsPage({ marketId, marketName, readOnly = false }: Props) {
         .order('name')
       if (!error && data) {
         setRetributionTypes(data)
+        return data as DbRetributionType[]
       }
+      return [] as DbRetributionType[]
     } catch (err) {
       console.error('Error loading retribution types:', err)
+      return [] as DbRetributionType[]
     }
   }
+
+  useEffect(() => {
+    loadRetributionTypes()
+  }, [marketId])
 
   const handleOpenRateDialog = (stall: Stall) => {
     setRateDialogStall(stall)
@@ -544,9 +770,14 @@ export function StallsPage({ marketId, marketName, readOnly = false }: Props) {
       <div className="page-header">
         <h2>🏪 Manajemen Lapak</h2>
         {!showForm && !readOnly && (
-          <button onClick={() => setShowForm(true)} className="btn-primary">
-            + Tambah Lapak
-          </button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={openCadenceDialog} className="btn-secondary">
+              Irama Penagihan
+            </button>
+            <button onClick={() => setShowForm(true)} className="btn-primary">
+              + Tambah Lapak
+            </button>
+          </div>
         )}
       </div>
 
@@ -943,6 +1174,233 @@ export function StallsPage({ marketId, marketName, readOnly = false }: Props) {
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {cadenceOpen && (
+        <div className="modal-backdrop" onClick={() => !cadenceSaving && setCadenceOpen(false)}>
+          <div
+            className="modal-content"
+            onClick={(event) => event.stopPropagation()}
+            style={{ maxWidth: 980, width: '94%' }}
+          >
+            <div className="modal-header">
+              <h3>📅 Irama Penagihan per Lapak</h3>
+              <button
+                className="modal-close"
+                onClick={() => !cadenceSaving && setCadenceOpen(false)}
+                aria-label="Tutup"
+              >
+                &times;
+              </button>
+            </div>
+
+            <p style={{ color: '#6b7280', marginTop: 0 }}>
+              Pilih lapak yang ingin diubah iramanya. Nominal tarif tetap per satuan; irama hanya menentukan
+              rentang tagihan. Mengubah irama tidak menerbitkan tagihan.
+            </p>
+
+            <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
+              <label>
+                Jenis Retribusi
+                <select
+                  value={cadenceTypeId}
+                  onChange={(event) => {
+                    setCadenceTypeId(event.target.value)
+                    setCadenceSelected(new Set())
+                  }}
+                  style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #d1d5db' }}
+                >
+                  {cadenceTypes.length === 0 && <option value="">Tidak ada jenis non-tahunan</option>}
+                  {cadenceTypes.map((type) => (
+                    <option key={type.id} value={type.id}>
+                      {type.name}{type.code ? ` (${type.code})` : ''}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Irama
+                <select
+                  value={cadencePeriod}
+                  onChange={(event) => {
+                    setCadencePeriod(event.target.value)
+                    setCadenceAnchor('1')
+                  }}
+                  style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #d1d5db' }}
+                >
+                  <option value="HARIAN">Harian</option>
+                  <option value="MINGGUAN">Mingguan (7 hari)</option>
+                  <option value="BULANAN">Bulanan</option>
+                </select>
+              </label>
+              {cadencePeriod === 'MINGGUAN' && (
+                <label>
+                  Hari Mulai
+                  <select
+                    value={cadenceAnchor}
+                    onChange={(event) => setCadenceAnchor(event.target.value)}
+                    style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #d1d5db' }}
+                  >
+                    {WEEKDAYS.map((day, index) => (
+                      <option key={day} value={index + 1}>
+                        {day}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+              {cadencePeriod === 'BULANAN' && (
+                <label>
+                  Tanggal Mulai
+                  <input
+                    type="number"
+                    min="1"
+                    max="31"
+                    value={cadenceAnchor}
+                    onChange={(event) => setCadenceAnchor(event.target.value)}
+                    style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #d1d5db' }}
+                  />
+                </label>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: 8, margin: '16px 0', flexWrap: 'wrap' }}>
+              <select
+                value={cadenceSector}
+                onChange={(event) => {
+                  setCadenceSector(event.target.value)
+                  setCadencePage(1)
+                }}
+                style={{ padding: 8, borderRadius: 6, border: '1px solid #d1d5db' }}
+              >
+                <option value="">Semua sektor</option>
+                {cadenceSectors.map((sector) => (
+                  <option key={sector} value={sector}>
+                    {sector}
+                  </option>
+                ))}
+              </select>
+              <input
+                value={cadenceSearch}
+                onChange={(event) => {
+                  setCadenceSearch(event.target.value)
+                  setCadencePage(1)
+                }}
+                placeholder="Cari kode / nomor / pemilik"
+                style={{ flex: 1, minWidth: 200, padding: 8, borderRadius: 6, border: '1px solid #d1d5db' }}
+              />
+              <button type="button" className="btn-secondary" onClick={toggleAllCadenceRows} disabled={cadenceFiltered.length === 0}>
+                {allFilteredSelected ? 'Batalkan pilihan' : 'Pilih semua hasil filter'}
+              </button>
+            </div>
+
+            {cadenceError && <div className="error-message">{cadenceError}</div>}
+            {cadenceNotice && (
+              <div style={{ background: '#e8f5e9', color: '#1b5e20', borderRadius: 8, padding: 10, marginBottom: 12 }}>
+                {cadenceNotice}
+              </div>
+            )}
+
+            {cadenceLoading ? (
+              <p>Memuat tarif lapak...</p>
+            ) : cadenceFiltered.length === 0 ? (
+              <p style={{ color: '#6b7280', padding: '12px 0' }}>
+                Tidak ada lapak dengan tarif jenis ini.
+              </p>
+            ) : (
+              <>
+                <div className="table-wrapper" style={{ maxHeight: 360, overflowY: 'auto' }}>
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th style={{ width: 40 }}>
+                          <input
+                            type="checkbox"
+                            checked={allFilteredSelected}
+                            onChange={toggleAllCadenceRows}
+                            aria-label="Pilih semua"
+                          />
+                        </th>
+                        <th>Lapak</th>
+                        <th>Nomor</th>
+                        <th>Pemilik</th>
+                        <th>Sektor</th>
+                        <th style={{ textAlign: 'right' }}>Tarif</th>
+                        <th>Irama saat ini</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {cadencePageRows.map((row) => (
+                        <tr
+                          key={row.rateId}
+                          onClick={() => toggleCadenceRow(row.rateId)}
+                          style={{ cursor: 'pointer', background: cadenceSelected.has(row.rateId) ? '#eef4ff' : undefined }}
+                        >
+                          <td>
+                            <input
+                              type="checkbox"
+                              checked={cadenceSelected.has(row.rateId)}
+                              onChange={() => toggleCadenceRow(row.rateId)}
+                              onClick={(event) => event.stopPropagation()}
+                              aria-label={`Pilih ${row.code}`}
+                            />
+                          </td>
+                          <td><strong>{row.code}</strong></td>
+                          <td>{row.number || '-'}</td>
+                          <td>{row.ownerName}</td>
+                          <td>{row.sectorName}</td>
+                          <td style={{ textAlign: 'right' }}>Rp {row.amount.toLocaleString('id-ID')}</td>
+                          <td>{cadenceLabel(row.period, row.anchor)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, flexWrap: 'wrap', gap: 8 }}>
+                  <span style={{ color: '#6b7280', fontSize: 13 }}>
+                    Menampilkan {(cadenceSafePage - 1) * cadencePageSize + 1}-
+                    {Math.min(cadenceSafePage * cadencePageSize, cadenceFiltered.length)} dari {cadenceFiltered.length} lapak
+                  </span>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      disabled={cadenceSafePage === 1}
+                      onClick={() => setCadencePage((value) => Math.max(1, value - 1))}
+                    >
+                      ← Sebelumnya
+                    </button>
+                    <span style={{ fontSize: 13 }}>Halaman {cadenceSafePage}/{cadenceTotalPages}</span>
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      disabled={cadenceSafePage === cadenceTotalPages}
+                      onClick={() => setCadencePage((value) => Math.min(cadenceTotalPages, value + 1))}
+                    >
+                      Selanjutnya →
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 12, marginTop: 16 }}>
+              <span style={{ color: '#1e3a8a', fontWeight: 600 }}>{cadenceSelected.size} lapak dipilih</span>
+              <button type="button" className="btn-secondary" onClick={() => setCadenceOpen(false)} disabled={cadenceSaving}>
+                Batal
+              </button>
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={handleApplyCadence}
+                disabled={cadenceSaving || cadenceSelected.size === 0}
+              >
+                {cadenceSaving ? 'Menyimpan...' : 'Simpan Irama'}
+              </button>
             </div>
           </div>
         </div>
