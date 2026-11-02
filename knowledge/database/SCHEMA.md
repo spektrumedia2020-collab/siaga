@@ -119,6 +119,44 @@ Tunggakan tidak digabung ke tagihan tahun baru: tagihan tiap tahun tetap terpisa
 melunasi tahun terdahulu lebih dulu (FIFO). Ringkasan "Tunggakan tahun lalu" dihitung dari sisa
 tagihan dengan `period_year` < tahun yang dipilih.
 
+## Tagihan periode mingguan / rentang tanggal (migration 025)
+
+`migrations/025_retribution_period_bills.sql` — **dijalankan pemilik 2026-11-02 dan terverifikasi**
+(struktur + uji rollback PASS). Satu-satunya perubahan yang belum ada: UI/API/mobile belum memakai
+kolom & RPC baru.
+
+Prinsip: **satuan tarif tetap** (HARI), yang dipisah adalah **irama penagihan** per tarif lapak.
+
+- `retribution_bills` + `period_kind` (`HARIAN|MINGGUAN|BULANAN|TAHUNAN|CUSTOM`, default `CUSTOM`),
+  `period_start`, `period_end` (NOT NULL). Tagihan lama di-backfill Jan–Des tahun `period_year`,
+  `period_kind='TAHUNAN'`.
+- UNIQUE lama `(stall_id, types_id, period_year)` dihapus, diganti partial unique
+  `(stall_id, types_id, period_start, period_end) WHERE status='AKTIF'` → periode yang dibatalkan
+  boleh diterbitkan ulang.
+- Trigger `trg_guard_retribution_bill_period`: menolak `period_end < period_start`, menurunkan
+  `period_year` dari `period_start`, dan menolak periode **tumpang tindih** untuk lapak+jenis yang
+  sama selama status `AKTIF`.
+- `retribution_rates` + `collection_period` (`HARIAN|MINGGUAN|BULANAN|TAHUNAN`, NOT NULL) dan
+  `collection_anchor` smallint (MINGGUAN 1–7 = ISO weekday, BULANAN 1–31; wajib untuk keduanya).
+  Trigger `trg_set_rate_collection_period` mewarisi irama/anchor dari baris tarif terbaru lapak+jenis,
+  atau dari `retribution_types.billing_period`; anchor default 1. Rate lama di-backfill dari jenisnya
+  (1.396 `HARIAN`, 1.396 `TAHUNAN`).
+- `generate_period_bills(p_market_id, p_types_id, p_period_start, p_period_end, p_stall_id, p_due_date,
+  p_note, p_period_kind)` — terbitkan tagihan untuk satu rentang (maks 31 hari) dari tarif terbaru per
+  lapak. Nominal: `HARIAN` × hari, `MINGGUAN` × hari/7, `BULANAN` × hari/30 (dibulatkan 2 desimal);
+  jenis `TAHUNAN` ditolak (pakai `generate_retribution_bills`). Melewati periode yang sudah tertagih.
+- `ensure_current_period_bill(p_stall_id, p_types_id)` — membuat/mengembalikan id tagihan periode
+  **berjalan** untuk irama MINGGUAN/BULANAN (batas hari WITA); `NULL` untuk HARIAN/TAHUNAN. Hanya
+  periode berjalan — periode terlewat harus diterbitkan eksplisit.
+- `pay_retribution_bills` kini FIFO `period_start, period_end, id` (bukan `period_year`), tetap menolak
+  kelebihan bayar.
+- View `retribution_bill_balances` menambah `period_kind`, `period_start`, `period_end`.
+- EXECUTE keempat RPC: `authenticated` saja, `anon` dicabut.
+
+Catatan operasional: tarif harian yang dibayar mingguan **belum** otomatis jadi MINGGUAN — set
+`collection_period`/`collection_anchor` per tarif lapak (atau lewat UI setelah dialog tarif diubah).
+Lapak tutup tidak diprorata otomatis.
+
 ## PIN pemilik lapak (migration 022)
 
 `migrations/022_stall_owner_pin.sql` — **dijalankan pemilik 2026-10-31 dan terverifikasi**.

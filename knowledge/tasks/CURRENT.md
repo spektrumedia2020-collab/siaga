@@ -129,11 +129,15 @@ Tidak ada gelombang paralel. `open_wave = null`.
 ## Next Session Handoff
 
 1. Baca urutan resume: `state.json` → `index/index-state.json` → `context.md` → `memory.md` → `00_INDEX.md` → berkas ini.
-2. **Tagihan tahunan (Jaspro) siap dipakai.** Schema live + logika FIFO terbukti lewat uji rollback.
-   Langkah pemilik: isi tarif Jaspro per lapak (dialog Tarif di halaman Lapak atau impor
-   `contoh-tarif.csv` dengan `KODE-JENIS = NGD-JASPRO`), lalu buka `#market/dashboard/bills`
-   → pilih tahun → "Terbitkan Tagihan". Bayar/cicil dari tombol bayar di baris lapak.
-   Belum ada tarif Jaspro di produksi, jadi penerbitan saat ini akan menghasilkan 0 tagihan.
+2. **Tagihan tahunan (Jaspro) live.** 1.396 tarif Rp 5.600.000/lapak dan tagihan 2025 + 2026 sudah
+   terbit (masing-masing 1.396 baris); tipe 102 sudah dihapus. FIFO terbukti lewat uji rollback.
+   Sisa: laporan realisasi vs target dan tunggakan per umur.
+2b. **Retribusi periode (migration 025) applied 2026-11-02 dan terverifikasi** lewat uji rollback:
+   tagihan mingguan (Senin–Minggu, 7×tarif harian), bulanan (anchor 31 dengan clamp akhir bulan),
+   anti-overlap, terbit ulang setelah dibatalkan, FIFO periode, dan penerbitan tahunan 2027
+   (1.396 baris, ulang 0). **Belum tersambung ke UI/API/mobile**: dialog tarif belum punya pilihan
+   irama, `api/lapak.ts` belum membaca `period_*`, mobile belum memanggil `ensure_current_period_bill`.
+   Semua tarif produksi masih `collection_period = 'HARIAN'`.
 3. **Fase mobile tagihan** (belum mulai): kartu tagihan per lapak, input cicilan, tampilkan sisa
    setelah bayar; mobile belum menulis `bill_id`, sehingga pembayaran cicilan harus lewat web/RPC.
 4. **Laporan tagihan**: realisasi vs target per tahun + daftar tunggakan per umur (belum dibuat).
