@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../services/local/database_service.dart';
+
 class HistoryPage extends ConsumerStatefulWidget {
   const HistoryPage({super.key});
 
@@ -23,8 +25,31 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
     _loadTransactions();
   }
 
+  Future<List<Map<String, dynamic>>> _pendingRows() async {
+    final entries = await DatabaseService().outboxEntries();
+    final day = _filterToday ? DateTime.now() : _selectedDate;
+    final start = DateTime(day.year, day.month, day.day);
+    final end = start.add(const Duration(days: 1));
+    return entries
+        .where((entry) => !entry.occurredAt.isBefore(start) && entry.occurredAt.isBefore(end))
+        .map((entry) => <String, dynamic>{
+              'id': entry.clientUuid,
+              'stall_id': entry.stallId,
+              'stall_code': entry.stallCode,
+              'payer_name': entry.payerName,
+              'amount': entry.amount,
+              'payment_method': entry.paymentMethod,
+              'status': entry.isFailed ? 'failed_sync' : 'pending_sync',
+              'note': entry.lastError ?? entry.note,
+              'created_at': entry.occurredAt.toIso8601String(),
+            })
+        .toList();
+  }
+
   Future<void> _loadTransactions() async {
     setState(() => _isLoading = true);
+
+    final pending = await _pendingRows();
 
     try {
       final user = Supabase.instance.client.auth.currentUser;
@@ -51,16 +76,19 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
 
       if (mounted) {
         setState(() {
-          _transactions = (response as List)
-              .map((e) => Map<String, dynamic>.from(e as Map))
-              .toList();
+          _transactions = [
+            ...pending,
+            ...(response as List).map((e) => Map<String, dynamic>.from(e as Map)),
+          ];
+          _errorMessage = null;
           _isLoading = false;
         });
       }
     } on Exception catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = 'Gagal memuat riwayat: ${e.toString()}';
+          _transactions = pending;
+          _errorMessage = pending.isEmpty ? 'Gagal memuat riwayat: ${e.toString()}' : null;
           _isLoading = false;
         });
       }
@@ -180,7 +208,10 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
     final amount = (tx['amount'] as num?)?.toDouble() ?? 0;
     final status = tx['status']?.toString() ?? 'paid';
     final isPaid = status == 'paid';
+    final isFailedSync = status == 'failed_sync';
+    final isPendingSync = status == 'pending_sync';
     final method = tx['payment_method']?.toString() ?? '-';
+    final stallLabel = tx['stall_code']?.toString() ?? 'Lapak #${tx['stall_id'] ?? '-'}';
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -194,12 +225,24 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
             Container(
               width: 40, height: 40,
               decoration: BoxDecoration(
-                color: isPaid ? const Color(0xFFE6EDF7) : Colors.orange[50],
+                color: isFailedSync
+                    ? Colors.red[50]
+                    : isPaid
+                        ? const Color(0xFFE6EDF7)
+                        : Colors.orange[50],
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
-                isPaid ? Icons.check_circle : Icons.pending,
-                color: isPaid ? const Color(0xFF1D4E89) : Colors.orange,
+                isFailedSync
+                    ? Icons.cloud_off
+                    : isPaid
+                        ? Icons.check_circle
+                        : Icons.cloud_upload,
+                color: isFailedSync
+                    ? Colors.red[700]
+                    : isPaid
+                        ? const Color(0xFF1D4E89)
+                        : Colors.orange,
                 size: 22,
               ),
             ),
@@ -217,7 +260,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                     children: [
                       Icon(Icons.store, size: 12, color: Colors.grey[500]),
                       const SizedBox(width: 4),
-                      Text('Lapak #${tx['stall_id'] ?? '-'}', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                      Text(stallLabel, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
                       const SizedBox(width: 12),
                       Icon(Icons.payment, size: 12, color: Colors.grey[500]),
                       const SizedBox(width: 4),
@@ -245,12 +288,29 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: isPaid ? const Color(0xFFE6EDF7) : Colors.orange[50],
+                    color: isFailedSync
+                        ? Colors.red[50]
+                        : isPaid
+                            ? const Color(0xFFE6EDF7)
+                            : Colors.orange[50],
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    isPaid ? 'Lunas' : 'Pending',
-                    style: TextStyle(fontSize: 10, color: isPaid ? const Color(0xFF1D4E89) : Colors.orange[700]),
+                    isFailedSync
+                        ? 'Gagal sinkron'
+                        : isPendingSync
+                            ? 'Menunggu sinkron'
+                            : isPaid
+                                ? 'Lunas'
+                                : 'Pending',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: isFailedSync
+                          ? Colors.red[700]
+                          : isPaid
+                              ? const Color(0xFF1D4E89)
+                              : Colors.orange[700],
+                    ),
                   ),
                 ),
               ],

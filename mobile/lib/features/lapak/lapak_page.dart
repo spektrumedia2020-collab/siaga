@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../../services/local/database_service.dart';
 
 class LapakPage extends ConsumerStatefulWidget {
   const LapakPage({super.key, required this.lapakId});
@@ -24,6 +27,7 @@ class _LapakPageState extends ConsumerState<LapakPage> {
   final int _selectedTabIndex = 0;
   String? _accessDeniedMessage;
   bool _alreadyCollectedDailyToday = false;
+  bool _offlineData = false;
 
   @override
   void initState() {
@@ -31,7 +35,98 @@ class _LapakPageState extends ConsumerState<LapakPage> {
     _loadLapakData();
   }
 
+  Future<bool> _isOffline() async {
+    final results = await Connectivity().checkConnectivity();
+    return results.contains(ConnectivityResult.none);
+  }
+
+  Future<bool> _loadLapakFromCache() async {
+    final database = DatabaseService();
+    final stall = await database.findStall(lapakId: widget.lapakId);
+    if (stall == null) return false;
+
+    final stallId = (stall['id'] as num?)?.toInt();
+    if (stallId == null) return false;
+    final marketId = (stall['market_id'] as num?)?.toInt();
+    final rates = await database.ratesForStall(stallId);
+    final types = marketId == null ? <Map<String, dynamic>>[] : await database.typesForMarket(marketId);
+    final typesById = {
+      for (final type in types) (type['id'] as num).toInt(): type,
+    };
+
+    final dailyTypeIds = types
+        .where((type) {
+          final text = '${type['code'] ?? ''} ${type['name'] ?? ''} ${type['unit'] ?? ''}'.toUpperCase();
+          return text.contains('HARIAN') || text.contains('HARI');
+        })
+        .map((type) => (type['id'] as num).toInt())
+        .toSet();
+
+    final rateMap = <int, double>{};
+    for (final rate in rates) {
+      final typeId = (rate['types_id'] as num?)?.toInt();
+      final amount = (rate['amount'] as num?)?.toDouble();
+      if (typeId != null && amount != null) rateMap[typeId] = amount;
+    }
+
+    final loadedTypes = rateMap.keys
+        .where(typesById.containsKey)
+        .map((typeId) {
+          final copy = Map<String, dynamic>.from(typesById[typeId]!);
+          copy['rate'] = rateMap[typeId];
+          return copy;
+        })
+        .toList();
+
+    var paidToday = false;
+    for (final rate in rates) {
+      final typeId = (rate['types_id'] as num?)?.toInt();
+      if (typeId == null || !dailyTypeIds.contains(typeId)) continue;
+      final rateId = (rate['id'] as num?)?.toInt();
+      final amount = (rate['amount'] as num?)?.toDouble();
+      if (await database.isPaidToday(stallId: stallId, rateId: rateId, amount: amount) ||
+          await database.hasPendingDailyToday(
+            stallId: stallId,
+            rateId: rateId,
+            amount: amount,
+            day: DateTime.now(),
+          )) {
+        paidToday = true;
+        break;
+      }
+    }
+
+    final bills = await database.billsForStall(stallId);
+    final billNames = {
+      for (final bill in bills)
+        (bill['types_id'] as num).toInt():
+            typesById[(bill['types_id'] as num).toInt()]?['name']?.toString() ?? 'Tagihan',
+    };
+
+    if (!mounted) return true;
+    setState(() {
+      stallData = stall;
+      loadingOwner = false;
+      ownerName = stall['owner_name']?.toString();
+      _ownerNIK = stall['owner_nik']?.toString();
+      _ownerPhone = stall['owner_phone']?.toString();
+      _ownerAddress = stall['owner_address']?.toString();
+      _sectorName = stall['sector_name']?.toString();
+      retributionTypes = loadedTypes;
+      transactionHistory = [];
+      _dailyTypeIds = dailyTypeIds;
+      _alreadyCollectedDailyToday = paidToday;
+      billRows = bills;
+      billTypeNames = billNames;
+      _offlineData = true;
+    });
+    return true;
+  }
+
   Future<void> _loadLapakData() async {
+    if (await _isOffline()) {
+      if (await _loadLapakFromCache()) return;
+    }
     try {
       final supabase = Supabase.instance.client;
       Map<String, dynamic>? row;
@@ -183,6 +278,24 @@ class _LapakPageState extends ConsumerState<LapakPage> {
             (rateId == null && amount != null && dailyAmounts.contains(amount));
       });
 
+      if (!_alreadyCollectedDailyToday) {
+        final database = DatabaseService();
+        for (final rate in rateRows) {
+          final typeId = (rate['types_id'] as num?)?.toInt();
+          if (typeId == null || !dailyTypeIds.contains(typeId)) continue;
+          final paidLocally = await database.hasPendingDailyToday(
+            stallId: stallId,
+            rateId: (rate['id'] as num?)?.toInt(),
+            amount: (rate['amount'] as num?)?.toDouble(),
+            day: DateTime.now(),
+          );
+          if (paidLocally) {
+            _alreadyCollectedDailyToday = true;
+            break;
+          }
+        }
+      }
+
       final rateMap = <int, double>{};
       for (final rate in rateRows) {
         rateMap[(rate['types_id'] as num).toInt()] = (rate['amount'] as num).toDouble();
@@ -215,6 +328,7 @@ class _LapakPageState extends ConsumerState<LapakPage> {
       unawaited(_loadBills(stallId));
     } on Exception catch (e) {
       debugPrint('Error in _loadLapakData: $e');
+      if (await _loadLapakFromCache()) return;
       if (mounted) {
         setState(() => loadingOwner = false);
       }
@@ -223,39 +337,48 @@ class _LapakPageState extends ConsumerState<LapakPage> {
 
   Future<void> _loadBills(int stallId) async {
     final supabase = Supabase.instance.client;
-    final data = await supabase
-        .from('retribution_bill_balances')
-        .select('types_id, period_year, amount_due, amount_paid, outstanding, status, due_date')
-        .eq('stall_id', stallId)
-        .order('period_year', ascending: true);
+    try {
+      final data = await supabase
+          .from('retribution_bill_balances')
+          .select('types_id, period_year, amount_due, amount_paid, outstanding, status, due_date')
+          .eq('stall_id', stallId)
+          .order('period_year', ascending: true);
 
-    final rows = (data as List)
-        .map((e) => Map<String, dynamic>.from(e as Map))
-        .toList();
+      final rows = (data as List)
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
 
-    final typeIds = rows
-        .map((row) => (row['types_id'] as num?)?.toInt())
-        .whereType<int>()
-        .toSet()
-        .toList();
+      final typeIds = rows
+          .map((row) => (row['types_id'] as num?)?.toInt())
+          .whereType<int>()
+          .toSet()
+          .toList();
 
-    final names = <int, String>{};
-    if (typeIds.isNotEmpty) {
-      final types = await supabase
-          .from('retribution_types')
-          .select('id, name')
-          .inFilter('id', typeIds);
-      for (final type in (types as List)) {
-        names[(type['id'] as num).toInt()] =
-            (type['name'] ?? 'Tagihan tahunan').toString();
+      final names = <int, String>{};
+      if (typeIds.isNotEmpty) {
+        final types = await supabase
+            .from('retribution_types')
+            .select('id, name')
+            .inFilter('id', typeIds);
+        for (final type in (types as List)) {
+          names[(type['id'] as num).toInt()] =
+              (type['name'] ?? 'Tagihan tahunan').toString();
+        }
       }
-    }
 
-    if (mounted) {
-      setState(() {
-        billRows = rows;
-        billTypeNames = names;
-      });
+      if (mounted) {
+        setState(() {
+          billRows = rows;
+          billTypeNames = names;
+        });
+      }
+    } on Exception {
+      final cached = await DatabaseService().billsForStall(stallId);
+      if (cached.isNotEmpty && mounted) {
+        setState(() {
+          billRows = cached;
+        });
+      }
     }
   }
 
@@ -294,6 +417,14 @@ class _LapakPageState extends ConsumerState<LapakPage> {
             ),
           ),
           actions: [
+            if (_offlineData)
+              const Padding(
+                padding: EdgeInsets.only(right: 8),
+                child: Tooltip(
+                  message: 'Data tersimpan di perangkat',
+                  child: Icon(Icons.cloud_off, size: 20),
+                ),
+              ),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
@@ -816,6 +947,14 @@ class _LapakPageState extends ConsumerState<LapakPage> {
     final stallId = (stallData?['id'] as num?)?.toInt();
     if (stallId == null) return;
 
+    if (await _isOffline()) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Pembayaran tagihan membutuhkan sinyal. Coba lagi saat terhubung.')),
+      );
+      return;
+    }
+
     final openBills = billRows
         .where((bill) =>
             ((bill['outstanding'] as num?)?.toDouble() ?? 0) > 0 &&
@@ -834,6 +973,7 @@ class _LapakPageState extends ConsumerState<LapakPage> {
     var saving = false;
     String? message;
 
+    if (!mounted) return;
     await showDialog<void>(
       context: context,
       builder: (dialogContext) {

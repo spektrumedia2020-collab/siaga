@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,7 +11,8 @@ import 'package:image_picker/image_picker.dart';
 import '../shop/shop_page.dart';
 import '../history/history_page.dart';
 import '../summary/summary_page.dart';
-import '../../services/sync_service.dart';
+import '../../services/local/database_service.dart';
+import '../../services/offline_sync_coordinator.dart';
 import '../../core/qr_payload.dart';
 import '../../core/ui_helpers.dart';
 
@@ -30,54 +32,35 @@ class _DashboardPageState extends State<DashboardPage> {
   bool _loadingStats = true;
   String _marketName = '';
   String _marketAddress = '';
-  bool _isOfflineMode = false;
-  bool _isSyncing = false;
+  final OfflineSyncCoordinator _coordinator = OfflineSyncCoordinator.instance;
 
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialTab;
     _loadTodayStats();
-  }
-
-  Future<void> _toggleOfflineMode() async {
-    setState(() => _isOfflineMode = !_isOfflineMode);
-    final mode = _isOfflineMode ? 'Offline' : 'Online';
-    if (mounted) {
-      showInfoSnackBar(context, 'Mode $mode aktif');
-    }
+    _coordinator.start();
   }
 
   Future<void> _syncData() async {
-    setState(() => _isSyncing = true);
+    final result = await _coordinator.syncNow(forceMaster: true, retryFailed: true);
+    if (!mounted) return;
 
-    try {
-      final client = Supabase.instance.client;
-      final syncService = SyncService(client);
-      final result = await syncService.syncAll();
+    if (!result.online) {
+      showInfoSnackBar(context, 'Tidak ada sinyal. Transaksi tetap tersimpan di perangkat.');
+      return;
+    }
 
-      int total = 0;
-      final parts = <String>[];
-      result.forEach((key, value) {
-        if (value > 0) {
-          total += value;
-          parts.add('$key: $value');
-        }
-      });
+    final parts = <String>[];
+    if (result.syncedTransactions > 0) parts.add('${result.syncedTransactions} transaksi terkirim');
+    if (result.masterSynced) parts.add('data lapak diperbarui');
+    if (result.pending > 0) parts.add('${result.pending} menunggu');
+    if (result.failed > 0) parts.add('${result.failed} gagal');
 
-      if (mounted) {
-        if (total > 0) {
-          showSuccessSnackBar(context, 'Sinkronisasi selesai: ${parts.join(', ')}');
-        } else {
-          showInfoSnackBar(context, 'Tidak ada data yang perlu disinkronkan');
-        }
-      }
-    } on Exception {
-      if (mounted) {
-        showErrorSnackBar(context, 'Sinkronisasi gagal');
-      }
-    } finally {
-      if (mounted) setState(() => _isSyncing = false);
+    if (parts.isEmpty) {
+      showInfoSnackBar(context, 'Semua data sudah sinkron');
+    } else {
+      showSuccessSnackBar(context, parts.join(' · '));
     }
   }
 
@@ -88,9 +71,15 @@ class _DashboardPageState extends State<DashboardPage> {
 
       final officerResponse = await Supabase.instance.client
           .from('users')
-          .select('market_id, markets!users_market_id_fkey(name, address)')
+          .select('id_user, market_id, markets!users_market_id_fkey(name, address)')
           .eq('auth_uid', user.id)
           .maybeSingle();
+
+      final officerMarketId = (officerResponse?['market_id'] as num?)?.toInt();
+      final officerUserId = (officerResponse?['id_user'] as num?)?.toInt();
+      if (officerMarketId != null) {
+        await _coordinator.configure(marketId: officerMarketId, officerId: officerUserId);
+      }
 
       if (mounted) {
         final marketData = officerResponse?['markets'];
@@ -151,14 +140,40 @@ class _DashboardPageState extends State<DashboardPage> {
       if (mounted) {
         final txList = (response as List);
         final filtered = marketId != null ? txList.where((tx) => tx['market_id'] == null || tx['market_id'] == marketId).toList() : txList;
+
+        final localEntries = await DatabaseService().outboxEntries();
+        final now = DateTime.now();
+        final localStart = DateTime(now.year, now.month, now.day);
+        final localToday = localEntries
+            .where((entry) => entry.isPending && !entry.occurredAt.isBefore(localStart))
+            .toList();
+        final localRevenue = localToday.fold<double>(0, (sum, entry) => sum + entry.amount);
+        final localStalls = localToday.map((entry) => entry.stallId).whereType<int>();
+        final paidStallIds = <dynamic>{
+          ...filtered.map((tx) => tx['stall_id']),
+          ...localStalls,
+        };
+
         setState(() {
-          _todayRevenue = filtered.fold(0.0, (sum, tx) => sum + ((tx['amount'] as num?)?.toDouble() ?? 0.0));
-          _paidStalls = filtered.map((tx) => tx['stall_id']).toSet().length;
+          _todayRevenue = filtered.fold(0.0, (sum, tx) => sum + ((tx['amount'] as num?)?.toDouble() ?? 0.0)) + localRevenue;
+          _paidStalls = paidStallIds.length;
           _loadingStats = false;
         });
       }
     } on Exception {
-      if (mounted) setState(() => _loadingStats = false);
+      final entries = await DatabaseService().outboxEntries();
+      final now = DateTime.now();
+      final start = DateTime(now.year, now.month, now.day);
+      final pendingToday = entries
+          .where((entry) => entry.isPending && !entry.occurredAt.isBefore(start))
+          .toList();
+      if (mounted) {
+        setState(() {
+          _todayRevenue = pendingToday.fold<double>(0, (sum, entry) => sum + entry.amount);
+          _paidStalls = pendingToday.map((entry) => entry.stallId).whereType<int>().toSet().length;
+          _loadingStats = false;
+        });
+      }
     }
   }
 
@@ -170,9 +185,7 @@ class _DashboardPageState extends State<DashboardPage> {
       loadingStats: _loadingStats,
       marketName: _marketName,
       marketAddress: _marketAddress,
-      isOfflineMode: _isOfflineMode,
-      isSyncing: _isSyncing,
-      onToggleOffline: _toggleOfflineMode,
+      syncStatus: _coordinator.status,
       onSync: _syncData,
       onRefresh: _loadTodayStats,
     ),
@@ -322,9 +335,7 @@ class DashboardHomePage extends StatelessWidget {
   final bool loadingStats;
   final String marketName;
   final String marketAddress;
-  final bool isOfflineMode;
-  final bool isSyncing;
-  final VoidCallback onToggleOffline;
+  final ValueListenable<SyncStatus> syncStatus;
   final VoidCallback onSync;
   final Future<void> Function() onRefresh;
 
@@ -336,9 +347,7 @@ class DashboardHomePage extends StatelessWidget {
     required this.loadingStats,
     required this.marketName,
     required this.marketAddress,
-    required this.isOfflineMode,
-    required this.isSyncing,
-    required this.onToggleOffline,
+    required this.syncStatus,
     required this.onSync,
     required this.onRefresh,
   });
@@ -367,21 +376,27 @@ class DashboardHomePage extends StatelessWidget {
             const SizedBox(height: 20),
             const Text('Menu Cepat', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
-            GridView.count(
-              crossAxisCount: 3,
-              crossAxisSpacing: 10,
-              mainAxisSpacing: 10,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              childAspectRatio: 1.0,
-              children: [
-                _MenuCard(icon: Icons.receipt_long, title: 'Transaksi', subtitle: 'Baru', color: const Color(0xFFE6EDF7), iconColor: const Color(0xFF1E3A8A), onTap: () => context.go('/shop')),
-                _MenuCard(icon: Icons.person_pin, title: 'Absensi', subtitle: 'Check-In/Out', color: const Color(0xFFFFF3E0), iconColor: const Color(0xFFE65100), onTap: () => context.go('/attendance')),
-                _MenuCard(icon: Icons.insert_chart, title: 'Rekap', subtitle: 'Ringkasan', color: const Color(0xFFE3EBF7), iconColor: const Color(0xFF1B4B7A), onTap: () => context.go('/summary')),
-                _MenuCard(icon: isOfflineMode ? Icons.wifi_off : Icons.wifi, title: isOfflineMode ? 'Offline' : 'Online', subtitle: isOfflineMode ? 'Mode Offline' : 'Terhubung', color: isOfflineMode ? const Color(0xFFFFEBEE) : const Color(0xFFE6EDF7), iconColor: isOfflineMode ? const Color(0xFFD32F2F) : const Color(0xFF1D4E89), onTap: isSyncing ? () {} : onToggleOffline),
-                _MenuCard(icon: Icons.sync, title: 'Sinkron', subtitle: isSyncing ? 'Menyinkronkan...' : 'Data', color: const Color(0xFFE3F2FD), iconColor: const Color(0xFF1565C0), onTap: isSyncing ? () {} : onSync),
-                _MenuCard(icon: Icons.account_balance_wallet, title: 'Setoran', subtitle: 'Deposit', color: const Color(0xFFE6EDF7), iconColor: const Color(0xFF1E3A8A), onTap: () => context.go('/setoran')),
-              ],
+            ValueListenableBuilder<SyncStatus>(
+              valueListenable: syncStatus,
+              builder: (context, status, _) {
+                final pendingLabel = status.pending + status.failed;
+                return GridView.count(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  childAspectRatio: 1.0,
+                  children: [
+                    _MenuCard(icon: Icons.receipt_long, title: 'Transaksi', subtitle: 'Baru', color: const Color(0xFFE6EDF7), iconColor: const Color(0xFF1E3A8A), onTap: () => context.go('/shop')),
+                    _MenuCard(icon: Icons.person_pin, title: 'Absensi', subtitle: 'Check-In/Out', color: const Color(0xFFFFF3E0), iconColor: const Color(0xFFE65100), onTap: () => context.go('/attendance')),
+                    _MenuCard(icon: Icons.insert_chart, title: 'Rekap', subtitle: 'Ringkasan', color: const Color(0xFFE3EBF7), iconColor: const Color(0xFF1B4B7A), onTap: () => context.go('/summary')),
+                    _MenuCard(icon: status.online ? Icons.wifi : Icons.wifi_off, title: status.online ? 'Online' : 'Offline', subtitle: status.online ? 'Terhubung' : 'Data lokal', color: status.online ? const Color(0xFFE6EDF7) : const Color(0xFFFFEBEE), iconColor: status.online ? const Color(0xFF1D4E89) : const Color(0xFFD32F2F), onTap: () {}),
+                    _MenuCard(icon: Icons.sync, title: 'Sinkron', subtitle: status.syncing ? 'Menyinkronkan...' : (pendingLabel > 0 ? '$pendingLabel menunggu' : 'Data'), color: status.failed > 0 ? const Color(0xFFFFEBEE) : const Color(0xFFE3F2FD), iconColor: status.failed > 0 ? const Color(0xFFD32F2F) : const Color(0xFF1565C0), onTap: status.syncing ? () {} : onSync),
+                    _MenuCard(icon: Icons.account_balance_wallet, title: 'Setoran', subtitle: 'Deposit', color: const Color(0xFFE6EDF7), iconColor: const Color(0xFF1E3A8A), onTap: () => context.go('/setoran')),
+                  ],
+                );
+              },
             ),
           ],
         ),

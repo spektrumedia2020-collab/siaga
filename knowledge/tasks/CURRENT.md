@@ -97,6 +97,7 @@ menampilkan data.
 | 13 | P0-11 — PII `stall_owners` | **SELESAI** | Migration 013; anon hanya `id,name` |
 | 84 | UI irama penagihan per tarif lapak | **SELESAI (kode, belum deploy)** | `StallsPage` dialog rate: pilihan Harian/Mingguan (anchor Senin–Minggu)/Bulanan (tanggal 1–31), disembunyikan untuk jenis TAHUNAN; daftar rate menampilkan "Penagihan: …"; kolom `collection_period`/`collection_anchor` ikut disimpan. Typecheck + build PASS |
 | 85 | Tab Tagihan Periode di halaman Tagihan | **SELESAI (kode, belum deploy)** | `MarketBillsPage` dipisah tab **Tahunan** / **Mingguan / Bulanan**; tabel periode (Lapak, Pemilik, Jenis+irama, Periode, Jatuh tempo, Tagihan, Dibayar, Sisa, Status, Aksi), filter jenis/status/cari, paginasi 25, dialog bayar per periode (FIFO). Modal **Terbitkan Periode**: mode periode berjalan (belum aktif sampai migration 026) atau rentang tanggal ≤31 hari. Verifikasi browser lokal: kedua tab, modal, dan label tarif tampil; screenshot tampilan tidak tersedia (permukaan browser tersembunyi) |
+| 86 | Mobile offline Fase 1 (outbox + cache + auto-sync) | **SELESAI (kode, belum APK)** | `siaga_offline.db` v2: outbox `client_uuid` → `transactions.uuid_transaction` (upsert idempoten, tanpa migrasi server), cache lapak/pemilik/tarif/jenis/tagihan/pembayaran hari ini, `offline_sync_coordinator` (listener konektivitas, resume, timer 2 menit, backoff 30 dtk–30 mnt, retry manual untuk `failed`). Pembayaran harian offline-first + struk "menunggu sinkron"; lapak & riwayat memakai cache/outbox; dashboard & landing menampilkan status nyata + jumlah pending/gagal. `flutter analyze` 0 issue, `flutter test` 8/8. Belum: APK, cicilan tagihan offline, absensi/setoran |
 
 ## Scope sesi ini
 
@@ -149,7 +150,14 @@ Tidak ada gelombang paralel. `open_wave = null`.
    `HARIAN`; irama hanya bisa diubah per lapak lewat dialog Retribusi. Tiga opsi yang diajukan:
    (1) dialog "set massal" per sektor/jenis di web (rekomendasi), (2) kolom `IRAMA`/`ANCHOR` di
    CSV tarif + impor ulang, (3) tetap per lapak bila hanya segelintir. Belum ada yang dikerjakan.
-3. **Fase mobile tagihan** (belum mulai): kartu tagihan per lapak, input cicilan, tampilkan sisa
+3. **Mobile offline Fase 1 SELESAI di kode (2026-11-02), belum APK.** Outbox idempoten
+   (`uuid_transaction`), cache master pasar, sinkron otomatis (konektivitas/resume/timer/backoff),
+   pembayaran harian offline + struk "menunggu sinkron", lapak & riwayat offline, dashboard
+   menampilkan pending/gagal. `flutter analyze` 0 issue, `flutter test` 8/8. **Berikutnya**:
+   (a) bangun & pasang APK untuk uji nyata di basment; (b) Fase 2 — cicilan tagihan offline
+   (kirim niat bayar, FIFO dihitung server saat sinkron), absensi masuk outbox; (c) pertimbangkan
+   `sector assignment` offline dan UNIQUE harian server untuk mencegah dobel lintas perangkat.
+3b. **Fase mobile tagihan cicilan**: kartu tagihan per lapak, input cicilan, tampilkan sisa
    setelah bayar; mobile belum menulis `bill_id`, sehingga pembayaran cicilan harus lewat web/RPC.
 4. **Laporan tagihan**: realisasi vs target per tahun + daftar tunggakan per umur (belum dibuat).
 5. **Fase 2 mobile**: `scan_page.dart` membaca URL/token QR (satu QR untuk petugas & pemilik)

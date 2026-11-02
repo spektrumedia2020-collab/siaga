@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/theme/app_theme.dart';
-import '../../services/sync_service.dart';
-import '../../services/local/database_service.dart';
+import '../../services/offline_sync_coordinator.dart';
 import '../../core/ui_helpers.dart';
 
 class LandingPage extends StatefulWidget {
@@ -14,71 +12,25 @@ class LandingPage extends StatefulWidget {
 }
 
 class _LandingPageState extends State<LandingPage> {
-  bool _isOnlineMode = true;
-  int _pendingCount = 0;
-  bool _syncing = false;
+  final OfflineSyncCoordinator _coordinator = OfflineSyncCoordinator.instance;
 
   @override
   void initState() {
     super.initState();
-    _checkPendingCount();
-  }
-
-  Future<void> _checkPendingCount() async {
-    final count = await DatabaseService().getPendingTransactionsCount();
-    if (mounted) {
-      setState(() {
-        _pendingCount = count;
-      });
-    }
-  }
-
-  Future<void> _toggleOnlineMode() async {
-    setState(() {
-      _isOnlineMode = !_isOnlineMode;
-    });
-
-    if (_isOnlineMode) {
-      // If switching to online mode, try to sync
-      await _syncNow();
-    }
+    _coordinator.start();
   }
 
   Future<void> _syncNow() async {
-    if (!_isOnlineMode) {
-      // Show message that sync is not available in offline mode
-      if (mounted) {
-        showInfoSnackBar(context, 'Sinkronisasi hanya tersedia dalam mode online');
-      }
+    final result = await _coordinator.syncNow(forceMaster: true, retryFailed: true);
+    if (!mounted) return;
+    if (!result.online) {
+      showInfoSnackBar(context, 'Tidak ada sinyal. Transaksi tetap tersimpan di perangkat.');
       return;
     }
-
-    setState(() {
-      _syncing = true;
-    });
-
-    try {
-      final syncService = SyncService(Supabase.instance.client);
-      final result = await syncService.syncAll();
-
-      if (mounted) {
-        final syncedTx = result['transactions'] ?? 0;
-        setState(() {
-          _pendingCount = 0;
-          _syncing = false;
-        });
-
-        showSuccessSnackBar(context, 'Sinkronisasi berhasil: $syncedTx transaksi');
-      }
-    } on Exception catch (e) {
-      if (mounted) {
-        setState(() {
-          _syncing = false;
-        });
-
-        showErrorSnackBar(context, 'Sinkronisasi gagal: $e');
-      }
-    }
+    showSuccessSnackBar(
+      context,
+      'Sinkron selesai: ${result.syncedTransactions} transaksi terkirim, ${result.pending} menunggu',
+    );
   }
 
   @override
@@ -161,61 +113,60 @@ class _LandingPageState extends State<LandingPage> {
 
               const SizedBox(height: 32),
 
-              // Online/Offline Toggle Card
+              // Connection status card
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: _isOnlineMode ? AppTheme.headerLight : Colors.orange[50],
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: _isOnlineMode ? const Color(0xFF93C5FD) : Colors.orange[200]!,
-                      width: 2,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        _isOnlineMode ? Icons.wifi : Icons.wifi_off,
-                        color: _isOnlineMode ? const Color(0xFF1D4E89) : Colors.orange[700],
-                        size: 32,
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _isOnlineMode ? 'Mode Online' : 'Mode Offline',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: _isOnlineMode ? const Color(0xFF0B1F3A) : Colors.orange[900],
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              _isOnlineMode
-                                  ? 'Terhubung ke server'
-                                  : 'Menyimpan data locally',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: _isOnlineMode ? const Color(0xFF1D4E89) : Colors.orange[700],
-                              ),
-                            ),
-                          ],
+                child: ValueListenableBuilder<SyncStatus>(
+                  valueListenable: _coordinator.status,
+                  builder: (context, status, _) {
+                    return Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: status.online ? AppTheme.headerLight : Colors.orange[50],
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: status.online ? const Color(0xFF93C5FD) : Colors.orange[200]!,
+                          width: 2,
                         ),
                       ),
-                      Switch(
-                        value: _isOnlineMode,
-                        onChanged: (_) => _toggleOnlineMode(),
-                        activeThumbColor: const Color(0xFF1D4E89),
-                        inactiveThumbColor: Colors.orange,
+                      child: Row(
+                        children: [
+                          Icon(
+                            status.online ? Icons.wifi : Icons.wifi_off,
+                            color: status.online ? const Color(0xFF1D4E89) : Colors.orange[700],
+                            size: 32,
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  status.online ? 'Terhubung' : 'Mode Offline',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: status.online ? const Color(0xFF0B1F3A) : Colors.orange[900],
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  status.online
+                                      ? 'Status koneksi mengikuti jaringan perangkat'
+                                      : 'Pembayaran disimpan di perangkat dan dikirim otomatis saat ada sinyal',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: status.online ? const Color(0xFF1D4E89) : Colors.orange[700],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    );
+                  },
                 ),
               ),
 
@@ -224,50 +175,63 @@ class _LandingPageState extends State<LandingPage> {
               // Sync Button
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: _syncing ? null : _syncNow,
-                    icon: _syncing
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                            ),
-                          )
-                        : const Icon(Icons.sync, size: 20),
-                    label: Text(
-                      _syncing ? 'Menyinkronkan...' : 'Sinkronkan Data',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryNavy,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                child: ValueListenableBuilder<SyncStatus>(
+                  valueListenable: _coordinator.status,
+                  builder: (context, status, _) {
+                    return SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: status.syncing ? null : _syncNow,
+                        icon: status.syncing
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              )
+                            : const Icon(Icons.sync, size: 20),
+                        label: Text(
+                          status.syncing ? 'Menyinkronkan...' : 'Sinkronkan Data',
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primaryNavy,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
+                    );
+                  },
                 ),
               ),
 
-              if (_pendingCount > 0) ...[
-                const SizedBox(height: 8),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Text(
-                    '$_pendingCount transaksi menunggu sinkronisasi',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
+              ValueListenableBuilder<SyncStatus>(
+                valueListenable: _coordinator.status,
+                builder: (context, status, _) {
+                  if (status.pending == 0 && status.failed == 0) {
+                    return const SizedBox.shrink();
+                  }
+                  final parts = <String>[];
+                  if (status.pending > 0) parts.add('${status.pending} menunggu sinkron');
+                  if (status.failed > 0) parts.add('${status.failed} gagal sinkron');
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 8, left: 24, right: 24),
+                    child: Text(
+                      parts.join(' · '),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: status.failed > 0 ? Colors.red[700] : Colors.grey[600],
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ],
+                  );
+                },
+              ),
 
               const SizedBox(height: 32),
 

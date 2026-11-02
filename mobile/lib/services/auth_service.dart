@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'local/database_service.dart';
+
 /// Service for handling officer authentication
 /// Uses Supabase Auth with proper password verification via Edge Function/RPC
 class AuthService {
@@ -67,6 +69,8 @@ class AuthService {
   /// Logout current user
   Future<void> logout() async {
     await _client.auth.signOut();
+    // Drop cached owner PII; unsynced payments stay queued for the next login.
+    await DatabaseService().clearCache();
   }
 
   /// Check if user is authenticated

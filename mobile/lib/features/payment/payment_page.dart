@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
+
+import '../../services/local/database_service.dart';
+import '../../services/offline_sync_coordinator.dart';
+import '../../shared/models/outbox_entry.dart';
 
 class PaymentPage extends ConsumerStatefulWidget {
   const PaymentPage({super.key, required this.lapakId});
@@ -32,6 +37,19 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
     final typeId = GoRouterState.of(context).uri.queryParameters['type'];
     if (typeId == null) return;
 
+    final numericTypeId = int.tryParse(typeId);
+    if (numericTypeId != null) {
+      final cached = await DatabaseService().typeById(numericTypeId);
+      if (cached != null && mounted) {
+        setState(() {
+          _retributionTypeName = cached['name']?.toString();
+          if (_noteController.text.isEmpty) {
+            _noteController.text = 'Jenis: $_retributionTypeName';
+          }
+        });
+      }
+    }
+
     try {
       final supabase = Supabase.instance.client;
       final result = await supabase.from('retribution_types').select('name, amount').eq('id', typeId).maybeSingle();
@@ -46,16 +64,31 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
         }
       }
     } on Exception {
-      // ignore
+      // Offline: the cached type name above is enough.
     }
   }
 
   Future<void> _loadOwnerName() async {
+    final lapakId = widget.lapakId;
+
+    try {
+      final cached = await DatabaseService().findStall(lapakId: lapakId);
+      if (cached != null) {
+        final cachedOwner = cached['owner_name']?.toString();
+        if (cachedOwner != null && cachedOwner.isNotEmpty) {
+          _payerController.text = cachedOwner;
+        }
+        final cachedId = (cached['id'] as num?)?.toInt();
+        if (cachedId != null) _stallId = cachedId;
+      }
+    } on Exception {
+      // Cache miss falls through to the network lookup below.
+    }
+
     try {
       final supabase = Supabase.instance.client;
-      final lapakId = widget.lapakId;
-      
-      final stallByCode = await supabase.from('stalls').select('owner_id, code, number').eq('code', lapakId).maybeSingle();
+
+      final stallByCode = await supabase.from('stalls').select('id, owner_id, code, number').eq('code', lapakId).maybeSingle();
 
       Map<String, dynamic>? row;
       if (stallByCode != null) {
@@ -63,7 +96,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
       } else {
         final idNumeric = int.tryParse(lapakId);
         if (idNumeric != null) {
-          final stallById = await supabase.from('stalls').select('owner_id, code, number').eq('id', idNumeric).maybeSingle();
+          final stallById = await supabase.from('stalls').select('id, owner_id, code, number').eq('id', idNumeric).maybeSingle();
           if (stallById != null) {
             row = Map<String, dynamic>.from(stallById as Map);
           }
@@ -102,7 +135,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
         _stallId = stallId;
       }
     } on Exception {
-      // ignore errors silently
+      // Offline: keep whatever the cache provided.
     }
   }
 
@@ -116,21 +149,44 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
       return;
     }
 
+    if (_stallId == null) {
+      setState(() => _message = 'Data lapak belum tersedia offline. Sinkronkan data lapak saat ada sinyal.');
+      return;
+    }
+
     setState(() {
       _saving = true;
       _message = null;
     });
 
     try {
-      final supabase = Supabase.instance.client;
-      final response = await supabase.from('transactions').insert({
-        'stall_id': _stallId,
-        'payer_name': payer,
-        'amount': amount,
-        'payment_method': _paymentMethod,
-        'status': 'paid',
-        'note': note,
-      }).select().single();
+      final database = DatabaseService();
+      final marketRaw = await database.getMeta('officer_market_id');
+      final officerRaw = await database.getMeta('officer_user_id');
+      final cachedStall = await database.stallById(_stallId!);
+      final clientUuid = const Uuid().v4();
+      final occurredAt = DateTime.now();
+
+      await database.enqueueTransaction(OutboxEntry(
+        clientUuid: clientUuid,
+        kind: OutboxEntry.kindDailyPayment,
+        marketId: cachedStall == null ? int.tryParse(marketRaw ?? '') : (cachedStall['market_id'] as num?)?.toInt(),
+        stallId: _stallId,
+        officerId: int.tryParse(officerRaw ?? ''),
+        amount: amount,
+        paymentMethod: _paymentMethod,
+        payerName: payer,
+        note: note,
+        occurredAt: occurredAt,
+        stallCode: widget.lapakId,
+        status: 'pending',
+        attempts: 0,
+        createdAt: occurredAt,
+      ));
+
+      final syncResult = await OfflineSyncCoordinator.instance.syncNow();
+      final entry = await database.outboxEntry(clientUuid);
+      final synced = entry?.status == 'done';
 
       if (!mounted) return;
 
@@ -141,8 +197,10 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
         'amount': amount,
         'method': _paymentMethod,
         'note': note,
-        'createdAt': DateTime.now().toIso8601String(),
-        'transactionId': response['id']?.toString() ?? 'N/A',
+        'createdAt': occurredAt.toIso8601String(),
+        'transactionId': synced ? (entry?.serverId?.toString() ?? clientUuid) : clientUuid,
+        'pendingSync': !synced,
+        'offline': !syncResult.online,
       };
 
       context.go('/receipt', extra: receipt);

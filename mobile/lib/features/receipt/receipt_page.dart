@@ -63,6 +63,7 @@ Tanggal: ${widget.receipt['createdAt']}
 
   @override
   Widget build(BuildContext context) {
+    final pendingSync = widget.receipt['pendingSync'] == true;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Bukti Transaksi'),
@@ -74,6 +75,28 @@ Tanggal: ${widget.receipt['createdAt']}
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            if (pendingSync)
+              Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF3E0),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFFFCC80)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.cloud_off, color: Color(0xFFE65100), size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Menunggu sinkron. Pembayaran tersimpan di perangkat dan akan dikirim otomatis saat ada sinyal.',
+                        style: TextStyle(color: const Color(0xFF8C4A00).withValues(alpha: 0.95), fontSize: 12),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             Card(
               elevation: 1,
               shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(18))),

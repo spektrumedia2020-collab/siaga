@@ -1,82 +1,102 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../shared/models/stall.dart' as models;
+
+import '../shared/models/outbox_entry.dart';
 import 'local/database_service.dart';
 
 class SyncService {
+  SyncService(this._client, {DatabaseService? database})
+      : _database = database ?? DatabaseService();
+
   final SupabaseClient _client;
+  final DatabaseService _database;
 
-  SyncService(this._client);
-
-  /// Check if device has internet connection
   Future<bool> isConnected() async {
-    final connectivityResults = await Connectivity().checkConnectivity();
-    return !connectivityResults.contains(ConnectivityResult.none);
+    final results = await Connectivity().checkConnectivity();
+    if (results.contains(ConnectivityResult.none)) return false;
+    try {
+      await _client.from('markets').select('id').limit(1).timeout(const Duration(seconds: 6));
+      return true;
+    } on Exception {
+      return false;
+    }
   }
 
-  /// Sync pending transactions to Supabase
   Future<int> syncPendingTransactions() async {
     if (!await isConnected()) return 0;
 
-    final pendingTransactions = await DatabaseService().getPendingTransactions();
-    int syncedCount = 0;
+    final entries = await _database.dueOutboxEntries();
+    var synced = 0;
 
-    for (final transaction in pendingTransactions) {
+    for (final entry in entries) {
+      if (entry.kind != OutboxEntry.kindDailyPayment) continue;
       try {
-        await _client.from('transactions').insert({
-          'stall_id': transaction.stallId,
-          'payer_name': transaction.payerName,
-          'amount': transaction.amount,
-          'payment_method': transaction.paymentMethod,
-          'status': transaction.status,
-          'note': transaction.note,
-          'created_at': transaction.createdAt?.toIso8601String(),
-        });
+        await _client.from('transactions').upsert(
+          {
+            'uuid_transaction': entry.clientUuid,
+            'transaction_date': entry.occurredAt.toUtc().toIso8601String(),
+            'created_at': entry.occurredAt.toUtc().toIso8601String(),
+            'market_id': entry.marketId,
+            'stall_id': entry.stallId,
+            'rate_id': entry.rateId,
+            'officer_id': entry.officerId,
+            'amount': entry.amount,
+            'payment_method': entry.paymentMethod,
+            'payer_name': entry.payerName,
+            'note': entry.note,
+            'status': 'paid',
+            'source': 'MOBILE',
+            'sync_status': 'SYNCED',
+          },
+          onConflict: 'uuid_transaction',
+          ignoreDuplicates: true,
+        );
 
-        // Mark as synced
-        await DatabaseService().markTransactionSynced(transaction.id?.toString() ?? transaction.stallId.toString());
-        syncedCount++;
-      } on Exception {
-        // ignore error, continue syncing
+        final row = await _client
+            .from('transactions')
+            .select('id')
+            .eq('uuid_transaction', entry.clientUuid)
+            .maybeSingle();
+        final serverId = (row?['id'] as num?)?.toInt();
+        await _database.markOutboxSynced(entry.clientUuid, serverId: serverId);
+        synced++;
+      } on PostgrestException catch (e) {
+        final code = e.code ?? '';
+        final retryable = code == '401' || code == '403' || code.startsWith('5');
+        if (retryable) {
+          final attempts = entry.attempts + 1;
+          await _database.markOutboxRetry(
+            entry.clientUuid,
+            error: e.message,
+            attempts: attempts,
+            nextAttemptAt: _nextAttempt(attempts),
+          );
+        } else {
+          await _database.markOutboxFailed(entry.clientUuid, error: e.message);
+        }
+      } on Exception catch (e) {
+        final attempts = entry.attempts + 1;
+        await _database.markOutboxRetry(
+          entry.clientUuid,
+          error: e.toString(),
+          attempts: attempts,
+          nextAttemptAt: _nextAttempt(attempts),
+        );
       }
     }
 
-    return syncedCount;
+    return synced;
   }
 
-  /// Sync all pending data
+  DateTime _nextAttempt(int attempts) {
+    final exponent = attempts <= 1 ? 0 : (attempts - 1).clamp(0, 6);
+    final seconds = 30 * (1 << exponent);
+    return DateTime.now().add(Duration(seconds: seconds.clamp(30, 1800)));
+  }
+
   Future<Map<String, int>> syncAll() async {
-    final result = <String, int>{};
-    
-    result['transactions'] = await syncPendingTransactions();
-    
-    return result;
+    return {'transactions': await syncPendingTransactions()};
   }
 
-  /// Get pending transactions count
-  Future<int> getPendingCount() async {
-    final pending = await DatabaseService().getPendingTransactions();
-    return pending.length;
-  }
-
-  /// Add transaction to offline queue
-  Future<void> queueTransaction({
-    required int stallId,
-    required String payerName,
-    required double amount,
-    required String paymentMethod,
-    required String status,
-    String? note,
-  }) async {
-    final tx = models.Transaction(
-      stallId: stallId,
-      payerName: payerName,
-      amount: amount,
-      paymentMethod: paymentMethod,
-      status: status,
-      note: note,
-    );
-
-    await DatabaseService().insertTransaction(tx);
-  }
+  Future<int> getPendingCount() => _database.pendingOutboxCount();
 }

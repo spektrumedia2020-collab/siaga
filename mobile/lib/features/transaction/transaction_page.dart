@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
+
+import '../../services/local/database_service.dart';
+import '../../services/offline_sync_coordinator.dart';
+import '../../shared/models/outbox_entry.dart';
 
 class TransactionPage extends ConsumerStatefulWidget {
   const TransactionPage({super.key, required this.lapakId, required this.typeId});
@@ -23,6 +28,8 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
   int? _stallId;
   int? _marketId;
   int? _rateId;
+  int? _officerId;
+  bool _fromCache = false;
   String? _retributionTypeName;
   bool _isDailyRetribution = false;
   List<Map<String, dynamic>> _retributionTypes = [];
@@ -51,6 +58,28 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
     if (!mounted) return;
     setState(() => _loadingTypes = true);
     try {
+      final database = DatabaseService();
+      _officerId ??= int.tryParse(await database.getMeta('officer_user_id') ?? '');
+      final marketId = int.tryParse(await database.getMeta('officer_market_id') ?? '');
+      if (marketId != null) {
+        final cachedTypes = await database.typesForMarket(marketId);
+        if (cachedTypes.isNotEmpty) {
+          final loaded = cachedTypes
+              .map((type) => <String, dynamic>{
+                    'id': (type['id'] as num).toInt(),
+                    'name': type['name'],
+                  })
+              .toList();
+          if (mounted) {
+            setState(() {
+              _retributionTypes = loaded;
+              _loadingTypes = false;
+            });
+          }
+          return;
+        }
+      }
+
       final supabase = Supabase.instance.client;
       final result = await supabase.from('retribution_types').select('id, name').order('name');
       final List<Map<String, dynamic>> loaded = (result as List).map((e) => Map<String, dynamic>.from(e as Map)).toList();
@@ -82,6 +111,7 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
 
   Future<void> _loadPaymentData() async {
     if (!mounted) return;
+    if (await _loadFromCache()) return;
     try {
       final supabase = Supabase.instance.client;
       final lapakId = widget.lapakId;
@@ -217,6 +247,42 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
     }
   }
 
+  Future<bool> _loadFromCache() async {
+    final database = DatabaseService();
+    _officerId ??= int.tryParse(await database.getMeta('officer_user_id') ?? '');
+    final stall = await database.findStall(lapakId: widget.lapakId);
+    if (stall == null) return false;
+
+    final stallId = (stall['id'] as num?)?.toInt();
+    _stallId = stallId;
+    _marketId = (stall['market_id'] as num?)?.toInt();
+    _nameController.text = stall['owner_name']?.toString() ?? '';
+
+    final typeId = int.tryParse(widget.typeId);
+    if (typeId != null) {
+      final type = await database.typeById(typeId);
+      if (type != null) {
+        _retributionTypeName = type['name']?.toString();
+        final typeText = '${type['code'] ?? ''} ${type['name'] ?? ''} ${type['unit'] ?? ''}'.toUpperCase();
+        _isDailyRetribution = typeText.contains('HARIAN') || typeText.contains('HARI');
+        _noteController.text = 'Jenis: $_retributionTypeName';
+      }
+      if (stallId != null) {
+        final rates = await database.ratesForStall(stallId);
+        final matches = rates.where((rate) => (rate['types_id'] as num?)?.toInt() == typeId).toList();
+        if (matches.isNotEmpty) {
+          _rateId = (matches.first['id'] as num?)?.toInt();
+          final rateAmount = (matches.first['amount'] as num?)?.toDouble();
+          if (rateAmount != null) _amountController.text = rateAmount.toStringAsFixed(0);
+        }
+      }
+    }
+
+    _fromCache = true;
+    if (mounted) setState(() => _loadingPaymentData = false);
+    return true;
+  }
+
   Future<void> _saveTransaction() async {
     setState(() {
       _saving = true;
@@ -226,6 +292,7 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
 
     try {
       final supabase = Supabase.instance.client;
+      final database = DatabaseService();
 
       final payerName = _nameController.text.trim();
       final amount = double.tryParse(_amountController.text);
@@ -248,23 +315,44 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
         return;
       }
 
-      if (_stallId != null && _isDailyRetribution) {
-        final now = DateTime.now().toUtc();
-        final startOfDay = DateTime.utc(now.year, now.month, now.day);
-        final startOfNextDay = startOfDay.add(const Duration(days: 1));
-        final existingTransactions = await supabase
-            .from('transactions')
-            .select('id, rate_id, amount')
-            .eq('stall_id', _stallId!)
-            .eq('status', 'paid')
-            .gte('created_at', startOfDay.toIso8601String())
-            .lt('created_at', startOfNextDay.toIso8601String());
+      if (_stallId == null) {
+        setState(() {
+          _message = 'Data lapak belum tersedia offline. Sinkronkan data lapak saat ada sinyal.';
+          _messageIsError = true;
+          _saving = false;
+        });
+        return;
+      }
 
-        final dailyTransactionExists = (existingTransactions as List).any((transaction) =>
-          (_rateId != null && transaction['rate_id'] == _rateId) ||
-          (transaction['rate_id'] == null && double.tryParse(_amountController.text) == transaction['amount'])
-        );
-        if (dailyTransactionExists) {
+      _officerId ??= int.tryParse(await database.getMeta('officer_user_id') ?? '');
+      if (_officerId == null) {
+        try {
+          final user = supabase.auth.currentUser;
+          if (user != null) {
+            final officer = await supabase
+                .from('users')
+                .select('id_user')
+                .eq('auth_uid', user.id)
+                .maybeSingle();
+            _officerId = (officer?['id_user'] as num?)?.toInt();
+            if (_officerId != null) {
+              await database.setMeta('officer_user_id', _officerId.toString());
+            }
+          }
+        } on Exception {
+          _officerId = null;
+        }
+      }
+
+      if (_isDailyRetribution) {
+        final localDuplicate = await database.hasPendingDailyToday(
+              stallId: _stallId!,
+              rateId: _rateId,
+              amount: amount,
+              day: DateTime.now(),
+            ) ||
+            await database.isPaidToday(stallId: _stallId!, rateId: _rateId, amount: amount);
+        if (localDuplicate) {
           setState(() {
             _message = 'Retribusi harian lapak ini sudah ditarik hari ini. Penagihan ganda ditolak.';
             _messageIsError = true;
@@ -272,43 +360,73 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
           });
           return;
         }
+
+        // The server check only runs when reachable; offline relies on the cache above.
+        try {
+          final now = DateTime.now().toUtc();
+          final startOfDay = DateTime.utc(now.year, now.month, now.day);
+          final startOfNextDay = startOfDay.add(const Duration(days: 1));
+          final existingTransactions = await supabase
+              .from('transactions')
+              .select('id, rate_id, amount')
+              .eq('stall_id', _stallId!)
+              .eq('status', 'paid')
+              .gte('created_at', startOfDay.toIso8601String())
+              .lt('created_at', startOfNextDay.toIso8601String());
+
+          final dailyTransactionExists = (existingTransactions as List).any((transaction) =>
+              (_rateId != null && transaction['rate_id'] == _rateId) ||
+              (transaction['rate_id'] == null && amount == (transaction['amount'] as num?)?.toDouble()));
+          if (dailyTransactionExists) {
+            setState(() {
+              _message = 'Retribusi harian lapak ini sudah ditarik hari ini. Penagihan ganda ditolak.';
+              _messageIsError = true;
+              _saving = false;
+            });
+            return;
+          }
+        } on Exception {
+          // Offline: the local cache check above is the guard.
+        }
       }
 
-      // Simpan ke database — pakai kolom `amount` tunggal (finalisasi skema 2.4)
-      final insertBody = <String, dynamic>{};
-      if (_stallId != null) {
-        insertBody['stall_id'] = _stallId;
-      }
-      if (_marketId != null) {
-        insertBody['market_id'] = _marketId;
-      }
-      if (_rateId != null) {
-        insertBody['rate_id'] = _rateId;
-      }
-      insertBody['amount'] = amount;
-      insertBody['payer_name'] = payerName;
-      insertBody['payment_method'] = _paymentMethod;
-      insertBody['note'] = _noteController.text.trim();
-      insertBody['status'] = 'paid';
+      final clientUuid = const Uuid().v4();
+      final occurredAt = DateTime.now();
+      await database.enqueueTransaction(OutboxEntry(
+        clientUuid: clientUuid,
+        kind: OutboxEntry.kindDailyPayment,
+        marketId: _marketId,
+        stallId: _stallId,
+        rateId: _rateId,
+        officerId: _officerId,
+        amount: amount,
+        paymentMethod: _paymentMethod,
+        payerName: payerName,
+        note: _noteController.text.trim(),
+        occurredAt: occurredAt,
+        stallCode: widget.lapakId,
+        status: 'pending',
+        attempts: 0,
+        createdAt: occurredAt,
+      ));
 
-      // CATATAN KEAMANAN: blok "bypass RLS" telah DIHAPUS (audit item 1.1).
-      // Validasi market kini ditangani server-side oleh trigger
-      // trg_validate_transaction_market di Supabase — client tidak boleh
-      // mencoba melewati kebijilan keamanan database.
-      final response = await supabase.from('transactions').insert(insertBody).select().single();
+      final syncResult = await OfflineSyncCoordinator.instance.syncNow();
+      final entry = await database.outboxEntry(clientUuid);
+      final synced = entry?.status == 'done';
 
       if (!mounted) return;
 
-      // Navigasi ke halaman receipt
       final receipt = {
-        'transactionId': response['id']?.toString() ?? 'N/A',
+        'transactionId': synced ? (entry?.serverId?.toString() ?? clientUuid) : clientUuid,
         'stallId': _stallId,
         'lapakId': widget.lapakId,
         'payerName': payerName,
         'amount': amount,
         'method': _paymentMethod,
         'note': _noteController.text.trim(),
-        'createdAt': DateTime.now().toIso8601String(),
+        'createdAt': occurredAt.toIso8601String(),
+        'pendingSync': !synced,
+        'offline': !syncResult.online,
       };
 
       context.go('/receipt', extra: receipt);
@@ -350,6 +468,28 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
                   const SizedBox(height: 12),
                   _buildRetributionSelector(),
                 ] else ...[
+                  if (_fromCache)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF3E0),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFFFFCC80)),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.cloud_off, size: 16, color: Color(0xFFE65100)),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Data lapak tersimpan di perangkat. Pembayaran dikirim otomatis saat ada sinyal.',
+                              style: TextStyle(fontSize: 12, color: Color(0xFF8C4A00)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   Row(
                     children: [
                       Icon(Icons.receipt_long, color: Theme.of(context).colorScheme.primary, size: 28),
