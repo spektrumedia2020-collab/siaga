@@ -33,11 +33,11 @@
   "context_version": 1,
   "skill_registry_version": 1,
   "current_task": "Absensi 1×/hari aktif (migration 028 terverifikasi); APK guard terpasang; uji UI antrean belum",
-  "last_task": "Verifikasi migration 028 + pasang APK guard absensi",
+  "last_task": "Bersihkan baris absensi uji; tabel attendance 0 & stabil setelah relaunch",
   "last_session_id": "SESSION-2026-11-02-3",
   "last_scan": "2026-10-25T20:05:00+07:00",
   "last_index": "",
-  "last_updated": "2026-11-03T00:35:00+07:00",
+  "last_updated": "2026-11-03T00:50:00+07:00",
   "last_validation": "2026-11-03T00:35:00+07:00",
   "last_test_status": "pass",
   "last_command": "TEST",
@@ -45,5 +45,5 @@
   "open_wave": null,
   "dirty": false,
   "drift_detected": false,
-  "next_step": "1) Uji UI check-in → check-out → tombol selesai (membuat 1 baris absensi; hapus perlu izin). 2) Setoran tetap online-only. 3) Set irama MINGGUAN/BULANAN per lapak (ditunda). 4) api/lapak.ts period_* + halaman pemilik. 5) Pembayaran uji 287693/287696/287722 tersimpan."
+  "next_step": "1) Uji UI absensi 1×/hari bila diinginkan (akan membuat 1 baris nyata). 2) Setoran tetap online-only. 3) Set irama MINGGUAN/BULANAN per lapak (ditunda). 4) api/lapak.ts period_* + halaman pemilik. 5) Pembayaran uji 287693/287696/287722 masih tersimpan."
 }
