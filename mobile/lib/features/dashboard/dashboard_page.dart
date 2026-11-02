@@ -53,6 +53,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
     final parts = <String>[];
     if (result.syncedTransactions > 0) parts.add('${result.syncedTransactions} transaksi terkirim');
+    if (result.syncedAttendance > 0) parts.add('${result.syncedAttendance} absensi terkirim');
     if (result.masterSynced) parts.add('data lapak diperbarui');
     if (result.pending > 0) parts.add('${result.pending} menunggu');
     if (result.failed > 0) parts.add('${result.failed} gagal');

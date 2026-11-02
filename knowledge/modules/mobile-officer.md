@@ -40,22 +40,28 @@ flutter_dotenv · share_plus · intl · uuid.
    dicoba ulang saat Sinkron manual.
 4. **Anti dobel harian**: cek cache pembayaran hari ini + outbox lokal sebelum menagih; cek
    server tetap dijalankan bila online.
-5. **Batas Fase 1**: pembayaran tagihan (FIFO `pay_retribution_bills`), absensi, dan setoran
-   (butuh unggah foto) masih **butuh sinyal**; halaman lapak menampilkan pesan bila offline.
-6. **Dual schema**: repository mencoba tabel baru (`stalls`, `stall_owners`) lalu fallback ke
+5. **Fase 2 (2026-11-02)**: cicilan tagihan ikut outbox (`kind=BILL_PAYMENT`, dikirim lewat
+   `pay_retribution_bills` dengan `p_client_uuid` sehingga pengiriman ulang tidak menagih dua kali),
+   dan presensi check-in/out disimpan lokal lalu di-upsert berdasarkan `attendance.client_uuid`.
+   Keduanya **memerlukan migration 027**; sebelum migration dijalankan, pembayaran tagihan offline
+   akan berstatus `failed` (bisa dicoba ulang lewat Sinkron setelah migrasi).
+6. **Masih online-only**: setoran (butuh unggah foto bukti) dan penagihan periode berjalan.
+7. **Dual schema**: repository mencoba tabel baru (`stalls`, `stall_owners`) lalu fallback ke
    legacy (`lapak`, `pemilik_lapak`).
-7. `transactions.amount` adalah kolom tunggal (fallback multi-kolom sudah dihapus per TODO_FIXES).
-8. Validasi market↔stall diandalkan pada trigger DB (status `UNKNOWN`).
+8. `transactions.amount` adalah kolom tunggal (fallback multi-kolom sudah dihapus per TODO_FIXES).
+9. Validasi market↔stall diandalkan pada trigger DB (status `UNKNOWN`).
 
 ## Skema lokal `siaga_offline.db` (versi 2)
 
-- `outbox(client_uuid PK, kind, market_id, stall_id, rate_id, officer_id, amount, payment_method,
-  payer_name, note, occurred_at, stall_code, stall_label, status, attempts, next_attempt_at,
-  last_error, server_id, created_at)` — status `pending|done|failed`.
+- `outbox(client_uuid PK, kind, market_id, stall_id, rate_id, types_id, officer_id, amount,
+  payment_method, payer_name, note, occurred_at, stall_code, stall_label, status, attempts,
+  next_attempt_at, last_error, server_id, created_at)` — kind `DAILY_PAYMENT|BILL_PAYMENT`,
+  status `pending|done|failed`.
 - `cache_stalls`, `cache_rates`, `cache_types`, `cache_bills`, `cache_paid_today`, `cache_meta`.
-- `attendance` (lama, belum masuk outbox — Fase 2).
-- Migrasi v1→v2 memindahkan baris `transactions` yang belum sinkron ke outbox lalu menghapus
-  tabel lama; `onCreate` membuat semua tabel idempoten.
+- `attendance(id = client_uuid, officer_id, market_id, check_in/out + koordinat, status,
+  is_synced, server_id)` — antrean presensi.
+- Versi 3 menambah `outbox.types_id` dan `attendance.server_id`; migrasi v1→v2 memindahkan baris
+  `transactions` yang belum sinkron ke outbox lalu menghapus tabel lama.
 
 ## SQL & migrasi
 
@@ -64,11 +70,12 @@ flutter_dotenv · share_plus · intl · uuid.
 
 ## Known issues
 
-- **Batas offline Fase 1**: penugasan sektor tidak ditegakkan saat offline (cache berisi seluruh
-  pasar), dan dua perangkat bisa menagih lapak yang sama pada hari yang sama saat
+- **Batas offline Fase 2**: setoran (unggah foto) masih online-only; penugasan sektor tidak
+  ditegakkan saat offline; dua perangkat bisa menagih lapak sama pada hari yang sama saat
   sama-sama offline — server baru mendeteksi saat sinkron (tidak ada UNIQUE harian).
+- Antrean tagihan/presensi membutuhkan migration 027; sebelum dijalankan, baris tagihan offline
+  berakhir `failed` dan presensi tetap lokal (dapat disinkronkan setelah migrasi).
 - Riwayat offline hanya menampilkan transaksi yang masih di outbox, bukan riwayat server.
-- Absensi & setoran belum masuk outbox; setoran juga butuh unggah foto.
 - Cache master menghapus data pemilik (NIK/HP) saat logout; outbox sengaja dipertahankan.
 - Sumber SQL ganda di `assets/sql` vs `migrations` (drift risk).
 - Ketergantungan fallback tabel legacy membuat migrasi skema tidak bisa langsung menghapus tabel lama.

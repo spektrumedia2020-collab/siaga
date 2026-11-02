@@ -4,6 +4,9 @@ import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
+
+import '../../services/local/database_service.dart';
 
 class AttendancePage extends ConsumerStatefulWidget {
   const AttendancePage({super.key});
@@ -64,9 +67,63 @@ class _AttendancePageState extends ConsumerState<AttendancePage> {
           _isCheckedIn = checkIn != null && !checkOut;
           _checkInTime = checkIn;
         });
+      } else if (response == null) {
+        await _loadLocalAttendance(user.id);
       }
     } on Exception {
-      // ignore errors
+      await _loadLocalAttendance(user.id);
+    }
+  }
+
+  Future<void> _loadLocalAttendance(String officerId) async {
+    final row = await DatabaseService().localAttendanceForOfficer(officerId, DateTime.now());
+    if (!mounted || row == null) return;
+    final checkIn = row['check_in'] != null ? DateTime.tryParse(row['check_in'] as String) : null;
+    setState(() {
+      _isCheckedIn = checkIn != null && row['check_out'] == null;
+      _checkInTime = checkIn;
+    });
+  }
+
+  Future<void> _pushCheckIn({
+    required String clientUuid,
+    required String officerName,
+    required int marketId,
+    required DateTime at,
+    required double lat,
+    required double lng,
+  }) async {
+    final database = DatabaseService();
+    final client = Supabase.instance.client;
+    final base = <String, dynamic>{
+      'officer_id': client.auth.currentUser?.id,
+      'officer_name': officerName,
+      'market_id': marketId,
+      'check_in': at.toIso8601String(),
+      'check_in_lat': lat,
+      'check_in_lng': lng,
+      'status': 'present',
+    };
+
+    try {
+      final response = await client
+          .from('attendance')
+          .insert({...base, 'client_uuid': clientUuid})
+          .select('id')
+          .single();
+      await database.markAttendanceSynced(clientUuid, serverId: (response['id'] as num?)?.toInt());
+      return;
+    } on PostgrestException {
+      // Older database without attendance.client_uuid (migration 027).
+    } on Exception {
+      return; // offline; the coordinator syncs it later
+    }
+
+    try {
+      final response = await client.from('attendance').insert(base).select('id').single();
+      await database.markAttendanceSynced(clientUuid, serverId: (response['id'] as num?)?.toInt());
+    } on Exception {
+      // offline; the coordinator syncs it later
     }
   }
 
@@ -128,20 +185,36 @@ class _AttendancePageState extends ConsumerState<AttendancePage> {
         throw Exception('Profil officer tidak ditemukan. Hubungi admin untuk membuat profil Anda.');
       }
 
-      await Supabase.instance.client.from('attendance').insert({
-        'officer_id': user.id,
-        'officer_name': officerProfile['name'],
-        'market_id': officerProfile['market_id'],
-        'check_in': DateTime.now().toIso8601String(),
-        'check_in_lat': position.latitude,
-        'check_in_lng': position.longitude,
-        'status': 'present',
-      });
+      final officerName = officerProfile['name']?.toString() ?? 'Petugas';
+      final marketId = (officerProfile['market_id'] as num?)?.toInt();
+      if (marketId == null) throw Exception('Pasar petugas belum diatur');
+
+      final database = DatabaseService();
+      final clientUuid = const Uuid().v4();
+      final checkInAt = DateTime.now();
+
+      await database.queueAttendanceCheckIn(
+        clientUuid: clientUuid,
+        officerId: user.id,
+        officerName: officerName,
+        marketId: marketId,
+        checkIn: checkInAt.toIso8601String(),
+        lat: position.latitude,
+        lng: position.longitude,
+      );
+      await _pushCheckIn(
+        clientUuid: clientUuid,
+        officerName: officerName,
+        marketId: marketId,
+        at: checkInAt,
+        lat: position.latitude,
+        lng: position.longitude,
+      );
 
       if (mounted) {
         setState(() {
           _isCheckedIn = true;
-          _checkInTime = DateTime.now();
+          _checkInTime = checkInAt;
         });
       }
     } on Exception catch (e) {
@@ -196,19 +269,42 @@ class _AttendancePageState extends ConsumerState<AttendancePage> {
         ),
       );
 
-      final attendance = await Supabase.instance.client
-          .from('attendance')
-          .select('id')
-          .eq('officer_id', user.id)
-          .filter('check_out', 'is', 'null')
-          .maybeSingle();
+      final database = DatabaseService();
+      final checkOutAt = DateTime.now();
+      final local = await database.localAttendanceForOfficer(user.id, DateTime.now());
+      if (local != null) {
+        await database.queueAttendanceCheckOut(
+          clientUuid: local['id'] as String,
+          checkOut: checkOutAt.toIso8601String(),
+          lat: position.latitude,
+          lng: position.longitude,
+        );
+      }
 
-      if (attendance != null) {
-        await Supabase.instance.client.from('attendance').update({
-          'check_out': DateTime.now().toIso8601String(),
-          'check_out_lat': position.latitude,
-          'check_out_lng': position.longitude,
-        }).eq('id', attendance['id']);
+      try {
+        final attendance = await Supabase.instance.client
+            .from('attendance')
+            .select('id')
+            .eq('officer_id', user.id)
+            .filter('check_out', 'is', 'null')
+            .maybeSingle();
+
+        if (attendance != null) {
+          await Supabase.instance.client.from('attendance').update({
+            'check_out': checkOutAt.toIso8601String(),
+            'check_out_lat': position.latitude,
+            'check_out_lng': position.longitude,
+          }).eq('id', attendance['id']);
+          if (local != null) {
+            await database.markAttendanceSynced(
+              local['id'] as String,
+              serverId: (attendance['id'] as num?)?.toInt(),
+            );
+          }
+        }
+      } on Exception {
+        // Offline: the local row keeps the checkout and syncs later.
+        if (local == null) rethrow;
       }
 
       if (mounted) {

@@ -10,7 +10,7 @@ class DatabaseService {
   DatabaseService._internal();
 
   static const _databaseName = 'siaga_offline.db';
-  static const _databaseVersion = 2;
+  static const _databaseVersion = 3;
 
   static Database? _database;
 
@@ -42,6 +42,18 @@ class DatabaseService {
       await _createOfflineTables(db);
       await _migrateLegacyTransactions(db);
       await db.execute('DROP TABLE IF EXISTS stalls');
+    }
+    if (oldVersion < 3) {
+      await _addColumnIfMissing(db, 'outbox', 'types_id', 'INTEGER');
+      await _addColumnIfMissing(db, 'attendance', 'server_id', 'INTEGER');
+    }
+  }
+
+  Future<void> _addColumnIfMissing(Database db, String table, String column, String type) async {
+    final info = await db.rawQuery('PRAGMA table_info($table)');
+    final exists = info.any((row) => row['name'] == column);
+    if (!exists) {
+      await db.execute('ALTER TABLE $table ADD COLUMN $column $type');
     }
   }
 
@@ -81,6 +93,7 @@ class DatabaseService {
         market_id INTEGER,
         stall_id INTEGER,
         rate_id INTEGER,
+        types_id INTEGER,
         officer_id INTEGER,
         amount REAL NOT NULL,
         payment_method TEXT,
@@ -197,7 +210,8 @@ class DatabaseService {
         check_out_lat REAL,
         check_out_lng REAL,
         status TEXT,
-        is_synced INTEGER DEFAULT 0
+        is_synced INTEGER DEFAULT 0,
+        server_id INTEGER
       )
     ''');
   }
@@ -288,6 +302,29 @@ class DatabaseService {
       {'status': 'pending', 'attempts': 0, 'next_attempt_at': null, 'last_error': null},
       where: "status = 'failed'",
     );
+  }
+
+  Future<double> pendingBillPayments({required int stallId, int? typesId}) async {
+    final db = await database;
+    final rows = await db.query(
+      'outbox',
+      where: "kind = ? AND stall_id = ? AND status = 'pending'",
+      whereArgs: [OutboxEntry.kindBillPayment, stallId],
+    );
+    return rows
+        .where((row) => typesId == null || (row['types_id'] as int?) == typesId)
+        .fold<double>(0, (sum, row) => sum + ((row['amount'] as num?)?.toDouble() ?? 0));
+  }
+
+  Future<bool> hasOpenBillPayments() async {
+    final db = await database;
+    final rows = await db.query(
+      'outbox',
+      where: "kind = ? AND status IN ('pending', 'failed')",
+      whereArgs: [OutboxEntry.kindBillPayment],
+      limit: 1,
+    );
+    return rows.isNotEmpty;
   }
 
   Future<List<OutboxEntry>> outboxEntries({int limit = 50}) async {
@@ -512,8 +549,85 @@ class DatabaseService {
     final db = await database;
     return db.insert('attendance', {
       ...attendance,
-      'is_synced': 0,
+      'is_synced': attendance['is_synced'] ?? 0,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<String> queueAttendanceCheckIn({
+    required String clientUuid,
+    required String officerId,
+    required String officerName,
+    required int marketId,
+    required String checkIn,
+    double? lat,
+    double? lng,
+    String status = 'present',
+    int? serverId,
+    bool synced = false,
+  }) async {
+    await insertAttendance({
+      'id': clientUuid,
+      'officer_id': officerId,
+      'officer_name': officerName,
+      'market_id': marketId,
+      'check_in': checkIn,
+      'check_in_lat': lat,
+      'check_in_lng': lng,
+      'status': status,
+      'server_id': serverId,
+      'is_synced': synced ? 1 : 0,
     });
+    return clientUuid;
+  }
+
+  Future<void> queueAttendanceCheckOut({
+    required String clientUuid,
+    required String checkOut,
+    double? lat,
+    double? lng,
+  }) async {
+    final db = await database;
+    await db.update(
+      'attendance',
+      {
+        'check_out': checkOut,
+        'check_out_lat': lat,
+        'check_out_lng': lng,
+        'is_synced': 0,
+      },
+      where: 'id = ?',
+      whereArgs: [clientUuid],
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> unsyncedAttendance() async {
+    final db = await database;
+    final rows = await db.query('attendance', where: 'is_synced = ?', whereArgs: [0]);
+    return rows.map((row) => Map<String, dynamic>.from(row)).toList();
+  }
+
+  Future<void> markAttendanceSynced(String clientUuid, {int? serverId}) async {
+    final db = await database;
+    await db.update(
+      'attendance',
+      {'is_synced': 1, 'server_id': serverId},
+      where: 'id = ?',
+      whereArgs: [clientUuid],
+    );
+  }
+
+  Future<Map<String, dynamic>?> localAttendanceForOfficer(String officerId, DateTime day) async {
+    final db = await database;
+    final start = DateTime(day.year, day.month, day.day).toIso8601String();
+    final end = DateTime(day.year, day.month, day.day, 23, 59, 59).toIso8601String();
+    final rows = await db.query(
+      'attendance',
+      where: 'officer_id = ? AND check_in >= ? AND check_in <= ?',
+      whereArgs: [officerId, start, end],
+      orderBy: 'check_in DESC',
+      limit: 1,
+    );
+    return rows.isEmpty ? null : Map<String, dynamic>.from(rows.first);
   }
 
   // ---------------------------------------------------------------- legacy

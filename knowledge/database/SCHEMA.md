@@ -157,6 +157,22 @@ Catatan operasional: tarif harian yang dibayar mingguan **belum** otomatis jadi 
 `collection_period`/`collection_anchor` per tarif lapak (bawah ini: dialog tarif sudah menyediakannya).
 Lapak tutup tidak diprorata otomatis.
 
+## Antrean offline mobile (migration 027)
+
+`migrations/027_offline_payment_and_attendance.sql` — **dijalankan pemilik: BELUM** (per 2026-11-02).
+
+- `transactions.client_uuid uuid` + index — penanda satu batch pembayaran tagihan yang dikirim
+  dari antrean offline; **bukan** unique karena satu batch bisa mengalokasikan ke beberapa tagihan.
+- `attendance.client_uuid uuid` + partial unique index — check-in/out offline di-upsert tanpa
+  membuat baris ganda.
+- `pay_retribution_bills` ditambah parameter `p_client_uuid uuid DEFAULT NULL`. Bila batch dengan
+  uuid itu sudah pernah masuk untuk lapak yang sama, fungsi mengembalikan alokasi lama tanpa
+  menagih ulang. Signature 6 argumen lama dihapus agar tidak ambigu; pemanggil lama tetap jalan
+  karena parameter baru punya DEFAULT. EXECUTE: `authenticated` + `service_role`, `anon`/PUBLIC dicabut.
+- Diuji dalam transaksi yang di-`ROLLBACK`: panggilan pertama membuat 1 baris Rp 1.000; panggilan
+  kedua dengan uuid sama mengembalikan baris yang sama dan tidak menambah transaksi; panggilan
+  lama 6 argumen tetap berfungsi.
+
 ## Penerbitan massal periode berjalan (migration 026)
 
 `migrations/026_generate_current_period_bills.sql` — **dijalankan pemilik 2026-11-02 dan terverifikasi**

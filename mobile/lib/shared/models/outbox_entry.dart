@@ -10,6 +10,7 @@ class OutboxEntry {
     this.marketId,
     this.stallId,
     this.rateId,
+    this.typesId,
     this.officerId,
     this.paymentMethod,
     this.payerName,
@@ -22,12 +23,14 @@ class OutboxEntry {
   });
 
   static const kindDailyPayment = 'DAILY_PAYMENT';
+  static const kindBillPayment = 'BILL_PAYMENT';
 
   final String clientUuid;
   final String kind;
   final int? marketId;
   final int? stallId;
   final int? rateId;
+  final int? typesId;
   final int? officerId;
   final double amount;
   final String? paymentMethod;
@@ -53,6 +56,7 @@ class OutboxEntry {
       marketId: map['market_id'] as int?,
       stallId: map['stall_id'] as int?,
       rateId: map['rate_id'] as int?,
+      typesId: map['types_id'] as int?,
       officerId: map['officer_id'] as int?,
       amount: (map['amount'] as num?)?.toDouble() ?? 0,
       paymentMethod: map['payment_method'] as String?,
@@ -77,6 +81,7 @@ class OutboxEntry {
       'market_id': marketId,
       'stall_id': stallId,
       'rate_id': rateId,
+      'types_id': typesId,
       'officer_id': officerId,
       'amount': amount,
       'payment_method': paymentMethod,

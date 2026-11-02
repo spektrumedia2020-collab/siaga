@@ -4,8 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../services/local/database_service.dart';
+import '../../services/offline_sync_coordinator.dart';
+import '../../shared/models/outbox_entry.dart';
 
 class LapakPage extends ConsumerStatefulWidget {
   const LapakPage({super.key, required this.lapakId});
@@ -947,13 +950,10 @@ class _LapakPageState extends ConsumerState<LapakPage> {
     final stallId = (stallData?['id'] as num?)?.toInt();
     if (stallId == null) return;
 
-    if (await _isOffline()) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pembayaran tagihan membutuhkan sinyal. Coba lagi saat terhubung.')),
-      );
-      return;
-    }
+    final online = !(await _isOffline());
+    final database = DatabaseService();
+    final pendingQueued = await database.pendingBillPayments(stallId: stallId, typesId: typeId);
+    if (!mounted) return;
 
     final openBills = billRows
         .where((bill) =>
@@ -964,7 +964,14 @@ class _LapakPageState extends ConsumerState<LapakPage> {
       0,
       (sum, bill) => sum + ((bill['outstanding'] as num?)?.toDouble() ?? 0),
     );
-    if (totalOutstanding <= 0) return;
+    final available = (totalOutstanding - pendingQueued).clamp(0.0, totalOutstanding);
+    if (available <= 0) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sisa tunggakan sudah tercakup pembayaran yang menunggu sinkron.')),
+      );
+      return;
+    }
 
     final amountController = TextEditingController();
     final payerController = TextEditingController(text: ownerName ?? '');
@@ -985,8 +992,8 @@ class _LapakPageState extends ConsumerState<LapakPage> {
                 setDialogState(() => message = 'Jumlah pembayaran harus lebih dari 0');
                 return;
               }
-              if (amount > totalOutstanding) {
-                setDialogState(() => message = 'Jumlah melebihi total tunggakan Rp ${_formatAmount(totalOutstanding)}');
+              if (amount > available) {
+                setDialogState(() => message = 'Jumlah melebihi sisa tunggakan Rp ${_formatAmount(available)}');
                 return;
               }
               setDialogState(() {
@@ -994,6 +1001,57 @@ class _LapakPageState extends ConsumerState<LapakPage> {
                 message = null;
               });
               try {
+                if (!online) {
+                  final officerId = int.tryParse(await database.getMeta('officer_user_id') ?? '');
+                  final clientUuid = const Uuid().v4();
+                  final occurredAt = DateTime.now();
+                  await database.enqueueTransaction(OutboxEntry(
+                    clientUuid: clientUuid,
+                    kind: OutboxEntry.kindBillPayment,
+                    marketId: (stallData?['market_id'] as num?)?.toInt(),
+                    stallId: stallId,
+                    typesId: typeId,
+                    officerId: officerId,
+                    amount: amount,
+                    paymentMethod: method,
+                    payerName: payerController.text.trim(),
+                    note: noteController.text.trim(),
+                    occurredAt: occurredAt,
+                    stallCode: stallData?['code']?.toString(),
+                    status: 'pending',
+                    attempts: 0,
+                    createdAt: occurredAt,
+                  ));
+                  await database.setMeta('bills_dirty', '1');
+                  final syncResult = await OfflineSyncCoordinator.instance.syncNow();
+                  final entry = await database.outboxEntry(clientUuid);
+                  final synced = entry?.status == 'done';
+                  if (synced) {
+                    await _loadBills(stallId);
+                  }
+                  if (!mounted || !dialogContext.mounted) return;
+                  Navigator.of(dialogContext).pop();
+                  await showDialog<void>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: Text(synced ? 'Pembayaran berhasil' : 'Pembayaran tercatat'),
+                      content: Text(
+                        synced
+                            ? 'Pembayaran Rp ${_formatAmount(amount)} sudah terkirim ke server.'
+                            : 'Pembayaran Rp ${_formatAmount(amount)} tersimpan di perangkat dan akan '
+                                'dikirim otomatis saat ada sinyal (status: ${syncResult.online ? 'menunggu' : 'offline'}).',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('Tutup'),
+                        ),
+                      ],
+                    ),
+                  );
+                  return;
+                }
+
                 final result = await Supabase.instance.client.rpc(
                   'pay_retribution_bills',
                   params: {
@@ -1052,9 +1110,23 @@ class _LapakPageState extends ConsumerState<LapakPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Total tunggakan Rp ${_formatAmount(totalOutstanding)}',
+                      'Sisa tunggakan Rp ${_formatAmount(available)}',
                       style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
+                    if (pendingQueued > 0) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        'Rp ${_formatAmount(pendingQueued)} sudah dibayar dan menunggu sinkron.',
+                        style: TextStyle(fontSize: 12, color: Colors.orange[800]),
+                      ),
+                    ],
+                    if (!online) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        'Mode offline: pembayaran disimpan di perangkat dan dikirim saat ada sinyal.',
+                        style: TextStyle(fontSize: 12, color: Colors.orange[800]),
+                      ),
+                    ],
                     const SizedBox(height: 12),
                     TextField(
                       controller: amountController,

@@ -10,6 +10,7 @@ void main() {
       marketId: 39,
       stallId: 8364,
       rateId: 12345,
+      typesId: 104,
       officerId: 36,
       amount: 5000,
       paymentMethod: 'Tunai',
@@ -29,6 +30,7 @@ void main() {
     expect(restored.marketId, 39);
     expect(restored.stallId, 8364);
     expect(restored.rateId, 12345);
+    expect(restored.typesId, 104);
     expect(restored.officerId, 36);
     expect(restored.amount, 5000);
     expect(restored.payerName, 'M. Saleh');

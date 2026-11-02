@@ -34,7 +34,7 @@ UserManagement.tsx → POST /api/users {email, password, fullName, roleId, marke
 
 Tanpa header Authorization; server tidak memeriksa siapa pemanggil. Lihat SECURITY S-01.
 
-## 4. Transaksi retribusi (mobile, offline-first — Fase 1, 2026-11-02)
+## 4. Transaksi retribusi (mobile, offline-first — Fase 1–2, 2026-11-02)
 
 ```
 login (butuh sinyal sekali) → offline_sync_coordinator.start()
@@ -51,13 +51,16 @@ scan QR / buka lapak
 
 sync_service (saat online)
   → upsert transactions on conflict uuid_transaction (ignore duplicates)
-      → terkirim → outbox.status='done' + server_id
+  → cicilan tagihan: rpc pay_retribution_bills(..., p_client_uuid) — pengiriman ulang
+    mengembalikan alokasi lama tanpa menagih dua kali (migration 027)
+  → presensi: upsert attendance on conflict client_uuid (migration 027)
+      → terkirim → outbox/attendance ditandai synced + server_id
       → error jaringan → retry backoff 30 dtk…30 mnt
-      → error validasi/RLS → outbox.status='failed' (dicoba ulang saat Sinkron manual)
+      → error validasi/RLS → status failed (dicoba ulang saat Sinkron manual)
 ```
 
-Batas Fase 1: cicilan tagihan (`pay_retribution_bills`), absensi, dan setoran masih
-online-only. Lihat [modules/mobile-officer.md](../modules/mobile-officer.md).
+Setoran (butuh unggah foto bukti) masih online-only. Lihat
+[modules/mobile-officer.md](../modules/mobile-officer.md).
 
 ## 5. Setoran petugas & approval
 

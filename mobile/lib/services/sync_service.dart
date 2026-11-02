@@ -29,35 +29,13 @@ class SyncService {
     var synced = 0;
 
     for (final entry in entries) {
-      if (entry.kind != OutboxEntry.kindDailyPayment) continue;
       try {
-        await _client.from('transactions').upsert(
-          {
-            'uuid_transaction': entry.clientUuid,
-            'transaction_date': entry.occurredAt.toUtc().toIso8601String(),
-            'created_at': entry.occurredAt.toUtc().toIso8601String(),
-            'market_id': entry.marketId,
-            'stall_id': entry.stallId,
-            'rate_id': entry.rateId,
-            'officer_id': entry.officerId,
-            'amount': entry.amount,
-            'payment_method': entry.paymentMethod,
-            'payer_name': entry.payerName,
-            'note': entry.note,
-            'status': 'paid',
-            'source': 'MOBILE',
-            'sync_status': 'SYNCED',
-          },
-          onConflict: 'uuid_transaction',
-          ignoreDuplicates: true,
-        );
-
-        final row = await _client
-            .from('transactions')
-            .select('id')
-            .eq('uuid_transaction', entry.clientUuid)
-            .maybeSingle();
-        final serverId = (row?['id'] as num?)?.toInt();
+        int? serverId;
+        if (entry.kind == OutboxEntry.kindBillPayment) {
+          await _pushBillPayment(entry);
+        } else {
+          serverId = await _pushDailyPayment(entry);
+        }
         await _database.markOutboxSynced(entry.clientUuid, serverId: serverId);
         synced++;
       } on PostgrestException catch (e) {
@@ -88,6 +66,88 @@ class SyncService {
     return synced;
   }
 
+  Future<int?> _pushDailyPayment(OutboxEntry entry) async {
+    await _client.from('transactions').upsert(
+      {
+        'uuid_transaction': entry.clientUuid,
+        'transaction_date': entry.occurredAt.toUtc().toIso8601String(),
+        'created_at': entry.occurredAt.toUtc().toIso8601String(),
+        'market_id': entry.marketId,
+        'stall_id': entry.stallId,
+        'rate_id': entry.rateId,
+        'officer_id': entry.officerId,
+        'amount': entry.amount,
+        'payment_method': entry.paymentMethod,
+        'payer_name': entry.payerName,
+        'note': entry.note,
+        'status': 'paid',
+        'source': 'MOBILE',
+        'sync_status': 'SYNCED',
+      },
+      onConflict: 'uuid_transaction',
+      ignoreDuplicates: true,
+    );
+
+    final row = await _client
+        .from('transactions')
+        .select('id')
+        .eq('uuid_transaction', entry.clientUuid)
+        .maybeSingle();
+    return (row?['id'] as num?)?.toInt();
+  }
+
+  Future<void> _pushBillPayment(OutboxEntry entry) async {
+    await _client.rpc('pay_retribution_bills', params: {
+      'p_stall_id': entry.stallId,
+      'p_amount': entry.amount,
+      'p_types_id': entry.typesId,
+      'p_payment_method': entry.paymentMethod ?? 'Tunai',
+      'p_payer_name': entry.payerName,
+      'p_note': entry.note,
+      'p_client_uuid': entry.clientUuid,
+    });
+  }
+
+  Future<int> syncAttendance() async {
+    if (!await isConnected()) return 0;
+
+    final rows = await _database.unsyncedAttendance();
+    var synced = 0;
+
+    for (final row in rows) {
+      try {
+        final response = await _client
+            .from('attendance')
+            .upsert(
+              {
+                'client_uuid': row['id'],
+                'officer_id': row['officer_id'],
+                'officer_name': row['officer_name'],
+                'market_id': row['market_id'],
+                'check_in': row['check_in'],
+                'check_out': row['check_out'],
+                'check_in_lat': row['check_in_lat'],
+                'check_in_lng': row['check_in_lng'],
+                'check_out_lat': row['check_out_lat'],
+                'check_out_lng': row['check_out_lng'],
+                'status': row['status'],
+              },
+              onConflict: 'client_uuid',
+              ignoreDuplicates: false,
+            )
+            .select('id')
+            .maybeSingle();
+        final serverId = (response?['id'] as num?)?.toInt();
+        await _database.markAttendanceSynced(row['id'] as String, serverId: serverId);
+        synced++;
+      } on Exception {
+        // Keep the local row; the next sync retries it.
+      }
+    }
+
+    return synced;
+  }
+
   DateTime _nextAttempt(int attempts) {
     final exponent = attempts <= 1 ? 0 : (attempts - 1).clamp(0, 6);
     final seconds = 30 * (1 << exponent);
@@ -95,7 +155,10 @@ class SyncService {
   }
 
   Future<Map<String, int>> syncAll() async {
-    return {'transactions': await syncPendingTransactions()};
+    return {
+      'transactions': await syncPendingTransactions(),
+      'attendance': await syncAttendance(),
+    };
   }
 
   Future<int> getPendingCount() => _database.pendingOutboxCount();
