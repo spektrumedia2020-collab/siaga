@@ -44,12 +44,15 @@ interface RetributionRate {
   stall_id: number | null
   market_id: number
   types_id: number
+  collection_period?: string | null
+  collection_anchor?: number | null
   retribution_types?: {
     id: number
     name: string
     code: string
     category: string
     unit: string
+    billing_period?: string | null
   }
   created_at?: string
   updated_at?: string
@@ -61,6 +64,7 @@ interface DbRetributionType {
   name: string
   category: string
   unit: string
+  billing_period?: string | null
   is_active?: boolean
 }
 
@@ -68,6 +72,23 @@ interface Props {
   marketId: number
   marketName?: string
   readOnly?: boolean
+}
+
+const WEEKDAYS = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu']
+
+const cadenceLabel = (period?: string | null, anchor?: number | null) => {
+  switch (period) {
+    case 'MINGGUAN':
+      return `Mingguan (${WEEKDAYS[(Number(anchor) || 1) - 1] || 'Senin'})`
+    case 'BULANAN':
+      return `Bulanan (tanggal ${Number(anchor) || 1})`
+    case 'TAHUNAN':
+      return 'Tahunan'
+    case 'HARIAN':
+      return 'Harian'
+    default:
+      return period || '-'
+  }
 }
 
 export function StallsPage({ marketId, marketName, readOnly = false }: Props) {
@@ -99,6 +120,8 @@ export function StallsPage({ marketId, marketName, readOnly = false }: Props) {
   const [rateEditingId, setRateEditingId] = useState<number | null>(null)
   const [rateFormTypesId, setRateFormTypesId] = useState('')
   const [rateFormAmount, setRateFormAmount] = useState('')
+  const [rateFormPeriod, setRateFormPeriod] = useState('HARIAN')
+  const [rateFormAnchor, setRateFormAnchor] = useState('1')
   const [rateSaving, setRateSaving] = useState(false)
   const [retributionTypes, setRetributionTypes] = useState<DbRetributionType[]>([])
   const [deleteTarget, setDeleteTarget] = useState<Stall | null>(null)
@@ -347,7 +370,7 @@ export function StallsPage({ marketId, marketName, readOnly = false }: Props) {
       const supabase = getSupabaseClient()
       const { data, error } = await supabase
         .from('retribution_rates')
-        .select('*, retribution_types(name, code, category, unit)')
+        .select('*, retribution_types(name, code, category, unit, billing_period)')
         .eq('stall_id', stallId)
         .order('created_at', { ascending: false })
 
@@ -390,6 +413,8 @@ export function StallsPage({ marketId, marketName, readOnly = false }: Props) {
     setRateEditingId(null)
     setRateFormTypesId('')
     setRateFormAmount('')
+    setRateFormPeriod('HARIAN')
+    setRateFormAnchor('1')
   }
 
   const handleRateFormSubmit = async (e: React.FormEvent) => {
@@ -399,17 +424,25 @@ export function StallsPage({ marketId, marketName, readOnly = false }: Props) {
     try {
       setRateSaving(true)
       const supabase = getSupabaseClient()
+      const isWeeklyOrMonthly = rateFormPeriod === 'MINGGUAN' || rateFormPeriod === 'BULANAN'
       const payload = {
         types_id: parseInt(rateFormTypesId),
         amount: parseFloat(rateFormAmount),
         stall_id: rateDialogStall!.id,
-        market_id: (rateDialogStall as any).market_id || marketId
+        market_id: (rateDialogStall as any).market_id || marketId,
+        collection_period: rateFormPeriod,
+        collection_anchor: isWeeklyOrMonthly ? parseInt(rateFormAnchor) || 1 : null
       }
 
       if (rateEditingId) {
         const { error } = await supabase
           .from('retribution_rates')
-          .update({ amount: payload.amount, types_id: payload.types_id })
+          .update({
+            amount: payload.amount,
+            types_id: payload.types_id,
+            collection_period: payload.collection_period,
+            collection_anchor: payload.collection_anchor
+          })
           .eq('id', rateEditingId)
         if (error) throw error
       } else {
@@ -419,10 +452,7 @@ export function StallsPage({ marketId, marketName, readOnly = false }: Props) {
         if (error) throw error
       }
 
-      setRateFormTypesId('')
-      setRateFormAmount('')
-      setRateEditingId(null)
-      setRateFormOpen(false)
+      resetRateForm()
       loadRates(rateDialogStall!.id)
     } catch (err: any) {
       console.error('Error saving rate:', err.message)
@@ -435,7 +465,23 @@ export function StallsPage({ marketId, marketName, readOnly = false }: Props) {
     setRateEditingId(rate.id)
     setRateFormTypesId(String(rate.types_id))
     setRateFormAmount(String(rate.amount))
+    const period = rate.collection_period || 'HARIAN'
+    setRateFormPeriod(period)
+    setRateFormAnchor(String(rate.collection_anchor || 1))
     setRateFormOpen(true)
+  }
+
+  const handleRateTypeChange = (typesId: string) => {
+    setRateFormTypesId(typesId)
+    const type = retributionTypes.find((item) => String(item.id) === typesId)
+    if (type?.billing_period === 'TAHUNAN') {
+      setRateFormPeriod('TAHUNAN')
+      return
+    }
+    if (rateFormPeriod === 'TAHUNAN') {
+      setRateFormPeriod('HARIAN')
+      setRateFormAnchor('1')
+    }
   }
 
   const handleRateDelete = async (id: number) => {
@@ -464,6 +510,8 @@ export function StallsPage({ marketId, marketName, readOnly = false }: Props) {
   const resetRateForm = () => {
     setRateFormTypesId('')
     setRateFormAmount('')
+    setRateFormPeriod('HARIAN')
+    setRateFormAnchor('1')
     setRateEditingId(null)
     setRateFormOpen(false)
   }
@@ -486,10 +534,11 @@ export function StallsPage({ marketId, marketName, readOnly = false }: Props) {
     }
   }
 
+  const rateFormType = retributionTypes.find((item) => String(item.id) === rateFormTypesId)
+
   if (loading) {
     return <Loading label="Memuat data lapak..." />
   }
-
   return (
     <div className="stalls-page">
       <div className="page-header">
@@ -776,7 +825,7 @@ export function StallsPage({ marketId, marketName, readOnly = false }: Props) {
                     <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>Jenis Retribusi</label>
                     <select
                       value={rateFormTypesId}
-                      onChange={(e) => setRateFormTypesId(e.target.value)}
+                      onChange={(e) => handleRateTypeChange(e.target.value)}
                       style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #d1d5db' }}
                       required
                     >
@@ -798,6 +847,53 @@ export function StallsPage({ marketId, marketName, readOnly = false }: Props) {
                       required
                     />
                   </div>
+                  {rateFormType?.billing_period !== 'TAHUNAN' && (
+                    <>
+                      <div>
+                        <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>Irama Penagihan</label>
+                        <select
+                          value={rateFormPeriod}
+                          onChange={(e) => setRateFormPeriod(e.target.value)}
+                          style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #d1d5db' }}
+                        >
+                          <option value="HARIAN">Harian — tagih setiap hari</option>
+                          <option value="MINGGUAN">Mingguan — satu tagihan 7 hari</option>
+                          <option value="BULANAN">Bulanan — satu tagihan sebulan</option>
+                        </select>
+                        <small style={{ color: '#6b7280' }}>
+                          Nominal tarif tetap per {rateFormType?.unit || 'satuan'}; irama hanya menentukan rentang tagihan.
+                        </small>
+                      </div>
+                      {rateFormPeriod === 'MINGGUAN' && (
+                        <div>
+                          <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>Hari Mulai Penagihan</label>
+                          <select
+                            value={rateFormAnchor}
+                            onChange={(e) => setRateFormAnchor(e.target.value)}
+                            style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #d1d5db' }}
+                          >
+                            {WEEKDAYS.map((day, index) => (
+                              <option key={day} value={index + 1}>{day}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                      {rateFormPeriod === 'BULANAN' && (
+                        <div>
+                          <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>Tanggal Mulai Penagihan</label>
+                          <input
+                            type="number"
+                            min="1"
+                            max="31"
+                            value={rateFormAnchor}
+                            onChange={(e) => setRateFormAnchor(e.target.value)}
+                            style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #d1d5db' }}
+                          />
+                          <small style={{ color: '#6b7280' }}>Tanggal 29–31 menyesuaikan akhir bulan.</small>
+                        </div>
+                      )}
+                    </>
+                  )}
                   <div style={{ display: 'flex', gap: 8 }}>
                     <button type="submit" className="btn-primary" disabled={rateSaving}>
                       {rateSaving ? 'Menyimpan...' : rateEditingId ? 'Simpan' : 'Tambah'}
@@ -827,6 +923,12 @@ export function StallsPage({ marketId, marketName, readOnly = false }: Props) {
                           Rp {rate.amount.toLocaleString('id-ID')}
                           {rate.retribution_types?.unit ? ` / ${rate.retribution_types.unit}` : ''}
                           {rate.retribution_types?.category ? ` • ${rate.retribution_types.category}` : ''}
+                        </div>
+                        <div style={{ color: '#6b7280', fontSize: 12 }}>
+                          Penagihan: {cadenceLabel(
+                            rate.retribution_types?.billing_period === 'TAHUNAN' ? 'TAHUNAN' : rate.collection_period,
+                            rate.collection_anchor
+                          )}
                         </div>
                       </div>
                       <div style={{ display: 'flex', gap: 8 }}>

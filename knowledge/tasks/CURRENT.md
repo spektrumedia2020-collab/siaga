@@ -95,6 +95,8 @@ menampilkan data.
 | 11 | P0-09 — aktifkan RLS `stall_categories` | **SELESAI** | Migration 011; anon ditolak, staf diizinkan |
 | 12 | P0-10 — read scope + `setoran` | **SELESAI** | Migration 012; deny/allow PASS |
 | 13 | P0-11 — PII `stall_owners` | **SELESAI** | Migration 013; anon hanya `id,name` |
+| 84 | UI irama penagihan per tarif lapak | **SELESAI (kode, belum deploy)** | `StallsPage` dialog rate: pilihan Harian/Mingguan (anchor Senin–Minggu)/Bulanan (tanggal 1–31), disembunyikan untuk jenis TAHUNAN; daftar rate menampilkan "Penagihan: …"; kolom `collection_period`/`collection_anchor` ikut disimpan. Typecheck + build PASS |
+| 85 | Tab Tagihan Periode di halaman Tagihan | **SELESAI (kode, belum deploy)** | `MarketBillsPage` dipisah tab **Tahunan** / **Mingguan / Bulanan**; tabel periode (Lapak, Pemilik, Jenis+irama, Periode, Jatuh tempo, Tagihan, Dibayar, Sisa, Status, Aksi), filter jenis/status/cari, paginasi 25, dialog bayar per periode (FIFO). Modal **Terbitkan Periode**: mode periode berjalan (belum aktif sampai migration 026) atau rentang tanggal ≤31 hari. Verifikasi browser lokal: kedua tab, modal, dan label tarif tampil; screenshot tampilan tidak tersedia (permukaan browser tersembunyi) |
 
 ## Scope sesi ini
 
@@ -135,9 +137,13 @@ Tidak ada gelombang paralel. `open_wave = null`.
 2b. **Retribusi periode (migration 025) applied 2026-11-02 dan terverifikasi** lewat uji rollback:
    tagihan mingguan (Senin–Minggu, 7×tarif harian), bulanan (anchor 31 dengan clamp akhir bulan),
    anti-overlap, terbit ulang setelah dibatalkan, FIFO periode, dan penerbitan tahunan 2027
-   (1.396 baris, ulang 0). **Belum tersambung ke UI/API/mobile**: dialog tarif belum punya pilihan
-   irama, `api/lapak.ts` belum membaca `period_*`, mobile belum memanggil `ensure_current_period_bill`.
-   Semua tarif produksi masih `collection_period = 'HARIAN'`.
+   (1.396 baris, ulang 0). **UI admin sudah tersambung**: dialog tarif punya irama penagihan dan
+   halaman Tagihan punya tab **Mingguan / Bulanan** + modal Terbitkan Periode. **Migration 026
+   (`generate_current_period_bills`) belum dijalankan pemilik** — tombol mode "Periode berjalan"
+   akan gagal sampai SQL itu dieksekusi. Mode "Rentang tanggal" sudah berfungsi dengan 025.
+   Masih kurang: `api/lapak.ts` belum membaca `period_*`, mobile belum memanggil
+   `ensure_current_period_bill`. Semua tarif produksi masih `collection_period = 'HARIAN'`, jadi
+   tombol terbitkan periode berjalan akan menghasilkan 0 sampai irama diubah per lapak.
 3. **Fase mobile tagihan** (belum mulai): kartu tagihan per lapak, input cicilan, tampilkan sisa
    setelah bayar; mobile belum menulis `bill_id`, sehingga pembayaran cicilan harus lewat web/RPC.
 4. **Laporan tagihan**: realisasi vs target per tahun + daftar tunggakan per umur (belum dibuat).

@@ -348,6 +348,34 @@
   gap: 10px;
 }
 
+.bills-tabs {
+  display: flex;
+  gap: 4px;
+  margin: 4px 0 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.bills-tabs button {
+  border: none;
+  background: none;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.bills-tabs button:hover {
+  color: #0b1f3a;
+}
+
+.bills-tabs button.active {
+  color: #1e3a8a;
+  border-bottom-color: #1e3a8a;
+}
+
 @media (max-width: 640px) {
   .bills-field-row {
     grid-template-columns: 1fr;
