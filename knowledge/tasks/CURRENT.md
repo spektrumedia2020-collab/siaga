@@ -98,7 +98,7 @@ menampilkan data.
 | 84 | UI irama penagihan per tarif lapak | **SELESAI (kode, belum deploy)** | `StallsPage` dialog rate: pilihan Harian/Mingguan (anchor Senin–Minggu)/Bulanan (tanggal 1–31), disembunyikan untuk jenis TAHUNAN; daftar rate menampilkan "Penagihan: …"; kolom `collection_period`/`collection_anchor` ikut disimpan. Typecheck + build PASS |
 | 85 | Tab Tagihan Periode di halaman Tagihan | **SELESAI (kode, belum deploy)** | `MarketBillsPage` dipisah tab **Tahunan** / **Mingguan / Bulanan**; tabel periode (Lapak, Pemilik, Jenis+irama, Periode, Jatuh tempo, Tagihan, Dibayar, Sisa, Status, Aksi), filter jenis/status/cari, paginasi 25, dialog bayar per periode (FIFO). Modal **Terbitkan Periode**: mode periode berjalan (belum aktif sampai migration 026) atau rentang tanggal ≤31 hari. Verifikasi browser lokal: kedua tab, modal, dan label tarif tampil; screenshot tampilan tidak tersedia (permukaan browser tersembunyi) |
 | 86 | Mobile offline Fase 1 (outbox + cache + auto-sync) | **SELESAI (kode, belum APK)** | `siaga_offline.db` v2: outbox `client_uuid` → `transactions.uuid_transaction` (upsert idempoten, tanpa migrasi server), cache lapak/pemilik/tarif/jenis/tagihan/pembayaran hari ini, `offline_sync_coordinator` (listener konektivitas, resume, timer 2 menit, backoff 30 dtk–30 mnt, retry manual untuk `failed`). Pembayaran harian offline-first + struk "menunggu sinkron"; lapak & riwayat memakai cache/outbox; dashboard & landing menampilkan status nyata + jumlah pending/gagal. `flutter analyze` 0 issue, `flutter test` 8/8. Belum: APK, cicilan tagihan offline, absensi/setoran |
-| 87 | Mobile offline Fase 2 (cicilan tagihan + presensi) | **SELESAI (kode), migration 027 BELUM dijalankan** | Outbox `kind=BILL_PAYMENT` (+`types_id`) → RPC `pay_retribution_bills(p_client_uuid)` idempoten; dialog tagihan offline membatasi jumlah dengan sisa dikurangi antrean; presensi check-in/out lokal (`attendance.client_uuid`) + upsert saat sinkron. Cache tagihan disegarkan setelah antrean tagihan selesai. `flutter analyze` 0 issue, `flutter test` 8/8. Migration 027 divalidasi dalam transaksi ROLLBACK: replay uuid sama → 1 baris, tidak menagih ulang; panggilan 6 argumen lama tetap jalan. Setoran tetap online-only |
+| 87 | Mobile offline Fase 2 (cicilan tagihan + presensi) | **SELESAI (migration 027 applied & terverifikasi)** | Outbox `kind=BILL_PAYMENT` (+`types_id`) → RPC `pay_retribution_bills(p_client_uuid)` idempoten; dialog tagihan offline membatasi jumlah dengan sisa dikurangi antrean; presensi check-in/out lokal (`attendance.client_uuid`) + upsert saat sinkron. Cache tagihan disegarkan setelah antrean tagihan selesai. `flutter analyze` 0 issue, `flutter test` 8/8. Migration 027 dijalankan pemilik 2026-11-02; verifikasi pooler: signature 7 argumen, `authenticated`/`service_role` saja, kedua kolom + unique index presensi ada, replay uuid sama tetap 1 baris Rp 1.000, panggilan 6 argumen lama tetap jalan, residu rollback 0. Setoran tetap online-only |
 | 88 | Tab Lapak offline (bug "Gagal memuat data") | **SELESAI (terpasang di perangkat)** | `ShopPageBody` memakai cache saat offline/kegagalan jaringan (`cachedStalls`/`cachedSectors`), banner "Data lapak tersimpan di perangkat", nama pasar disimpan di meta; pemuat cache halaman lapak menangkap `Error` juga agar tidak layar merah. Terverifikasi di 23124RA7EO tanpa sinyal: daftar 72 lapak Blok I, detail NGD-0073 (tarif + tagihan 2025/2026), dialog cicilan menampilkan mode offline; setelah sinyal pulih judul menjadi "Pasar Niaga Daya (54 lapak)". APK 21:59 terpasang |
 
 ## Scope sesi ini
@@ -152,14 +152,13 @@ Tidak ada gelombang paralel. `open_wave = null`.
    `HARIAN`; irama hanya bisa diubah per lapak lewat dialog Retribusi. Tiga opsi yang diajukan:
    (1) dialog "set massal" per sektor/jenis di web (rekomendasi), (2) kolom `IRAMA`/`ANCHOR` di
    CSV tarif + impor ulang, (3) tetap per lapak bila hanya segelintir. Belum ada yang dikerjakan.
-3. **Mobile offline Fase 1 & 2 SELESAI di kode (2026-11-02), belum APK.** Fase 1: outbox
-   idempoten harian, cache master pasar, sinkron otomatis, pembayaran harian offline, lapak &
-   riwayat offline. Fase 2: cicilan tagihan lewat outbox `BILL_PAYMENT` (RPC idempoten
-   `p_client_uuid`) dan presensi lokal (`attendance.client_uuid`). **Wajib**: pemilik menjalankan
-   `migrations/027_offline_payment_and_attendance.sql` sebelum uji cicilan/presensi offline —
-   tanpa itu baris tagihan offline berakhir `failed` (bisa diulang lewat Sinkron) dan presensi
-   tetap lokal. **Berikutnya**: bangun & pasang APK; setoran tetap online-only; pertimbangkan
-   penegakan sektor offline dan UNIQUE harian server.
+3. **Mobile offline Fase 1 & 2 SELESAI di kode (2026-11-02); migration 027 sudah dijalankan dan
+   terverifikasi.** Fase 1: outbox idempoten harian, cache master pasar, sinkron otomatis,
+   pembayaran harian offline, lapak & riwayat offline (termasuk tab Lapak; bug "Gagal memuat data"
+   diperbaiki `b89949d`). Fase 2: cicilan tagihan lewat outbox `BILL_PAYMENT` (RPC idempoten
+   `p_client_uuid`) dan presensi lokal (`attendance.client_uuid`). **Berikutnya**: uji end-to-end
+   antrean nyata (cicilan kecil saat offline lalu sinkron), pasang APK terbaru di perangkat lain,
+   setoran tetap online-only, pertimbangkan penegakan sektor offline dan UNIQUE harian server.
 3b. **Tagihan periode di mobile** (belum): kartu tagihan mingguan/bulanan per lapak belum
    ditampilkan; cicilan tagihan tahunan sudah bisa lewat RPC/antrean offline. `api/lapak.ts`
    juga belum membaca `period_*` untuk halaman pemilik.

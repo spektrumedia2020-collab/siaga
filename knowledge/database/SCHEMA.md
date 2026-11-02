@@ -159,7 +159,8 @@ Lapak tutup tidak diprorata otomatis.
 
 ## Antrean offline mobile (migration 027)
 
-`migrations/027_offline_payment_and_attendance.sql` — **dijalankan pemilik: BELUM** (per 2026-11-02).
+`migrations/027_offline_payment_and_attendance.sql` — **dijalankan pemilik 2026-11-02 dan terverifikasi**
+lewat pooler (signature 7 argumen, grant, kolom, uji idempotensi rollback).
 
 - `transactions.client_uuid uuid` + index — penanda satu batch pembayaran tagihan yang dikirim
   dari antrean offline; **bukan** unique karena satu batch bisa mengalokasikan ke beberapa tagihan.
