@@ -139,11 +139,12 @@ Tidak ada gelombang paralel. `open_wave = null`.
    anti-overlap, terbit ulang setelah dibatalkan, FIFO periode, dan penerbitan tahunan 2027
    (1.396 baris, ulang 0). **UI admin sudah tersambung**: dialog tarif punya irama penagihan dan
    halaman Tagihan punya tab **Mingguan / Bulanan** + modal Terbitkan Periode. **Migration 026
-   (`generate_current_period_bills`) belum dijalankan pemilik** — tombol mode "Periode berjalan"
-   akan gagal sampai SQL itu dieksekusi. Mode "Rentang tanggal" sudah berfungsi dengan 025.
-   Masih kurang: `api/lapak.ts` belum membaca `period_*`, mobile belum memanggil
+   (`generate_current_period_bills`) dijalankan pemilik 2026-11-02 dan terverifikasi** lewat pooler:
+   grant `authenticated` saja, mingguan anchor Senin (2–8 Nov, Rp 35.000), idempoten, lapak harian
+   tidak tersentuh, bulanan anchor 31 (31 Okt–29 Nov, Rp 150.000), filter lapak, non-anggota ditolak,
+   residu rollback 0. **Masih kurang**: `api/lapak.ts` belum membaca `period_*`, mobile belum memanggil
    `ensure_current_period_bill`. Semua tarif produksi masih `collection_period = 'HARIAN'`, jadi
-   tombol terbitkan periode berjalan akan menghasilkan 0 sampai irama diubah per lapak.
+   terbitkan periode berjalan akan menghasilkan 0 sampai irama diubah per lapak.
 3. **Fase mobile tagihan** (belum mulai): kartu tagihan per lapak, input cicilan, tampilkan sisa
    setelah bayar; mobile belum menulis `bill_id`, sehingga pembayaran cicilan harus lewat web/RPC.
 4. **Laporan tagihan**: realisasi vs target per tahun + daftar tunggakan per umur (belum dibuat).

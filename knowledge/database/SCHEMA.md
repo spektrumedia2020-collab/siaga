@@ -122,8 +122,8 @@ tagihan dengan `period_year` < tahun yang dipilih.
 ## Tagihan periode mingguan / rentang tanggal (migration 025)
 
 `migrations/025_retribution_period_bills.sql` — **dijalankan pemilik 2026-11-02 dan terverifikasi**
-(struktur + uji rollback PASS). Satu-satunya perubahan yang belum ada: UI/API/mobile belum memakai
-kolom & RPC baru.
+(struktur + uji rollback PASS). UI admin sudah memakai kolom & RPC ini (irama di dialog tarif, tab
+Tagihan Periode); `api/lapak.ts` dan mobile belum.
 
 Prinsip: **satuan tarif tetap** (HARI), yang dipisah adalah **irama penagihan** per tarif lapak.
 
@@ -154,8 +154,31 @@ Prinsip: **satuan tarif tetap** (HARI), yang dipisah adalah **irama penagihan** 
 - EXECUTE keempat RPC: `authenticated` saja, `anon` dicabut.
 
 Catatan operasional: tarif harian yang dibayar mingguan **belum** otomatis jadi MINGGUAN — set
-`collection_period`/`collection_anchor` per tarif lapak (atau lewat UI setelah dialog tarif diubah).
+`collection_period`/`collection_anchor` per tarif lapak (bawah ini: dialog tarif sudah menyediakannya).
 Lapak tutup tidak diprorata otomatis.
+
+## Penerbitan massal periode berjalan (migration 026)
+
+`migrations/026_generate_current_period_bills.sql` — **dijalankan pemilik 2026-11-02 dan terverifikasi**
+lewat pooler.
+
+- `generate_current_period_bills(p_market_id, p_types_id DEFAULT NULL, p_stall_id DEFAULT NULL)` →
+  integer (jumlah tagihan yang dipastikan ada). SECURITY DEFINER, `search_path = public`, cek
+  `is_current_user_admin_full() OR is_current_user_market_member(market)`.
+- Hanya memproses **tarif terbaru per (lapak, jenis)** yang `collection_period`-nya `MINGGUAN`/`BULANAN`
+  dan lapak `AKTIF`; setiap pasangan memanggil `ensure_current_period_bill`, jadi anchor minggu/bulan
+  dihitung per lapak. Lapak berirama `HARIAN` tidak tersentuh.
+- Idempoten: periode yang sudah ada tidak diduplikasi (nilai kembali = jumlah yang "tersedia", bukan
+  jumlah baris baru). `p_types_id`/`p_stall_id` mempersempit cakupan.
+- EXECUTE hanya `authenticated` (dan `service_role`); `anon`/PUBLIC dicabut.
+
+Hasil uji rollback 2026-11-02 (residu 0): mingguan anchor Senin → 2–8 Nov 2026, Rp 35.000, satu baris;
+panggilan ulang tetap 1 baris; lapak lain berirama HARIAN tidak mendapat tagihan; bulanan anchor 31 →
+31 Okt–29 Nov 2026 (clamp), Rp 150.000; filter `p_stall_id` bekerja; pengguna non-anggota ditolak.
+Catatan: bila sebuah tarif **jenis TAHUNAN** diberi irama MINGGUAN/BULANAN lewat SQL, pemanggilan
+dengan `p_types_id` jenis itu akan `RAISE EXCEPTION` ("Gunakan generate_retribution_bills untuk jenis
+tahunan") dan membatalkan seluruh batch — UI tidak mengirim jenis tahunan, jadi ini hanya risiko
+pemanggilan manual.
 
 ## PIN pemilik lapak (migration 022)
 
