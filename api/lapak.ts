@@ -304,7 +304,7 @@ export default async function handler(req: any, res: any) {
         : Promise.resolve({ data: null }),
       supabaseAdmin
         .from('retribution_rates')
-        .select('id, amount, types_id, retribution_types(name, unit)')
+        .select('id, amount, types_id, collection_period, retribution_types(name, unit)')
         .eq('stall_id', stall.id)
         .order('id')
     ])
@@ -316,9 +316,9 @@ export default async function handler(req: any, res: any) {
     let billRows: any[] = []
     const { data: billData, error: billsError } = await supabaseAdmin
       .from('retribution_bill_balances')
-      .select('id, types_id, period_year, amount_due, amount_paid, outstanding, status, due_date, is_open')
+      .select('id, types_id, period_year, amount_due, amount_paid, outstanding, status, due_date, is_open, period_kind, period_start, period_end')
       .eq('stall_id', stall.id)
-      .order('period_year', { ascending: true })
+      .order('period_start', { ascending: true })
 
     if (billsError) {
       const message = String(billsError.message || '')
@@ -376,7 +376,9 @@ export default async function handler(req: any, res: any) {
     })
     const todayAmount = todayTransactions.reduce((sum, tx) => sum + Number(tx.amount || 0), 0)
 
-    const dailyRates = (rates || []).filter((rate: any) => rateUnit(rate) === 'HARI')
+    const dailyRates = (rates || []).filter(
+      (rate: any) => rateUnit(rate) === 'HARI' && (rate.collection_period || 'HARIAN') === 'HARIAN'
+    )
     const dailyDue = dailyRates.reduce((sum: number, rate: any) => sum + Number(rate.amount || 0), 0)
     const dailyNames = Array.from(new Set(dailyRates.map((rate: any) => rateName(rate)).filter(Boolean)))
     const dailyRateIds = new Set(dailyRates.map((rate: any) => Number(rate.id)).filter(Boolean))
@@ -416,7 +418,10 @@ export default async function handler(req: any, res: any) {
     const bills = billRows.map((bill: any) => ({
       bill_id: Number(bill.id),
       period_year: Number(bill.period_year),
-      type_name: typeById.get(Number(bill.types_id))?.name || 'Tagihan tahunan',
+      period_kind: bill.period_kind || 'TAHUNAN',
+      period_start: bill.period_start || null,
+      period_end: bill.period_end || null,
+      type_name: typeById.get(Number(bill.types_id))?.name || 'Tagihan',
       amount_due: Number(bill.amount_due || 0),
       amount_paid: Number(bill.amount_paid || 0),
       outstanding: Number(bill.outstanding || 0),
@@ -424,6 +429,13 @@ export default async function handler(req: any, res: any) {
       due_date: bill.due_date,
       installments: (installmentsByBill.get(Number(bill.id)) || []).sort((a, b) => timeOf(a.date) - timeOf(b.date))
     }))
+    const billById = new Map(bills.map((bill) => [bill.bill_id, bill]))
+    const billPeriodText = (bill: any) => {
+      if (!bill) return null
+      const kind = String(bill.period_kind || 'TAHUNAN').toUpperCase()
+      if (kind === 'TAHUNAN' || !bill.period_start) return String(bill.period_year)
+      return `${bill.period_start} s/d ${bill.period_end}`
+    }
     const billsOutstanding = bills.reduce(
       (sum, bill) => sum + (bill.status === 'DIBATALKAN' ? 0 : bill.outstanding),
       0
@@ -465,6 +477,7 @@ export default async function handler(req: any, res: any) {
           status: tx.status,
           bill_id: tx.bill_id,
           period_year: tx.period_year,
+          bill_period: tx.bill_id != null ? billPeriodText(billById.get(Number(tx.bill_id))) : null,
           rate_name: rateNameById(tx.rate_id)
         }))
       },

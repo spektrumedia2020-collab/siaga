@@ -23,7 +23,7 @@ interface StallResponse {
     sector_name: string | null
     owner_name: string | null
     rates: { amount: number; name: string | null; unit: string | null }[]
-    transactions: { amount: number; payment_method: string | null; created_at: string; transaction_date: string | null; status: string; bill_id?: number | null; period_year?: number | null; rate_name?: string | null }[]
+    transactions: { amount: number; payment_method: string | null; created_at: string; transaction_date: string | null; status: string; bill_id?: number | null; period_year?: number | null; bill_period?: string | null; rate_name?: string | null }[]
   }
   summary: {
     total_paid: number
@@ -38,6 +38,9 @@ interface StallResponse {
   bills: Array<{
     bill_id: number
     period_year: number
+    period_kind?: string | null
+    period_start?: string | null
+    period_end?: string | null
     type_name: string
     amount_due: number
     amount_paid: number
@@ -399,6 +402,10 @@ export function PublicStallPage({ token, marketId, stallCode }: Props) {
   })
   const formatRupiah = (value: number) => `Rp ${Number(value || 0).toLocaleString('id-ID')}`
   const formatDate = (value: string | null) => (value ? new Date(value).toLocaleDateString('id-ID') : '-')
+  const billPeriodLabel = (bill: StallResponse['bills'][number]) =>
+    bill.period_kind && bill.period_kind !== 'TAHUNAN' && bill.period_start
+      ? `${formatDate(bill.period_start)} – ${formatDate(bill.period_end ?? null)}`
+      : String(bill.period_year)
   const todayLabel = summary.today.status === 'SUDAH'
     ? 'Sudah ditarik'
     : summary.today.status === 'BELUM'
@@ -487,16 +494,16 @@ export function PublicStallPage({ token, marketId, stallCode }: Props) {
 
         <section className="public-stall-bills">
           <div className="public-stall-section-heading">
-            <h2>Tagihan Tahunan (Jaspro)</h2>
+            <h2>Tagihan</h2>
             <span>{bills.length} tagihan</span>
           </div>
           {bills.length === 0 ? (
-            <p className="public-stall-muted">Belum ada tagihan tahunan yang diterbitkan.</p>
+            <p className="public-stall-muted">Belum ada tagihan yang diterbitkan.</p>
           ) : (
             bills.map((bill) => (
               <article className="public-stall-bill" key={bill.bill_id}>
                 <div className="public-stall-bill-head">
-                  <span className="public-stall-bill-title">{bill.period_year} · {bill.type_name}</span>
+                  <span className="public-stall-bill-title">{billPeriodLabel(bill)} · {bill.type_name}</span>
                   <span className={`public-stall-bill-status ${billStatusClass(bill.status)}`}>{billStatusLabel(bill.status)}</span>
                 </div>
                 <div className="public-stall-bill-meta">
@@ -544,7 +551,7 @@ export function PublicStallPage({ token, marketId, stallCode }: Props) {
             <div className="public-stall-section-heading"><h2>Riwayat Transaksi</h2><span>{stall.transactions.length} transaksi</span></div>
             {stall.transactions.length === 0 ? <p className="public-stall-muted">Belum ada transaksi pembayaran.</p> : (
               <div className="public-stall-list">
-                {sortedTransactions.map((transaction, index) => <div className="public-stall-list-row" key={`${transaction.created_at}-${index}`}><span>{new Date(transaction.transaction_date || transaction.created_at).toLocaleDateString('id-ID')}<small>{transaction.rate_name ? `${transaction.rate_name} · ` : ''}{transaction.payment_method || 'Pembayaran'}{transaction.period_year ? ` • ${transaction.period_year}` : ''}</small></span><strong>Rp {Number(transaction.amount).toLocaleString('id-ID')}</strong></div>)}
+                {sortedTransactions.map((transaction, index) => <div className="public-stall-list-row" key={`${transaction.created_at}-${index}`}><span>{new Date(transaction.transaction_date || transaction.created_at).toLocaleDateString('id-ID')}<small>{transaction.rate_name ? `${transaction.rate_name} · ` : ''}{transaction.payment_method || 'Pembayaran'}{transaction.bill_period ? ` • ${transaction.bill_period}` : transaction.period_year ? ` • ${transaction.period_year}` : ''}</small></span><strong>Rp {Number(transaction.amount).toLocaleString('id-ID')}</strong></div>)}
               </div>
             )}
           </section>
