@@ -32,18 +32,18 @@
   "memory_version": 1,
   "context_version": 1,
   "skill_registry_version": 1,
-  "current_task": "Dialog irama penagihan per lapak (multi-select) selesai; menunggu pemilik memilih lapak & menyimpan",
-  "last_task": "Perbaikan kontras: tombol Logout header & sidebar",
+  "current_task": "Tagihan mingguan 5 lapak sudah terbit; otomatisasi pg_cron disiapkan, menunggu ekstensi diaktifkan pemilik",
+  "last_task": "Terbitkan tagihan mingguan (idempoten) + migration 029 cron harian",
   "last_session_id": "SESSION-2026-11-02-3",
   "last_scan": "2026-10-25T20:05:00+07:00",
   "last_index": "",
-  "last_updated": "2026-11-03T03:10:00+07:00",
-  "last_validation": "2026-11-03T03:10:00+07:00",
+  "last_updated": "2026-11-03T03:45:00+07:00",
+  "last_validation": "2026-11-03T03:45:00+07:00",
   "last_test_status": "pass",
   "last_command": "CLOSE",
   "last_command_status": "COMPLETED",
   "open_wave": null,
   "dirty": false,
   "drift_detected": false,
-  "next_step": "1) Pemilik memilih lapak di dialog Irama Penagihan lalu Simpan. 2) Terbitkan periode berjalan. 3) api/lapak.ts period_* + halaman pemilik. 4) Kartu periode di mobile. 5) Laporan realisasi vs target."
+  "next_step": "1) Pemilik mengaktifkan pg_cron lalu menjalankan migrations/029_auto_generate_period_bills.sql. 2) Verifikasi cron.job dan uji manual run_period_billing_cron(). 3) Ingatkan petugas agar tidak menagih harian untuk lapak berirama mingguan. 4) api/lapak.ts period_* + halaman pemilik. 5) Kartu periode di mobile."
 }
