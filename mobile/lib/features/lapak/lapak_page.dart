@@ -3,6 +3,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
@@ -386,9 +387,9 @@ class _LapakPageState extends ConsumerState<LapakPage> {
     try {
       final data = await supabase
           .from('retribution_bill_balances')
-          .select('types_id, period_year, amount_due, amount_paid, outstanding, status, due_date')
+          .select('types_id, period_year, period_kind, period_start, period_end, amount_due, amount_paid, outstanding, status, due_date')
           .eq('stall_id', stallId)
-          .order('period_year', ascending: true);
+          .order('period_start', ascending: true);
 
       final rows = (data as List)
           .map((e) => Map<String, dynamic>.from(e as Map))
@@ -907,7 +908,7 @@ class _LapakPageState extends ConsumerState<LapakPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'Tagihan Tahunan',
+                'Tagihan',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF1D4E89)),
               ),
               Text(
@@ -943,9 +944,24 @@ class _LapakPageState extends ConsumerState<LapakPage> {
     );
   }
 
+  String _billPeriodLabel(Map<String, dynamic> bill) {
+    final kind = (bill['period_kind'] ?? 'TAHUNAN').toString().toUpperCase();
+    final start = bill['period_start']?.toString();
+    final end = bill['period_end']?.toString();
+    if (kind == 'TAHUNAN' || start == null || start.isEmpty) {
+      return bill['period_year']?.toString() ?? '-';
+    }
+    String fmt(String? value) {
+      if (value == null || value.isEmpty) return '-';
+      final date = DateTime.tryParse(value);
+      return date == null ? value : DateFormat('dd MMM yyyy', 'id').format(date);
+    }
+    return '${fmt(start)} – ${fmt(end)}';
+  }
+
   Widget _buildBillCard(Map<String, dynamic> bill) {
-    final year = bill['period_year']?.toString() ?? '-';
-    final typeName = billTypeNames[(bill['types_id'] as num?)?.toInt()] ?? 'Tagihan tahunan';
+    final periodLabel = _billPeriodLabel(bill);
+    final typeName = billTypeNames[(bill['types_id'] as num?)?.toInt()] ?? 'Tagihan';
     final due = (bill['amount_due'] as num?)?.toDouble() ?? 0;
     final paid = (bill['amount_paid'] as num?)?.toDouble() ?? 0;
     final outstanding = (bill['outstanding'] as num?)?.toDouble() ?? 0;
@@ -978,7 +994,7 @@ class _LapakPageState extends ConsumerState<LapakPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
-                child: Text('$year · $typeName', style: const TextStyle(fontWeight: FontWeight.w600)),
+                child: Text('$periodLabel · $typeName', style: const TextStyle(fontWeight: FontWeight.w600)),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -1050,7 +1066,7 @@ class _LapakPageState extends ConsumerState<LapakPage> {
 
     final amountController = TextEditingController();
     final payerController = TextEditingController(text: ownerName ?? '');
-    final noteController = TextEditingController(text: 'Cicilan tagihan tahunan');
+    final noteController = TextEditingController(text: 'Cicilan tagihan');
     var method = 'Tunai';
     var saving = false;
     String? message;
@@ -1149,7 +1165,12 @@ class _LapakPageState extends ConsumerState<LapakPage> {
                   (sum, bill) => sum + ((bill['outstanding'] as num?)?.toDouble() ?? 0),
                 );
                 final detail = allocations
-                    .map((a) => 'Tahun ${a['period_year']}: Rp ${_formatAmount((a['amount'] as num?) ?? 0)}')
+                    .map((a) {
+                      final billId = (a['bill_id'] as num?)?.toInt();
+                      final match = billRows.where((bill) => (bill['id'] as num?)?.toInt() == billId).toList();
+                      final label = match.isNotEmpty ? _billPeriodLabel(match.first) : 'Tahun ${a['period_year']}';
+                      return '$label: Rp ${_formatAmount((a['amount'] as num?) ?? 0)}';
+                    })
                     .join('\n');
                 await showDialog<void>(
                   context: context,
@@ -1178,7 +1199,7 @@ class _LapakPageState extends ConsumerState<LapakPage> {
             }
 
             return AlertDialog(
-              title: const Text('Bayar Tagihan Tahunan'),
+              title: const Text('Bayar Tagihan'),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,

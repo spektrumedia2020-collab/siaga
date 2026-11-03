@@ -549,7 +549,7 @@ class DatabaseService {
       'cache_bills',
       where: 'stall_id = ?',
       whereArgs: [stallId],
-      orderBy: 'period_year ASC, id ASC',
+      orderBy: 'period_start ASC, id ASC',
     );
     return rows.map((e) => Map<String, dynamic>.from(e)).toList();
   }
