@@ -31,6 +31,7 @@ class _LapakPageState extends ConsumerState<LapakPage> {
   String? _accessDeniedMessage;
   bool _alreadyCollectedDailyToday = false;
   bool _offlineData = false;
+  bool _hasPeriodBill = false;
 
   @override
   void initState() {
@@ -66,8 +67,19 @@ class _LapakPageState extends ConsumerState<LapakPage> {
       for (final type in types) (type['id'] as num).toInt(): type,
     };
 
+    final periodBilledTypeIds = rates
+        .where((rate) {
+          final period = rate['collection_period']?.toString();
+          return period == 'MINGGUAN' || period == 'BULANAN';
+        })
+        .map((rate) => (rate['types_id'] as num?)?.toInt())
+        .whereType<int>()
+        .toSet();
+
     final dailyTypeIds = types
         .where((type) {
+          final typeId = (type['id'] as num).toInt();
+          if (periodBilledTypeIds.contains(typeId)) return false;
           final text = '${type['code'] ?? ''} ${type['name'] ?? ''} ${type['unit'] ?? ''}'.toUpperCase();
           return text.contains('HARIAN') || text.contains('HARI');
         })
@@ -78,7 +90,9 @@ class _LapakPageState extends ConsumerState<LapakPage> {
     for (final rate in rates) {
       final typeId = (rate['types_id'] as num?)?.toInt();
       final amount = (rate['amount'] as num?)?.toDouble();
-      if (typeId != null && amount != null) rateMap[typeId] = amount;
+      if (typeId != null && amount != null && !periodBilledTypeIds.contains(typeId)) {
+        rateMap[typeId] = amount;
+      }
     }
 
     final loadedTypes = rateMap.keys
@@ -128,6 +142,7 @@ class _LapakPageState extends ConsumerState<LapakPage> {
       transactionHistory = [];
       _dailyTypeIds = dailyTypeIds;
       _alreadyCollectedDailyToday = paidToday;
+      _hasPeriodBill = periodBilledTypeIds.isNotEmpty;
       billRows = bills;
       billTypeNames = billNames;
       _offlineData = true;
@@ -204,7 +219,7 @@ class _LapakPageState extends ConsumerState<LapakPage> {
                 .maybeSingle(),
         supabase
             .from('retribution_rates')
-            .select('id, amount, types_id')
+            .select('id, amount, types_id, collection_period')
             .eq('stall_id', stallId)
             .eq('market_id', marketId),
         supabase
@@ -266,8 +281,18 @@ class _LapakPageState extends ConsumerState<LapakPage> {
         return;
       }
 
+      final periodBilledTypeIds = rateRows
+          .where((rate) {
+            final period = rate['collection_period']?.toString();
+            return period == 'MINGGUAN' || period == 'BULANAN';
+          })
+          .map((rate) => (rate['types_id'] as num).toInt())
+          .toSet();
+
       final dailyTypeIds = typeRows
           .where((type) {
+            final typeId = (type['id'] as num).toInt();
+            if (periodBilledTypeIds.contains(typeId)) return false;
             final text = '${type['code'] ?? ''} ${type['name'] ?? ''} ${type['unit'] ?? ''}'.toUpperCase();
             return text.contains('HARIAN') || text.contains('HARI');
           })
@@ -310,7 +335,9 @@ class _LapakPageState extends ConsumerState<LapakPage> {
 
       final rateMap = <int, double>{};
       for (final rate in rateRows) {
-        rateMap[(rate['types_id'] as num).toInt()] = (rate['amount'] as num).toDouble();
+        final typeId = (rate['types_id'] as num).toInt();
+        if (periodBilledTypeIds.contains(typeId)) continue;
+        rateMap[typeId] = (rate['amount'] as num).toDouble();
       }
       final loadedTypes = typeRows
           .where((type) => rateMap.containsKey((type['id'] as num).toInt()))
@@ -333,6 +360,7 @@ class _LapakPageState extends ConsumerState<LapakPage> {
           retributionTypes = loadedTypes;
           transactionHistory = historyRows;
           _dailyTypeIds = dailyTypeIds;
+          _hasPeriodBill = periodBilledTypeIds.isNotEmpty;
         });
       }
 
@@ -614,6 +642,31 @@ class _LapakPageState extends ConsumerState<LapakPage> {
       } else {
         children.addAll(dailyTypes.map(_buildTypeCard));
       }
+    }
+
+    if (_hasPeriodBill) {
+      children.add(Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFF3E0),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: const Color(0xFFFFCC80)),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.event_repeat, size: 18, color: Color(0xFFE65100)),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Lapak ini ditagih mingguan/bulanan. Penagihan harian dinonaktifkan; '
+                'gunakan pembayaran tagihan periode di bawah.',
+                style: TextStyle(fontSize: 12, color: Color(0xFF8C4A00)),
+              ),
+            ),
+          ],
+        ),
+      ));
     }
 
     children.add(_buildBillsSection());

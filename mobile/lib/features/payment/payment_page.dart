@@ -24,6 +24,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
   bool _saving = false;
   String? _message;
   int? _stallId;
+  int? _typeId;
   String? _retributionTypeName;
 
   @override
@@ -39,6 +40,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
 
     final numericTypeId = int.tryParse(typeId);
     if (numericTypeId != null) {
+      _typeId = numericTypeId;
       final cached = await DatabaseService().typeById(numericTypeId);
       if (cached != null && mounted) {
         setState(() {
@@ -152,6 +154,19 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
     if (_stallId == null) {
       setState(() => _message = 'Data lapak belum tersedia offline. Sinkronkan data lapak saat ada sinyal.');
       return;
+    }
+
+    try {
+      final rates = await DatabaseService().ratesForStall(_stallId!);
+      final match = rates.where((rate) => (rate['types_id'] as num?)?.toInt() == _typeId);
+      final period = match.isEmpty ? null : match.first['collection_period']?.toString();
+      if (period == 'MINGGUAN' || period == 'BULANAN') {
+        setState(() => _message =
+            'Lapak ini ditagih ${period == 'MINGGUAN' ? 'mingguan' : 'bulanan'}. Gunakan pembayaran tagihan periode.');
+        return;
+      }
+    } on Exception {
+      // If the cache cannot be read, the server trigger remains the guard.
     }
 
     setState(() {

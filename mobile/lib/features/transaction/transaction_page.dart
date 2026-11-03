@@ -30,11 +30,14 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
   int? _rateId;
   int? _officerId;
   bool _fromCache = false;
+  String? _collectionPeriod;
   String? _retributionTypeName;
   bool _isDailyRetribution = false;
   List<Map<String, dynamic>> _retributionTypes = [];
   bool _loadingTypes = true;
   bool _loadingPaymentData = true;
+
+  bool get _isPeriodBilled => _collectionPeriod == 'MINGGUAN' || _collectionPeriod == 'BULANAN';
 
   @override
   void initState() {
@@ -189,13 +192,14 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
                 // Cari rate khusus untuk stall ini dulu
                 final rateForStall = await supabase
                     .from('retribution_rates')
-                    .select('id, amount, market_id')
+                    .select('id, amount, market_id, collection_period')
                     .eq('types_id', typeIdNumeric)
                     .eq('stall_id', stallIdLocal)
                     .eq('market_id', _marketId ?? 0)
                     .maybeSingle();
                 if (rateForStall != null && rateForStall['amount'] != null) {
                   _rateId = rateForStall['id'] as int?;
+                  _collectionPeriod = rateForStall['collection_period']?.toString();
                   _amountController.text = rateForStall['amount'].toString();
                   debugPrint('DEBUG TransactionPage: Found amount for stall: ${rateForStall['amount']}');
                 } else {
@@ -272,6 +276,7 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
         final matches = rates.where((rate) => (rate['types_id'] as num?)?.toInt() == typeId).toList();
         if (matches.isNotEmpty) {
           _rateId = (matches.first['id'] as num?)?.toInt();
+          _collectionPeriod = matches.first['collection_period']?.toString();
           final rateAmount = (matches.first['amount'] as num?)?.toDouble();
           if (rateAmount != null) _amountController.text = rateAmount.toStringAsFixed(0);
         }
@@ -318,6 +323,16 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
       if (_stallId == null) {
         setState(() {
           _message = 'Data lapak belum tersedia offline. Sinkronkan data lapak saat ada sinyal.';
+          _messageIsError = true;
+          _saving = false;
+        });
+        return;
+      }
+
+      if (_isPeriodBilled) {
+        setState(() {
+          _message = 'Lapak ini ditagih ${_collectionPeriod == 'MINGGUAN' ? 'mingguan' : 'bulanan'}. '
+              'Gunakan pembayaran tagihan periode, bukan penagihan harian.';
           _messageIsError = true;
           _saving = false;
         });
@@ -468,6 +483,29 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
                   const SizedBox(height: 12),
                   _buildRetributionSelector(),
                 ] else ...[
+                  if (_isPeriodBilled)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFEBEE),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFFFFCDD2)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.event_repeat, size: 16, color: Color(0xFFB3261E)),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Lapak ini ditagih ${_collectionPeriod == 'MINGGUAN' ? 'mingguan' : 'bulanan'}. '
+                              'Penagihan harian dinonaktifkan; bayar melalui tagihan periode.',
+                              style: const TextStyle(fontSize: 12, color: Color(0xFF8C1D18)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   if (_fromCache)
                     Container(
                       margin: const EdgeInsets.only(bottom: 12),
@@ -601,14 +639,19 @@ class _TransactionPageState extends ConsumerState<TransactionPage> {
                       width: double.infinity,
                       height: 50,
                       child: ElevatedButton(
-                        onPressed: _saving ? null : _saveTransaction,
+                        onPressed: _saving || _isPeriodBilled ? null : _saveTransaction,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Theme.of(context).colorScheme.primary,
                           foregroundColor: Theme.of(context).colorScheme.onPrimary,
                         ),
                         child: _saving
                             ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                            : const Text('Bayar Sekarang', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                            : Text(
+                                _isPeriodBilled
+                                    ? 'Gunakan Tagihan ${_collectionPeriod == 'MINGGUAN' ? 'Mingguan' : 'Bulanan'}'
+                                    : 'Bayar Sekarang',
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                              ),
                       ),
                     ),
                 ],
