@@ -32,18 +32,18 @@
   "memory_version": 1,
   "context_version": 1,
   "skill_registry_version": 1,
-  "current_task": "Kartu tagihan periode di mobile selesai di kode & APK; migration 030 masih menunggu",
-  "last_task": "Mobile: label periode tagihan + dialog bayar generik",
+  "current_task": "Blokir penagihan harian aktif di mobile dan database (030 terverifikasi)",
+  "last_task": "Verifikasi migration 030 di produksi",
   "last_session_id": "SESSION-2026-11-02-3",
   "last_scan": "2026-10-25T20:05:00+07:00",
   "last_index": "",
-  "last_updated": "2026-11-03T06:00:00+07:00",
-  "last_validation": "2026-11-03T06:00:00+07:00",
+  "last_updated": "2026-11-03T06:20:00+07:00",
+  "last_validation": "2026-11-03T06:20:00+07:00",
   "last_test_status": "pass",
   "last_command": "CLOSE",
   "last_command_status": "COMPLETED",
   "open_wave": null,
   "dirty": false,
   "drift_detected": false,
-  "next_step": "1) Pemilik menjalankan migrations/030. 2) Pasang APK terbaru saat perangkat tersambung. 3) Perbaiki daftar Lapak admin yang berhenti di 1.000 baris. 4) Laporan realisasi vs target + tunggakan per umur. 5) Pantau cron 00:05 WITA."
+  "next_step": "1) Pasang APK terbaru saat perangkat tersambung. 2) Perbaiki daftar Lapak admin yang berhenti di 1.000 baris. 3) Laporan realisasi vs target + tunggakan per umur. 4) Pantau cron 00:05 WITA dan tagihan 9–15 Nov. 5) Opsional: setoran offline, koreksi absensi admin."
 }
