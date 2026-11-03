@@ -1440,7 +1440,7 @@ export function MarketDashboard({ userId, onLogout }: Props) {
                       onClick={() => updatePageRoute('bills')}
                     >
                       <span className="sidebar-icon">📄</span>
-                      <span>Tagihan Tahunan</span>
+                      <span>Tagihan</span>
                     </button>
                     <button
                       className={`sidebar-item ${currentPage === 'transactions' ? 'active' : ''}`}

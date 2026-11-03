@@ -583,9 +583,9 @@ export function MarketBillsPage({ marketId, readOnly = false }: MarketBillsPageP
   if (setupMissing) {
     return (
       <div className="page-card">
-        <h2>📄 Tagihan Tahunan</h2>
+        <h2>📄 Tagihan</h2>
         <div className="bills-setup-box">
-          <strong>Fitur tagihan tahunan belum aktif di database.</strong>
+          <strong>Fitur tagihan belum aktif di database.</strong>
           <p>Jalankan <code>migrations/020_retribution_annual_bills.sql</code> lalu <code>migrations/025_retribution_period_bills.sql</code> di SQL Editor Supabase, kemudian muat ulang halaman ini.</p>
         </div>
       </div>
@@ -596,10 +596,10 @@ export function MarketBillsPage({ marketId, readOnly = false }: MarketBillsPageP
     <div className="page-card bills-page">
       <header className="bills-header">
         <div>
-          <h2>{tab === 'annual' ? '📄 Tagihan Tahunan' : '📅 Tagihan Periode'}</h2>
+          <h2>📄 Tagihan</h2>
           <p>
             {tab === 'annual'
-              ? 'Retribusi tahunan (mis. Jaspro) dapat dicicil. Pembayaran dilunasi dari tunggakan terlama lebih dulu.'
+              ? 'Tagihan tahunan (mis. Jaspro) dapat dicicil. Pembayaran dilunasi dari tunggakan terlama lebih dulu.'
               : 'Retribusi harian yang ditagih mingguan atau bulanan per lapak. Pembayaran tetap FIFO dari periode terlama.'}
           </p>
         </div>
