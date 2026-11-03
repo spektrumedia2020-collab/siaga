@@ -40,8 +40,10 @@
 }
 
 .logout-btn {
-  background-color: rgba(30, 58, 138, 0.12);
+  background-color: #e3ecff;
+  background-image: none;
   color: #152c5b;
+  border: 1px solid #b9cdf0;
   border-radius: 999px;
   cursor: pointer;
   font-size: 0.95rem;
@@ -51,6 +53,8 @@
 
 .logout-btn:hover {
   background-color: #1e3a8a;
+  background-image: none;
+  border-color: #1e3a8a;
   color: #fff;
 }
 
