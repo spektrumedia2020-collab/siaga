@@ -401,3 +401,15 @@
   background: #0b1f3a;
   color: #fff;
 }
+
+/* The landing-page .btn-secondary (white text) also leaks into the stalls
+   page header, so keep secondary buttons readable everywhere on this page. */
+.stalls-page .btn-secondary {
+  background: #e8eefc;
+  color: #0b1f3a;
+  border: 1px solid rgba(11, 31, 58, 0.16);
+}
+
+.stalls-page .btn-secondary:hover {
+  background: #dbe6fb;
+}
