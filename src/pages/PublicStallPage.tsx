@@ -406,11 +406,16 @@ export function PublicStallPage({ token, marketId, stallCode }: Props) {
     bill.period_kind && bill.period_kind !== 'TAHUNAN' && bill.period_start
       ? `${formatDate(bill.period_start)} – ${formatDate(bill.period_end ?? null)}`
       : String(bill.period_year)
+  const hasPeriodBilling = bills.some(
+    (bill) => (bill.period_kind === 'MINGGUAN' || bill.period_kind === 'BULANAN') && bill.status !== 'DIBATALKAN'
+  )
   const todayLabel = summary.today.status === 'SUDAH'
     ? 'Sudah ditarik'
     : summary.today.status === 'BELUM'
       ? 'Belum ditarik'
-      : 'Tanpa tarif harian'
+      : hasPeriodBilling
+        ? 'Ditagih mingguan/bulanan'
+        : 'Tanpa tarif harian'
   const todayTone = summary.today.status === 'SUDAH' ? 'paid' : summary.today.status === 'BELUM' ? 'unpaid' : 'none'
   const billStatusLabel = (status: string) => (
     status === 'LUNAS' ? 'Lunas' : status === 'CICILAN' ? 'Cicilan' : status === 'DIBATALKAN' ? 'Dibatalkan' : 'Belum lunas'
@@ -457,7 +462,7 @@ export function PublicStallPage({ token, marketId, stallCode }: Props) {
                 Tarif <strong>{formatRupiah(summary.today.daily_due)}</strong>
               </>
             ) : (
-              'Tidak ada tarif harian'
+              hasPeriodBilling ? 'Pembayaran melalui tagihan periode di bawah' : 'Tidak ada tarif harian'
             )}
           </div>
         </section>
