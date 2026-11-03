@@ -824,6 +824,149 @@ class _ProfilePageState extends State<ProfilePage> {
     if (mounted) context.go('/login');
   }
 
+  Future<void> _openChangePasswordDialog() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return;
+
+    final oldController = TextEditingController();
+    final newController = TextEditingController();
+    final confirmController = TextEditingController();
+    var saving = false;
+    String? message;
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (dialogContext, setDialogState) {
+            Future<void> submit() async {
+              final oldPassword = oldController.text;
+              final newPassword = newController.text;
+              if (oldPassword.isEmpty) {
+                setDialogState(() => message = 'Password lama wajib diisi');
+                return;
+              }
+              if (newPassword.length < 6) {
+                setDialogState(() => message = 'Password baru minimal 6 karakter');
+                return;
+              }
+              if (newPassword != confirmController.text) {
+                setDialogState(() => message = 'Konfirmasi password tidak sama');
+                return;
+              }
+
+              setDialogState(() {
+                saving = true;
+                message = null;
+              });
+
+              final auth = Supabase.instance.client.auth;
+              final email = user.email;
+              if (email == null) {
+                setDialogState(() {
+                  saving = false;
+                  message = 'Email akun tidak tersedia';
+                });
+                return;
+              }
+
+              try {
+                await auth.signInWithPassword(email: email, password: oldPassword);
+              } on AuthException {
+                setDialogState(() {
+                  saving = false;
+                  message = 'Password lama salah';
+                });
+                return;
+              } on Exception {
+                setDialogState(() {
+                  saving = false;
+                  message = 'Tidak dapat memverifikasi. Periksa koneksi internet.';
+                });
+                return;
+              }
+
+              try {
+                await auth.updateUser(UserAttributes(password: newPassword));
+                if (!dialogContext.mounted) return;
+                Navigator.of(dialogContext).pop();
+                if (mounted) {
+                  showSuccessSnackBar(context, 'Password berhasil diganti');
+                }
+              } on AuthException catch (e) {
+                setDialogState(() {
+                  saving = false;
+                  message = e.message;
+                });
+              } on Exception {
+                setDialogState(() {
+                  saving = false;
+                  message = 'Gagal mengganti password. Coba lagi saat ada sinyal.';
+                });
+              }
+            }
+
+            return AlertDialog(
+              title: const Text('Ganti Password'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: oldController,
+                      obscureText: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Password lama',
+                        prefixIcon: Icon(Icons.lock_outline),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: newController,
+                      obscureText: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Password baru',
+                        helperText: 'Minimal 6 karakter',
+                        prefixIcon: Icon(Icons.lock_reset),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: confirmController,
+                      obscureText: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Ulangi password baru',
+                        prefixIcon: Icon(Icons.lock_reset),
+                      ),
+                    ),
+                    if (message != null) ...[
+                      const SizedBox(height: 12),
+                      Text(message!, style: const TextStyle(color: Colors.red, fontSize: 12)),
+                    ],
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: saving ? null : () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Batal'),
+                ),
+                ElevatedButton(
+                  onPressed: saving ? null : submit,
+                  child: Text(saving ? 'Menyimpan...' : 'Simpan'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    oldController.dispose();
+    newController.dispose();
+    confirmController.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = Supabase.instance.client.auth.currentUser;
@@ -987,6 +1130,15 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ),
                   const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: _openChangePasswordDialog,
+                      icon: const Icon(Icons.lock_outline),
+                      label: const Text('Ganti Password'),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
