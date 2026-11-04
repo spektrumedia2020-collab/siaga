@@ -1,6 +1,6 @@
 # CURRENT — Task Aktif
 
-**Sesi:** SESSION-2026-11-02-1 · **Update:** 2026-11-02T14:00:00+07:00 · **Branch:** `main` @ `e7fcc2d`
+**Sesi:** SESSION-2026-11-04-1 · **Update:** 2026-11-04T07:05:00+07:00 · **Branch:** `main` @ `11999da`
 
 ## Status
 
@@ -113,6 +113,9 @@ menampilkan data.
 | 99 | Halaman pemilik: tagihan periode | **SELESAI (deploy)** | `api/lapak.ts` mengirim `period_kind/period_start/period_end` untuk setiap tagihan, mengurutkan per periode, memberi label periode pada riwayat pembayaran (`bill_period`), dan menyembunyikan item harian untuk tarif berirama mingguan/bulanan (`today.status=TIDAK_ADA_TARIF`). `PublicStallPage`: judul “Tagihan”, tanggal rentang untuk tagihan mingguan/bulanan, banner “Ditagih mingguan/bulanan — Pembayaran melalui tagihan periode di bawah”, riwayat menampilkan rentang. Verifikasi produksi `/api/lapak` (token+PIN default): NGD-0001 mengembalikan tagihan Jaspro tahunan **dan** mingguan 2026-11-02…2026-11-08 Rp 35.000; bundle produksi memuat teks banner baru. Commit `c2ad9f4` + `3f9ca1e`; CI success |
 | 100 | Kartu tagihan periode di mobile | **SELESAI (kode, APK dibangun)** | `lapak_page.dart`: daftar tagihan memakai label periode (`02 Nov 2026 – 08 Nov 2026`) untuk MINGGUAN/BULANAN/CUSTOM dan tahun untuk TAHUNAN; judul bagian “Tagihan”; dialog “Bayar Tagihan”; hasil alokasi menyebut periode tagihan, bukan hanya tahun; catatan default “Cicilan tagihan”. Query tagihan mengambil `period_kind/period_start/period_end` dan cache diurutkan `period_start`. `flutter analyze` 0 issue; APK release dibangun |
 | 101 | Ganti password di aplikasi mobile | **SELESAI (kode, APK dibangun)** | `ProfilePage`: tombol **Ganti Password** membuka dialog (password lama, baru, ulangi). Password lama diverifikasi lewat `signInWithPassword`, lalu `updateUser(password)`; validasi minimal 6 karakter dan konfirmasi cocok. Pesan Indonesia untuk password lama salah, tanpa koneksi, dan gagal update. `flutter analyze` 0 issue; APK 4 Nov 06:40 dibangun. Diverifikasi visual di perangkat: kartu tagihan NGD-0001 menampilkan **02 Nov 2026 – 08 Nov 2026 · Sewa Tempat Harian Rp 35.000** dan banner penagihan harian dinonaktifkan. Commit `82b4ed1` |
+| 102 | Daftar Lapak melewati plafon 1.000 baris | **SELESAI (verifikasi browser)** | `StallsPage.loadData` membaca `stalls` bertahap (`range` 1.000, urut `number`+`id`) sehingga NGD menampilkan seluruh **1.396** lapak, bukan 1.000. Browser lokal: heading "Data Lapak (1396)" dan 1.396 baris tabel. Typecheck + build PASS. Commit `4e96ec8` |
+| 103 | Halaman Laporan: realisasi vs tagihan + umur tunggakan | **SELESAI (kode, verifikasi DOM)** | Halaman `#market/dashboard/reports` (sidebar Keuangan → **Laporan**): filter bulan, kartu target/realisasi/selisih/tunggakan, tabel realisasi per jenis, umur tunggakan (belum jatuh tempo, 1–30, 31–60, 61–90, >90), dan 10 lapak tunggakan terbesar. Target = tagihan jatuh tempo bulan itu; realisasi = pembayaran diterima bulan itu. Data nyata Nov 2026: target Rp 175.000 (5 tagihan), realisasi Rp 50.000 (10 transaksi), tunggakan Rp 15.624.055.000. Screenshot tidak tersedia (permukaan browser tersembunyi); verifikasi lewat DOM. Commit `11999da` |
+| 104 | Verifikasi pg_cron tagihan periode | **SELESAI (bukti pooler)** | `cron.job` id 1 `generate_period_bills_daily` aktif, jadwal `5 16 * * *` (00:05 WITA); `cron.job_run_details` mencatat run `2026-11-03T16:05Z` status **succeeded**, kembalian "1 row". Tagihan mingguan 2–8 Nov 2026 untuk 5 lapak masih satu-satunya periode aktif (idempoten) |
 
 ## Scope sesi ini
 
@@ -182,7 +185,10 @@ realisasi vs target + tunggakan per umur. Semua commit hingga `74f5d0f` sudah di
 3b. **Tagihan periode di mobile** (belum): kartu tagihan mingguan/bulanan per lapak belum
    ditampilkan; cicilan tagihan tahunan sudah bisa lewat RPC/antrean offline. `api/lapak.ts`
    juga belum membaca `period_*` untuk halaman pemilik.
-4. **Laporan tagihan**: realisasi vs target per tahun + daftar tunggakan per umur (belum dibuat).
+4. **Laporan tagihan SELESAI (2026-11-04).** Halaman `#market/dashboard/reports` menampilkan target
+   (tagihan jatuh tempo bulan terpilih), realisasi (pembayaran diterima bulan itu), selisih/capaian,
+   umur tunggakan (belum jatuh tempo, 1–30, 31–60, 61–90, >90 hari), dan 10 lapak dengan tunggakan
+   terbesar. Target/realisasi dipisah per jenis; jenis tanpa tagihan hanya menampilkan realisasi.
 5. **Mobile fase lanjutan**: tombol notifikasi `wa.me` ke pengelola (scan QR & satu QR sudah
    selesai pada task 72).
 6. **Path-based URL** `/admin/*`, `/market/*` — ditunda; hash deep-link masih kanonik.

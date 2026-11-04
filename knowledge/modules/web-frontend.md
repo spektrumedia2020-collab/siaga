@@ -13,7 +13,7 @@ UI untuk superadmin, admin pasar, bendahara, petugas (web), plus halaman publik
 |---|---|
 | `src/App.tsx` | Router manual (hash + pathname), auth state, impersonation, redirect per role |
 | `src/components/` | `Auth`, `Dashboard` (shell), `Navigation`, `ProtectedRoute`, `ConfirmDialog`, `EmptyState`, `Loading`, `ErrorBoundary`, `ExportButtons`, `QRCodeGenerator`, `DateRangePicker`, `Icons` |
-| `src/pages/` | `SuperAdminDashboardImproved`, `MarketDashboard`, `MarketEditPage`, `MarketLandingPage`, `PublicStallPage`, `MarketsManagement`, `MarketsPage`, `MarketDetailPage`, `StallsPage`, `OwnersPage`, `OfficersPage`, `CategoriesPage`, `SectorsPage`, `RetribusiPage`, `MarketBillsPage`, `TransactionsPage`, `SetoranPage`, `ReconciliationsPage`, `UserManagement`, `ThemeManagement`, `ImportDataPage` |
+| `src/pages/` | `SuperAdminDashboardImproved`, `MarketDashboard`, `MarketEditPage`, `MarketLandingPage`, `PublicStallPage`, `MarketsManagement`, `MarketsPage`, `MarketDetailPage`, `StallsPage`, `OwnersPage`, `OfficersPage`, `CategoriesPage`, `SectorsPage`, `RetribusiPage`, `MarketBillsPage`, `MarketReportsPage`, `TransactionsPage`, `SetoranPage`, `ReconciliationsPage`, `UserManagement`, `ThemeManagement`, `ImportDataPage` |
 | `src/lib/` | `supabase`, `api` (ApiClient), `roleUtils`, `store` (zustand), `exportUtils`, `googleSheetsAuth`, `imageUtils`, `userProfile`, `csvImport`, `csvImportRunner` |
 | `src/styles/`, `src/*.css` | Layout & tema |
 | `src/server.ts`, `src/routes/`, `src/middleware/` | Backend Express (bukan bagian SPA build) |
@@ -35,6 +35,20 @@ UI untuk superadmin, admin pasar, bendahara, petugas (web), plus halaman publik
   tahunan/dicicil (sebelumnya selalu HARIAN karena default kolom).
 - `TransactionsPage` menampilkan kolom "Tahun" dari `transactions.period_year` dan menormalkan status
   `paid` sebagai LUNAS.
+
+## Laporan & paginasi data besar (2026-11-04)
+
+- `MarketReportsPage` di `#market/dashboard/reports` (sidebar Keuangan → "Laporan").
+- Definisi metrik: **target** = `sum(amount_due)` tagihan yang `due_date`-nya jatuh di bulan terpilih
+  (status bukan `DIBATALKAN`); **realisasi** = `sum(transactions.amount)` yang `created_at`-nya di bulan
+  itu (batas bulan memakai offset `+08:00`); **tunggakan** = `outstanding` semua tagihan terbuka.
+- Tabel umur tunggakan memakai selisih hari `due_date` terhadap hari ini (WITA): belum jatuh tempo,
+  1–30, 31–60, 61–90, >90 hari.
+- Jenis transaksi ditentukan dari `bill_id` (tagihan) atau `rate_id` (tarif), sehingga pembayaran
+  harian dan tagihan periode bisa dipisah per jenis.
+- **Plafon PostgREST 1.000 baris**: `StallsPage` kini membaca `stalls` bertahap (lihat `fetchAllRows`
+  pola di `MarketBillsPage`/`MarketReportsPage`). Jangan memakai satu query `select` untuk tabel
+  yang bisa melebihi 1.000 baris (lapak NGD = 1.396).
 
 ## Ketergantungan
 

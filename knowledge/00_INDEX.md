@@ -49,6 +49,7 @@
 - [decisions/ADR-001-supabase-first.md](./decisions/ADR-001-supabase-first.md)
 - [logs/2026-10-25.md](./logs/2026-10-25.md)
 - [logs/2026-10-31.md](./logs/2026-10-31.md)
+- [logs/2026-11-04.md](./logs/2026-11-04.md)
 
 ## Rujukan root repo (bukan canonical)
 
