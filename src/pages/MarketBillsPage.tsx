@@ -45,6 +45,7 @@ interface BillRow {
   status: string
   is_open: boolean
   due_date: string | null
+  note?: string | null
   period_kind?: string | null
   period_start?: string | null
   period_end?: string | null
@@ -147,7 +148,7 @@ export function MarketBillsPage({ marketId, readOnly = false }: MarketBillsPageP
   const [generateError, setGenerateError] = useState('')
 
   const [periodTypeFilter, setPeriodTypeFilter] = useState<'all' | string>('all')
-  const [periodStatusFilter, setPeriodStatusFilter] = useState<'all' | 'open' | 'paid'>('open')
+  const [periodStatusFilter, setPeriodStatusFilter] = useState<'all' | 'open' | 'paid' | 'cancelled'>('open')
   const [periodSearch, setPeriodSearch] = useState('')
   const [periodPage, setPeriodPage] = useState(1)
 
@@ -163,6 +164,10 @@ export function MarketBillsPage({ marketId, readOnly = false }: MarketBillsPageP
   const [issueError, setIssueError] = useState('')
 
   const [payTarget, setPayTarget] = useState<PayTarget | null>(null)
+  const [cancelTarget, setCancelTarget] = useState<{ bill: BillRow; code: string } | null>(null)
+  const [cancelReason, setCancelReason] = useState('')
+  const [cancelling, setCancelling] = useState(false)
+  const [cancelError, setCancelError] = useState('')
   const [payAmount, setPayAmount] = useState('')
   const [payMethod, setPayMethod] = useState('Tunai')
   const [payName, setPayName] = useState('')
@@ -189,7 +194,7 @@ export function MarketBillsPage({ marketId, readOnly = false }: MarketBillsPageP
       const billRows = await fetchAllRows<BillRow>((from, to) =>
         client
           .from('retribution_bill_balances')
-          .select('id, stall_id, types_id, period_year, amount_due, amount_paid, outstanding, status, is_open, due_date, period_kind, period_start, period_end')
+          .select('id, stall_id, types_id, period_year, amount_due, amount_paid, outstanding, status, is_open, due_date, note, period_kind, period_start, period_end')
           .eq('market_id', marketId)
           .order('stall_id')
           .order('period_year')
@@ -341,9 +346,11 @@ export function MarketBillsPage({ marketId, readOnly = false }: MarketBillsPageP
     const keyword = periodSearch.trim().toLowerCase()
     return bills
       .filter((bill) => periodTypeIds.has(bill.types_id))
-      .filter((bill) => normalizeStatus(bill.status) !== 'DIBATALKAN')
       .filter((bill) => periodTypeFilter === 'all' || bill.types_id === Number(periodTypeFilter))
       .filter((bill) => {
+        const cancelled = normalizeStatus(bill.status) === 'DIBATALKAN'
+        if (periodStatusFilter === 'cancelled') return cancelled
+        if (cancelled) return false
         if (periodStatusFilter === 'open' && !(bill.is_open && bill.outstanding > 0)) return false
         if (periodStatusFilter === 'paid' && bill.outstanding > 0) return false
         return true
@@ -364,6 +371,7 @@ export function MarketBillsPage({ marketId, readOnly = false }: MarketBillsPageP
     let outstanding = 0
     const stallIds = new Set<number>()
     for (const bill of periodRows) {
+      if (normalizeStatus(bill.status) === 'DIBATALKAN') continue
       due += bill.amount_due
       paid += bill.amount_paid
       outstanding += bill.outstanding
@@ -560,6 +568,74 @@ export function MarketBillsPage({ marketId, readOnly = false }: MarketBillsPageP
   const billStatus = (bill: BillRow) =>
     bill.outstanding <= 0 ? 'LUNAS' : bill.amount_paid > 0 ? 'CICILAN' : 'BELUM_LUNAS'
 
+  const isPeriodCurrent = (bill: BillRow) => {
+    if ((bill.period_kind || 'TAHUNAN') === 'TAHUNAN') return false
+    if (!bill.period_start || !bill.period_end) return false
+    const today = witaToday()
+    return bill.period_start <= today && today <= bill.period_end
+  }
+
+  const cancelBlockReason = (bill: BillRow): string | null => {
+    if (normalizeStatus(bill.status) === 'DIBATALKAN') return 'Tagihan sudah dibatalkan'
+    if (bill.amount_paid > 0) return 'Tagihan sudah memiliki pembayaran'
+    if (!bill.is_open) return 'Tagihan sudah lunas'
+    if (isPeriodCurrent(bill)) {
+      return 'Periode berjalan akan diterbitkan ulang oleh cron. Ubah irama tarif ke Harian dulu bila tagihan ini keliru.'
+    }
+    return null
+  }
+
+  const canCancelBill = (bill: BillRow) => !readOnly && cancelBlockReason(bill) === null
+
+  const openCancelDialog = (bill: BillRow) => {
+    const stall = stallById.get(bill.stall_id)
+    setCancelTarget({
+      bill,
+      code: stall?.code || stall?.number || `Lapak #${bill.stall_id}`
+    })
+    setCancelReason('')
+    setCancelError('')
+  }
+
+  const handleCancel = async () => {
+    if (!cancelTarget) return
+    try {
+      setCancelling(true)
+      setCancelError('')
+      const reason = cancelReason.trim()
+      const stamp = new Date().toLocaleString('id-ID', { timeZone: 'Asia/Makassar' })
+      const entry = `Dibatalkan ${stamp}${reason ? `: ${reason}` : ''}`
+      const note = cancelTarget.bill.note ? `${cancelTarget.bill.note} | ${entry}` : entry
+      const { data, error: updateError } = await getSupabaseClient()
+        .from('retribution_bills')
+        .update({ status: 'DIBATALKAN', note })
+        .eq('id', cancelTarget.bill.id)
+        .eq('status', 'AKTIF')
+        .select('id')
+      if (updateError) throw updateError
+      if (!data || data.length === 0) {
+        throw new Error('Tagihan sudah berubah (mungkin sudah dibayar atau dibatalkan). Muat ulang halaman.')
+      }
+      setCancelTarget(null)
+      setNotice(`Tagihan ${cancelTarget.code} ${periodLabel(cancelTarget.bill)} dibatalkan.`)
+      await loadData()
+    } catch (err: any) {
+      setCancelError(err?.message || 'Gagal membatalkan tagihan')
+    } finally {
+      setCancelling(false)
+    }
+  }
+
+  const annualBillFor = (row: StallSummary): BillRow | null => {
+    if (annualPayTypesId == null) return null
+    return row.bills.find(
+      (bill) =>
+        bill.types_id === annualPayTypesId &&
+        bill.period_year === year &&
+        normalizeStatus(bill.status) !== 'DIBATALKAN'
+    ) || null
+  }
+
   const openPeriodPayDialog = (bill: BillRow) => {
     const stall = stallById.get(bill.stall_id)
     const openBills = bills
@@ -738,17 +814,35 @@ export function MarketBillsPage({ marketId, readOnly = false }: MarketBillsPageP
                       </span>
                     </td>
                     <td>
-                      {row.totalOutstanding > 0 ? (
-                        annualPayTypesId == null && annualTypes.length > 1 ? (
-                          <span className="bills-muted" title="Pilih salah satu jenis tahunan di filter Jenis untuk membayar">Pilih jenis</span>
+                      <div className="bills-row-actions">
+                        {row.totalOutstanding > 0 ? (
+                          annualPayTypesId == null && annualTypes.length > 1 ? (
+                            <span className="bills-muted" title="Pilih salah satu jenis tahunan di filter Jenis untuk membayar">Pilih jenis</span>
+                          ) : (
+                            <button type="button" className="btn-secondary bills-pay-btn" onClick={() => openPayDialog({ ...row, typesId: annualPayTypesId })}>
+                              {readOnly ? 'Lihat' : 'Bayar'}
+                            </button>
+                          )
                         ) : (
-                          <button type="button" className="btn-secondary bills-pay-btn" onClick={() => openPayDialog({ ...row, typesId: annualPayTypesId })}>
-                            {readOnly ? 'Lihat' : 'Bayar'}
-                          </button>
-                        )
-                      ) : (
-                        <span className="bills-muted">—</span>
-                      )}
+                          <span className="bills-muted">—</span>
+                        )}
+                        {(() => {
+                          const bill = annualBillFor(row)
+                          if (!bill || readOnly) return null
+                          const allowed = canCancelBill(bill)
+                          return (
+                            <button
+                              type="button"
+                              className="btn-secondary bills-cancel-btn"
+                              disabled={!allowed}
+                              title={allowed ? 'Batalkan tagihan tahun ini' : cancelBlockReason(bill) || ''}
+                              onClick={() => openCancelDialog(bill)}
+                            >
+                              Batalkan
+                            </button>
+                          )
+                        })()}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -803,6 +897,7 @@ export function MarketBillsPage({ marketId, readOnly = false }: MarketBillsPageP
                 <option value="open">Belum lunas</option>
                 <option value="paid">Lunas</option>
                 <option value="all">Semua</option>
+                <option value="cancelled">Dibatalkan</option>
               </select>
             </label>
             <label className="bills-search">
@@ -846,9 +941,10 @@ export function MarketBillsPage({ marketId, readOnly = false }: MarketBillsPageP
                   <tbody>
                     {periodPageRows.map((bill) => {
                       const stall = stallById.get(bill.stall_id)
-                      const status = billStatus(bill)
+                      const cancelled = normalizeStatus(bill.status) === 'DIBATALKAN'
+                      const status = cancelled ? 'DIBATALKAN' : billStatus(bill)
                       return (
-                        <tr key={bill.id}>
+                        <tr key={bill.id} className={cancelled ? 'bills-row-cancelled' : undefined}>
                           <td><strong>{stall?.code || stall?.number || `Lapak #${bill.stall_id}`}</strong></td>
                           <td>{stall?.owner_id ? owners.get(stall.owner_id) || '-' : '-'}</td>
                           <td>
@@ -862,16 +958,33 @@ export function MarketBillsPage({ marketId, readOnly = false }: MarketBillsPageP
                           <td className="num"><strong>{formatRupiah(bill.outstanding)}</strong></td>
                           <td>
                             <span className={`bills-badge ${status.toLowerCase()}`}>
-                              {status === 'LUNAS' ? 'Lunas' : status === 'CICILAN' ? 'Dicicil' : 'Belum bayar'}
+                              {status === 'LUNAS' ? 'Lunas' : status === 'CICILAN' ? 'Dicicil' : status === 'DIBATALKAN' ? 'Dibatalkan' : 'Belum bayar'}
                             </span>
                           </td>
                           <td>
-                            {bill.outstanding > 0 ? (
-                              <button type="button" className="btn-secondary bills-pay-btn" onClick={() => openPeriodPayDialog(bill)}>
-                                {readOnly ? 'Lihat' : 'Bayar'}
-                              </button>
-                            ) : (
+                            {cancelled ? (
                               <span className="bills-muted">—</span>
+                            ) : (
+                              <div className="bills-row-actions">
+                                {bill.outstanding > 0 ? (
+                                  <button type="button" className="btn-secondary bills-pay-btn" onClick={() => openPeriodPayDialog(bill)}>
+                                    {readOnly ? 'Lihat' : 'Bayar'}
+                                  </button>
+                                ) : (
+                                  <span className="bills-muted">—</span>
+                                )}
+                                {!readOnly && (
+                                  <button
+                                    type="button"
+                                    className="btn-secondary bills-cancel-btn"
+                                    disabled={!canCancelBill(bill)}
+                                    title={canCancelBill(bill) ? 'Batalkan tagihan periode ini' : cancelBlockReason(bill) || ''}
+                                    onClick={() => openCancelDialog(bill)}
+                                  >
+                                    Batalkan
+                                  </button>
+                                )}
+                              </div>
                             )}
                           </td>
                         </tr>
@@ -984,6 +1097,53 @@ export function MarketBillsPage({ marketId, readOnly = false }: MarketBillsPageP
               <button type="button" className="btn-secondary" disabled={issuing} onClick={() => setIssueOpen(false)}>Batal</button>
               <button type="button" className="btn-primary" disabled={issuing || periodTypes.length === 0} onClick={handleIssue}>
                 {issuing ? 'Menerbitkan...' : 'Terbitkan'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {cancelTarget && (
+        <div className="bills-modal-backdrop" role="presentation" onClick={() => !cancelling && setCancelTarget(null)}>
+          <div className="bills-modal" role="dialog" aria-modal="true" aria-labelledby="cancel-bill-title" onClick={(event) => event.stopPropagation()}>
+            <h3 id="cancel-bill-title">Batalkan Tagihan</h3>
+            <p>
+              Tagihan <strong>{cancelTarget.code}</strong> · {periodLabel(cancelTarget.bill)} ·{' '}
+              {formatRupiah(cancelTarget.bill.amount_due)}
+            </p>
+            <div className="bills-cancel-summary">
+              <div>
+                <span>Jenis</span>
+                <strong>{typeById.get(cancelTarget.bill.types_id)?.name || `Jenis #${cancelTarget.bill.types_id}`}</strong>
+              </div>
+              <div>
+                <span>Jatuh tempo</span>
+                <strong>{formatDate(cancelTarget.bill.due_date)}</strong>
+              </div>
+              <div>
+                <span>Dibayar</span>
+                <strong>{formatRupiah(cancelTarget.bill.amount_paid)}</strong>
+              </div>
+            </div>
+            <label>Alasan (opsional)
+              <input
+                value={cancelReason}
+                onChange={(event) => setCancelReason(event.target.value)}
+                placeholder="Mis. salah periode / dobel dengan tagihan sebelumnya"
+                maxLength={160}
+              />
+            </label>
+            <div className="bills-hint">
+              Tagihan yang dibatalkan tidak dihitung sebagai tunggakan dan tidak menghalangi penerbitan
+              periode baru. Hanya tagihan tanpa pembayaran yang bisa dibatalkan, dan tagihan periode
+              berjalan dikecualikan karena akan diterbitkan ulang otomatis oleh cron — ubah irama tarif
+              ke Harian lebih dulu bila tagihan itu memang keliru.
+            </div>
+            {cancelError && <div className="bills-error">{cancelError}</div>}
+            <div className="bills-modal-actions">
+              <button type="button" className="btn-secondary" disabled={cancelling} onClick={() => setCancelTarget(null)}>Batal</button>
+              <button type="button" className="btn-primary bills-confirm-cancel" disabled={cancelling} onClick={handleCancel}>
+                {cancelling ? 'Membatalkan...' : 'Batalkan Tagihan'}
               </button>
             </div>
           </div>

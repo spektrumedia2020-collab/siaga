@@ -381,3 +381,83 @@
     grid-template-columns: 1fr;
   }
 }
+
+.bills-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.bills-cancel-btn {
+  padding: 6px 12px;
+  font-size: 13px;
+  background-color: #fff;
+  background-image: none;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.bills-cancel-btn:hover:not(:disabled) {
+  background-color: #fef2f2;
+  background-image: none;
+  color: #991b1b;
+}
+
+.bills-cancel-btn:disabled {
+  color: #94a3b8;
+  border-color: #e2e8f0;
+  background-color: #f8fafc;
+  background-image: none;
+  cursor: not-allowed;
+}
+
+.bills-badge.dibatalkan {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.bills-row-cancelled td {
+  color: #94a3b8;
+}
+
+.bills-cancel-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 10px;
+  padding: 12px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.bills-cancel-summary div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bills-cancel-summary span {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.bills-cancel-summary strong {
+  font-size: 14px;
+  color: #0f172a;
+}
+
+.bills-confirm-cancel {
+  background-color: #b91c1c;
+  background-image: none;
+  color: #fff;
+  border: 1px solid #b91c1c;
+}
+
+.bills-confirm-cancel:hover:not(:disabled) {
+  background-color: #991b1b;
+  background-image: none;
+}
