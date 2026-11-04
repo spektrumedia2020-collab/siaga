@@ -25,7 +25,7 @@ dari query kode. Status terpasang di DB produksi: **UNKNOWN** (tidak ada akses D
 | `officers` | `id`, `user_id` UNIQUE, `market_id`, `name` | select own / auth; insert/update own |
 | `attendance` | `id`, `officer_id`, `market_id`, `check_in`, `check_out` (+ kolom lokasi via `add_attendance_location_columns.sql`) | select own/auth; insert/update own |
 | `stall_categories` | `id`, `name`, `description` | `UNKNOWN` |
-| `setoran` | `id` UUID, `officer_id`, `market_id`, `total_amount`, `transaction_count`, `note`, `proof_image_url`, `status` CHECK(`pending_treasurer`,`pending_head`,`approved`,`rejected`), `rejection_reason`, `approved_by_treasurer`, `approved_by_head`, `approved_at_*` | select/insert officer; update approval |
+| `setoran` | `id` UUID, `officer_id` (**auth uid**, bukan `users.id_user`), `market_id`, `total_amount`, `transaction_count`, `note`, `proof_image_url`, `status` CHECK(`pending_treasurer`,`pending_head`,`approved`,`rejected`), `rejection_reason`, `approved_by_treasurer`, `approved_by_head`, `approved_at_*` | select/insert officer; update approval. `transactions.officer_id` memakai `users.id_user` (bigint) — beda domain, perlu pemetaan `auth_uid → id_user` |
 | `market_config` | `id`, `market_id`, `key`, `value`, UNIQUE(market_id,key) | read authenticated; tulis oleh petugas pasar |
 | `announcements` | `id`, `market_id`, `title`, `content`, `priority`, `is_active`, `start_date`, `end_date`, `created_by`→users.id_user | read authenticated; kelola oleh petugas pasar |
 | `retribution_rates` | `id`, `amount`, `stall_id`→stalls, `market_id`→markets, `types_id`→retribution_types | SELECT authenticated; INSERT/UPDATE/DELETE admin atau staf pasar terkait (migration 008) |

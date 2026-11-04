@@ -46,6 +46,9 @@ flutter_dotenv · share_plus · intl · uuid.
    Keduanya **memerlukan migration 027**; sebelum migration dijalankan, pembayaran tagihan offline
    akan berstatus `failed` (bisa dicoba ulang lewat Sinkron setelah migrasi).
 6. **Masih online-only**: setoran (butuh unggah foto bukti) dan penagihan periode berjalan.
+7. **Setoran per petugas**: total setoran dihitung dari `transactions` dengan filter
+   `market_id` + `officer_id = users.id_user` (dipetakan dari `auth_uid`), bukan seluruh
+   transaksi pasar. Berlaku di `setoran_page` (ringkasan harian) dan `setoran_form_dialog`.
 7. **Dual schema**: repository mencoba tabel baru (`stalls`, `stall_owners`) lalu fallback ke
    legacy (`lapak`, `pemilik_lapak`).
 8. `transactions.amount` adalah kolom tunggal (fallback multi-kolom sudah dihapus per TODO_FIXES).

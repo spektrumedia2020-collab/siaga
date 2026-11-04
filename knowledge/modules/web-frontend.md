@@ -66,6 +66,16 @@ UI untuk superadmin, admin pasar, bendahara, petugas (web), plus halaman publik
 - Tab periode: filter status **Dibatalkan**, badge abu-abu, baris dibatalkan dikeluarkan dari
   total kartu. Tab tahunan: tombol disabled dengan tooltip saat tagihan sudah dibayar.
 
+## Setoran (2026-11-04)
+
+- `SetoranPage` (`#market/dashboard/setoran`) memetakan petugas lewat `users.auth_uid` — nilai yang
+  disimpan mobile di `setoran.officer_id` — bukan `users.id_user` (bug lama membuat semua total 0).
+- Ringkasan per petugas memakai rentang tanggal WITA (`+08:00`, eksklusif di hari berikutnya):
+  `Total Setoran` dari `setoran`, `Terkumpul` + `Transaksi` dari `transactions.officer_id =
+  users.id_user`, serta `Selisih = terkumpul − setoran` (merah bila masih ada yang belum disetor).
+- Tabel transaksi diambil bertahap 1.000 baris (`fetchAllRows`) dan hanya saat rentang berubah.
+- Halaman ini masih **monitoring**; aksi setujui/tolak belum ada.
+
 ## Ketergantungan
 
 - Supabase (anon key) untuk semua CRUD; RLS menentukan izin baris.
