@@ -37,13 +37,13 @@
   "last_session_id": "SESSION-2026-11-04-1",
   "last_scan": "2026-10-25T20:05:00+07:00",
   "last_index": "",
-  "last_updated": "2026-11-04T07:22:00+07:00",
-  "last_validation": "2026-11-04T07:22:00+07:00",
+  "last_updated": "2026-11-04T08:05:00+07:00",
+  "last_validation": "2026-11-04T08:05:00+07:00",
   "last_test_status": "pass",
   "last_command": "CLOSE",
   "last_command_status": "COMPLETED",
   "open_wave": null,
   "dirty": false,
   "drift_detected": false,
-  "next_step": "1) Uji pembatalan nyata atas persetujuan pemilik. 2) Pantau cron 2026-11-09 00:05 WITA. 3) Distribusikan APK terbaru. 4) Laporan per petugas."
+  "next_step": "1) Pantau cron 2026-11-09 00:05 WITA. 2) Distribusikan APK terbaru ke petugas. 3) Laporan per petugas. 4) Setoran offline + penegakan sektor offline."
 }
