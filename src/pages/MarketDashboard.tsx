@@ -16,6 +16,7 @@ import { SetoranPage } from './SetoranPage'
 import { MarketDetailPage } from './MarketDetailPage'
 import { MarketThemePage } from './MarketThemePage'
 import { MarketBillsPage } from './MarketBillsPage'
+import { MarketReportsPage } from './MarketReportsPage'
 import {
   LineChart,
   Line,
@@ -69,7 +70,7 @@ interface PublicNewsItem {
   link: string
 }
 
-type PageType = 'overview' | 'officers' | 'stalls' | 'sectors' | 'owners' | 'categories' | 'retribusi' | 'bills' | 'transactions' | 'reconciliations' | 'setoran' | 'marketDetail' | 'publicContent' | 'theme'
+type PageType = 'overview' | 'officers' | 'stalls' | 'sectors' | 'owners' | 'categories' | 'retribusi' | 'bills' | 'reports' | 'transactions' | 'reconciliations' | 'setoran' | 'marketDetail' | 'publicContent' | 'theme'
 
 function formatMarketAddress(market: any) {
   const clean = (value: unknown) => String(value || '').trim().replace(/^[,\s]+|[,\s]+$/g, '')
@@ -763,6 +764,7 @@ export function MarketDashboard({ userId, onLogout }: Props) {
       categories: 'categories',
       retribusi: 'retribusi',
       bills: 'bills',
+      reports: 'reports',
       marketdetail: 'marketDetail',
       publiccontent: 'publicContent',
       officers: 'officers',
@@ -867,6 +869,8 @@ export function MarketDashboard({ userId, onLogout }: Props) {
         return <RetribusiPage readOnly={isReadOnly} />
       case 'bills':
         return <MarketBillsPage marketId={stats.market.id} readOnly={isReadOnly} />
+      case 'reports':
+        return <MarketReportsPage marketId={stats.market.id} />
       case 'transactions':
         return <TransactionsPage marketId={stats.market.id} readOnly={isReadOnly} />
       case 'reconciliations':
@@ -1462,6 +1466,13 @@ export function MarketDashboard({ userId, onLogout }: Props) {
                     >
                       <span className="sidebar-icon"><IconReconciliations /></span>
                       <span>Setoran</span>
+                    </button>
+                    <button
+                      className={`sidebar-item ${currentPage === 'reports' ? 'active' : ''}`}
+                      onClick={() => updatePageRoute('reports')}
+                    >
+                      <span className="sidebar-icon">📊</span>
+                      <span>Laporan</span>
                     </button>
                   </div>
                   <div className="sidebar-group">
