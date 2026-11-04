@@ -385,13 +385,23 @@ export function StallsPage({ marketId, marketName, readOnly = false }: Props) {
         return
       }
 
-      // Load stalls
-      const { data: stallsData, error: stallsErr } = await supabase
-        .from('stalls')
-        .select('*')
-        .eq('market_id', marketId)
-        .order('number')
-      const loadedStalls = stallsData || []
+      // PostgREST caps a single response at 1,000 rows; page through so markets
+      // larger than that (e.g. NGD with 1,396 stalls) are fully listed.
+      const loadedStalls: Stall[] = []
+      let stallsErr: { message?: string } | null = null
+      for (let from = 0; ; from += 1000) {
+        const { data: stallsPage, error: pageError } = await supabase
+          .from('stalls')
+          .select('*')
+          .eq('market_id', marketId)
+          .order('number')
+          .order('id')
+          .range(from, from + 999)
+        if (pageError) { stallsErr = pageError; break }
+        const page = (stallsPage || []) as Stall[]
+        loadedStalls.push(...page)
+        if (page.length < 1000) break
+      }
 
       if (stallsErr) {
         const msg = stallsErr.message || ''
