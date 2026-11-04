@@ -50,6 +50,22 @@ UI untuk superadmin, admin pasar, bendahara, petugas (web), plus halaman publik
   pola di `MarketBillsPage`/`MarketReportsPage`). Jangan memakai satu query `select` untuk tabel
   yang bisa melebihi 1.000 baris (lapak NGD = 1.396).
 
+## Pembatalan tagihan (2026-11-04)
+
+- Tombol **Batalkan** ada di kolom Aksi tab **Tahunan** (target: tagihan tahun terpilih + jenis terpilih)
+  dan tab **Mingguan / Bulanan** (target: baris tagihan itu).
+- Syarat: `amount_paid = 0`, tagihan masih terbuka (`is_open`), dan **bukan periode berjalan**.
+  Alasan pemblokiran periode berjalan: `ensure_current_period_bill`/cron harian 00:05 WITA akan
+  membuat ulang tagihan AKTIF untuk rentang yang sama (index unik hanya berlaku untuk `AKTIF`).
+  Bila tagihan periode berjalan memang keliru, ubah irama tarif lapak ke `HARIAN` lebih dulu.
+- Aksi menulis `status = 'DIBATALKAN'` + menambahkan jejak alasan ke kolom `note`
+  (`Dibatalkan <waktu WITA>: <alasan>`), memakai RLS `retribution_bills_update`
+  (`is_current_user_admin_full` / anggota pasar). Tidak ada DDL baru.
+- Guard klien: `.eq('status','AKTIF').select('id')`; nol baris terpengaruh → pesan "tagihan sudah
+  berubah" tanpa mengasumsikan sukses.
+- Tab periode: filter status **Dibatalkan**, badge abu-abu, baris dibatalkan dikeluarkan dari
+  total kartu. Tab tahunan: tombol disabled dengan tooltip saat tagihan sudah dibayar.
+
 ## Ketergantungan
 
 - Supabase (anon key) untuk semua CRUD; RLS menentukan izin baris.
