@@ -40,6 +40,15 @@ class _SetoranFormDialogState extends State<SetoranFormDialog> {
     _loadRevenue();
   }
 
+  Future<int?> _officerUserId() async {
+    final row = await Supabase.instance.client
+        .from('users')
+        .select('id_user')
+        .eq('auth_uid', widget.officerId)
+        .maybeSingle();
+    return (row?['id_user'] as num?)?.toInt();
+  }
+
   Future<void> _loadRevenue() async {
     setState(() => _updatingRevenue = true);
     try {
@@ -49,9 +58,16 @@ class _SetoranFormDialogState extends State<SetoranFormDialog> {
       final endOfDay = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day, 23, 59, 59)
           .toUtc()
           .toIso8601String();
+      final officerUserId = await _officerUserId();
+      if (officerUserId == null) {
+        if (mounted) setState(() => _updatingRevenue = false);
+        return;
+      }
       final txResponse = await Supabase.instance.client
           .from('transactions')
           .select('amount')
+          .eq('market_id', widget.marketId)
+          .eq('officer_id', officerUserId)
           .gte('created_at', startOfDay)
           .lte('created_at', endOfDay);
       final transactions = txResponse as List;
@@ -133,9 +149,15 @@ class _SetoranFormDialogState extends State<SetoranFormDialog> {
       final endOfDay = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day, 23, 59, 59)
           .toUtc()
           .toIso8601String();
+      final officerUserId = await _officerUserId();
+      if (officerUserId == null) {
+        throw Exception('Data petugas tidak ditemukan');
+      }
       final txResponse = await client
           .from('transactions')
           .select('amount')
+          .eq('market_id', widget.marketId)
+          .eq('officer_id', officerUserId)
           .gte('created_at', startOfDay)
           .lte('created_at', endOfDay);
       final transactions = txResponse as List;

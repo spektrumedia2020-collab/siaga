@@ -45,9 +45,23 @@ class _SetoranPageState extends ConsumerState<SetoranPage> {
           .toUtc()
           .toIso8601String();
 
+      final officerRow = await Supabase.instance.client
+          .from('users')
+          .select('id_user, market_id')
+          .eq('auth_uid', user.id)
+          .maybeSingle();
+      final officerUserId = (officerRow?['id_user'] as num?)?.toInt();
+      final marketId = (officerRow?['market_id'] as num?)?.toInt();
+      if (officerUserId == null || marketId == null) {
+        if (mounted) setState(() => _loadingRevenue = false);
+        return;
+      }
+
       final txResponse = await Supabase.instance.client
           .from('transactions')
           .select('amount')
+          .eq('market_id', marketId)
+          .eq('officer_id', officerUserId)
           .gte('created_at', startOfDay)
           .lte('created_at', endOfDay);
 
