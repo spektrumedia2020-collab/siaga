@@ -1,7 +1,31 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { getSupabaseClient } from '../lib/supabase'
 import { DateRangePicker } from '../components/DateRangePicker'
 import { ExportButtons } from '../components/ExportButtons'
+
+const PAGE_SIZE = 1000
+
+async function fetchAllRows<T>(
+  build: (from: number, to: number) => PromiseLike<{ data: unknown[] | null; error: unknown }>
+): Promise<T[]> {
+  const rows: T[] = []
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await build(from, from + PAGE_SIZE - 1)
+    if (error) throw error
+    const page = (data || []) as T[]
+    rows.push(...page)
+    if (page.length < PAGE_SIZE) break
+  }
+  return rows
+}
+
+const witaStart = (date: string) => `${date}T00:00:00+08:00`
+
+const witaNextDayStart = (date: string) => {
+  const next = new Date(`${date}T00:00:00Z`)
+  next.setUTCDate(next.getUTCDate() + 1)
+  return `${next.toISOString().slice(0, 10)}T00:00:00+08:00`
+}
 
 interface SetoranPageProps {
   marketId?: number | string
@@ -39,10 +63,23 @@ interface OfficerSummary {
   rejected_count: number
 }
 
+interface OfficerUser {
+  id_user: number
+  auth_uid: string | null
+  nama: string | null
+  email: string | null
+}
+
+interface TransactionRow {
+  officer_id: number | null
+  amount: number
+}
+
 export function SetoranPage({ marketId }: SetoranPageProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [officerSummaries, setOfficerSummaries] = useState<OfficerSummary[]>([])
+  const [officers, setOfficers] = useState<OfficerUser[]>([])
+  const [transactions, setTransactions] = useState<TransactionRow[]>([])
   const [officerNameMap, setOfficerNameMap] = useState<Map<string, string>>(new Map())
   const [setorans, setSetorans] = useState<Setoran[]>([])
   const [selectedOfficer, setSelectedOfficer] = useState<string>('')
@@ -112,27 +149,14 @@ export function SetoranPage({ marketId }: SetoranPageProps) {
         return roleName === 'OFFICER'
       })
 
-      // Build officer summaries
-      const summaries: OfficerSummary[] = officerUsers.map((user: any) => {
-        const officerSetoran = (setoranData || []).filter(s => String(s.officer_id) === String(user.id_user))
-        const totalSetoran = officerSetoran.reduce((sum, s) => sum + Number(s.total_amount), 0)
-        const pendingCount = officerSetoran.filter(s => s.status === 'pending_treasurer' || s.status === 'pending_head').length
-        const approvedCount = officerSetoran.filter(s => s.status === 'approved').length
-        const rejectedCount = officerSetoran.filter(s => s.status === 'rejected').length
-
-        return {
-          officer_id: String(user.auth_uid),
-          officer_name: user.nama || user.email || 'Unknown',
-          total_setoran: totalSetoran,
-          total_collected: 0,
-          transaction_count: 0,
-          pending_count: pendingCount,
-          approved_count: approvedCount,
-          rejected_count: rejectedCount
-        }
-      })
-
-      setOfficerSummaries(summaries)
+      setOfficers(
+        officerUsers.map((user: any) => ({
+          id_user: Number(user.id_user),
+          auth_uid: user.auth_uid ? String(user.auth_uid) : null,
+          nama: user.nama || user.email || 'Unknown',
+          email: user.email || null
+        }))
+      )
     } catch (err: any) {
       setError(err.message || 'Gagal memuat data setoran')
     } finally {
@@ -140,12 +164,70 @@ export function SetoranPage({ marketId }: SetoranPageProps) {
     }
   }
 
+  useEffect(() => {
+    if (marketIdNum <= 0) {
+      setTransactions([])
+      return
+    }
+    let active = true
+    const loadTransactions = async () => {
+      try {
+        const client = getSupabaseClient()
+        const rows = await fetchAllRows<{ officer_id: number | null; amount: number }>((from, to) => {
+          let query = client
+            .from('transactions')
+            .select('officer_id, amount')
+            .eq('market_id', marketIdNum)
+          if (dateFrom) query = query.gte('created_at', witaStart(dateFrom))
+          if (dateTo) query = query.lt('created_at', witaNextDayStart(dateTo))
+          return query.order('id').range(from, to)
+        })
+        if (active) setTransactions(rows.map((row) => ({ ...row, amount: Number(row.amount || 0) })))
+      } catch (err: any) {
+        if (active) setError(err?.message || 'Gagal memuat transaksi petugas')
+      }
+    }
+    loadTransactions()
+    return () => {
+      active = false
+    }
+  }, [marketIdNum, dateFrom, dateTo])
+
+  const rangeStartMs = dateFrom ? Date.parse(witaStart(dateFrom)) : Number.NEGATIVE_INFINITY
+  const rangeEndMs = dateTo ? Date.parse(witaNextDayStart(dateTo)) : Number.POSITIVE_INFINITY
+
+  const inRange = (value: string | null | undefined) => {
+    if (!value) return false
+    const ms = Date.parse(value)
+    return !Number.isNaN(ms) && ms >= rangeStartMs && ms < rangeEndMs
+  }
+
+  const officerSummaries = useMemo<OfficerSummary[]>(() => {
+    return officers.map((officer) => {
+      const officerSetoran = setorans.filter(
+        (item) => officer.auth_uid != null && String(item.officer_id) === officer.auth_uid && inRange(item.created_at)
+      )
+      const officerTransactions = transactions.filter((tx) => tx.officer_id === officer.id_user)
+      return {
+        officer_id: officer.auth_uid || String(officer.id_user),
+        officer_name: officer.nama || officer.email || 'Unknown',
+        total_setoran: officerSetoran.reduce((sum, item) => sum + Number(item.total_amount || 0), 0),
+        total_collected: officerTransactions.reduce((sum, tx) => sum + tx.amount, 0),
+        transaction_count: officerTransactions.length,
+        pending_count: officerSetoran.filter(
+          (item) => item.status === 'pending_treasurer' || item.status === 'pending_head'
+        ).length,
+        approved_count: officerSetoran.filter((item) => item.status === 'approved').length,
+        rejected_count: officerSetoran.filter((item) => item.status === 'rejected').length
+      }
+    })
+  }, [officers, setorans, transactions, rangeStartMs, rangeEndMs])
+
   // Filter setoran based on criteria
   const filteredSetoran = setorans.filter(s => {
     if (selectedOfficer && s.officer_id !== selectedOfficer) return false
     if (statusFilter && s.status !== statusFilter) return false
-    if (dateFrom && s.created_at < `${dateFrom}T00:00:00`) return false
-    if (dateTo && s.created_at > `${dateTo}T23:59:59`) return false
+    if (!inRange(s.created_at)) return false
     return true
   })
 
@@ -282,7 +364,8 @@ export function SetoranPage({ marketId }: SetoranPageProps) {
             data={paginatedSummary.map(o => ({
               'Petugas': o.officer_name,
               'Total Setoran': o.total_setoran,
-              'Total Terkumpul': o.total_collected,
+              'Terkumpul': o.total_collected,
+              'Selisih': o.total_collected - o.total_setoran,
               'Jumlah Transaksi': o.transaction_count,
               'Pending': o.pending_count,
               'Disetujui': o.approved_count,
@@ -323,6 +406,9 @@ export function SetoranPage({ marketId }: SetoranPageProps) {
                 <tr style={{ background: '#f9fafb', borderBottom: '2px solid #1e3a8a' }}>
                   <th style={{ padding: 10, border: '1px solid #e5e7eb', textAlign: 'left' }}>Petugas</th>
                   <th style={{ padding: 10, border: '1px solid #e5e7eb', textAlign: 'right' }}>Total Setoran (Rp)</th>
+                  <th style={{ padding: 10, border: '1px solid #e5e7eb', textAlign: 'right' }}>Terkumpul (Rp)</th>
+                  <th style={{ padding: 10, border: '1px solid #e5e7eb', textAlign: 'right' }}>Selisih (Rp)</th>
+                  <th style={{ padding: 10, border: '1px solid #e5e7eb', textAlign: 'center' }}>Transaksi</th>
                   <th style={{ padding: 10, border: '1px solid #e5e7eb', textAlign: 'center' }}>Menunggu</th>
                   <th style={{ padding: 10, border: '1px solid #e5e7eb', textAlign: 'center' }}>Disetujui</th>
                   <th style={{ padding: 10, border: '1px solid #e5e7eb', textAlign: 'center' }}>Ditolak</th>
@@ -335,6 +421,21 @@ export function SetoranPage({ marketId }: SetoranPageProps) {
                     <td style={{ padding: 10, border: '1px solid #e5e7eb', fontWeight: 600 }}>{o.officer_name}</td>
                     <td style={{ padding: 10, border: '1px solid #e5e7eb', textAlign: 'right', fontWeight: 600 }}>
                       Rp {o.total_setoran.toLocaleString('id-ID')}
+                    </td>
+                    <td style={{ padding: 10, border: '1px solid #e5e7eb', textAlign: 'right' }}>
+                      Rp {o.total_collected.toLocaleString('id-ID')}
+                    </td>
+                    <td style={{
+                      padding: 10,
+                      border: '1px solid #e5e7eb',
+                      textAlign: 'right',
+                      fontWeight: 600,
+                      color: o.total_collected - o.total_setoran > 0 ? '#b91c1c' : '#15803d'
+                    }}>
+                      Rp {(o.total_collected - o.total_setoran).toLocaleString('id-ID')}
+                    </td>
+                    <td style={{ padding: 10, border: '1px solid #e5e7eb', textAlign: 'center' }}>
+                      {o.transaction_count.toLocaleString('id-ID')}
                     </td>
                     <td style={{ padding: 10, border: '1px solid #e5e7eb', textAlign: 'center' }}>
                       <span style={{ color: '#1d4e89', fontWeight: 600 }}>{o.pending_count}</span>
