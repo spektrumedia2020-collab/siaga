@@ -400,6 +400,8 @@ class DashboardHomePage extends StatelessWidget {
                     _MenuCard(icon: Icons.insert_chart, title: 'Rekap', subtitle: 'Ringkasan', color: const Color(0xFFE3EBF7), iconColor: const Color(0xFF1B4B7A), onTap: () => context.go('/summary')),
                     _MenuCard(icon: status.online ? Icons.wifi : Icons.wifi_off, title: status.online ? 'Online' : 'Offline', subtitle: status.online ? 'Terhubung' : 'Data lokal', color: status.online ? const Color(0xFFE6EDF7) : const Color(0xFFFFEBEE), iconColor: status.online ? const Color(0xFF1D4E89) : const Color(0xFFD32F2F), onTap: () {}),
                     _MenuCard(icon: Icons.sync, title: 'Sinkron', subtitle: status.syncing ? 'Menyinkronkan...' : (pendingLabel > 0 ? '$pendingLabel menunggu' : 'Data'), color: status.failed > 0 ? const Color(0xFFFFEBEE) : const Color(0xFFE3F2FD), iconColor: status.failed > 0 ? const Color(0xFFD32F2F) : const Color(0xFF1565C0), onTap: status.syncing ? () {} : onSync),
+                    // Sel tengah sengaja kosong agar tidak tertutup tombol scan melayang.
+                    const SizedBox.shrink(),
                     _MenuCard(icon: Icons.account_balance_wallet, title: 'Setoran', subtitle: 'Deposit', color: const Color(0xFFE6EDF7), iconColor: const Color(0xFF1E3A8A), onTap: () => context.go('/setoran')),
                   ],
                 );
