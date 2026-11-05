@@ -994,7 +994,7 @@ export function StallsPage({ marketId, marketName, readOnly = false }: Props) {
                             ? `${getPublicBaseUrl()}/lapak/${stall.public_token}?code=${encodeURIComponent(stall.code || '')}`
                             : `${getPublicBaseUrl()}/lapak/${stall.market_id}/${encodeURIComponent(stall.code)}`}
                           heading={marketName}
-                          label={`QR Lapak — ${stall.code || stall.number}${stall.legacy_code ? ` | ${stall.legacy_code}` : ''}`}
+                          label={`${stall.code || stall.number}${stall.legacy_code ? ` | ${stall.legacy_code}` : ''}`}
                           hint="Bisa dipindai petugas (aplikasi) maupun pemilik (kamera/Google Lens)."
                           icon={<IconQr />}
                           title="QR Lapak (petugas & pemilik)"
