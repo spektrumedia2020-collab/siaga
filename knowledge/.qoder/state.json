@@ -3,7 +3,7 @@
   "project": "SIAGA",
   "project_root": "D:/_siaga",
   "branch": "main",
-  "commit": "d6e5430",
+  "commit": "7be3fd1",
   "status": "WIP",
   "autonomy": "L1",
   "runtime": {
@@ -32,18 +32,18 @@
   "memory_version": 1,
   "context_version": 1,
   "skill_registry_version": 1,
-  "current_task": "Fitur absensi dihapus dari aplikasi mobile",
-  "last_task": "Hapus absensi (UI, rute, sync, tabel lokal, izin lokasi, geolocator)",
+  "current_task": "Kartu Jaspro/retribusi lain + perbaikan modal bayar di aplikasi mobile",
+  "last_task": "Tampilkan Jaspro di bawah sewa harian dan rombak dialog bayar tagihan",
   "last_session_id": "SESSION-2026-11-05-1",
   "last_scan": "2026-10-25T20:05:00+07:00",
   "last_index": "",
-  "last_updated": "2026-11-05T14:20:00+07:00",
-  "last_validation": "2026-11-05T14:15:00+07:00",
+  "last_updated": "2026-11-05T15:40:00+07:00",
+  "last_validation": "2026-11-05T15:38:00+07:00",
   "last_test_status": "pass",
   "last_command": "CLOSE",
   "last_command_status": "COMPLETED",
   "open_wave": null,
-  "dirty": false,
+  "dirty": true,
   "drift_detected": false,
-  "next_step": "1) Pasang APK tanpa absensi ke perangkat. 2) Alur persetujuan setoran web. 3) Pantau cron 9 Nov. 4) Push commit lokal bila disetujui."
+  "next_step": "1) Uji pembayaran Jaspro di perangkat bila diperlukan. 2) Alur persetujuan setoran web. 3) Pantau cron 9 Nov. 4) Push commit lokal bila disetujui."
 }
