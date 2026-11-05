@@ -623,16 +623,26 @@ class _LapakPageState extends ConsumerState<LapakPage> {
     final dailyTypes = retributionTypes
         .where((type) => _dailyTypeIds.contains((type['id'] as num?)?.toInt()))
         .toList();
-    final billedTypeIds = billRows
-        .map((bill) => (bill['types_id'] as num?)?.toInt())
-        .whereType<int>()
-        .toSet();
     final otherTypes = retributionTypes
-        .where((type) {
-          final typeId = (type['id'] as num?)?.toInt();
-          return !_dailyTypeIds.contains(typeId) && !billedTypeIds.contains(typeId);
-        })
+        .where((type) => !_dailyTypeIds.contains((type['id'] as num?)?.toInt()))
         .toList();
+    // Jenis yang ditagih berkala (mis. Jaspro) tidak ada di rates harian, jadi
+    // kartunya dibentuk dari nama jenis pada tagihan agar tetap bisa dibayar.
+    final knownOtherIds = otherTypes.map((type) => (type['id'] as num?)?.toInt()).toSet();
+    for (final entry in billTypeNames.entries) {
+      if (_dailyTypeIds.contains(entry.key) || knownOtherIds.contains(entry.key)) continue;
+      otherTypes.add({
+        'id': entry.key,
+        'name': entry.value,
+        'code': 'Tagihan berkala',
+      });
+    }
+    otherTypes.sort((a, b) {
+      final aBilled = _typeHasBills((a['id'] as num?)?.toInt());
+      final bBilled = _typeHasBills((b['id'] as num?)?.toInt());
+      if (aBilled != bBilled) return aBilled ? -1 : 1;
+      return (a['name'] ?? '').toString().compareTo((b['name'] ?? '').toString());
+    });
 
     final children = <Widget>[];
 
@@ -642,6 +652,17 @@ class _LapakPageState extends ConsumerState<LapakPage> {
         children.add(_buildDailyPaidCard());
       } else {
         children.addAll(dailyTypes.map(_buildTypeCard));
+      }
+    }
+
+    if (otherTypes.isNotEmpty) {
+      children.add(_buildSectionHeader('Retribusi Lain'));
+      for (final type in otherTypes) {
+        final typeId = (type['id'] as num?)?.toInt();
+        children.add(_buildTypeCard(
+          type,
+          disabled: typeId != null && _typeIsLunas(typeId),
+        ));
       }
     }
 
@@ -671,17 +692,6 @@ class _LapakPageState extends ConsumerState<LapakPage> {
     }
 
     children.add(_buildBillsSection());
-
-    if (otherTypes.isNotEmpty) {
-      children.add(_buildSectionHeader('Retribusi Lain'));
-      for (final type in otherTypes) {
-        final typeId = (type['id'] as num?)?.toInt();
-        children.add(_buildTypeCard(
-          type,
-          disabled: typeId != null && _typeIsLunas(typeId),
-        ));
-      }
-    }
 
     if (children.isEmpty) {
       return Center(
@@ -751,13 +761,26 @@ class _LapakPageState extends ConsumerState<LapakPage> {
     });
   }
 
+  bool _typeHasBills(int? typeId) {
+    if (typeId == null) return false;
+    return billRows.any((bill) => (bill['types_id'] as num?)?.toInt() == typeId);
+  }
+
+  double _typeOutstanding(int? typeId) {
+    if (typeId == null) return 0;
+    return billRows
+        .where((bill) => (bill['types_id'] as num?)?.toInt() == typeId)
+        .fold<double>(0, (sum, bill) => sum + ((bill['outstanding'] as num?)?.toDouble() ?? 0));
+  }
+
   Widget _buildTypeCard(Map<String, dynamic> type, {bool disabled = false}) {
     final typeName = type['name'] ?? 'Tidak diketahui';
     final typeCode = type['code'] ?? '-';
     final amount = (type['rate'] as num?)?.toDouble() ?? 0;
     final typeId = (type['id'] as num?)?.toInt();
-    final hasBills = typeId != null &&
-        billRows.any((bill) => (bill['types_id'] as num?)?.toInt() == typeId);
+    final hasBills = _typeHasBills(typeId);
+    final outstanding = _typeOutstanding(typeId);
+    final showOutstanding = hasBills && outstanding > 0;
     final onTap = disabled || typeId == null
         ? null
         : (hasBills
@@ -822,7 +845,41 @@ class _LapakPageState extends ConsumerState<LapakPage> {
                         style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                       ),
                       const SizedBox(height: 6),
-                      if (amount > 0)
+                      if (showOutstanding)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFFC0392B), Color(0xFF8E1B12)],
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            'Sisa Rp ${_formatAmount(outstanding)}',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        )
+                      else if (hasBills)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE8F5E9),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Text(
+                            'Tagihan lunas',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF2E7D32),
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        )
+                      else if (amount > 0)
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                           decoration: BoxDecoration(
@@ -1198,61 +1255,120 @@ class _LapakPageState extends ConsumerState<LapakPage> {
               }
             }
 
+            final dialogTypeName = typeId == null ? null : billTypeNames[typeId];
             return AlertDialog(
-              title: const Text('Bayar Tagihan'),
-              content: SingleChildScrollView(
+              title: Text(dialogTypeName == null ? 'Bayar Tagihan' : 'Bayar $dialogTypeName'),
+              insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+              scrollable: true,
+              content: SizedBox(
+                width: 400,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(
-                      'Sisa tunggakan Rp ${_formatAmount(available)}',
-                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF3F6FB),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: const Color(0xFFC7D5EA)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Sisa tunggakan Rp ${_formatAmount(available)}',
+                            style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF1D4E89)),
+                          ),
+                          if (dialogTypeName != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Text(
+                                'Jenis: $dialogTypeName',
+                                style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                              ),
+                            ),
+                          if (pendingQueued > 0) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              'Rp ${_formatAmount(pendingQueued)} sudah dibayar dan menunggu sinkron.',
+                              style: TextStyle(fontSize: 12, color: Colors.orange[800]),
+                            ),
+                          ],
+                          if (!online) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              'Mode offline: pembayaran disimpan di perangkat dan dikirim saat ada sinyal.',
+                              style: TextStyle(fontSize: 12, color: Colors.orange[800]),
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
-                    if (pendingQueued > 0) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        'Rp ${_formatAmount(pendingQueued)} sudah dibayar dan menunggu sinkron.',
-                        style: TextStyle(fontSize: 12, color: Colors.orange[800]),
-                      ),
-                    ],
-                    if (!online) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        'Mode offline: pembayaran disimpan di perangkat dan dikirim saat ada sinyal.',
-                        style: TextStyle(fontSize: 12, color: Colors.orange[800]),
-                      ),
-                    ],
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     TextField(
                       controller: amountController,
                       keyboardType: const TextInputType.numberWithOptions(decimal: false),
+                      textInputAction: TextInputAction.next,
                       decoration: const InputDecoration(
                         labelText: 'Jumlah dibayar',
                         hintText: 'Boleh sebagian (cicilan)',
+                        prefixText: 'Rp ',
+                        border: OutlineInputBorder(),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
                       initialValue: method,
-                      decoration: const InputDecoration(labelText: 'Metode'),
+                      isExpanded: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Metode',
+                        border: OutlineInputBorder(),
+                      ),
                       items: const [
                         DropdownMenuItem(value: 'Tunai', child: Text('Tunai')),
                         DropdownMenuItem(value: 'QRIS', child: Text('QRIS')),
                       ],
                       onChanged: (value) => setDialogState(() => method = value ?? 'Tunai'),
                     ),
+                    const SizedBox(height: 12),
                     TextField(
                       controller: payerController,
-                      decoration: const InputDecoration(labelText: 'Nama pembayar'),
+                      textInputAction: TextInputAction.next,
+                      decoration: const InputDecoration(
+                        labelText: 'Nama pembayar',
+                        border: OutlineInputBorder(),
+                      ),
                     ),
+                    const SizedBox(height: 12),
                     TextField(
                       controller: noteController,
-                      decoration: const InputDecoration(labelText: 'Catatan'),
+                      textInputAction: TextInputAction.done,
+                      decoration: const InputDecoration(
+                        labelText: 'Catatan',
+                        border: OutlineInputBorder(),
+                      ),
                     ),
                     if (message != null) ...[
-                      const SizedBox(height: 8),
-                      Text(message!, style: const TextStyle(color: Colors.red, fontSize: 12)),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.red.withValues(alpha: 0.4)),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(Icons.error_outline, size: 18, color: Colors.red),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(message!, style: const TextStyle(color: Colors.red, fontSize: 12)),
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ],
                 ),

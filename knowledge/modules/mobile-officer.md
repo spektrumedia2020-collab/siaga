@@ -65,6 +65,20 @@ flutter_dotenv · share_plus · intl · uuid.
   `_isNavigating` + perbandingan kode agar frame deteksi berulang tidak membuka halaman berkali-kali.
 - Getaran tetap menjadi umpan balik; teks bawah berubah menjadi "Membuka lapak <kode>...".
 
+## Tab Retribusi lapak (2026-11-05)
+
+- Urutan bagian: **Retribusi Harian** → **Retribusi Lain** → peringatan tagihan periode → **Tagihan**.
+- **Retribusi Lain** memuat semua jenis non-harian, termasuk jenis yang ditagih berkala dan tidak
+  punya tarif harian (mis. **Jaspro**). Karena `retributionTypes` hanya berisi jenis dengan tarif
+  non-periode, kartu Jaspro dibentuk dari `billTypeNames` (nama jenis pada tagihan) dengan kode
+  "Tagihan berkala".
+- Kartu jenis yang punya tagihan menampilkan **Sisa Rp <outstanding>** dan membuka dialog bayar per
+  jenis (`_openBillPayment(typeId)`); kartu yang sudah lunas menjadi nonaktif berlabel **Lunas**.
+- Tombol **Bayar / Cicil Tagihan** di bagian Tagihan tetap ada untuk membayar semua tagihan sekaligus.
+- Dialog pembayaran memakai `AlertDialog(scrollable: true)` selebar 400 dipadu `Column` berjarak 12
+  (OutlinedInputBorder) dan kartu ringkasan sisa tunggakan; aman saat keyboard terbuka dan tidak
+  tumpang tindih.
+
 ## Skema lokal `siaga_offline.db` (versi 2)
 
 - `outbox(client_uuid PK, kind, market_id, stall_id, rate_id, types_id, officer_id, amount,
