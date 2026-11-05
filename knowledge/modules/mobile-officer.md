@@ -5,12 +5,17 @@ Path: `mobile/` · App: `siaga_officer` · Status: **VERIFIED** (analyze + test)
 ## Tanggung jawab
 
 Aplikasi petugas lapangan: scan QR lapak, catat transaksi retribusi, cetak struk,
-absensi ber-lokasi, setoran ke bendahara, ringkasan & riwayat, mode offline.
+setoran ke bendahara, ringkasan & riwayat, mode offline.
+
+> **Absensi dihapus 2026-11-05** atas permintaan pemilik karena presensi ditangani aplikasi
+> terpisah. Halaman, rute `/attendance`, menu dashboard/landing, antrean sync, tabel lokal,
+> izin lokasi, dan dependensi `geolocator` sudah dibuang. Tabel `attendance` **di server tetap ada**
+> (dipakai aplikasi lain) dan tidak disentuh.
 
 ## Stack
 
 Flutter (Dart ^3.12) · supabase_flutter · flutter_riverpod · go_router · dio · sqflite ·
-connectivity_plus · geolocator · mobile_scanner · pdf + printing · image_picker ·
+connectivity_plus · mobile_scanner · pdf + printing · image_picker ·
 flutter_dotenv · share_plus · intl · uuid.
 
 ## Struktur
@@ -20,8 +25,8 @@ flutter_dotenv · share_plus · intl · uuid.
 | `lib/main.dart` | Load `.env`, init Supabase, `ProviderScope` |
 | `lib/config/router.dart` | `go_router` + route guard (`RouterNotifier` listen `onAuthStateChange`) |
 | `lib/core/` | `providers.dart`, `theme/app_theme.dart`, `ui_helpers.dart` |
-| `lib/features/` | splash, landing, auth/login, dashboard, scan, transaction, lapak, payment, receipt, shop, summary, attendance, history, reconciliation, setoran |
-| `lib/services/` | `supabase_service`, `auth_service`, `stall_repository`, `local/database_service` (sqflite v2), `sync_service`, `market_cache_service`, `offline_sync_coordinator`, `attendance/attendance_service` |
+| `lib/features/` | splash, landing, auth/login, dashboard, scan, transaction, lapak, payment, receipt, shop, summary, history, reconciliation, setoran |
+| `lib/services/` | `supabase_service`, `auth_service`, `stall_repository`, `local/database_service` (sqflite v2), `sync_service`, `market_cache_service`, `offline_sync_coordinator` |
 | `lib/shared/models/` | `stall.dart`, `outbox_entry.dart` |
 
 ## Pola data
@@ -41,9 +46,8 @@ flutter_dotenv · share_plus · intl · uuid.
 4. **Anti dobel harian**: cek cache pembayaran hari ini + outbox lokal sebelum menagih; cek
    server tetap dijalankan bila online.
 5. **Fase 2 (2026-11-02)**: cicilan tagihan ikut outbox (`kind=BILL_PAYMENT`, dikirim lewat
-   `pay_retribution_bills` dengan `p_client_uuid` sehingga pengiriman ulang tidak menagih dua kali),
-   dan presensi check-in/out disimpan lokal lalu di-upsert berdasarkan `attendance.client_uuid`.
-   Keduanya **memerlukan migration 027**; sebelum migration dijalankan, pembayaran tagihan offline
+   `pay_retribution_bills` dengan `p_client_uuid` sehingga pengiriman ulang tidak menagih dua kali).
+   Memerlukan **migration 027**; sebelum migration dijalankan, pembayaran tagihan offline
    akan berstatus `failed` (bisa dicoba ulang lewat Sinkron setelah migrasi).
 6. **Masih online-only**: setoran (butuh unggah foto bukti) dan penagihan periode berjalan.
 7. **Setoran per petugas**: total setoran dihitung dari `transactions` dengan filter
@@ -68,10 +72,11 @@ flutter_dotenv · share_plus · intl · uuid.
   next_attempt_at, last_error, server_id, created_at)` — kind `DAILY_PAYMENT|BILL_PAYMENT`,
   status `pending|done|failed`.
 - `cache_stalls`, `cache_rates`, `cache_types`, `cache_bills`, `cache_paid_today`, `cache_meta`.
-- `attendance(id = client_uuid, officer_id, market_id, check_in/out + koordinat, status,
-  is_synced, server_id)` — antrean presensi.
-- Versi 3 menambah `outbox.types_id` dan `attendance.server_id`; migrasi v1→v2 memindahkan baris
+- Versi 3 menambah `outbox.types_id`; migrasi v1→v2 memindahkan baris
   `transactions` yang belum sinkron ke outbox lalu menghapus tabel lama.
+- Tabel `attendance` lokal tidak lagi dibuat sejak 2026-11-05 (fitur absensi dihapus). Basis data
+  lama di perangkat yang masih memuat tabel itu dibiarkan apa adanya; tidak ada data yang dihapus
+  otomatis.
 
 ## SQL & migrasi
 
