@@ -3,7 +3,7 @@
   "project": "SIAGA",
   "project_root": "D:/_siaga",
   "branch": "main",
-  "commit": "ebcee4f",
+  "commit": "816c102",
   "status": "WIP",
   "autonomy": "L1",
   "runtime": {
@@ -32,18 +32,18 @@
   "memory_version": 1,
   "context_version": 1,
   "skill_registry_version": 1,
-  "current_task": "Setoran: web ringkasan per petugas + mobile filter officer/market (kode)",
-  "last_task": "Kebenaran data setoran web + mobile",
+  "current_task": "Mobile: QR langsung buka lapak; setoran per petugas selesai",
+  "last_task": "Auto-navigasi scan QR ke halaman lapak",
   "last_session_id": "SESSION-2026-11-04-1",
   "last_scan": "2026-10-25T20:05:00+07:00",
   "last_index": "",
-  "last_updated": "2026-11-04T08:40:00+07:00",
-  "last_validation": "2026-11-04T08:40:00+07:00",
+  "last_updated": "2026-11-04T09:00:00+07:00",
+  "last_validation": "2026-11-04T09:00:00+07:00",
   "last_test_status": "pass",
   "last_command": "CLOSE",
   "last_command_status": "COMPLETED",
   "open_wave": null,
   "dirty": false,
   "drift_detected": false,
-  "next_step": "1) Commit mobile setelah flutter test. 2) Lanjut alur persetujuan setoran di web. 3) Pantau cron 9 Nov. 4) Distribusikan APK."
+  "next_step": "1) Pasang APK baru setelah build. 2) Alur persetujuan setoran web. 3) Pantau cron 9 Nov."
 }

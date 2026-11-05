@@ -54,6 +54,13 @@ flutter_dotenv · share_plus · intl · uuid.
 8. `transactions.amount` adalah kolom tunggal (fallback multi-kolom sudah dihapus per TODO_FIXES).
 9. Validasi market↔stall diandalkan pada trigger DB (status `UNKNOWN`).
 
+## Scan QR (2026-11-04)
+
+- `ScanPage` dan `BottomScanPage` langsung membuka `/lapak/<kode>` saat kode valid pertama terdeteksi
+  (tanpa tombol "Temukan Lapak"). Navigasi dijadwalkan lewat `addPostFrameCallback` dan dijaga
+  `_isNavigating` + perbandingan kode agar frame deteksi berulang tidak membuka halaman berkali-kali.
+- Getaran tetap menjadi umpan balik; teks bawah berubah menjadi "Membuka lapak <kode>...".
+
 ## Skema lokal `siaga_offline.db` (versi 2)
 
 - `outbox(client_uuid PK, kind, market_id, stall_id, rate_id, types_id, officer_id, amount,
