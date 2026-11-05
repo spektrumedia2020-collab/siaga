@@ -74,10 +74,15 @@ flutter_dotenv · share_plus · intl · uuid.
   "Tagihan berkala".
 - Kartu jenis yang punya tagihan menampilkan **Sisa Rp <outstanding>** dan membuka dialog bayar per
   jenis (`_openBillPayment(typeId)`); kartu yang sudah lunas menjadi nonaktif berlabel **Lunas**.
+  Baris berstatus `DIBATALKAN` dikecualikan dari `_typeHasBills`/`_typeOutstanding`, dari batas
+  jumlah yang boleh dibayar, dan dari sisa tunggakan setelah bayar — jenis yang seluruh tagihannya
+  dibatalkan tidak dibuatkan kartu (selaras dengan [api/lapak.ts](../../api/lapak.ts) yang juga
+  mengabaikan tagihan batal).
 - Tombol **Bayar / Cicil Tagihan** di bagian Tagihan tetap ada untuk membayar semua tagihan sekaligus.
 - Dialog pembayaran memakai `AlertDialog(scrollable: true)` selebar 400 dipadu `Column` berjarak 12
   (OutlinedInputBorder) dan kartu ringkasan sisa tunggakan; aman saat keyboard terbuka dan tidak
-  tumpang tindih.
+  tumpang tindih. Kolom nominal berlabel "Jumlah dibayar (Rp)" dengan hint "Boleh sebagian
+  (cicilan)" — tanpa `prefixText` agar prefix tidak menempel pada hint saat kosong.
 
 ## Skema lokal `siaga_offline.db` (versi 2)
 

@@ -631,6 +631,8 @@ class _LapakPageState extends ConsumerState<LapakPage> {
     final knownOtherIds = otherTypes.map((type) => (type['id'] as num?)?.toInt()).toSet();
     for (final entry in billTypeNames.entries) {
       if (_dailyTypeIds.contains(entry.key) || knownOtherIds.contains(entry.key)) continue;
+      // Jenis yang seluruh tagihannya dibatalkan tidak perlu kartu.
+      if (!_typeHasBills(entry.key)) continue;
       otherTypes.add({
         'id': entry.key,
         'name': entry.value,
@@ -761,15 +763,20 @@ class _LapakPageState extends ConsumerState<LapakPage> {
     });
   }
 
+  bool _isCancelledBill(Map<String, dynamic> bill) =>
+      (bill['status'] ?? '').toString() == 'DIBATALKAN';
+
   bool _typeHasBills(int? typeId) {
     if (typeId == null) return false;
-    return billRows.any((bill) => (bill['types_id'] as num?)?.toInt() == typeId);
+    return billRows.any((bill) =>
+        (bill['types_id'] as num?)?.toInt() == typeId && !_isCancelledBill(bill));
   }
 
   double _typeOutstanding(int? typeId) {
     if (typeId == null) return 0;
     return billRows
-        .where((bill) => (bill['types_id'] as num?)?.toInt() == typeId)
+        .where((bill) =>
+            (bill['types_id'] as num?)?.toInt() == typeId && !_isCancelledBill(bill))
         .fold<double>(0, (sum, bill) => sum + ((bill['outstanding'] as num?)?.toDouble() ?? 0));
   }
 
@@ -1105,6 +1112,7 @@ class _LapakPageState extends ConsumerState<LapakPage> {
 
     final openBills = billRows
         .where((bill) =>
+            !_isCancelledBill(bill) &&
             ((bill['outstanding'] as num?)?.toDouble() ?? 0) > 0 &&
             (typeId == null || (bill['types_id'] as num?)?.toInt() == typeId))
         .toList();
@@ -1219,7 +1227,9 @@ class _LapakPageState extends ConsumerState<LapakPage> {
                 Navigator.of(dialogContext).pop();
                 final remaining = billRows.fold<double>(
                   0,
-                  (sum, bill) => sum + ((bill['outstanding'] as num?)?.toDouble() ?? 0),
+                  (sum, bill) => _isCancelledBill(bill)
+                      ? sum
+                      : sum + ((bill['outstanding'] as num?)?.toDouble() ?? 0),
                 );
                 final detail = allocations
                     .map((a) {
@@ -1311,9 +1321,8 @@ class _LapakPageState extends ConsumerState<LapakPage> {
                       keyboardType: const TextInputType.numberWithOptions(decimal: false),
                       textInputAction: TextInputAction.next,
                       decoration: const InputDecoration(
-                        labelText: 'Jumlah dibayar',
+                        labelText: 'Jumlah dibayar (Rp)',
                         hintText: 'Boleh sebagian (cicilan)',
-                        prefixText: 'Rp ',
                         border: OutlineInputBorder(),
                       ),
                     ),
