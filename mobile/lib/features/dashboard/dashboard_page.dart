@@ -652,10 +652,18 @@ class _BottomScanPageState extends ConsumerState<BottomScanPage> {
   String? scannedCode;
   bool _isNavigating = false;
 
-  void _openTransaction() {
-    if (scannedCode == null || _isNavigating) return;
+  void _handleDetection(BarcodeCapture capture) {
+    if (_isNavigating) return;
+    final raw = capture.barcodes.isEmpty ? null : capture.barcodes.first.rawValue;
+    final code = raw == null ? null : extractStallCode(raw);
+    if (code == null || code == scannedCode) return;
+    scannedCode = code;
     _isNavigating = true;
-    context.go('/lapak/$scannedCode');
+    HapticFeedback.mediumImpact();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.go('/lapak/$code');
+    });
   }
 
   @override
@@ -665,37 +673,17 @@ class _BottomScanPageState extends ConsumerState<BottomScanPage> {
       body: Column(
         children: [
           Expanded(
-            child: MobileScanner(
-              onDetect: (capture) {
-                final raw = capture.barcodes.first.rawValue;
-                final code = raw == null ? null : extractStallCode(raw);
-                if (code != null && code != scannedCode) {
-                  setState(() => scannedCode = code);
-                  HapticFeedback.mediumImpact();
-                }
-              },
-            ),
+            child: MobileScanner(onDetect: _handleDetection),
           ),
           Container(
             color: Colors.black,
             padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  scannedCode != null ? 'Lapak Terbaca: $scannedCode' : 'Arahkan kamera ke QR lapak',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.white),
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: scannedCode == null ? null : _openTransaction,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  child: const Text('Temukan Lapak'),
-                ),
-              ],
+            child: Text(
+              scannedCode != null
+                  ? 'Membuka lapak $scannedCode...'
+                  : 'Arahkan kamera ke QR lapak',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.white),
             ),
           ),
         ],
