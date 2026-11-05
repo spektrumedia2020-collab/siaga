@@ -44,7 +44,6 @@ class SyncResult {
   const SyncResult({
     this.online = false,
     this.syncedTransactions = 0,
-    this.syncedAttendance = 0,
     this.masterSynced = false,
     this.pending = 0,
     this.failed = 0,
@@ -52,7 +51,6 @@ class SyncResult {
 
   final bool online;
   final int syncedTransactions;
-  final int syncedAttendance;
   final bool masterSynced;
   final int pending;
   final int failed;
@@ -155,7 +153,6 @@ class OfflineSyncCoordinator with WidgetsBindingObserver {
         await _database.resetFailedOutbox();
       }
       final synced = await _syncService.syncPendingTransactions();
-      final syncedAttendance = await _syncService.syncAttendance();
       var masterSynced = false;
       final marketId = _marketId;
       final billsDirty = await _database.getMeta('bills_dirty') == '1';
@@ -175,7 +172,6 @@ class OfflineSyncCoordinator with WidgetsBindingObserver {
       return SyncResult(
         online: true,
         syncedTransactions: synced,
-        syncedAttendance: syncedAttendance,
         masterSynced: masterSynced,
         pending: status.value.pending,
         failed: status.value.failed,

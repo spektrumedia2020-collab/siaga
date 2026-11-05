@@ -292,17 +292,6 @@ class _LandingPageState extends State<LandingPage> {
                       children: [
                         Expanded(
                           child: _QuickMenuCard(
-                            icon: Icons.person_pin,
-                            title: 'Absensi',
-                            subtitle: 'Check-In/Out',
-                            color: const Color(0xFFFFF3E0),
-                            iconColor: const Color(0xFFE65100),
-                            onTap: () => context.go('/attendance'),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _QuickMenuCard(
                             icon: Icons.history,
                             title: 'Riwayat',
                             subtitle: 'Lihat Histori',

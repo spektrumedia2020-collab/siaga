@@ -15,7 +15,6 @@ import '../features/payment/payment_page.dart';
 import '../features/receipt/receipt_page.dart';
 import '../features/shop/shop_page.dart';
 import '../features/summary/summary_page.dart';
-import '../features/attendance/attendance_page.dart';
 import '../features/history/history_page.dart';
 import '../features/reconciliation/reconciliation_page.dart';
 import '../features/setoran/setoran_page.dart';
@@ -33,7 +32,6 @@ class RoutePaths {
   static const String receipt = '/receipt';
   static const String shop = '/shop';
   static const String summary = '/summary';
-  static const String attendance = '/attendance';
   static const String history = '/history';
   static const String settlement = '/settlement';
   static const String setoran = '/setoran';
@@ -135,10 +133,6 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: RoutePaths.summary,
       builder: (context, state) => const SummaryPage(),
-    ),
-    GoRoute(
-      path: RoutePaths.attendance,
-      builder: (context, state) => const AttendancePage(),
     ),
     GoRoute(
       path: RoutePaths.history,

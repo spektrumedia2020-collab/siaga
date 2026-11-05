@@ -34,7 +34,6 @@ class DatabaseService {
 
   Future<void> _onCreate(Database db, int version) async {
     await _createOfflineTables(db);
-    await _createAttendanceTable(db);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -45,7 +44,6 @@ class DatabaseService {
     }
     if (oldVersion < 3) {
       await _addColumnIfMissing(db, 'outbox', 'types_id', 'INTEGER');
-      await _addColumnIfMissing(db, 'attendance', 'server_id', 'INTEGER');
     }
   }
 
@@ -192,26 +190,6 @@ class DatabaseService {
       CREATE TABLE IF NOT EXISTS cache_meta (
         key TEXT PRIMARY KEY,
         value TEXT
-      )
-    ''');
-  }
-
-  Future<void> _createAttendanceTable(Database db) async {
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS attendance (
-        id TEXT PRIMARY KEY,
-        officer_id TEXT,
-        officer_name TEXT,
-        market_id INTEGER,
-        check_in TEXT,
-        check_out TEXT,
-        check_in_lat REAL,
-        check_in_lng REAL,
-        check_out_lat REAL,
-        check_out_lng REAL,
-        status TEXT,
-        is_synced INTEGER DEFAULT 0,
-        server_id INTEGER
       )
     ''');
   }
@@ -579,110 +557,10 @@ class DatabaseService {
     return count ?? 0;
   }
 
-  // ------------------------------------------------------------- attendance
-  Future<int> insertAttendance(Map<String, dynamic> attendance) async {
-    final db = await database;
-    return db.insert('attendance', {
-      ...attendance,
-      'is_synced': attendance['is_synced'] ?? 0,
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
-  }
-
-  Future<String> queueAttendanceCheckIn({
-    required String clientUuid,
-    required String officerId,
-    required String officerName,
-    required int marketId,
-    required String checkIn,
-    double? lat,
-    double? lng,
-    String status = 'present',
-    int? serverId,
-    bool synced = false,
-  }) async {
-    await insertAttendance({
-      'id': clientUuid,
-      'officer_id': officerId,
-      'officer_name': officerName,
-      'market_id': marketId,
-      'check_in': checkIn,
-      'check_in_lat': lat,
-      'check_in_lng': lng,
-      'status': status,
-      'server_id': serverId,
-      'is_synced': synced ? 1 : 0,
-    });
-    return clientUuid;
-  }
-
-  Future<void> queueAttendanceCheckOut({
-    required String clientUuid,
-    required String checkOut,
-    double? lat,
-    double? lng,
-  }) async {
-    final db = await database;
-    await db.update(
-      'attendance',
-      {
-        'check_out': checkOut,
-        'check_out_lat': lat,
-        'check_out_lng': lng,
-        'is_synced': 0,
-      },
-      where: 'id = ?',
-      whereArgs: [clientUuid],
-    );
-  }
-
-  Future<List<Map<String, dynamic>>> unsyncedAttendance() async {
-    final db = await database;
-    final rows = await db.query('attendance', where: 'is_synced = ?', whereArgs: [0]);
-    return rows.map((row) => Map<String, dynamic>.from(row)).toList();
-  }
-
-  Future<void> markAttendanceSynced(String clientUuid, {int? serverId}) async {
-    final db = await database;
-    await db.update(
-      'attendance',
-      {'is_synced': 1, 'server_id': serverId},
-      where: 'id = ?',
-      whereArgs: [clientUuid],
-    );
-  }
-
-  Future<Map<String, dynamic>?> localAttendanceForOfficer(String officerId, DateTime day) async {
-    final db = await database;
-    final start = DateTime(day.year, day.month, day.day).toIso8601String();
-    final end = DateTime(day.year, day.month, day.day, 23, 59, 59).toIso8601String();
-    final rows = await db.query(
-      'attendance',
-      where: 'officer_id = ? AND check_in >= ? AND check_in <= ?',
-      whereArgs: [officerId, start, end],
-      orderBy: 'check_in DESC',
-      limit: 1,
-    );
-    return rows.isEmpty ? null : Map<String, dynamic>.from(rows.first);
-  }
-
-  /// Removes cached attendance that the server no longer has (e.g. an admin
-  /// deleted it). Rows still waiting to sync are kept.
-  Future<int> deleteSyncedAttendanceForDay(String officerId, DateTime day) async {
-    final db = await database;
-    final start = DateTime(day.year, day.month, day.day).toIso8601String();
-    final end = DateTime(day.year, day.month, day.day, 23, 59, 59).toIso8601String();
-    return db.delete(
-      'attendance',
-      where: 'officer_id = ? AND is_synced = 1 AND check_in >= ? AND check_in <= ?',
-      whereArgs: [officerId, start, end],
-    );
-  }
-
   // ---------------------------------------------------------------- legacy
   Future<void> clearAll() async {
     final db = await database;
     await db.delete('outbox');
-    await db.delete('attendance');
     await clearCache();
   }
 }
